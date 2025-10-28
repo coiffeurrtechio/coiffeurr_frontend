@@ -1,26 +1,35 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "./ui_components/button";
+import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui_components/avatar"
 
-export function MobileMenu() {
+export function Header() {
 
   const [isOpen, setIsOpen] = useState(false);
+  const isAuthenticated = useSelector((state: any) => state.auth.isAuthenticated);
+  const userDetails = useSelector((state: any) => state.auth.user);
 
+  console.log("isAuthenticated =",isAuthenticated);
+  
   const menuItems = [
     { name: "About", href: "#" },
     { name: "Services", href: "#" },
     { name: "Artists", href: "#" },
-    { name: "Salons", href: "#" },
+    { name: "Salons", href: "/salons" },
   ];
   return (
-     <>
+    <>
       <header className="sticky top-0 z-40 w-full border-b border-border/40 backdrop-blur">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-2">
-              <img src="/dummy_logo.png" alt="" className="h-10"/>
-              <h1 className="text-2xl font-bold tracking-tight">Coiffure</h1>
-            </div>
+            <Link to="/">
+              <div className="flex items-center gap-2">
+                <img src="/dummy_logo.png" alt="" fetchPriority="high" className="h-10" />
+                <h1 className="text-2xl font-bold tracking-tight">Coiffure</h1>
+              </div>
+            </Link>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-8">
@@ -37,7 +46,22 @@ export function MobileMenu() {
 
             {/* Right Actions */}
             <div className="flex items-center gap-4">
-              <Button className="hidden sm:inline-flex">Book Appointment</Button>
+              {isAuthenticated
+                ? (<Link to="/profile">
+                  <Avatar className="w-14 h-14 mx-auto border-4 border-accent/20">
+                    <AvatarFallback className="bg-accent text-accent-foreground text-xl font-semibold">
+                      {userDetails.username
+                        .split(" ")
+                        .map((n: any) => n[0])
+                        .join("")}
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>)
+                :
+                (<Link to="/login">
+                  <Button className="hidden sm:inline-flex cursor-pointer">Login</Button>
+                </Link>)
+              }
 
               {/* Hamburger button */}
               <Button
@@ -56,9 +80,8 @@ export function MobileMenu() {
 
       {/* Mobile Menu Overlay (outside header) */}
       <div
-        className={`fixed inset-0 z-50 md:hidden transition-all duration-300 ${
-          isOpen ? "visible opacity-100" : "invisible opacity-0"
-        }`}
+        className={`fixed inset-0 z-50 md:hidden transition-all duration-300 ${isOpen ? "visible opacity-100" : "invisible opacity-0"
+          }`}
       >
         {/* Overlay */}
         <div
@@ -68,14 +91,13 @@ export function MobileMenu() {
 
         {/* Drawer sliding from top */}
         <div
-          className={`fixed top-0 left-0 w-full h-full bg-white p-6 shadow-2xl transition-transform duration-500 ${
-            isOpen ? "translate-y-0" : "-translate-y-full"
-          }`}
+          className={`fixed top-0 left-0 w-full h-full bg-white p-6 shadow-2xl transition-transform duration-500 ${isOpen ? "translate-y-0" : "-translate-y-full"
+            }`}
         >
           <div className="flex items-center justify-between">
             {/* <h2 className="text-lg font-semibold text-rose-900">Menu</h2> */}
-             <div className="flex items-center gap-2">
-              <img src="/dummy_logo.png" alt="" className="h-10"/>
+            <div className="flex items-center gap-2">
+              <img src="/dummy_logo.png" alt="" className="h-10" fetchPriority="high" />
               <h1 className="text-2xl font-bold tracking-tight">Coiffure</h1>
             </div>
             <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
