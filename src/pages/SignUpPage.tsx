@@ -99,7 +99,7 @@ export default function SignUpPage() {
             }
 
             // Success
-            const result = await response.json();
+            // const result = await response.json();
             showToast({
                 type: "success",
                 title: "Account Created Successfully!",
