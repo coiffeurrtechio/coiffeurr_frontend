@@ -19,7 +19,7 @@ export default function LoginPage() {
     password: "",
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
   const { showToast } = useToast();
   const dispatch = useDispatch();
   const navigate = useNavigate(); // ✅ hook for navigation

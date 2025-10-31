@@ -13,7 +13,7 @@ const App = () => {
   const navigate = useNavigate();
   useEffect(() => {
     const lastVisit = localStorage.getItem('lastVisit');
-    const lastVisitTime = parseInt(lastVisit, 10);
+    const lastVisitTime = lastVisit ? parseInt(lastVisit, 10) : 0;
     const currentTime = Date.now();
     const timeDifference = currentTime - lastVisitTime;
     const isRecentVisit = timeDifference < THIRTY_MINUTES;
@@ -32,7 +32,6 @@ const App = () => {
       setnum((prev) => prev+1);
       const response = await fetch(`${Config.API_BASE_URL}/authenticating`, { credentials: 'include' })
       if (response.status === 200) {
-        console.log("response ", response.data);
         console.log("response ", response);
         const result = await response.json();
         console.log("result =",result);

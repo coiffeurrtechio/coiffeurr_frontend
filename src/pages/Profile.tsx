@@ -7,7 +7,6 @@ import {
   MapPin,
   Phone,
   Mail,
-  Star,
   Clock,
   Gift,
   Settings,
@@ -22,14 +21,15 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../utils/Storage/slice/authSlice"
 import { useApi } from "../API/SalonsAPIs/ALLSalonAPI"
+import type { BookingResponse } from "../Interfaces/BookingInterface"
 
 
 export default function Profile() {
-  const [activeTab, setActiveTab] = useState("overview")
+  const [activeTab, setActiveTab] = useState<string>("overview")
   const dispatch = useDispatch();
   const navigate = useNavigate(); // ✅ hook for navigation
   const { apiRequest } = useApi()
-  const [bookingdata, setbookingdata] = useState([])
+  const [bookingdata, setbookingdata] = useState<BookingResponse[]>([])
 
   const userDetails = useSelector((state: any) => state.auth.user);
 
@@ -57,38 +57,7 @@ export default function Profile() {
   };
 
 
-  const recentBookings = [
-    {
-      id: 1,
-      service: "Hair Cut & Style",
-      artist: "Emma Rodriguez",
-      date: "Dec 15, 2024",
-      time: "2:00 PM",
-      status: "Completed",
-      rating: 5,
-      price: "$85",
-    },
-    {
-      id: 2,
-      service: "Facial Treatment",
-      artist: "Maria Santos",
-      date: "Nov 28, 2024",
-      time: "11:00 AM",
-      status: "Completed",
-      rating: 5,
-      price: "$120",
-    },
-    {
-      id: 3,
-      service: "Manicure & Pedicure",
-      artist: "Lisa Chen",
-      date: "Nov 10, 2024",
-      time: "3:30 PM",
-      status: "Completed",
-      rating: 4,
-      price: "$65",
-    },
-  ]
+  
 
   const upcomingBookings = [
     {
@@ -115,7 +84,7 @@ export default function Profile() {
 
   const fetchappointmentbookings = async () => {
     try {
-      const res = await apiRequest("/salon/appointments");
+      const res = await apiRequest<BookingResponse[]>("/salon/appointments");
       if (res.error) {
         console.error("API Error:", res.error);
         // setError("Failed to fetch salons");
@@ -130,7 +99,7 @@ export default function Profile() {
     }
   }
 
-  function extractDateAndTime(isoString) {
+  function extractDateAndTime(isoString: string) {
   const dateObj = new Date(isoString);
 
   // Extract date parts

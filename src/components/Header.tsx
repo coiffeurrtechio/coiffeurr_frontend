@@ -3,7 +3,7 @@ import { Menu, X } from "lucide-react";
 import { Button } from "./ui_components/button";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { Avatar, AvatarFallback, AvatarImage } from "../components/ui_components/avatar"
+import { Avatar, AvatarFallback } from "../components/ui_components/avatar"
 
 export function Header() {
 

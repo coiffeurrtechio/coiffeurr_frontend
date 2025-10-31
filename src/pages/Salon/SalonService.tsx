@@ -1,29 +1,23 @@
 
 import { useEffect, useState } from "react"
 import { Star, MapPin, Clock, Heart, Check, Calendar, Phone, X } from "lucide-react"
-// import { ServiceGallery } from "./service-gallery"
-// import { ArtistProfile } from "./artist-profile"
-// import { ServiceInfo } from "./service-info"
-// import { ReviewsSection } from "./reviews-section"
-// import { BookingSection } from "./booking-section"
 import { Button } from "../../components/ui_components/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui_components/card"
 import { Badge } from "../../components/ui_components/badge"
-import { useSalonApi } from "../../API/Salon_Owner_API/SalonOwnerAPI"
-import { useParams, useSearchParams } from "react-router-dom"
+import { useParams } from "react-router-dom"
 import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI"
-import type { ReactFormState } from "react-dom/client"
+import type { salonSlots } from "../../Interfaces/SaloInterface"
 
 const SalonService: React.FC = () => {
     const [isFavorite, setIsFavorite] = useState(false)
     const { apiRequest, apiCustomerpiPost } = useApi();
     const { id, serviceID } = useParams();
-    const [salonservicedata, setsalonservicedata] = useState({});
-    const [salonserviceslotsdata, setsalonserviceslotsdata] = useState([]);
-    const uniqueSortedDates = [...new Set(salonserviceslotsdata.map(s => s.date))].sort();
-    const [selectedDate, setSelectedDate] = useState(null);
-    const [selectedslottime, setselectedslottime] = useState(null);
-    const [isEditModalOpen, setisEditModalOpen] = useState(false);
+    const [salonservicedata, setsalonservicedata] = useState<any>({});
+    const [salonserviceslotsdata, setsalonserviceslotsdata] = useState<salonSlots[]>([]);
+    const uniqueSortedDates = [...new Set(salonserviceslotsdata.map((s: salonSlots) => s.date))].sort();
+    const [selectedDate, setSelectedDate] = useState<string>("");
+    const [selectedslottime, setselectedslottime] = useState<string>("");
+    const [isEditModalOpen, setisEditModalOpen] = useState<boolean>(false);
 
     // const isoString = `${dateStr}T${timeStr}`;
 
@@ -95,7 +89,7 @@ const SalonService: React.FC = () => {
 
     const fetchServiceSlots = async () => {
         try {
-            const res = await apiRequest(`/salonServices/slots?salonid=${id}&serviceId=${serviceID}`);
+            const res = await apiRequest<salonSlots[]>(`/salonServices/slots?salonid=${id}&serviceId=${serviceID}`);
             if (res.error) {
                 console.error("API Error:", res.error);
                 // setError("Failed to fetch salons");
@@ -110,13 +104,14 @@ const SalonService: React.FC = () => {
         }
     }
 
-    function formatToShortMonthDay(dateString) {
+    function formatToShortMonthDay(dateString: string) {
         const date = new Date(dateString);
-        const options = { month: 'short', day: 'numeric' };
+        const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
         return date.toLocaleDateString('en-US', options);
     }
 
-    function formatTo12Hour(timeString) {
+
+    function formatTo12Hour(timeString: any) {
         // Split the "HH:MM:SS" string
         const [hourStr, minuteStr] = timeString.split(":");
         let hour = parseInt(hourStr, 10);
@@ -134,25 +129,25 @@ const SalonService: React.FC = () => {
     }
 
 
-    const BookAppointment = async (e: ReactFormState) => {
+    const BookAppointment = async (e: any) => {
         e.preventDefault();
         try {
-            console.log("selectedDate = ",selectedDate);
-            console.log("selectedslottime = ",selectedslottime);
-            
+            console.log("selectedDate = ", selectedDate);
+            console.log("selectedslottime = ", selectedslottime);
+
             const isoString = `${selectedDate}T${selectedslottime}`;
 
             const localDateTime = new Date(isoString);
-            console.log("localDateTime=",localDateTime);
-            
+            console.log("localDateTime=", localDateTime);
+
 
             const data = {
                 bookedPrice: salonservicedata?.price,
                 durationMinutes: salonservicedata?.slotTime,
                 appointmentDateTime: localDateTime,
             }
-            console.log("data = ",data);
-            
+            console.log("data = ", data);
+
 
 
             const res = await apiCustomerpiPost(`/salon/service/appointment?salonid=${id}&serviceId=${serviceID}`,
@@ -234,7 +229,7 @@ const SalonService: React.FC = () => {
 
                         {/* Description */}
                         <div className="space-y-4">
-                            {salonservicedata?.descriptions && salonservicedata?.descriptions.map((items) => (
+                            {salonservicedata?.descriptions && salonservicedata?.descriptions.map((items: any) => (
                                 <p className="text-lg text-foreground leading-relaxed">{items}</p>
 
                             ))}
@@ -250,7 +245,7 @@ const SalonService: React.FC = () => {
                         <Card className="p-6 space-y-4">
                             <h3 className="text-xl font-bold text-foreground">What's Included</h3>
                             <ul className="space-y-3">
-                                {salonservicedata?.includedItems && salonservicedata?.includedItems.map((item, index) => (
+                                {salonservicedata?.includedItems && salonservicedata?.includedItems.map((item: any, index: number) => (
                                     <li key={index} className="flex items-start gap-3">
                                         <Check className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
                                         <span className="text-foreground">{item}</span>
@@ -284,7 +279,7 @@ const SalonService: React.FC = () => {
                                     {/* Artist Image */}
                                     <div className="flex-shrink-0">
                                         <div className="relative w-32 h-32 rounded-lg overflow-hidden">
-                                            <image src={artist.image || "/placeholder.svg"} alt={artist.name} fill className="object-cover" />
+                                            <img src={artist.image || "/placeholder.svg"} alt={artist.name} className="object-cover" />
                                         </div>
                                     </div>
 
@@ -381,7 +376,7 @@ const SalonService: React.FC = () => {
                                         key={index}
                                         onClick={() => {
                                             setSelectedDate(item);
-                                            setselectedslottime(null);
+                                            setselectedslottime("");
                                         }}
                                         className={`flex-shrink-0 px-4 py-2 rounded-full cursor-pointer whitespace-nowrap transition-all duration-200
                 ${selectedDate === item
@@ -398,10 +393,10 @@ const SalonService: React.FC = () => {
                             {selectedDate && (
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[50vh] overflow-y-auto pr-2">
                                     {salonserviceslotsdata
-                                        .filter((slot) => slot?.date === selectedDate)
-                                        .map((slot) => (
+                                        .filter((slot: salonSlots) => slot?.date === selectedDate)
+                                        .map((slot: salonSlots, index: number) => (
                                             <button
-                                                key={slot.id}
+                                                key={index}
                                                 onClick={() => setselectedslottime(slot.time)}
                                                 className={`p-3 rounded-lg text-sm font-medium transition-all border-2 
                     ${selectedslottime === slot.time

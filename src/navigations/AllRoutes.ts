@@ -4,7 +4,6 @@ import Profile from "../pages/Profile";
 import SalonRegistrationForm from "../pages/Salon/SalonRegistrationForm";
 import SalonsPage from "../pages/Salon/SalonsPage";
 import SingleSalonPage from "../pages/Salon/SingleSalonPage";
-import DashboardPage from "../pages/Salon/SalonOwner/DashboardLayout"; // or rename to DashboardPage
 import SignUpPage from "../pages/SignUpPage";
 import MainLayout from "../Layouts/MainLayout";
 import DashboardLayout from "../Layouts/DashboardLayout";

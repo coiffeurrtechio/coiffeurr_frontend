@@ -1,10 +1,8 @@
 
-import * as React from "react"
 import { useForm } from "react-hook-form"
 import { Button } from "../../components/ui_components/button"
 import { Input } from "../../components/ui_components/input"
 import { Label } from "../../components/ui_components/label"
-import { Textarea } from "../../components/ui_components/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui_components/select"
 import { Card } from "../../components/ui_components/card"
 import { useSelector } from "react-redux";
@@ -38,10 +36,8 @@ type FormValues = {
 }
 
 export default function SalonRegistrationForm() {
-  const [servicesOpen, setServicesOpen] = React.useState(false)
-  const [logoPreview, setLogoPreview] = React.useState<string | undefined>(undefined)
   const userDetails = useSelector((state: any) => state.auth.user);
-  const {apiRequest, apiPost} = useApi();
+  const { apiPost} = useApi();
   
   const form = useForm<FormValues>({
     defaultValues: {
@@ -69,31 +65,23 @@ export default function SalonRegistrationForm() {
     mode: "onChange",
   })
 
-  const selectedServices = form.watch("salonServices")
-  const logoUrl = form.watch("logoUrl")
   const SALON_TYPES = ["unisex", "male only", "female only"];
   const navigate = useNavigate();
 
-  React.useEffect(() => {
-    if (logoUrl && logoUrl.startsWith("http")) {
-      setLogoPreview(logoUrl)
-    } else {
-      setLogoPreview(undefined)
-    }
-  }, [logoUrl])
+ 
 
-  function toggleService(value: string) {
-    const current = form.getValues("salonServices")
-    if (current.includes(value)) {
-      form.setValue(
-        "salonServices",
-        current.filter((s) => s !== value),
-        { shouldValidate: true, shouldDirty: true },
-      )
-    } else {
-      form.setValue("salonServices", [...current, value], { shouldValidate: true, shouldDirty: true })
-    }
-  }
+  // function toggleService(value: string) {
+  //   const current = form.getValues("salonServices")
+  //   if (current.includes(value)) {
+  //     form.setValue(
+  //       "salonServices",
+  //       current.filter((s) => s !== value),
+  //       { shouldValidate: true, shouldDirty: true },
+  //     )
+  //   } else {
+  //     form.setValue("salonServices", [...current, value], { shouldValidate: true, shouldDirty: true })
+  //   }
+  // }
 
   async function handleUseLocation() {
     if (!("geolocation" in navigator)) {

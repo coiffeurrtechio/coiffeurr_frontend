@@ -1,7 +1,7 @@
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Config from "../../configs/config";
-import { logout, setAuth } from "../../utils/Storage/slice/authSlice";
+import { logout } from "../../utils/Storage/slice/authSlice";
 
 export interface ApiResponse<T> {
   data: T | null;

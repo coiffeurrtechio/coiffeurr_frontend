@@ -8,154 +8,59 @@ import {
   Clock,
   Phone,
   Star,
-  Wifi,
-  Car,
-  CreditCard,
+  // Wifi,
+  // Car,
+  // CreditCard,
   Calendar,
   Heart,
   Share2,
   Mail,
-  Globe,
+  // Globe,
   CheckCircle,
-  Scissors,
-  Sparkles,
 } from "lucide-react"
 import { useEffect, useState } from "react"
-import { CalendarIcon } from "lucide-react"
+// import { CalendarIcon } from "lucide-react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI"
-import { useSelector } from "react-redux";
+import type { Salon, SalonService, salonStaffDTOS } from "../../Interfaces/SaloInterface"
 
 
 
-interface SalonService {
-  serviceName: string;
-  price?: number;
-}
-interface Salon {
-  id: number;
-  salonName: string;
-  ownerName: string;
-  phone: string;
-  street: string;
-  city: string;
-  state: string;
-  pincode: number;
-  country: string;
-  openingTime: string;
-  closingTime: string;
-  rating: number;
-  reviews: number;
-  latitude: string;
-  longitude: string;
-  salonType: string;
-  logoUrl: string;
-  image: string;
-  priceRange: string;
-  salonServices?: SalonService[];
-}
+
 
 
 export default function SalonDetailPage() {
   const [isFavorite, setIsFavorite] = useState(false)
-  const [salon, setsalon] = useState<Salon>();
-  const id = useParams<{ id: int }>();
-  const {apiRequest} = useApi();
+  const [salon, setsalon] = useState<Salon | null>(null);
+  const params = useParams<{ id: string }>();
+  const { apiRequest } = useApi();
   const navigate = useNavigate();
 
 
-  const handleViewService = (serviceId: string) => {
+  const handleViewService = (serviceId?: number) => {
+    if (serviceId == null) return;
     navigate(`/salon/${salon?.id}/service/${serviceId}`);
   };
 
-  const FetchSalonById = async() =>{
-    console.log("id =",id);
-    
-    let res = await apiRequest<[]>(`/salon/${id.id}`);
+  const FetchSalonById = async () => {
+    console.log("id =", params.id);
 
-      if(res.error){
-        console.log("error",res.error);  
-      }
+    let res = await apiRequest<Salon>(`/salon/${params.id}`);
 
-      else{
-        setsalon(res.data);
-      }
+    if (res.error) {
+      console.log("error", res.error);
+    }
+
+    else {
+      setsalon(res.data);
+    }
   }
-  
+
   useEffect(() => {
     FetchSalonById();
-  },[])
-
-  const baseHours = [
-  { day: "Monday", hours: "9:00 AM - 8:00 PM" },
-  { day: "Tuesday", hours: "9:00 AM - 8:00 PM" },
-  { day: "Wednesday", hours: "9:00 AM - 8:00 PM" },
-  { day: "Thursday", hours: "9:00 AM - 8:00 PM" },
-  { day: "Friday", hours: "9:00 AM - 8:00 PM" },
-  { day: "Saturday", hours: "8:00 AM - 7:00 PM" },
-  { day: "Sunday", hours: "10:00 AM - 6:00 PM" },
-]
-
-const baseServices= [
-  {
-    category: "Hair Services",
-    items: [
-      { name: "Haircut & Style", price: "$65", duration: "60 min", description: "Professional cut with styling" },
-      {
-        name: "Hair Coloring",
-        price: "$120",
-        duration: "120 min",
-        description: "Full color service with consultation",
-      },
-      { name: "Highlights", price: "$150", duration: "150 min", description: "Partial or full highlights" },
-      { name: "Balayage", price: "$180", duration: "180 min", description: "Hand-painted highlights technique" },
-      { name: "Hair Treatment", price: "$85", duration: "45 min", description: "Deep conditioning treatment" },
-    ],
-  },
-  {
-    category: "Nail Services",
-    items: [
-      { name: "Classic Manicure", price: "$35", duration: "30 min", description: "Basic nail care and polish" },
-      { name: "Gel Manicure", price: "$45", duration: "45 min", description: "Long-lasting gel polish" },
-      { name: "Classic Pedicure", price: "$45", duration: "45 min", description: "Foot care and polish" },
-      { name: "Spa Pedicure", price: "$65", duration: "60 min", description: "Luxury foot treatment with massage" },
-    ],
-  },
-  {
-    category: "Facial Services",
-    items: [
-      { name: "Classic Facial", price: "$75", duration: "60 min", description: "Deep cleansing facial" },
-      { name: "Anti-Aging Facial", price: "$95", duration: "75 min", description: "Rejuvenating treatment" },
-      { name: "Hydrating Facial", price: "$85", duration: "60 min", description: "Moisture-boosting treatment" },
-    ],
-  },
-]
+  }, [])
 
 
-const baseReviews = [
-  {
-    name: "Sarah Johnson",
-    rating: 5,
-    date: "2 days ago",
-    comment:
-      "Amazing experience! The team did an incredible job with my balayage. Beautiful space and professional staff.",
-    service: "Balayage",
-  },
-  {
-    name: "Michael Chen",
-    rating: 5,
-    date: "1 week ago",
-    comment: "Great haircut and styling. Relaxing atmosphere and good value for the quality.",
-    service: "Haircut & Style",
-  },
-  {
-    name: "Emily Davis",
-    rating: 4,
-    date: "2 weeks ago",
-    comment: "Love coming here for my monthly manicure. The gel lasts for weeks!",
-    service: "Gel Manicure",
-  },
-]
 
 
 
@@ -216,12 +121,6 @@ const baseReviews = [
   // }
 
 
-
-  const allServices =
-    salon?.services?.flatMap((category) => category.items.map((item) => ({ ...item, category: category.category }))) ??
-    []
-  const featuredArtist = salon?.staff?.[0]
-
   if (!salon) {
     return (
       <div className="min-h-screen bg-background">
@@ -276,9 +175,9 @@ const baseReviews = [
       <section className="relative">
         <div className="">
           <div className="w-full">
-            <img src={ "/placeholder.svg"} alt={salon.name} className="w-full h-[500px]" />
+            <img src={"/placeholder.svg"} alt={salon?.salonName} className="w-full h-[500px]" />
           </div>
-          
+
         </div>
       </section>
 
@@ -293,8 +192,8 @@ const baseReviews = [
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-4">
                   <img
-                    src={salon.logo || "/placeholder.svg"}
-                    alt={`${salon.name} logo`}
+                    src={salon?.logoUrl || "/placeholder.svg"}
+                    alt={`${salon.salonName} logo`}
                     className="w-16 h-16 rounded-full object-cover"
                   />
                   <div>
@@ -324,37 +223,36 @@ const baseReviews = [
               </TabsList>
 
               <TabsContent value="services" className="space-y-6">
-                {salon?.salonServices?.map((category, index) => (
+                {salon?.salonServices?.map((category: SalonService, index: number) => (
                   <div key={index}>
                     {/* <h3 className="text-xl font-semibold mb-4 flex items-center gap-2"> */}
-                      {/* {category.serviceName === "Hair Services" && <Scissors className="h-5 w-5" />}
+                    {/* {category.serviceName === "Hair Services" && <Scissors className="h-5 w-5" />}
                       {category.serviceName === "Nail Services" && <Sparkles className="h-5 w-5" />}
                       {category.serviceName === "Facial Services" && <Star className="h-5 w-5" />}
                       {category.serviceName} */}
                     {/* </h3> */}
                     <div className="grid gap-4">
-                        <Card className="border-0 bg-card/50 backdrop-blur-sm">
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center justify-between mb-2">
-                                  <h4 className="font-medium">{category.serviceName}</h4>
-                                  <div className="text-right">
-                                    <div className="font-semibold text-accent-foreground">{category.price}</div>
-                                    <div className="text-xs text-muted-foreground">{category.duration}</div>
-                                  </div>
+                      <Card className="border-0 bg-card/50 backdrop-blur-sm">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className="font-medium">{category.serviceName}</h4>
+                                <div className="text-right">
+                                  <div className="font-semibold text-accent-foreground">{category.price}</div>
                                 </div>
-                                <p className="text-sm text-muted-foreground">{category.description}</p>
                               </div>
-                              <Button size="sm" className="ml-4" 
-                              onClick={() => handleViewService(category?.serviceID)}
-                              >
-                                Book Now
-                              </Button>
+                              <p className="text-sm text-muted-foreground">{category.description}</p>
                             </div>
-                          </CardContent>
-                        </Card>
-                    
+                            <Button size="sm" className="ml-4"
+                              onClick={() => handleViewService(category?.serviceID)}
+                            >
+                              Book Now
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+
                     </div>
                   </div>
                 ))}
@@ -362,12 +260,12 @@ const baseReviews = [
 
               <TabsContent value="staff" className="space-y-4">
                 <div className="grid gap-6">
-                  {salon?.salonStaffDTOS && salon?.salonStaffDTOS.map((member, index) => (
+                  {salon?.salonStaffDTOS && salon?.salonStaffDTOS.map((member : salonStaffDTOS, index : number) => (
                     <Card key={index} className="border-0 bg-card/50 backdrop-blur-sm">
                       <CardContent className="p-6">
                         <div className="flex items-start gap-4">
                           <img
-                            src={member.image || "/placeholder.svg"}
+                            src={member.staffimage || "/placeholder.svg"}
                             alt={member.staffname}
                             className="w-16 h-16 rounded-full object-cover"
                           />
@@ -382,9 +280,9 @@ const baseReviews = [
                               <div className="text-right">
                                 <div className="flex items-center gap-1 mb-1">
                                   <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                                  <span className="text-sm font-medium">{member.rating}</span>
+                                  {/* <span className="text-sm font-medium">{member.rating}</span> */}
                                 </div>
-                                <p className="text-xs text-muted-foreground">{member.experience}</p>
+                                <p className="text-xs text-muted-foreground">{member?.staffexperience}</p>
                               </div>
                             </div>
                             {/* <div className="flex flex-wrap gap-1">
@@ -404,7 +302,7 @@ const baseReviews = [
 
               <TabsContent value="reviews" className="space-y-4">
                 <div className="grid gap-4">
-                  {salon.reviewsList && salon.reviewsList?.map((review, index) => (
+                  {/* {salon.reviewsList && salon.reviewsList?.map((review, index) => (
                     <Card key={index} className="border-0 bg-card/50 backdrop-blur-sm">
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between mb-3">
@@ -415,9 +313,8 @@ const baseReviews = [
                                 {[...Array(5)].map((_, i) => (
                                   <Star
                                     key={i}
-                                    className={`h-3 w-3 ${
-                                      i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-                                    }`}
+                                    className={`h-3 w-3 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                                      }`}
                                   />
                                 ))}
                               </div>
@@ -431,13 +328,13 @@ const baseReviews = [
                         <p className="text-muted-foreground">{review.comment}</p>
                       </CardContent>
                     </Card>
-                  ))}
+                  ))} */}
                 </div>
               </TabsContent>
 
               <TabsContent value="photos" className="space-y-4">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {salon?.images && salon.images.map((image, index) => (
+                  {/* {salon?.images && salon.images.map((image, index) => (
                     <div key={index} className="aspect-square overflow-hidden rounded-lg">
                       <img
                         src={image || "/placeholder.svg"}
@@ -445,7 +342,7 @@ const baseReviews = [
                         className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                       />
                     </div>
-                  ))}
+                  ))} */}
                 </div>
               </TabsContent>
             </Tabs>
@@ -479,8 +376,8 @@ const baseReviews = [
                   <div className="flex items-center gap-3">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
                     <div>
-                      <p className="text-sm">{salon.address}</p>
-                      <p className="text-xs text-muted-foreground">{salon.distance} away</p>
+                      <p className="text-sm"> {salon.street}, {salon.city}, {salon.state}, {salon.pincode}</p>
+                      {/* <p className="text-xs text-muted-foreground">{salon.distance} </p> */}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -493,14 +390,14 @@ const baseReviews = [
                       <p className="text-sm">{salon.email}</p>
                     </div>
                   )}
-                  {salon.website && (
+                  {/* {salon.website && (
                     <div className="flex items-center gap-3">
                       <Globe className="h-4 w-4 text-muted-foreground" />
                       <a href={`https://${salon.website}`} className="text-sm text-accent-foreground hover:underline">
                         {salon.website}
                       </a>
                     </div>
-                  )}
+                  )} */}
                 </div>
               </CardContent>
             </Card>
@@ -513,14 +410,14 @@ const baseReviews = [
                   Opening Hours
                 </h3>
                 <div className="space-y-2">
-                  {salon?.hours && salon.hours.map((schedule, index) => (
+                  {/* {salon?.hours && salon.hours.map((schedule, index) => (
                     <div key={index} className="flex justify-between text-sm">
                       <span className={schedule.day === "Sunday" ? "text-accent-foreground font-medium" : ""}>
                         {schedule.day}
                       </span>
                       <span className="text-muted-foreground">{schedule.hours}</span>
                     </div>
-                  ))}
+                  ))} */}
                 </div>
                 <div className="mt-3 pt-3 border-t border-border">
                   <div className="flex items-center gap-2 text-sm">
@@ -536,7 +433,7 @@ const baseReviews = [
               <CardContent className="p-6">
                 <h3 className="font-semibold mb-4">Amenities</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  {salon?.amenitiesKeys && salon.amenitiesKeys.map((key, index) => (
+                  {/* {salon?.amenitiesKeys && salon.amenitiesKeys.map((key, index) => (
                     <div key={index} className="flex items-center gap-2 text-sm">
                       {key === "wifi" && <Wifi className="h-4 w-4" />}
                       {key === "parking" && <Car className="h-4 w-4" />}
@@ -549,7 +446,7 @@ const baseReviews = [
                         {key === "online" && "Online Booking"}
                       </span>
                     </div>
-                  ))}
+                  ))} */}
                 </div>
               </CardContent>
             </Card>

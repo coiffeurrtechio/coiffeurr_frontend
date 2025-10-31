@@ -1,10 +1,8 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../components/ui_components/card"
+import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui_components/card"
 import { Mail, Phone, MapPin, Calendar, MapPinHouse, User, Plus, X } from "lucide-react"
 import { Button } from "../../../../components/ui_components/button"
 import { useEffect, useState } from "react"
-import Config from "../../../../configs/config"
-import type { SalonInterface } from "../../../../Interfaces/SaloInterface"
-import { useApi } from "../../../../API/SalonsAPIs/ALLSalonAPI"
+import type { SalonInterface, salonSataff, SalonService, salonServiceInterface, services } from "../../../../Interfaces/SaloInterface"
 import { Input } from "../../../../components/ui_components/input"
 import { useSalonApi } from "../../../../API/Salon_Owner_API/SalonOwnerAPI"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../../components/ui_components/select"
@@ -20,14 +18,14 @@ export default function DashBoardProfile() {
         bio: "Experienced salon manager with 10+ years in the beauty industry.",
     }
 
-    const [salonData, setsalonData] = useState<SalonInterface>();
+    const [salonData, setsalonData] = useState<SalonInterface | undefined>();
     const { apiSalonRequest, apiSalonPost, apiSalonPut } = useSalonApi();
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [isEditModalOpen, setIsEditModalOpen] = useState(false)
     const [isEditModalServiceOpen, setisEditModalServiceOpen] = useState(false)
-    const [editFormData, setEditFormData] = useState(salonData)
-    const [salonDetails, setSalonDetails] = useState(editFormData)
-    const [formData, setFormData] = useState({
+    const [editFormData, setEditFormData] = useState<SalonInterface | undefined>(salonData)
+    const [salonDetails, setSalonDetails] = useState<SalonInterface | undefined>(editFormData)
+    const [formData, setFormData] = useState<salonSataff>({
         staffname: "",
         staffexperience: "",
         description: "",
@@ -35,7 +33,7 @@ export default function DashBoardProfile() {
         staffimage: "",
     })
 
-    const [NewSalonService, setNewSalonService] = useState({
+    const [NewSalonService, setNewSalonService] = useState<salonServiceInterface>({
         price: "",
         descriptions: [""],
         available: "",
@@ -45,7 +43,7 @@ export default function DashBoardProfile() {
         includedItems: [""],
     });
 
-    const [ALLService, setALLService] = useState([]);
+    const [ALLService, setALLService] = useState<services[]>([]);
 
     useEffect(() => {
         fetchSalonDetails();
@@ -54,7 +52,7 @@ export default function DashBoardProfile() {
     const fetchSalonDetails = async () => {
 
         try {
-            const res = await apiSalonRequest<SalonInterface[]>("/details");
+            const res = await apiSalonRequest<SalonInterface>("/details");
 
             console.log("res =", res);
 
@@ -95,7 +93,7 @@ export default function DashBoardProfile() {
             }
         } catch (error) {
 
-            console.error("Unexpected error:", err);
+            console.error("Unexpected error:", error);
 
         }
 
@@ -121,7 +119,7 @@ export default function DashBoardProfile() {
             }
         } catch (error) {
 
-            console.error("Unexpected error:", err);
+            console.error("Unexpected error:", error);
 
         }
 
@@ -136,7 +134,7 @@ export default function DashBoardProfile() {
 
 
         try {
-            const res = await apiSalonPut("/update-salon", editFormData, {
+            const res = await apiSalonPut<string>("/update-salon", salonDetails, {
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -150,7 +148,7 @@ export default function DashBoardProfile() {
             }
 
         } catch (error) {
-            console.error("Unexpected error:", err);
+            console.error("Unexpected error:", error);
         }
     }
 
@@ -159,52 +157,70 @@ export default function DashBoardProfile() {
         setIsEditModalOpen(true)
     }
 
-    const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target
-        setEditFormData((prev: SalonInterface) => ({
-            ...prev,
-            [name]: value,
-        }))
-    }
+    const handleEditInputChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    ) => {
+        const { name, value } = e.target;
+
+        setEditFormData((prev) => {
+            if (!prev) return prev; // safely handle undefined
+            return { ...prev, [name]: value };
+        });
+    };
+
+
+
 
     const handleSalonServiceChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target
         console.log("name =", name);
         console.log("value =", value);
 
-        setNewSalonService((prev) => ({
+        setNewSalonService((prev: salonServiceInterface) => ({
             ...prev,
             [name]: value,
         }))
     }
 
-    const handleArrayItemChange = (field, index, value) => {
-        setNewSalonService((prev) => {
-            const updatedArray = [...prev[field]];
-
-            
-                updatedArray[index] = value; // handle string array (like description)
-        
-
+    const handleArrayItemChange = (
+        field: keyof salonServiceInterface,
+        index: number,
+        value: string | number
+    ) => {
+        setNewSalonService((prev: salonServiceInterface) => {
+            const updatedArray = [...(prev[field] as (string | number)[])];
+            updatedArray[index] = value;
             return { ...prev, [field]: updatedArray };
         });
     };
 
 
-    const addArrayItemField = (field) => {
-        setNewSalonService((prev) => {
-            const newField =
-                field ===  ""; // match data type
-            return { ...prev, [field]: [...prev[field], newField] };
+
+    const addArrayItemField = (field: keyof salonServiceInterface) => {
+        setNewSalonService((prev: salonServiceInterface) => {
+            const currentArray = prev[field] as any[];
+
+            // Add a new empty object or appropriate default item
+            const newItem = {}; // or { serviceName: '', price: 0 } etc.
+
+            return { ...prev, [field]: [...currentArray, newItem] };
         });
     };
 
-    const removeArrayItemField = (field, index) => {
-        setNewSalonService((prev) => {
-            const updatedArray = prev[field].filter((_, i) => i !== index);
+
+    const removeArrayItemField = (
+        field: keyof salonServiceInterface,
+        index: number
+    ) => {
+        setNewSalonService((prev: salonServiceInterface) => {
+            // Ensure prev[field] is treated as an array
+            const currentArray = prev[field] as unknown as any[];
+            const updatedArray = currentArray.filter((_: any, i: number) => i !== index);
+
             return { ...prev, [field]: updatedArray };
         });
     };
+
 
 
 
@@ -222,7 +238,7 @@ export default function DashBoardProfile() {
 
     const fetchServices = async () => {
         try {
-            const res = await apiSalonRequest("/Services")
+            const res = await apiSalonRequest<services[]>("/Services")
 
             if (res.error) {
                 console.error("API Error:", res.error);
@@ -232,7 +248,7 @@ export default function DashBoardProfile() {
             }
 
         } catch (error) {
-            console.error("Unexpected error fetching salons:", err);
+            console.error("Unexpected error fetching salons:", error);
 
         }
     }
@@ -432,11 +448,11 @@ export default function DashBoardProfile() {
                 </CardHeader>
                 <CardContent className="space-y-4">
 
-                    {salonData?.salonServices && salonData?.salonServices.map((item, index) => (
+                    {salonData?.salonServices && salonData?.salonServices.map((item: SalonService, index: number) => (
 
                         <div
                             key={index}
-                            className={`${item.available === "true" ? "bg-red-200" : "bg-secondary/50"
+                            className={`${item?.available === true ? "bg-red-200" : "bg-secondary/50"
                                 } flex items-center justify-between p-4 rounded-lg`}
                         >
                             <div>
@@ -580,7 +596,7 @@ export default function DashBoardProfile() {
                                         </SelectTrigger>
 
                                         <SelectContent>
-                                            {ALLService.map((item) => (
+                                            {ALLService.map((item: services) => (
                                                 <SelectItem key={item.service_id} value={String(item.service_id)}>
                                                     {item.service_name}
                                                 </SelectItem>
@@ -659,7 +675,7 @@ export default function DashBoardProfile() {
                                         <label className="text-sm font-medium text-foreground block mb-2">Service Descriptions</label>
 
                                         {/* Dynamic List of Descriptions */}
-                                        {NewSalonService?.descriptions.map((descriptions, index) => (
+                                        {NewSalonService?.descriptions.map((descriptions: string, index: number) => (
                                             <div key={index} className="flex items-center gap-2 mb-2">
                                                 <Input
                                                     type="text" // Changed from 'tel' to 'text' for descriptions

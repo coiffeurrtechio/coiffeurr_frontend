@@ -9,9 +9,9 @@ import { useToast } from "../components/Toast"
 
 
 export default function SignUpPage() {
-    const [showPassword, setShowPassword] = useState(false)
+    const [showPassword, setShowPassword] = useState<boolean>(false)
     const { showToast } = useToast();
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<any>({
         email: "",
         phone: "",
         username: "",

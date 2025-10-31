@@ -1,15 +1,16 @@
-import { Badge, Calendar, Clock, X } from "lucide-react"
+import { Calendar, X } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui_components/card"
 import { useSalonApi } from "../../../../API/Salon_Owner_API/SalonOwnerAPI"
 import { useEffect, useState } from "react";
 import { Button } from "../../../../components/ui_components/button";
+import type { salonBookingResponse } from "../../../../Interfaces/BookingInterface";
 
 const DashBoardBusiness: React.FC = () => {
 
-  const { apiSalonRequest, apiSalonPut } = useSalonApi();
-  const [appointmentdata, setappointmentdata] = useState([]);
+  const { apiSalonRequest } = useSalonApi();
+  const [appointmentdata, setappointmentdata] = useState<salonBookingResponse[]>([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [Selectbooking, setSelectbooking] = useState({})
+  const [Selectbooking, setSelectbooking] = useState<salonBookingResponse | null>(null)
 
 
   useEffect(() => {
@@ -18,13 +19,15 @@ const DashBoardBusiness: React.FC = () => {
 
   const fetchsalonAppointments = async () => {
     try {
-      const res = await apiSalonRequest("/salon-appointments")
+      const res = await apiSalonRequest<salonBookingResponse[]>("/salon-appointments")
       if (res.error) {
         console.log("error =", res.error);
       }
       else {
         console.log(" data =", res.data);
-        setappointmentdata(res.data);
+        if (Array.isArray(res.data)) {
+          setappointmentdata(res.data as salonBookingResponse[]);
+        }
       }
     } catch (error) {
       console.log("error = ", error);
@@ -32,9 +35,12 @@ const DashBoardBusiness: React.FC = () => {
     }
   }
 
-  function extractDateAndTime(isoString) {
-    const dateString = "2025-10-29T07:30:00";
+  function extractDateAndTime(isoString?: string) {
+    if (!isoString) return "";
     const localDate = new Date(isoString);
+
+    // Guard against invalid date
+    if (isNaN(localDate.getTime())) return "";
 
     // Format it as a readable string
     const formatted = localDate.toLocaleString("en-IN", {
@@ -56,10 +62,10 @@ const DashBoardBusiness: React.FC = () => {
 
       }
       setIsEditModalOpen(false);
-      setSelectbooking({})
+      setSelectbooking(null)
     } catch (error) {
-      console.log("error =",error);
-      
+      console.log("error =", error);
+
     }
 
   }
@@ -76,10 +82,10 @@ const DashBoardBusiness: React.FC = () => {
 
       }
       setIsEditModalOpen(false);
-      setSelectbooking({})
+      setSelectbooking(null);
     } catch (error) {
-      console.log("error =",error);
-      
+      console.log("error =", error);
+
     }
   }
   return (
@@ -144,8 +150,8 @@ const DashBoardBusiness: React.FC = () => {
                   className={`${Selectbooking?.status === "pending" ? "bg-yellow-200" : ""}flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent/5 transition-colors`}
                 >
                   <div className="flex-1">
-                    <h4 className="font-medium text-lg">{Selectbooking.salonname}</h4>
-                    <h4 className="font-medium ">{Selectbooking.serviceName}</h4>
+                    <h4 className="font-medium text-lg">{Selectbooking?.salonname}</h4>
+                    <h4 className="font-medium ">{Selectbooking?.serviceName}</h4>
                     {/* <p className="text-sm text-muted-foreground">with {booking.artist}</p> */}
                     <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
@@ -159,7 +165,7 @@ const DashBoardBusiness: React.FC = () => {
 
                     {Selectbooking?.status}
 
-                    <p className="text-lg font-semibold">{Selectbooking.price}</p>
+                    <p className="text-lg font-semibold">{Selectbooking?.price}</p>
                   </div>
                 </div>
 

@@ -3,42 +3,13 @@ import { Card, CardContent } from "../../components/ui_components/card";
 import { Badge } from "../../components/ui_components/badge";
 import { MapPin, Clock, Phone, Star, Users, ArrowRight, Filter, Search } from "lucide-react";
 import { useEffect, useState, type JSX } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI";
-import { useDispatch, useSelector } from "react-redux";
+import type { Salon } from "../../Interfaces/SaloInterface";
 
 // ------------------ INTERFACES ------------------
 
-interface SalonService {
-  serviceName: string;
-  [key: string]: any; // fallback for extra properties
-}
 
-export interface Salon {
-  id: string;
-  salonName: string;
-  ownerName: string;
-  email?: string;
-  phone: string;
-  street: string;
-  city: string;
-  state: string;
-  pincode: number;
-  country: string;
-  openingTime: string;
-  closingTime: string;
-  rating: number;
-  reviews: number;
-  latitude: string;
-  longitude: string;
-  salonType: string;
-  logoUrl: string;
-  image: string;
-  priceRange: string;
-  salonServices: SalonService[];
-  description?: string;
-  distance?: string;
-}
 
 // ------------------ COMPONENT ------------------
 
@@ -48,8 +19,7 @@ export default function SalonsPage(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [salons, setSalons] = useState<Salon[]>([]);
 
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+
   const { apiRequest } = useApi();
 
   // ------------------ FETCH FUNCTION ------------------
@@ -116,6 +86,7 @@ export default function SalonsPage(): JSX.Element {
           <div className="text-center mb-8">
             <h1 className="text-4xl lg:text-5xl font-bold mb-4 text-balance">
               Find Your Perfect Salon
+              {error && <div className="text-red-300">error</div>}
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty">
               Discover premium salons near you with expert stylists and luxury treatments
@@ -205,9 +176,11 @@ export default function SalonsPage(): JSX.Element {
                     </div>
                   </div>
 
+                    {salon?.description &&
                   <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                    {salon.description || "No description available"}
+                    salon?.description 
                   </p>
+                     }
 
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center gap-2 text-sm">
@@ -215,9 +188,7 @@ export default function SalonsPage(): JSX.Element {
                       <span className="text-muted-foreground">
                         {salon.street}, {salon.city}, {salon.state}, {salon.pincode}
                       </span>
-                      {salon.distance && (
-                        <span className="text-xs text-accent-foreground">• {salon.distance}</span>
-                      )}
+                      
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <Clock className="h-4 w-4 text-muted-foreground" />
@@ -238,9 +209,9 @@ export default function SalonsPage(): JSX.Element {
                         {service.serviceName}
                       </Badge>
                     ))}
-                    {salon.salonServices?.length > 3 && (
+                    {(salon.salonServices?.length ?? 0) > 3 && (
                       <Badge variant="outline" className="text-xs">
-                        +{salon.salonServices.length - 3} more
+                        +{(salon.salonServices?.length ?? 0) - 3} more
                       </Badge>
                     )}
                   </div>
