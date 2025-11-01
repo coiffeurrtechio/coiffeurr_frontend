@@ -86,7 +86,7 @@ export default function SalonsPage(): JSX.Element {
           <div className="text-center mb-8">
             <h1 className="text-4xl lg:text-5xl font-bold mb-4 text-balance">
               Find Your Perfect Salon
-              {error && <div className="text-red-300">error</div>}
+              {/* {error && <div className="text-red-300">error</div>} */}
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty">
               Discover premium salons near you with expert stylists and luxury treatments
