@@ -16,7 +16,7 @@ import type { Salon } from "../../Interfaces/SaloInterface";
 export default function SalonsPage(): JSX.Element {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedType, setSelectedType] = useState<string>("all");
-  const [error, setError] = useState<string | null>(null);
+  // const [error, setError] = useState<string | null>(null);
   const [salons, setSalons] = useState<Salon[]>([]);
 
 
@@ -32,13 +32,13 @@ export default function SalonsPage(): JSX.Element {
 
       if (res.error) {
         console.error("API Error:", res.error);
-        setError("Failed to fetch salons");
+        // setError("Failed to fetch salons");
       } else if (res.data) {
         setSalons(res.data);
       }
     } catch (err) {
       console.error("Unexpected error fetching salons:", err);
-      setError("Something went wrong while fetching salons");
+      // setError("Something went wrong while fetching salons");
     }
   };
 
