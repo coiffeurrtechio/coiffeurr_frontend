@@ -62,7 +62,7 @@ export function useApi() {
         const newToken = await generateAccessToken();
         if (newToken) {
           // Retry original request with new token
-          const retryResponse = await fetch(`${Config.API_BASE_URL}${endpoint}`, {
+          const retryResponse = await fetch(`${Config.API_Customers}${endpoint}`, {
             ...options,
             headers: {
               "Content-Type": "application/json",
@@ -202,7 +202,7 @@ export function useApi() {
         const newToken = await generateAccessToken();
         if (newToken) {
           // Retry with refreshed token
-          const retryResponse = await fetch(`${Config.API_BASE_URL}${endpoint}`, {
+          const retryResponse = await fetch(`${Config.API_Customers}${endpoint}`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

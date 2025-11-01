@@ -65,14 +65,13 @@ export function useSalonApi() {
         if (newToken) {
           // Retry original request with new token
           const retryResponse = await fetch(`${Config.API_Salon_owner}${endpoint}`, {
-            ...options,
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${newToken}`,
-              // ...(options.headers || {}),
-            },
-            credentials: "include",
-          });
+        headers: {
+          "Content-Type": "application/json",
+          ...(options.headers || {}),
+        },
+        credentials: "include",
+        ...options,
+      });
 
           const retryJson = await retryResponse.json();
           return {
