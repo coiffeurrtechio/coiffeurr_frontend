@@ -17,7 +17,7 @@ export function Header() {
     { name: "About", href: "#" },
     { name: "Services", href: "#" },
     { name: "Artists", href: "#" },
-    { name: "Salons", href: "/salons" },
+    { name: "Salons", href: "salons" },
   ];
   return (
     <>
