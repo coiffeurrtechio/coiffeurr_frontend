@@ -59,7 +59,7 @@ export function Header() {
                 </Link>)
                 :
                 (<Link to="/login">
-                  <Button className="hidden sm:inline-flex cursor-pointer">Login</Button>
+                  <Button className="sm:inline-flex cursor-pointer">Login</Button>
                 </Link>)
               }
 

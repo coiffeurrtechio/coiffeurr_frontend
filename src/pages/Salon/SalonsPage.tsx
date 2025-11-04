@@ -6,6 +6,7 @@ import { useEffect, useState, type JSX } from "react";
 import { Link } from "react-router-dom";
 import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI";
 import type { Salon } from "../../Interfaces/SaloInterface";
+import { Loader } from "../../components/ui_components/Loader";
 
 // ------------------ INTERFACES ------------------
 
@@ -18,6 +19,7 @@ export default function SalonsPage(): JSX.Element {
   const [selectedType, setSelectedType] = useState<string>("all");
   // const [error, setError] = useState<string | null>(null);
   const [salons, setSalons] = useState<Salon[]>([]);
+  const [fetchSalonAPI, setfetchSalonAPI] = useState(true);
 
 
   const { apiRequest } = useApi();
@@ -25,6 +27,7 @@ export default function SalonsPage(): JSX.Element {
   // ------------------ FETCH FUNCTION ------------------
 
   const FetchAllSalons = async () => {
+    // setfetchSalonAPI(true);
     try {
       const res = await apiRequest<Salon[]>("/salon");
 
@@ -39,6 +42,9 @@ export default function SalonsPage(): JSX.Element {
     } catch (err) {
       console.error("Unexpected error fetching salons:", err);
       // setError("Something went wrong while fetching salons");
+    }
+    finally{
+      setfetchSalonAPI(false);
     }
   };
 
@@ -81,6 +87,7 @@ export default function SalonsPage(): JSX.Element {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
+       <Loader isVisible={fetchSalonAPI} />
       <section className="py-12 bg-secondary/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">

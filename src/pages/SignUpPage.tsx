@@ -18,6 +18,7 @@ export default function SignUpPage() {
         password: "",
         agreeToPolicy: false,
     })
+    const [formSubmit, setformSubmit] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({})
 
     const validateEmail = (email: string) => {
@@ -67,6 +68,7 @@ export default function SignUpPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setformSubmit(true);
 
         if (!validateForm()) return;
 
@@ -116,6 +118,10 @@ export default function SignUpPage() {
                 message: "Something went wrong. Please try again.",
                 duration: 5000,
             });
+        }
+        finally {
+            setformSubmit(false);
+
         }
     };
 
@@ -273,8 +279,8 @@ export default function SignUpPage() {
                                 {errors.agreeToPolicy && <p className="text-sm text-destructive">{errors.agreeToPolicy}</p>}
                             </div>
 
-                            <Button type="submit" className="w-full" size="lg">
-                                Create Account
+                            <Button disabled={formSubmit} type="submit" className="w-full" size="lg">
+                                {formSubmit ? 'Creating your account ...' : 'Create Account'}
                             </Button>
                         </form>
 
