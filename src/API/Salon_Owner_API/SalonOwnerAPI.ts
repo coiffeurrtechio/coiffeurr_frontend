@@ -14,9 +14,19 @@ export function useSalonApi() {
   const navigate = useNavigate();
 
   const generateAccessToken = async (): Promise<string | null> => {
+    const userData = localStorage.getItem("authState");
+    if (!userData) return null;
+    const parsed = JSON.parse(userData).user;
+    const accessToken = parsed?.accessToken
+    const refreshToken = parsed?.refreshToken
+
     try {
       const response = await fetch(`${Config.API_BASE_URL}/refreshtoken`, {
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: accessToken ? `Bearer ${accessToken}` : "",
+          "X-Refresh-Token": refreshToken, // 👈 send refresh token in header
+        },
         credentials: "include",
       });
 
@@ -35,16 +45,24 @@ export function useSalonApi() {
     }
   };
 
- 
 
-   const apiSalonRequest = async <T>(
+
+  const apiSalonRequest = async <T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> => {
     try {
+      const userData = localStorage.getItem("authState");
+
+      if (!userData) return { data: null, error: "No user data", status: 401 };
+
+      const parsed = JSON.parse(userData).user;
+      const accessToken = parsed?.accessToken;
+
       const response = await fetch(`${Config.API_Salon_owner}${endpoint}`, {
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
           ...(options.headers || {}),
         },
         credentials: "include",
@@ -65,13 +83,13 @@ export function useSalonApi() {
         if (newToken) {
           // Retry original request with new token
           const retryResponse = await fetch(`${Config.API_Salon_owner}${endpoint}`, {
-        headers: {
-          "Content-Type": "application/json",
-          ...(options.headers || {}),
-        },
-        credentials: "include",
-        ...options,
-      });
+            headers: {
+              "Content-Type": "application/json",
+              ...(options.headers || {}),
+            },
+            credentials: "include",
+            ...options,
+          });
 
           const retryJson = await retryResponse.json();
           return {
@@ -106,10 +124,18 @@ export function useSalonApi() {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> => {
     try {
+      const userData = localStorage.getItem("authState");
+
+      if (!userData) return { data: null, error: "No user data", status: 401 };
+
+      const parsed = JSON.parse(userData).user;
+      const accessToken = parsed?.accessToken;
+
       const response = await fetch(`${Config.API_Salon_owner}${endpoint}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
           ...(options.headers || {}),
         },
         body: JSON.stringify(body),
@@ -177,10 +203,18 @@ export function useSalonApi() {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> => {
     try {
+      const userData = localStorage.getItem("authState");
+
+      if (!userData) return { data: null, error: "No user data", status: 401 };
+
+      const parsed = JSON.parse(userData).user;
+      const accessToken = parsed?.accessToken;
       const response = await fetch(`${Config.API_Salon_owner}${endpoint}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
+
           ...(options.headers || {}),
         },
         body: JSON.stringify(body),
@@ -239,5 +273,5 @@ export function useSalonApi() {
     }
   };
 
-  return {  generateAccessToken, apiSalonPost, apiSalonRequest, apiSalonPut };
+  return { generateAccessToken, apiSalonPost, apiSalonRequest, apiSalonPut };
 }

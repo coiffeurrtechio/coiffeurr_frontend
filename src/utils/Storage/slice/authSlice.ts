@@ -5,6 +5,8 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  accessToken: string;
+  refreshToken: string;
 }
 
 export interface AuthState {
