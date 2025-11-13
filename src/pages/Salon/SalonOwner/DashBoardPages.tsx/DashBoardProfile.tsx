@@ -105,11 +105,7 @@ export default function DashBoardProfile() {
     const handleSubmitService = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const res = await apiSalonPost("/salonService", NewSalonService, {
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
+            const res = await apiSalonPost("/salonService", NewSalonService);
 
             if (res.error) {
                 console.error("Error while registering:", res.error);

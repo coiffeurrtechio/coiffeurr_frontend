@@ -62,7 +62,7 @@ export function useSalonApi() {
       const response = await fetch(`${Config.API_Salon_owner}${endpoint}`, {
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           ...(options.headers || {}),
         },
         credentials: "include",
@@ -135,7 +135,7 @@ export function useSalonApi() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           ...(options.headers || {}),
         },
         body: JSON.stringify(body),
@@ -213,7 +213,7 @@ export function useSalonApi() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
 
           ...(options.headers || {}),
         },
