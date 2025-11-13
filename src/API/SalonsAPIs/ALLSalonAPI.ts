@@ -16,8 +16,8 @@ export function useApi() {
   const generateAccessToken = async (): Promise<string | null> => {
     const userData = localStorage.getItem("authState");
     if (!userData) return null;
-    const parsed = JSON.parse(userData).user;
-    const accessToken = parsed?.accessToken
+    const parsed = JSON.parse(userData);
+    const accessToken = parsed?.user?.accessToken
     const refreshToken = parsed?.refreshToken
     try {
       // ✅ Read tokens from localStorage
@@ -70,8 +70,8 @@ export function useApi() {
       const userData = localStorage.getItem("authState");
       if (!userData) return { data: null, error: "No user data", status: 401 };
 
-      const parsed = JSON.parse(userData).user;
-      const accessToken = parsed?.accessToken;
+      const parsed = JSON.parse(userData);
+      const accessToken = parsed?.user?.accessToken;
       console.log("parsed =",parsed);
       console.log("accessToken =",accessToken);
       
@@ -154,8 +154,8 @@ export function useApi() {
       const userData = localStorage.getItem("authState");
       if (!userData) return { data: null, error: "No user data", status: 401 };
 
-      const parsed = JSON.parse(userData).user;
-      const accessToken = parsed?.accessToken;
+      const parsed = JSON.parse(userData);
+      const accessToken = parsed?.user?.accessToken;
 
       const response = await fetch(`${Config.API_BASE_URL}${endpoint}`, {
         method: "POST",
@@ -230,8 +230,8 @@ export function useApi() {
       const userData = localStorage.getItem("authState");
       if (!userData) return { data: null, error: "No user data", status: 401 };
 
-      const parsed = JSON.parse(userData).user;
-      const accessToken = parsed?.accessToken;
+      const parsed = JSON.parse(userData);
+      const accessToken = parsed?.user?.accessToken;
 
       const response = await fetch(`${Config.API_Customers}${endpoint}`, {
         method: "POST",

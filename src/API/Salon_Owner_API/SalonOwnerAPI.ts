@@ -16,8 +16,8 @@ export function useSalonApi() {
   const generateAccessToken = async (): Promise<string | null> => {
     const userData = localStorage.getItem("authState");
     if (!userData) return null;
-    const parsed = JSON.parse(userData).user;
-    const accessToken = parsed?.accessToken
+    const parsed = JSON.parse(userData);
+    const accessToken = parsed?.user?.accessToken
     const refreshToken = parsed?.refreshToken
 
     try {
@@ -56,8 +56,8 @@ export function useSalonApi() {
 
       if (!userData) return { data: null, error: "No user data", status: 401 };
 
-      const parsed = JSON.parse(userData).user;
-      const accessToken = parsed?.accessToken;
+      const parsed = JSON.parse(userData);
+      const accessToken = parsed?.user?.accessToken;
 
       const response = await fetch(`${Config.API_Salon_owner}${endpoint}`, {
         headers: {
@@ -128,8 +128,8 @@ export function useSalonApi() {
 
       if (!userData) return { data: null, error: "No user data", status: 401 };
 
-      const parsed = JSON.parse(userData).user;
-      const accessToken = parsed?.accessToken;
+      const parsed = JSON.parse(userData);
+      const accessToken = parsed?.user?.accessToken;
 
       const response = await fetch(`${Config.API_Salon_owner}${endpoint}`, {
         method: "POST",
@@ -207,8 +207,8 @@ export function useSalonApi() {
 
       if (!userData) return { data: null, error: "No user data", status: 401 };
 
-      const parsed = JSON.parse(userData).user;
-      const accessToken = parsed?.accessToken;
+      const parsed = JSON.parse(userData);
+      const accessToken = parsed?.user?.accessToken;
       const response = await fetch(`${Config.API_Salon_owner}${endpoint}`, {
         method: "PUT",
         headers: {

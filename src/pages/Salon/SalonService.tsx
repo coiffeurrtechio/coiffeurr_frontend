@@ -150,13 +150,7 @@ const SalonService: React.FC = () => {
 
 
 
-            const res = await apiCustomerpiPost(`/salon/service/appointment?salonid=${id}&serviceId=${serviceID}`,
-                data, // or just use values
-                {
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                })
+            const res = await apiCustomerpiPost(`/salon/service/appointment?salonid=${id}&serviceId=${serviceID}`,data,)
 
             if (res.error) {
                 console.error("Error while registering:", res.error);
