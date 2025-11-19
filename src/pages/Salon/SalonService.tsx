@@ -150,7 +150,7 @@ const SalonService: React.FC = () => {
 
 
 
-            const res = await apiCustomerpiPost(`/salon/service/appointment?salonid=${id}&serviceId=${serviceID}`,data,)
+            const res = await apiCustomerpiPost(`/salon/service/appointment?salonid=${id}&serviceId=${serviceID}`, data,)
 
             if (res.error) {
                 console.error("Error while registering:", res.error);
@@ -329,20 +329,22 @@ const SalonService: React.FC = () => {
 
 
 
-            <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur md:hidden">
+            <div className="fixed inset-x-0 bottom-16 z-40 border-t border-border bg-background/95 backdrop-blur md:hidden">
                 <div className="container mx-auto px-4 py-3 flex items-center gap-3">
                     <Button className="flex-1" onClick={() => setisEditModalOpen(true)}>
                         <Calendar className="mr-2 h-4 w-4" />
                         Book
                     </Button>
+
                     <Button asChild variant="outline" className="flex-1 bg-transparent">
-                        <a >
+                        <a>
                             <Phone className="mr-2 h-4 w-4" />
                             Call
                         </a>
                     </Button>
                 </div>
             </div>
+
 
 
 

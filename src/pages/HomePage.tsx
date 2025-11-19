@@ -12,9 +12,15 @@ import {
   Users,
   Award,
   Calendar,
+  ScissorsLineDashed,
+  User,
 } from "lucide-react"
+import { useState } from "react";
+import { Header } from "../components/Header";
 
 export default function HomePage() {
+  const [active, setActive] = useState("salon");
+
   const services = [
     {
       title: "Premium Haircut & Styling",
@@ -84,6 +90,74 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
 
+
+      <Header/>
+     <div className="w-full sticky bg-background top-0 z-50">
+      {/* Tabs */}
+      <div className="relative flex w-full justify-center border-b border-gray-300">
+        <button
+          onClick={() => setActive("salon")}
+          className="relative w-1/2 py-3 text-center font-semibold flex justify-center items-center gap-2"
+        >
+          <ScissorsLineDashed />
+          Salon
+        </button>
+
+        <button
+          onClick={() => setActive("artist")}
+          className="relative w-1/2 py-3 text-center font-semibold flex justify-center items-center gap-2"
+        >
+          <User />
+          Artist
+        </button>
+
+        {/* SUPER SMOOTH SLIDING BAR */}
+        <div
+          className={`absolute bottom-0 h-1.5 bg-black rounded-full 
+            transition-all duration-500 ease-[cubic-bezier(.25,.8,.25,1)]
+          `}
+          style={{
+            width: "25%",           // matches w-1/4 width
+            left: active === "salon" ? "12.5%" : "62.5%", // perfect smooth slide
+          }}
+        ></div>
+      </div>
+
+      {/* Animated Content */}
+      <div className="p-4">
+        <div
+          key={active}
+          className="p-4 bg-gray-100 rounded-lg shadow
+          transition-all duration-500 ease-[cubic-bezier(.25,.8,.25,1)]
+          opacity-100 translate-y-0 animate-fadeSlide"
+        >
+          {active === "salon" ? (
+            <>
+              <h2 className="text-xl font-bold mb-2">Salon UI</h2>
+              <p>This is the Salon section content.</p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-xl font-bold mb-2">Artist UI</h2>
+              <p>This is the Artist section content.</p>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Inline CSS for fade + slide animation */}
+      <style>{`
+        @keyframes fadeSlide {
+          0% { opacity: 0; transform: translateY(8px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeSlide {
+          animation: fadeSlide 0.5s ease-out;
+        }
+      `}</style>
+    </div>
+
+
       {/* Hero Section */}
       <section className="relative py-20 lg:py-32 overflow-hidden">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -112,7 +186,7 @@ export default function HomePage() {
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="relative rounded-2xl overflow-hidden shadow-2xl">
               <img
-              fetchPriority="high"
+                fetchPriority="high"
                 src="/luxury-salon-interior-with-modern-styling-chairs.jpg"
                 alt="Luxury salon interior"
                 className="w-full h-[400px] lg:h-[600px] object-cover"
@@ -195,7 +269,7 @@ export default function HomePage() {
               >
                 <div className="aspect-square overflow-hidden">
                   <img
-                  fetchPriority="high"
+                    fetchPriority="high"
                     src={artist.image || "/placeholder.svg"}
                     alt={artist.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

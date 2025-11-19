@@ -6,7 +6,7 @@ import Footer from "../components/Footer";
 const MainLayout: React.FC = () => {
   return (
     <>
-      <Header />
+      {/* <Header /> */}
       <main className="min-h-screen">
         <Outlet /> 
       </main>
