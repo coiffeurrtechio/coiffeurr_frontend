@@ -33,6 +33,7 @@ type FormValues = {
   gstNumber?: string
   salonServices: string[]
   password?: string
+  salonimages?:[]
 }
 
 export default function SalonRegistrationForm() {
@@ -61,6 +62,7 @@ export default function SalonRegistrationForm() {
       registrationNumber: "",
       gstNumber: "",
       salonServices: [],
+      salonimages:[]
     },
     mode: "onChange",
   })

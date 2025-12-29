@@ -76,20 +76,17 @@ export default function DashBoardProfile() {
         }))
     }
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (e : React.FormEvent) => {
 
+        e.preventDefault()
         try {
-            const res = await apiSalonPost("/salonStaff", formData, {
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
+            const res = await apiSalonPost("/salonStaff", formData);
 
             if (res.error) {
                 console.error("Error while registering:", res.error);
             } else {
                 console.log("Salon registered successfully:", res.data);
-                // setIsModalOpen(false);
+                setIsModalOpen(false);
             }
         } catch (error) {
 

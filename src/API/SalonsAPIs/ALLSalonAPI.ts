@@ -31,7 +31,6 @@ export function useApi() {
 
       // ✅ Call backend refresh API
       const response = await fetch(`${Config.API_BASE_URL}/refreshtoken`, {
-        method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: accessToken ? `Bearer ${accessToken}` : "",

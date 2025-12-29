@@ -30,8 +30,9 @@ const App = () => {
   const handleUserAuth = async () => {
     try {
       setnum((prev) => prev + 1);
-      const userData = localStorage.getItem("authState");
+      const userData = localStorage.getItem("user");
       if (!userData) return null;
+
       const parsed = JSON.parse(userData);
       const accessToken = parsed?.accessToken
     const refreshToken = parsed?.refreshToken

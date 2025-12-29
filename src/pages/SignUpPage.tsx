@@ -68,9 +68,9 @@ export default function SignUpPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setformSubmit(true);
-
+        
         if (!validateForm()) return;
+        setformSubmit(true);
 
         const data = {
             username: formData.username,

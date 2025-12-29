@@ -7,9 +7,13 @@ import { Badge } from "../../components/ui_components/badge"
 import { useParams } from "react-router-dom"
 import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI"
 import type { salonSlots } from "../../Interfaces/SaloInterface"
+import { BookingLoader } from "../../components/ui_components/BookingLoader"
+import { BookingRequestSuccess } from "../../components/Loaders/BookingRequestSuccess"
 
 const SalonService: React.FC = () => {
     const [isFavorite, setIsFavorite] = useState(false)
+    const [bookingrequestsend, setbookingrequestsend] = useState(false)
+    const [bookingrequestsuccess, setbookingrequestsuccess] = useState(false)
     const { apiRequest, apiCustomerpiPost } = useApi();
     const { id, serviceID } = useParams();
     const [salonservicedata, setsalonservicedata] = useState<any>({});
@@ -132,6 +136,7 @@ const SalonService: React.FC = () => {
     const BookAppointment = async (e: any) => {
         e.preventDefault();
         try {
+            setbookingrequestsend(true);
             console.log("selectedDate = ", selectedDate);
             console.log("selectedslottime = ", selectedslottime);
 
@@ -157,9 +162,15 @@ const SalonService: React.FC = () => {
             } else {
                 console.log("Salon registered successfully:", res.data);
                 setisEditModalOpen(false);
+                setbookingrequestsuccess(true);
+                setTimeout(() => {
+                    setbookingrequestsuccess(false);
+                }, 4000);
             }
+            setbookingrequestsend(false);
 
         } catch (error) {
+            setbookingrequestsend(false);
 
         }
     }
@@ -167,6 +178,8 @@ const SalonService: React.FC = () => {
 
     return (
         <main className="min-h-screen bg-background">
+
+
             {/* Header */}
             <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
@@ -352,6 +365,16 @@ const SalonService: React.FC = () => {
 
             {isEditModalOpen && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <BookingLoader
+                        isVisible={bookingrequestsend}
+                        salonName="Samothing"
+                    />
+
+
+
+                   
+
+
                     <Card className="w-full max-w-3xl max-h-[90vh] bg-card border-border flex flex-col">
                         <CardHeader className="flex flex-row items-center justify-between pb-4">
                             <CardTitle>Select Slots</CardTitle>
@@ -424,6 +447,12 @@ const SalonService: React.FC = () => {
                     </Card>
                 </div>
             )}
+
+             <BookingRequestSuccess
+                        isVisible={bookingrequestsuccess}
+                        salonName={serviceData?.name || ""}
+                        
+                    />  
 
 
         </main>

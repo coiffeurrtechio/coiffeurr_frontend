@@ -24,6 +24,7 @@ import { Link, useNavigate, useParams } from "react-router-dom"
 import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI"
 import type { Salon, SalonService, salonStaffDTOS } from "../../Interfaces/SaloInterface"
 import { Loader } from "../../components/ui_components/Loader"
+import { BookingLoader } from "../../components/ui_components/BookingLoader"
 
 
 
@@ -153,6 +154,7 @@ export default function SalonDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
+     
       <Loader isVisible={FetchSalonByIdAPI} />
 
       {/* Header */}
