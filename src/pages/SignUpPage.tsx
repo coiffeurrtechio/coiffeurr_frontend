@@ -3,7 +3,7 @@ import { useState } from "react"
 import { Button } from "../components/ui_components/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui_components/card"
 import { Eye, EyeOff, Mail, Lock, User, Phone, ArrowLeft, UserPlus } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import Config from "../configs/config"
 import { useToast } from "../components/Toast"
 
@@ -11,6 +11,7 @@ import { useToast } from "../components/Toast"
 export default function SignUpPage() {
     const [showPassword, setShowPassword] = useState<boolean>(false)
     const { showToast } = useToast();
+    const navigate = useNavigate();
     const [formData, setFormData] = useState<any>({
         email: "",
         phone: "",
@@ -102,6 +103,7 @@ export default function SignUpPage() {
 
             // Success
             // const result = await response.json();
+            navigate('/login');
             showToast({
                 type: "success",
                 title: "Account Created Successfully!",

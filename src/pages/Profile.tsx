@@ -224,7 +224,7 @@ export default function Profile() {
             </div>
 
             {/* Tab Content */}
-            {activeTab === "overview" && (
+            {/* {activeTab === "overview" && (
               <div className="space-y-6">
                 <Card className="bg-card border-border shadow-lg">
                   <CardHeader>
@@ -250,7 +250,6 @@ export default function Profile() {
                   </CardContent>
                 </Card>
 
-                {/* Upcoming Appointments */}
                 {upcomingBookings.length > 0 && (
                   <Card className="bg-card border-border shadow-lg">
                     <CardHeader>
@@ -283,7 +282,7 @@ export default function Profile() {
                   </Card>
                 )}
               </div>
-            )}
+            )} */}
 
             {activeTab === "bookings" && (
               <Card className="bg-card border-border shadow-lg">

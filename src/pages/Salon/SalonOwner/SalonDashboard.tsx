@@ -1,6 +1,6 @@
 import { LayoutDashboard, Database, TrendingUp, BarChart3, Settings } from "lucide-react";
 import { Button } from "../../../components/ui_components/button";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -23,7 +23,9 @@ export default function Sidebar() {
             <span className="text-sidebar-primary-foreground font-bold text-lg">S</span>
           </div>
           <div>
-            <h1 className="font-bold text-lg">Salon Pro</h1>
+            <Link to='/'>
+            <h1 className="font-bold text-lg">Coiffeurr</h1>
+             </Link>
             <p className="text-xs text-sidebar-foreground/70">Dashboard</p>
           </div>
         </div>

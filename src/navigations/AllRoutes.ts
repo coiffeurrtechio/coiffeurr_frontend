@@ -11,6 +11,7 @@ import type { ComponentType } from "react";
 import DashBoardProfile from "../pages/Salon/SalonOwner/DashBoardPages.tsx/DashBoardProfile";
 import SalonService from "../pages/Salon/SalonService";
 import DashBoardBusiness from "../pages/Salon/SalonOwner/DashBoardPages.tsx/DashBoardBusiness";
+import WorkInProgress from "../components/WorkInProgress";
 
 export interface AppRoute {
   key: number;
@@ -63,6 +64,9 @@ const routes: AppRoute[] = [
       { key: 21, path: "", Element: DashBoardBusiness, isProtected: true },
       { key: 22, path: "business", Element: DashBoardBusiness, isProtected: true },
       { key: 22, path: "SalonProfile", Element: DashBoardProfile, isProtected: true },
+      { key: 23, path: "sales", Element: WorkInProgress, isProtected: true },
+      { key: 24, path: "performance", Element: WorkInProgress, isProtected: true },
+      { key: 25, path: "data", Element: WorkInProgress, isProtected: true },
     ],
   },
 ];
