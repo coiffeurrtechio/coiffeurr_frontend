@@ -12,6 +12,7 @@ import DashBoardProfile from "../pages/Salon/SalonOwner/DashBoardPages.tsx/DashB
 import SalonService from "../pages/Salon/SalonService";
 import DashBoardBusiness from "../pages/Salon/SalonOwner/DashBoardPages.tsx/DashBoardBusiness";
 import WorkInProgress from "../components/WorkInProgress";
+import BookingPage from "../pages/BookingPage";
 
 export interface AppRoute {
   key: number;
@@ -35,6 +36,7 @@ const routes: AppRoute[] = [
       { key: 11, path: "/", Element: HomePage, isProtected: false },
       { key: 12, path: "/profile", Element: Profile, isProtected: false },
       { key: 14, path: "/salons", Element: SalonsPage, isProtected: false },
+      { key: 14, path: "/Bookings", Element: BookingPage, isProtected: false },
       { key: 15, path: "/salons/:id", Element: SingleSalonPage, isProtected: true },
       { key: 16, path: "/salonRegistration", Element: SalonRegistrationForm, isProtected: true },
       { key: 17, path: "/salon/:id/service/:serviceID", Element: SalonService, isProtected: true },

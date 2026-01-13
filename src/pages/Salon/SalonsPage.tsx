@@ -43,7 +43,7 @@ export default function SalonsPage(): JSX.Element {
       console.error("Unexpected error fetching salons:", err);
       // setError("Something went wrong while fetching salons");
     }
-    finally{
+    finally {
       setfetchSalonAPI(false);
     }
   };
@@ -87,38 +87,37 @@ export default function SalonsPage(): JSX.Element {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-       <Loader isVisible={fetchSalonAPI} />
-      <section className="py-12 bg-secondary/30">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl lg:text-5xl font-bold mb-4 text-balance">
-              Find Your Perfect Salon
-              {/* {error && <div className="text-red-300">error</div>} */}
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty">
-              Discover premium salons near you with expert stylists and luxury treatments
-            </p>
-          </div>
+      <Loader isVisible={fetchSalonAPI} />
 
-          {/* Search and Filter */}
+
+      <section className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
+        <div className="container mx-auto px-4 sm:px-2 lg:px-8 py-3">
+
           <div className="max-w-4xl mx-auto">
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="flex flex-col md:flex-row gap-3">
+
+              {/* Search */}
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <input
                   type="text"
-                  placeholder="Search salons by name or location..."
+                  placeholder="Search salons or location"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                  className="w-full h-11 pl-10 pr-4 rounded-xl bg-muted/60 
+                       border border-border focus:outline-none 
+                       focus:ring-2 focus:ring-accent/50"
                 />
               </div>
+
+              {/* Filter */}
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4 text-muted-foreground" />
                 <select
                   value={selectedType}
                   onChange={(e) => setSelectedType(e.target.value)}
-                  className="px-4 py-3 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                  className="h-11 px-4 rounded-xl bg-muted/60 border border-border
+                       focus:outline-none focus:ring-2 focus:ring-accent/50"
                 >
                   {salonTypes.map((type) => (
                     <option key={type} value={type}>
@@ -127,17 +126,18 @@ export default function SalonsPage(): JSX.Element {
                   ))}
                 </select>
               </div>
-            </div>
 
-            <div className="text-sm text-muted-foreground text-center">
-              Found {filteredSalons.length} salon{filteredSalons.length !== 1 ? "s" : ""} near you
             </div>
           </div>
+
         </div>
       </section>
 
+
+
+
       {/* Salons Grid */}
-      <section className="py-12">
+      <section className="py-4">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredSalons.map((salon) => (
@@ -183,11 +183,11 @@ export default function SalonsPage(): JSX.Element {
                     </div>
                   </div>
 
-                    {salon?.description &&
-                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                    salon?.description 
-                  </p>
-                     }
+                  {salon?.description &&
+                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                      salon?.description
+                    </p>
+                  }
 
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center gap-2 text-sm">
@@ -195,7 +195,7 @@ export default function SalonsPage(): JSX.Element {
                       <span className="text-muted-foreground">
                         {salon.street}, {salon.city}, {salon.state}, {salon.pincode}
                       </span>
-                      
+
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <Clock className="h-4 w-4 text-muted-foreground" />

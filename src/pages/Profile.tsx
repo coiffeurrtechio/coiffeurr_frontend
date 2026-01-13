@@ -11,9 +11,12 @@ import {
   Gift,
   Settings,
   LogOut,
+  MessageCircleQuestionMark,
+  BookOpen,
+  LayoutDashboard,
+  ArrowLeft,
 } from "lucide-react"
 import { Button } from "../components/ui_components/button"
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui_components/card"
 import { Badge } from "../components/ui_components/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui_components/avatar"
 import { useSelector } from "react-redux";
@@ -25,7 +28,6 @@ import type { BookingResponse } from "../Interfaces/BookingInterface"
 
 
 export default function Profile() {
-  const [activeTab, setActiveTab] = useState<string>("overview")
   const dispatch = useDispatch();
   const navigate = useNavigate(); // ✅ hook for navigation
   const { apiRequest } = useApi()
@@ -57,7 +59,7 @@ export default function Profile() {
   };
 
 
-  
+
 
   const upcomingBookings = [
     {
@@ -78,9 +80,9 @@ export default function Profile() {
     { id: "rewards", label: "Rewards", icon: Gift },
   ]
 
-  useEffect(() =>{
+  useEffect(() => {
     fetchappointmentbookings();
-  },[])
+  }, [])
 
   const fetchappointmentbookings = async () => {
     try {
@@ -100,297 +102,251 @@ export default function Profile() {
   }
 
   function extractDateAndTime(isoString: string) {
-  const dateObj = new Date(isoString);
+    const dateObj = new Date(isoString);
 
-  // Extract date parts
-  const year = dateObj.getFullYear();
-  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-  const day = String(dateObj.getDate()).padStart(2, '0');
+    // Extract date parts
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
 
-  // Extract time parts
-  const hours = String(dateObj.getHours()).padStart(2, '0');
-  const minutes = String(dateObj.getMinutes()).padStart(2, '0');
-  const seconds = String(dateObj.getSeconds()).padStart(2, '0');
+    // Extract time parts
+    const hours = String(dateObj.getHours()).padStart(2, '0');
+    const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+    const seconds = String(dateObj.getSeconds()).padStart(2, '0');
 
-  // Return formatted date and time
-  return {
-    date: `${day}-${month}-${year}`,
-    time: `${hours}:${minutes}:${seconds}`
-  };
-}
+    // Return formatted date and time
+    return {
+      date: `${day}-${month}-${year}`,
+      time: `${hours}:${minutes}:${seconds}`
+    };
+  }
 
 
+  const your_information = [
+    {
+      title: "Address Book",
+      icon: BookOpen,
+      onClick: () => { },
+    },
+    userDetails.role === "salon_owner" && {
+      title: "Go to Dashboard",
+      icon: LayoutDashboard,
+      onClick: () => navigate("/dashboard"),
+    },
+  ].filter(Boolean);
+
+
+  const other_information = [
+    {
+      tittle: "Logout",
+      icon: LogOut,
+      onclick: handleLogout,
+    },
+    {
+      tittle: "Address Book",
+      icon: BookOpen,
+      onclick: () => { },
+    },
+  ]
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
 
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Profile Sidebar */}
           <div className="lg:col-span-1">
-            <Card className="bg-card border-border shadow-lg">
-              <CardContent className="p-6">
-                <div className="text-center">
-                  <div className="relative inline-block">
-                    <Avatar className="w-24 h-24 mx-auto border-4 border-accent/20">
-                      <AvatarImage src={user.profileImage || "/placeholder.svg"} alt={user.name} />
-                      <AvatarFallback className="bg-accent text-accent-foreground text-xl font-semibold">
-                        {user.name
-                          .split(" ")
-                          .map((n: any) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <Button size="icon" className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full shadow-lg">
-                      <Camera className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <h2 className="mt-4 text-xl font-semibold">{user.name}</h2>
-                  <Badge variant="secondary" className="mt-2">
-                    {user.userType}
-                  </Badge>
-                  <p className="text-sm text-muted-foreground mt-2">Member since {user.joinDate}</p>
-                </div>
 
-                <div className="mt-6 space-y-4">
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                    <Mail className="h-4 w-4" />
-                    <span className="truncate">{user.email}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                    <Phone className="h-4 w-4" />
-                    <span>{user.phone}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                    <MapPin className="h-4 w-4" />
-                    <span>{user.location}</span>
-                  </div>
-                </div>
+            <div className="relative text-center">
 
-                <Button className="w-full mt-6">
-                  <Edit3 className="h-4 w-4 mr-2" />
-                  Edit Profile
+              {/* Back Button */}
+              <button
+                onClick={() => navigate("/")}
+                className="absolute left-0 top-0 p-2 rounded-full 
+             bg-muted/60 backdrop-blur-sm 
+             hover:bg-muted transition"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+
+
+              <div className="relative inline-block mt-4">
+                <Avatar className="w-24 h-24 mx-auto border-4 border-accent/20">
+                  <AvatarImage
+                    src={user.profileImage || "/placeholder.svg"}
+                    alt={user.name}
+                  />
+                  <AvatarFallback className="bg-accent text-accent-foreground text-xl font-semibold">
+                    {user.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </AvatarFallback>
+                </Avatar>
+
+                <Button
+                  size="icon"
+                  className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full shadow-lg"
+                >
+                  <Camera className="h-4 w-4" />
                 </Button>
-                <Button className=" w-full mt-6" onClick={handleLogout}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Logout
-                </Button>
-                <Button className=" w-full mt-6" onClick={() => navigate("/salonRegistration")}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Create a Salon
-                </Button>
-                {userDetails.role === "salon_owner" && <Button className=" w-full mt-6" onClick={() => navigate("/dashboard")}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Dashboard
-                </Button>}
-              </CardContent>
-            </Card>
-
-            {/* Quick Stats */}
-            <div className="mt-6 grid grid-cols-2 gap-4">
-              <Card className="bg-card border-border">
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-accent-foreground">{user.totalBookings}</div>
-                  <div className="text-sm text-muted-foreground">Total Visits</div>
-                </CardContent>
-              </Card>
-              <Card className="bg-card border-border">
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-accent-foreground">{user.loyaltyPoints}</div>
-                  <div className="text-sm text-muted-foreground">Reward Points</div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div className="lg:col-span-3">
-            {/* Tab Navigation */}
-            <div className="flex flex-wrap gap-2 mb-6">
-              {tabs.map((tab) => {
-                const Icon = tab.icon
-                return (
-                  <Button
-                    key={tab.id}
-                    variant={activeTab === tab.id ? "default" : "ghost"}
-                    className={activeTab === tab.id ? "" : "hover:bg-accent"}
-                    onClick={() => setActiveTab(tab.id)}
-                  >
-                    <Icon className="h-4 w-4 mr-2" />
-                    {tab.label}
-                  </Button>
-                )
-              })}
-            </div>
-
-            {/* Tab Content */}
-            {/* {activeTab === "overview" && (
-              <div className="space-y-6">
-                <Card className="bg-card border-border shadow-lg">
-                  <CardHeader>
-                    <CardTitle>Account Overview</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <h4 className="font-medium mb-2">Preferred Artist</h4>
-                        <p className="text-muted-foreground">{user.preferredArtist}</p>
-                      </div>
-                      <div>
-                        <h4 className="font-medium mb-2">Favorite Services</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {user.favoriteServices.map((service, index) => (
-                            <Badge key={index} variant="outline">
-                              {service}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {upcomingBookings.length > 0 && (
-                  <Card className="bg-card border-border shadow-lg">
-                    <CardHeader>
-                      <CardTitle>Upcoming Appointments</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {upcomingBookings.map((booking) => (
-                        <div key={booking.id} className="flex items-center justify-between p-4 bg-accent/10 rounded-lg">
-                          <div>
-                            <h4 className="font-medium">{booking.service}</h4>
-                            <p className="text-sm text-muted-foreground">with {booking.artist}</p>
-                            <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                {booking.date}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                {booking.time}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <Badge className="bg-green-100 text-green-700 hover:bg-green-200">{booking.status}</Badge>
-                            <p className="text-lg font-semibold mt-1">{booking.price}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                )}
               </div>
-            )} */}
 
-            {activeTab === "bookings" && (
-              <Card className="bg-card border-border shadow-lg">
-                <CardHeader>
-                  <CardTitle>Booking History</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {bookingdata.length >= 1 && bookingdata.map((booking, index) => (
+              <h2 className="mt-4 text-xl font-semibold">{user.name}</h2>
+              <Badge variant="secondary" className="mt-2">
+                {user.userType}
+              </Badge>
+            </div>
+
+            <div className="mt-6 space-y-4">
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <Mail className="h-4 w-4" />
+                <span className="truncate">{user.email}</span>
+              </div>
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <Phone className="h-4 w-4" />
+                <span>{user.phone}</span>
+              </div>
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4" />
+                <span>{user.location}</span>
+              </div>
+            </div>
+
+
+
+            <div className="mt-4 grid grid-cols-3 sm:grid-cols-3 gap-2">
+
+              <div className="bg-card text-card-foreground rounded-xl border p-3 shadow-sm flex items-center justify-center">
+                <div className="flex flex-col items-center text-center" onClick={() => {navigate("/Bookings")}}>
+                  <Calendar className="h-6 w-6 text-primary" />
+                  <div className="text-sm font-bold text-muted-foreground mt-2">
+                    Your Bookings
+                  </div>
+                </div>
+              </div>
+              <div className="bg-card text-card-foreground rounded-xl border p-3 shadow-sm flex items-center justify-center">
+                <div className="flex flex-col items-center text-center">
+                  <Gift className="h-6 w-6 text-primary" />
+                  <div className="text-sm font-bold text-muted-foreground mt-2">
+                    Rewards
+                  </div>
+                </div>
+              </div>
+              <div className="bg-card text-card-foreground rounded-xl border p-3 shadow-sm flex items-center justify-center">
+                <div className="flex flex-col items-center text-center">
+                  <MessageCircleQuestionMark className="h-6 w-6 text-primary" />
+                  <div className="text-sm font-bold text-muted-foreground mt-2">
+                    Need Helps?
+                  </div>
+                </div>
+              </div>
+
+
+
+
+            </div>
+
+
+
+            {/* your information  */}
+            <div className="mt-4">
+              {/* Section Header */}
+              <div className="bg-card px-3 rounded-xl">
+
+                <div className=" text-card-foreground border-b border-border py-3">
+                  <h2 className="text-md font-bold">
+                    Your Information
+                  </h2>
+                </div>
+
+                {/* Information List */}
+                <div className="text-card-foreground rounded-b-xl overflow-hidden">
+                  {your_information.map((item, index) => {
+                    const Icon = item.icon;
+
+                    return (
                       <div
                         key={index}
-                        className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent/5 transition-colors"
+                        onClick={item.onClick}
+                        className="py-3 cursor-pointer hover:bg-muted/40 transition border-b"
                       >
-                        <div className="flex-1">
-                          <h4 className="font-medium">{booking.serviceName}</h4>
-                          {/* <p className="text-sm text-muted-foreground">with {booking.artist}</p> */}
-                          <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {extractDateAndTime(booking?.appointmentDate).date}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {extractDateAndTime(booking?.appointmentDate).time}
-                            </span>
-                          </div>
+                        <div className="flex items-center">
+                          <Icon className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span className="text-sm font-medium">
+                            {item.title}
+                          </span>
                         </div>
-                        <div className="text-right">
-                          {/* <div className="flex items-center gap-1 mb-1">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`h-3 w-3 ${i < booking.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-                                  }`}
-                              />
-                            ))}
-                          </div> */}
-                          <Badge variant="outline" className="mb-1">
-                            {booking.status}
-                          </Badge>
-                          <p className="text-lg font-semibold">{booking.price}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
-            {activeTab === "favorites" && (
-              <Card className="bg-card border-border shadow-lg">
-                <CardHeader>
-                  <CardTitle>Favorite Services</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {user.favoriteServices.map((service, index) => (
+
+                      </div>
+                    );
+                  })}
+
+                </div>
+
+
+              </div>
+
+            </div>
+
+            {/* other information  */}
+            <div className="mt-4">
+              {/* Section Header */}
+              <div className="bg-card px-3 rounded-xl">
+
+                <div className=" text-card-foreground border-b border-border py-3">
+                  <h2 className="text-md font-bold">
+                    Other Information
+                  </h2>
+                </div>
+
+                {/* Information List */}
+                <div className="text-card-foreground rounded-b-xl overflow-hidden">
+                  {other_information.map((item, index) => {
+                    const Icon = item.icon;
+
+                    return (
                       <div
                         key={index}
-                        className="p-4 border border-border rounded-lg hover:bg-accent/5 transition-colors"
+                        className=" py-3 cursor-pointer border-b border-border"
+                        onClick={item?.onclick}
                       >
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium">{service}</h4>
-                          <Heart className="h-5 w-5 fill-red-500 text-red-500" />
+
+                        {/* Row */}
+                        <div className="flex items-center">
+                          <Icon className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span className="text-sm font-medium">
+                            {item.tittle}
+                          </span>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1">Frequently booked</p>
+
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                    );
+                  })}
+                </div>
 
-            {activeTab === "rewards" && (
-              <Card className="bg-card border-border shadow-lg">
-                <CardHeader>
-                  <CardTitle>Loyalty Rewards</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center mb-6">
-                    <div className="text-4xl font-bold text-accent-foreground mb-2">{user.loyaltyPoints}</div>
-                    <p className="text-muted-foreground">Available Points</p>
-                    <div className="w-full bg-accent/20 rounded-full h-2 mt-4">
-                      <div className="bg-primary h-2 rounded-full" style={{ width: "75%" }}></div>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-2">250 points until next reward</p>
-                  </div>
 
-                  <div className="space-y-4">
-                    <div className="p-4 border border-border rounded-lg">
-                      <h4 className="font-medium">Free Service (1500 points)</h4>
-                      <p className="text-sm text-muted-foreground">Get any service up to $100 value</p>
-                    </div>
-                    <div className="p-4 border border-border rounded-lg">
-                      <h4 className="font-medium">20% Discount (800 points)</h4>
-                      <p className="text-sm text-muted-foreground">Valid on any service</p>
-                    </div>
-                    <div className="p-4 border border-border rounded-lg">
-                      <h4 className="font-medium">Priority Booking (500 points)</h4>
-                      <p className="text-sm text-muted-foreground">Skip the waiting list for 30 days</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+              </div>
+
+            </div>
           </div>
+
+
+          <div className="mt-2 py-2 flex flex-col items-center">
+            <span className="text-[21px] text-muted-foreground">
+              Mr & Mrs Coiffeurr
+            </span>
+            <span className="text-[19px] text-muted-foreground opacity-60">
+              © {new Date().getFullYear()}
+            </span>
+          </div>
+
+
+
+
         </div>
       </div>
-    </div>
+    </div >
   )
 }
