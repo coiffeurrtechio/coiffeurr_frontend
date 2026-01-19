@@ -32,8 +32,7 @@ export default function DashBoardProfile() {
         staffphone: "",
         staffimage: "",
     })
-
-    const [NewSalonService, setNewSalonService] = useState<salonServiceInterface>({
+    const [NewSalonService, setNewSalonService] = useState({
         price: "",
         descriptions: [""],
         available: "",
@@ -41,7 +40,11 @@ export default function DashBoardProfile() {
         slotTime: "",
         serviceID: "",
         includedItems: [""],
+        heading: "",
+        serviceImages: [""],   // images inside saloninfoDTO
+        imageUrls: [""],       // main service images (if any)
     });
+
 
     const [ALLService, setALLService] = useState<services[]>([]);
 
@@ -76,7 +79,7 @@ export default function DashBoardProfile() {
         }))
     }
 
-    const handleSubmit = async (e : React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
 
         e.preventDefault()
         try {
@@ -102,7 +105,22 @@ export default function DashBoardProfile() {
     const handleSubmitService = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const res = await apiSalonPost("/salonService", NewSalonService);
+            const payload = {
+                available: Boolean(NewSalonService.available),
+                capacity: NewSalonService.capacity,
+                price: Number(NewSalonService.price),
+                serviceID: Number(NewSalonService.serviceID),
+                slotTime: Number(NewSalonService.slotTime),
+                imageUrls: NewSalonService.imageUrls,
+
+                saloninfoDTO: {
+                    heading: NewSalonService.heading,
+                    description: NewSalonService.descriptions.filter(d => d.trim() !== ""),
+                    included_items: NewSalonService.includedItems.filter(i => i.trim() !== ""),
+                    images: NewSalonService.serviceImages,
+                },
+            };
+            const res = await apiSalonPost("/salonService", payload);
 
             if (res.error) {
                 console.error("Error while registering:", res.error);
@@ -567,85 +585,81 @@ export default function DashBoardProfile() {
                         </CardHeader>
                         <CardContent className="max-h-[80vh] overflow-y-auto pr-2">
                             {/* <form onSubmit={handleSubmitService} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">  */}
-                            <form onSubmit={handleSubmitService}
-                                // className="space-y-4"
-                                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 "
 
+                            <form
+                                onSubmit={handleSubmitService}
+                                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
                             >
+                                {/* SERVICE */}
                                 <div>
-                                    <label className="text-sm font-medium text-foreground block mb-2">Service</label>
-                                    {/* <select name="" id="">
-                                        {ALLService && ALLService.map((items) =>(
-                                            <option className="bg-background border-border" value={items?.service_id}>{items?.service_name}</option>
-                                        ))}
-                                    </select> */}
+                                    <label className="text-sm font-medium block mb-2">Service</label>
                                     <Select
-                                        name="serviceID"
-                                        onValueChange={(value) => handleServiceSelect(value, "serviceID")}
                                         value={NewSalonService.serviceID}
+                                        onValueChange={(v) => handleServiceSelect(v, "serviceID")}
                                     >
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select salon type" />
+                                            <SelectValue placeholder="Select Service" />
                                         </SelectTrigger>
-
                                         <SelectContent>
-                                            {ALLService.map((item: services) => (
-                                                <SelectItem key={item.service_id} value={String(item.service_id)}>
+                                            {ALLService.map((item) => (
+                                                <SelectItem
+                                                    key={item.service_id}
+                                                    value={String(item.service_id)}
+                                                >
                                                     {item.service_name}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
-
                                 </div>
 
+                                {/* PRICE */}
                                 <div>
-                                    <label className="text-sm font-medium text-foreground block mb-2">Service Price</label>
+                                    <label className="text-sm font-medium block mb-2">Price</label>
                                     <Input
-                                        type="text"
                                         name="price"
                                         value={NewSalonService.price}
                                         onChange={handleSalonServiceChange}
-                                        placeholder="e.g., 200, 500"
-                                        // maxLength={2}
-                                        className="bg-background border-border"
+                                        placeholder="300"
                                     />
                                 </div>
 
+                                {/* CAPACITY */}
                                 <div>
-                                    <label className="text-sm font-medium text-foreground block mb-2">Capacity In single Slot</label>
+                                    <label className="text-sm font-medium block mb-2">Capacity</label>
                                     <Input
-                                        type="text"
                                         name="capacity"
                                         value={NewSalonService.capacity}
                                         onChange={handleSalonServiceChange}
-                                        placeholder="e.g., 5 years"
-                                        className="bg-background border-border"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-foreground block mb-2">How much time you will take in one slot for this service</label>
-                                    <Input
-                                        type="text"
-                                        name="slotTime"
-                                        value={NewSalonService?.slotTime}
-                                        onChange={handleSalonServiceChange}
-                                        placeholder="e.g., 45, 50 min"
-                                        className="bg-background border-border"
+                                        placeholder="4"
                                     />
                                 </div>
 
+                                {/* SLOT TIME */}
                                 <div>
-                                    <label className="text-sm font-medium text-foreground block mb-2">Is slot available now</label>
+                                    <label className="text-sm font-medium block mb-2">
+                                        Slot Time (minutes)
+                                    </label>
+                                    <Input
+                                        name="slotTime"
+                                        value={NewSalonService.slotTime}
+                                        onChange={handleSalonServiceChange}
+                                        placeholder="30"
+                                    />
+                                </div>
+
+                                {/* AVAILABLE */}
+                                <div>
+                                    <label className="text-sm font-medium block mb-2">Available</label>
                                     <Select
-                                        name="available"
+                                        value={NewSalonService.available}
                                         onValueChange={(value) => handleServiceSelect(value === "true", "available")}
                                         value={String(NewSalonService.available)} // store as string
+
                                     >
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Yes or No" />
+                                            <SelectValue placeholder="Yes / No" />
                                         </SelectTrigger>
-
                                         <SelectContent>
                                             <SelectItem value="true">Yes</SelectItem>
                                             <SelectItem value="false">No</SelectItem>
@@ -653,114 +667,139 @@ export default function DashBoardProfile() {
                                     </Select>
                                 </div>
 
-                                <div className="col-span-1 sm:col-span-2 lg:col-span-3">
-                                    {/* <label className="text-sm font-medium text-foreground block mb-2"> Service Description</label> */}
-                                    {/* <Input
-                                        type="tel"
-                                        name="description"
-                                        value={NewSalonService?.description}
+                                {/* HEADING */}
+                                <div className="col-span-full">
+                                    <label className="text-sm font-medium block mb-2">
+                                        Service Heading
+                                    </label>
+                                    <Input
+                                        name="heading"
+                                        value={NewSalonService.heading}
                                         onChange={handleSalonServiceChange}
-                                        placeholder="This is a body healing massage."
-                                        required
-                                        className="bg-background border-border"
-                                    /> */}
-                                    <div>
-                                        <label className="text-sm font-medium text-foreground block mb-2">Service Descriptions</label>
-
-                                        {/* Dynamic List of Descriptions */}
-                                        {NewSalonService?.descriptions.map((descriptions: string, index: number) => (
-                                            <div key={index} className="flex items-center gap-2 mb-2">
-                                                <Input
-                                                    type="text" // Changed from 'tel' to 'text' for descriptions
-                                                    name={`descriptions-${index}`}
-                                                    // Use the value from the array at the current index
-                                                    value={descriptions}
-                                                    // Call the new handler with the index and the new value
-                                                    onChange={(e) => handleArrayItemChange('descriptions', index, e.target.value)}
-                                                    placeholder={`Description point ${index + 1}`}
-                                                    required
-                                                    className="bg-background border-border flex-grow"
-                                                />
-
-                                                {/* Remove Button (Show only if there's more than one field) */}
-                                                {NewSalonService.descriptions.length > 1 && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeArrayItemField('descriptions', index)}
-                                                        className="p-1 text-red-500 hover:text-red-700"
-                                                    >
-                                                        {/* Assuming you have a Trash or X icon component */}
-                                                        <X className="w-4 h-4" />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        ))}
-
-                                        {/* Plus Option to add a new description */}
-                                        <div className="pt-2">
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                onClick={() => addArrayItemField('descriptions')}
-                                                className="w-full justify-center bg-transparent border-dashed border-2 text-muted-foreground hover:bg-muted"
-                                            >
-                                                {/* Assuming you have a Plus icon component */}
-                                                <Plus className="w-4 h-4 mr-2" />
-                                                Add Another Description Point
-                                            </Button>
-                                        </div>
-                                    </div>
+                                        placeholder="Bridal Makeup Pack"
+                                    />
                                 </div>
 
-
-                                <div className="col-span-1 sm:col-span-2 lg:col-span-3">
-                                    <label className="text-sm font-medium text-foreground block mb-2">Included Items (e.g., Hair Wash, Head Massage)</label>
-
-                                    {NewSalonService.includedItems.map((item, index) => (
-                                        <div key={`incl-${index}`} className="flex items-center gap-2 mb-2">
+                                {/* DESCRIPTIONS */}
+                                <div className="col-span-full">
+                                    <label className="text-sm font-medium block mb-2">
+                                        Service Descriptions
+                                    </label>
+                                    {NewSalonService.descriptions.map((desc, index) => (
+                                        <div key={index} className="flex gap-2 mb-2">
                                             <Input
-                                                type="text"
-                                                value={item}
-                                                onChange={(e) => handleArrayItemChange("includedItems", index, e.target.value)}
-                                                placeholder={`Included Item ${index + 1}`}
-                                                required
-                                                className="bg-background border-border flex-grow"
+                                                value={desc}
+                                                onChange={(e) =>
+                                                    handleArrayItemChange("descriptions", index, e.target.value)
+                                                }
+                                                placeholder={`Description ${index + 1}`}
                                             />
-
-                                            {NewSalonService.includedItems.length > 1 && (
+                                            {NewSalonService.descriptions.length > 1 && (
                                                 <button
                                                     type="button"
-                                                    onClick={() => removeArrayItemField("includedItems", index)}
-                                                    className="p-1 text-red-500 hover:text-red-700"
+                                                    onClick={() =>
+                                                        removeArrayItemField("descriptions", index)
+                                                    }
+                                                    className="text-red-500"
                                                 >
                                                     <X className="w-4 h-4" />
                                                 </button>
                                             )}
                                         </div>
                                     ))}
-
-
-                                    <div className="pt-2">
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            // REUSED HANDLER: Passes 'includedItems' as the fieldName
-                                            onClick={() => addArrayItemField('includedItems')}
-                                            className="w-full justify-center bg-transparent border-dashed border-2 text-muted-foreground hover:bg-muted"
-                                        >
-                                            <Plus className="w-4 h-4 mr-2" />
-                                            Add Another Included Item
-                                        </Button>
-                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => addArrayItemField("descriptions")}
+                                        className="w-full border-dashed"
+                                    >
+                                        <Plus className="w-4 h-4 mr-2" />
+                                        Add Description
+                                    </Button>
+                                </div>
+                                
+                                <div className="col-span-full">
+                                    <label className="text-sm font-medium block mb-2">
+                                        Service images
+                                    </label>
+                                    {NewSalonService.serviceImages.map((desc, index) => (
+                                        <div key={index} className="flex gap-2 mb-2">
+                                            <Input
+                                                value={desc}
+                                                onChange={(e) =>
+                                                    handleArrayItemChange("serviceImages", index, e.target.value)
+                                                }
+                                                placeholder={`Description ${index + 1}`}
+                                            />
+                                            {NewSalonService.serviceImages.length > 1 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        removeArrayItemField("serviceImages", index)
+                                                    }
+                                                    className="text-red-500"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => addArrayItemField("serviceImages")}
+                                        className="w-full border-dashed"
+                                    >
+                                        <Plus className="w-4 h-4 mr-2" />
+                                        Add image
+                                    </Button>
                                 </div>
 
+                                {/* INCLUDED ITEMS */}
+                                <div className="col-span-full">
+                                    <label className="text-sm font-medium block mb-2">
+                                        Included Items
+                                    </label>
+                                    {NewSalonService.includedItems.map((item, index) => (
+                                        <div key={index} className="flex gap-2 mb-2">
+                                            <Input
+                                                value={item}
+                                                onChange={(e) =>
+                                                    handleArrayItemChange("includedItems", index, e.target.value)
+                                                }
+                                                placeholder={`Item ${index + 1}`}
+                                            />
+                                            {NewSalonService.includedItems.length > 1 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        removeArrayItemField("includedItems", index)
+                                                    }
+                                                    className="text-red-500"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => addArrayItemField("includedItems")}
+                                        className="w-full border-dashed"
+                                    >
+                                        <Plus className="w-4 h-4 mr-2" />
+                                        Add Included Item
+                                    </Button>
+                                </div>
 
-                                <div className="flex gap-3 pt-4">
+                                {/* ACTIONS */}
+                                <div className="col-span-full flex gap-3 pt-4">
                                     <Button
                                         type="button"
                                         variant="outline"
                                         onClick={() => setisEditModalServiceOpen(false)}
-                                        className="flex-1 bg-transparent"
+                                        className="flex-1"
                                     >
                                         Cancel
                                     </Button>

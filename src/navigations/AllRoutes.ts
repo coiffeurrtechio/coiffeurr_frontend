@@ -71,6 +71,7 @@ const routes: AppRoute[] = [
       { key: 25, path: "data", Element: WorkInProgress, isProtected: true },
     ],
   },
+  
 ];
 
 export default routes;

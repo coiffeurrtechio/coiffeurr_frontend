@@ -80,26 +80,7 @@ export default function Profile() {
     { id: "rewards", label: "Rewards", icon: Gift },
   ]
 
-  useEffect(() => {
-    fetchappointmentbookings();
-  }, [])
 
-  const fetchappointmentbookings = async () => {
-    try {
-      const res = await apiRequest<BookingResponse[]>("/salon/appointments");
-      if (res.error) {
-        console.error("API Error:", res.error);
-        // setError("Failed to fetch salons");
-      } else if (res.data) {
-        setbookingdata(res?.data);
-        console.log("response =", res);
-
-      }
-
-    } catch (error) {
-      console.error("err = ", error)
-    }
-  }
 
   function extractDateAndTime(isoString: string) {
     const dateObj = new Date(isoString);

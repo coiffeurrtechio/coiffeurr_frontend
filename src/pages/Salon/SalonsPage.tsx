@@ -7,6 +7,14 @@ import { Link } from "react-router-dom";
 import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI";
 import type { Salon } from "../../Interfaces/SaloInterface";
 import { Loader } from "../../components/ui_components/Loader";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination, Autoplay } from "swiper/modules";
+
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+
+
 
 // ------------------ INTERFACES ------------------
 
@@ -146,11 +154,29 @@ export default function SalonsPage(): JSX.Element {
                 className="border-0 bg-card/50 backdrop-blur-sm overflow-hidden group hover:shadow-lg transition-all duration-300"
               >
                 <div className="relative aspect-video overflow-hidden">
-                  <img
-                    src={salon.image || "/placeholder.svg"}
-                    alt={salon.salonName}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
+                  <Swiper
+                    // key={salon.id}              // 🔥 THIS FIXES IT
+                    modules={[ Pagination, Autoplay]}
+                    navigation
+                    pagination={{ clickable: true }}
+                    autoplay={{ delay: 3000, disableOnInteraction: false }}
+                    loop={salon?.images?.length > 1}
+                  >
+                    {(salon?.images?.length > 0
+                      ? salon.images
+                      : ["/placeholder.svg"]
+                    ).map((img, index) => (
+                      <SwiperSlide key={index}>
+                        <img
+                          src={img}
+                          alt={salon.salonName}
+                          className="w-full h-full object-cover"
+                        />
+                      </SwiperSlide>
+                    ))}
+                  </Swiper>
+
+
                   <div className="absolute top-4 left-4">
                     <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm">
                       {salon.salonType}

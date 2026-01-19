@@ -36,7 +36,21 @@ export function useSalonApi() {
         return null;
       }
 
+
+
+
       const json = await response.json();
+
+      localStorage.setItem(
+        "authState",
+        JSON.stringify({
+          ...parsed,
+          user: {
+            json
+          },
+        })
+      );
+
 
       return json;
     } catch {

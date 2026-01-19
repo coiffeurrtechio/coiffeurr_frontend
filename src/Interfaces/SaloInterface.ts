@@ -30,7 +30,7 @@ export interface Salon {
   longitude: string;
   salonType: string;
   logoUrl: string;
-  image: string;
+  image: [];
   description?: string;
   priceRange: string;
   salonServices?: SalonService[];
@@ -84,6 +84,7 @@ export interface salonServiceInterface {
   slotTime: string,
   serviceID: string,
   includedItems: string[],
+  serviceImages: string[],
 }
 
 export interface salonSataff {

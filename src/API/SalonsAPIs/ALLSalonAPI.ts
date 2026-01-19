@@ -49,7 +49,16 @@ export function useApi() {
 
       // ✅ Update localStorage with new access token
       if (json?.accessToken) {
-        localStorage.setItem("accessToken", json.accessToken);
+        localStorage.setItem(
+          "authState",
+          JSON.stringify({
+            ...parsed,
+            user: {
+              json
+            },
+          })
+        );
+
       }
 
       return json?.accessToken || null;
@@ -71,9 +80,9 @@ export function useApi() {
 
       const parsed = JSON.parse(userData);
       const accessToken = parsed?.user?.accessToken;
-      console.log("parsed =",parsed);
-      console.log("accessToken =",accessToken);
-      
+      console.log("parsed =", parsed);
+      console.log("accessToken =", accessToken);
+
 
       const response = await fetch(`${Config.API_Customers}${endpoint}`, {
         headers: {

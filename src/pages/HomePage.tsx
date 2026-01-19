@@ -15,12 +15,23 @@ import {
   ScissorsLineDashed,
   User,
 } from "lucide-react"
-import { useState } from "react";
+
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination, Autoplay } from "swiper/modules";
+
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import type { Salon } from "../Interfaces/SaloInterface";
+import { useEffect, useState } from "react";
 import { Header } from "../components/Header";
 import SalonInfo from "./SalonInfo";
 
+
+
 export default function HomePage() {
   const [active, setActive] = useState("salon");
+
 
   const services = [
     {

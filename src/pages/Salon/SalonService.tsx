@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react"
-import { Star, MapPin, Clock, Heart, Check, Calendar, Phone, X } from "lucide-react"
+import { Star, MapPin, Clock, Heart, Check, Calendar, Phone, X, Dot } from "lucide-react"
 import { Button } from "../../components/ui_components/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui_components/card"
 import { Badge } from "../../components/ui_components/badge"
@@ -205,7 +205,7 @@ const SalonService: React.FC = () => {
                                 <div className="flex-1">
                                     <p className="text-sm font-semibold text-accent uppercase tracking-wide">{serviceData.category}</p>
                                     <h1 className="text-4xl lg:text-5xl font-bold text-foreground mt-2 text-balance">
-                                        {serviceData.name}
+                                        {salonservicedata?.saloninfoDTO?.heading && salonservicedata?.saloninfoDTO?.heading}
                                     </h1>
                                 </div>
                             </div>
@@ -225,7 +225,7 @@ const SalonService: React.FC = () => {
                             <div className="flex flex-wrap gap-6 pt-4 text-sm">
                                 <div className="flex items-center gap-2 text-foreground">
                                     <Clock className="w-5 h-5 text-accent" />
-                                    <span>{serviceData.duration} minutes</span>
+                                    <span>{salonservicedata?.slotTime} minutes</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-foreground">
                                     <MapPin className="w-5 h-5 text-accent" />
@@ -243,16 +243,32 @@ const SalonService: React.FC = () => {
                         </div>
 
 
-
+                        <div className="container mx-auto px-4 py-3 flex items-center gap-3">
+                            <Button className="flex-1" onClick={() => setisEditModalOpen(true)}>
+                                <Calendar className="mr-2 h-4 w-4" />
+                                Book
+                            </Button>
+                        </div>
 
 
 
 
                         {/* What's Included */}
                         <Card className="p-6 space-y-4">
+                            <h3 className="text-xl font-bold text-foreground">Description</h3>
+                            <ul className="space-y-3">
+                                {salonservicedata?.saloninfoDTO?.description && salonservicedata?.saloninfoDTO?.description.map((item: any, index: number) => (
+                                    <li key={index} className="flex items-start gap-3">
+                                        <Dot className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                                        <span className="text-foreground">{item}</span>
+                                    </li>
+                                ))}
+                            </ul>
+
+
                             <h3 className="text-xl font-bold text-foreground">What's Included</h3>
                             <ul className="space-y-3">
-                                {salonservicedata?.includedItems && salonservicedata?.includedItems.map((item: any, index: number) => (
+                                {salonservicedata?.saloninfoDTO?.included_items && salonservicedata?.saloninfoDTO?.included_items.map((item: any, index: number) => (
                                     <li key={index} className="flex items-start gap-3">
                                         <Check className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
                                         <span className="text-foreground">{item}</span>
@@ -275,62 +291,9 @@ const SalonService: React.FC = () => {
 
 
 
-                        {/* Artist Profile */}
-                        {/* <ArtistProfile artist={serviceData.artist} /> */}
-                        {serviceData.artist && serviceData.artist.map((artist) => (
 
-                            <Card className="p-6 space-y-6">
-                                <h3 className="text-2xl font-bold text-foreground">Meet Your Artist</h3>
-
-                                <div className="flex flex-col sm:flex-row gap-6">
-                                    {/* Artist Image */}
-                                    <div className="flex-shrink-0">
-                                        <div className="relative w-32 h-32 rounded-lg overflow-hidden">
-                                            <img src={artist.image || "/placeholder.svg"} alt={artist.name} className="object-cover" />
-                                        </div>
-                                    </div>
-
-                                    {/* Artist Info */}
-                                    <div className="flex-1 space-y-4">
-                                        <div>
-                                            <h4 className="text-xl font-bold text-foreground">{artist.name}</h4>
-                                            <p className="text-accent font-semibold">{artist.title}</p>
-                                            <p className="text-sm text-muted-foreground mt-1">{artist.experience} years of experience</p>
-                                        </div>
-
-                                        {/* Rating */}
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex items-center gap-1">
-                                                {[...Array(5)].map((_, i) => (
-                                                    <Star key={i} className="w-4 h-4 fill-accent text-accent" aria-hidden="true" />
-                                                ))}
-                                            </div>
-                                            <span className="font-semibold text-foreground">{artist.rating}</span>
-                                            <span className="text-sm text-muted-foreground">({artist.reviews} reviews)</span>
-                                        </div>
-
-                                        {/* Bio */}
-                                        <p className="text-sm text-foreground leading-relaxed">{artist.bio}</p>
-                                    </div>
-                                </div>
-
-                                {/* Specialties */}
-                                <div className="space-y-3">
-                                    <h5 className="font-semibold text-foreground">Specialties</h5>
-                                    <div className="flex flex-wrap gap-2">
-                                        {artist.specialties.map((specialty, index) => (
-                                            <Badge key={index} variant="secondary" className="bg-secondary text-secondary-foreground">
-                                                {specialty}
-                                            </Badge>
-                                        ))}
-                                    </div>
-                                </div>
-                            </Card>
-                        ))
-                        }
 
                         {/* Reviews Section */}
-                        {/* <ReviewsSection rating={serviceData.rating} reviews={serviceData.reviews} /> */}
                     </div>
 
                     {/* Right Column - Booking Card */}
@@ -342,21 +305,14 @@ const SalonService: React.FC = () => {
 
 
 
-            <div className="fixed inset-x-0 bottom-16 z-40 border-t border-border bg-background/95 backdrop-blur md:hidden">
+            {/* <div className="fixed inset-x-0 bottom-6 z-40 border-t border-border bg-background/95 backdrop-blur md:hidden">
                 <div className="container mx-auto px-4 py-3 flex items-center gap-3">
                     <Button className="flex-1" onClick={() => setisEditModalOpen(true)}>
                         <Calendar className="mr-2 h-4 w-4" />
                         Book
                     </Button>
-
-                    <Button asChild variant="outline" className="flex-1 bg-transparent">
-                        <a>
-                            <Phone className="mr-2 h-4 w-4" />
-                            Call
-                        </a>
-                    </Button>
                 </div>
-            </div>
+            </div> */}
 
 
 
@@ -372,7 +328,7 @@ const SalonService: React.FC = () => {
 
 
 
-                   
+
 
 
                     <Card className="w-full max-w-3xl max-h-[90vh] bg-card border-border flex flex-col">
@@ -448,11 +404,11 @@ const SalonService: React.FC = () => {
                 </div>
             )}
 
-             <BookingRequestSuccess
-                        isVisible={bookingrequestsuccess}
-                        salonName={serviceData?.name || ""}
-                        
-                    />  
+            <BookingRequestSuccess
+                isVisible={bookingrequestsuccess}
+                salonName={serviceData?.name || ""}
+
+            />
 
 
         </main>

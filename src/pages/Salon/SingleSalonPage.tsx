@@ -26,6 +26,13 @@ import type { Salon, SalonService, salonStaffDTOS } from "../../Interfaces/SaloI
 import { Loader } from "../../components/ui_components/Loader"
 import { BookingLoader } from "../../components/ui_components/BookingLoader"
 
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination, Autoplay } from "swiper/modules";
+
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import NoServicesAvailable from "../../components/NoServicesAvailable"
 
 
 
@@ -154,7 +161,7 @@ export default function SalonDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
-     
+
       <Loader isVisible={FetchSalonByIdAPI} />
 
       {/* Header */}
@@ -195,7 +202,28 @@ export default function SalonDetailPage() {
           <section className="relative">
             <div className="">
               <div className="w-full">
-                <img src={"/placeholder.svg"} alt={salon?.salonName} className="w-full h-[500px]" />
+                <Swiper
+                  // key={salon.id}              // 🔥 THIS FIXES IT
+                  modules={[Pagination, Autoplay]}
+                  navigation
+                  pagination={{ clickable: true }}
+                  autoplay={{ delay: 3000, disableOnInteraction: false }}
+                  loop={salon?.images?.length > 1}
+                >
+                  {(salon?.images?.length > 0
+                    ? salon.images
+                    : ["/placeholder.svg"]
+                  ).map((img, index) => (
+                    <SwiperSlide key={index}>
+                      <img
+                        src={img}
+                        alt={salon.salonName}
+                        className="w-full h-full object-cover"
+                      />
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+                {/* <img src={"/placeholder.svg"} alt={salon?.salonName} className="w-full h-[500px]" /> */}
               </div>
 
             </div>
@@ -233,96 +261,102 @@ export default function SalonDetailPage() {
                   <p className="text-muted-foreground leading-relaxed">{salon.description}</p>
                 </div>
 
-                {/* Tabs */}
-                <Tabs defaultValue="services" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="services">Services</TabsTrigger>
-                    <TabsTrigger value="staff">Staff</TabsTrigger>
-                    <TabsTrigger value="reviews">Reviews</TabsTrigger>
-                    <TabsTrigger value="photos">Photos</TabsTrigger>
-                  </TabsList>
 
-                  <TabsContent value="services" className="space-y-6">
-                    {salon?.salonServices?.map((category: SalonService, index: number) => (
-                      <div key={index}>
-                        {/* <h3 className="text-xl font-semibold mb-4 flex items-center gap-2"> */}
-                        {/* {category.serviceName === "Hair Services" && <Scissors className="h-5 w-5" />}
+
+
+
+
+                {/* Tabs */}
+                {salon?.salonServices?.length > 0
+                  ? (<Tabs defaultValue="services" className="w-full">
+                    <TabsList className="grid w-full grid-cols-4">
+                      <TabsTrigger value="services">Services</TabsTrigger>
+                      <TabsTrigger value="staff">Staff</TabsTrigger>
+                      <TabsTrigger value="reviews">Reviews</TabsTrigger>
+                      <TabsTrigger value="photos">Photos</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="services" className="space-y-6">
+                      {salon?.salonServices?.map((category: SalonService, index: number) => (
+                        <div key={index}>
+                          {/* <h3 className="text-xl font-semibold mb-4 flex items-center gap-2"> */}
+                          {/* {category.serviceName === "Hair Services" && <Scissors className="h-5 w-5" />}
                       {category.serviceName === "Nail Services" && <Sparkles className="h-5 w-5" />}
                       {category.serviceName === "Facial Services" && <Star className="h-5 w-5" />}
                       {category.serviceName} */}
-                        {/* </h3> */}
-                        <div className="grid gap-4">
-                          <Card className="border-0 bg-card/50 backdrop-blur-sm">
-                            <CardContent className="p-4">
-                              <div className="flex items-center justify-between">
+                          {/* </h3> */}
+                          <div className="grid gap-4">
+                            <Card className="border-0 bg-card/50 backdrop-blur-sm">
+                              <CardContent className="p-4">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <h4 className="font-medium">{category.serviceName}</h4>
+                                      <div className="text-right">
+                                        <div className="font-semibold text-accent-foreground">{category.price}</div>
+                                      </div>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">{category.description}</p>
+                                  </div>
+                                  <Button size="sm" className="ml-4"
+                                    onClick={() => handleViewService(category?.serviceID)}
+                                  >
+                                    Book Now
+                                  </Button>
+                                </div>
+                              </CardContent>
+                            </Card>
+
+                          </div>
+                        </div>
+                      ))}
+                    </TabsContent>
+
+                    <TabsContent value="staff" className="space-y-4">
+                      <div className="grid gap-6">
+                        {salon?.salonStaffDTOS && salon?.salonStaffDTOS.map((member: salonStaffDTOS, index: number) => (
+                          <Card key={index} className="border-0 bg-card/50 backdrop-blur-sm">
+                            <CardContent className="p-6">
+                              <div className="flex items-start gap-4">
+                                <img
+                                  src={member.staffimage || "/placeholder.svg"}
+                                  alt={member.staffname}
+                                  className="w-16 h-16 rounded-full object-cover"
+                                />
                                 <div className="flex-1">
                                   <div className="flex items-center justify-between mb-2">
-                                    <h4 className="font-medium">{category.serviceName}</h4>
+                                    <div>
+
+                                      <p className="text-md">{member.staffname}</p>
+                                      <p className="text-sm text-muted-foreground">{member.description}</p>
+                                      <p className="text-sm text-muted-foreground">{member.staffexperience} years</p>
+                                    </div>
                                     <div className="text-right">
-                                      <div className="font-semibold text-accent-foreground">{category.price}</div>
+                                      <div className="flex items-center gap-1 mb-1">
+                                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                        {/* <span className="text-sm font-medium">{member.rating}</span> */}
+                                      </div>
+                                      <p className="text-xs text-muted-foreground">{member?.staffexperience}</p>
                                     </div>
                                   </div>
-                                  <p className="text-sm text-muted-foreground">{category.description}</p>
-                                </div>
-                                <Button size="sm" className="ml-4"
-                                  onClick={() => handleViewService(category?.serviceID)}
-                                >
-                                  Book Now
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
-
-                        </div>
-                      </div>
-                    ))}
-                  </TabsContent>
-
-                  <TabsContent value="staff" className="space-y-4">
-                    <div className="grid gap-6">
-                      {salon?.salonStaffDTOS && salon?.salonStaffDTOS.map((member: salonStaffDTOS, index: number) => (
-                        <Card key={index} className="border-0 bg-card/50 backdrop-blur-sm">
-                          <CardContent className="p-6">
-                            <div className="flex items-start gap-4">
-                              <img
-                                src={member.staffimage || "/placeholder.svg"}
-                                alt={member.staffname}
-                                className="w-16 h-16 rounded-full object-cover"
-                              />
-                              <div className="flex-1">
-                                <div className="flex items-center justify-between mb-2">
-                                  <div>
-
-                                    <p className="text-md">{member.staffname}</p>
-                                    <p className="text-sm text-muted-foreground">{member.description}</p>
-                                    <p className="text-sm text-muted-foreground">{member.staffexperience} years</p>
-                                  </div>
-                                  <div className="text-right">
-                                    <div className="flex items-center gap-1 mb-1">
-                                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                                      {/* <span className="text-sm font-medium">{member.rating}</span> */}
-                                    </div>
-                                    <p className="text-xs text-muted-foreground">{member?.staffexperience}</p>
-                                  </div>
-                                </div>
-                                {/* <div className="flex flex-wrap gap-1">
+                                  {/* <div className="flex flex-wrap gap-1">
                               {member.specialties.map((specialty, specIndex) => (
                                 <Badge key={specIndex} variant="outline" className="text-xs">
                                   {specialty}
                                 </Badge>
                               ))}
                             </div> */}
+                                </div>
                               </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </TabsContent>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </TabsContent>
 
-                  <TabsContent value="reviews" className="space-y-4">
-                    <div className="grid gap-4">
-                      {/* {salon.reviewsList && salon.reviewsList?.map((review, index) => (
+                    <TabsContent value="reviews" className="space-y-4">
+                      <div className="grid gap-4">
+                        {/* {salon.reviewsList && salon.reviewsList?.map((review, index) => (
                     <Card key={index} className="border-0 bg-card/50 backdrop-blur-sm">
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between mb-3">
@@ -349,12 +383,12 @@ export default function SalonDetailPage() {
                       </CardContent>
                     </Card>
                   ))} */}
-                    </div>
-                  </TabsContent>
+                      </div>
+                    </TabsContent>
 
-                  <TabsContent value="photos" className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {/* {salon?.images && salon.images.map((image, index) => (
+                    <TabsContent value="photos" className="space-y-4">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {/* {salon?.images && salon.images.map((image, index) => (
                     <div key={index} className="aspect-square overflow-hidden rounded-lg">
                       <img
                         src={image || "/placeholder.svg"}
@@ -363,9 +397,13 @@ export default function SalonDetailPage() {
                       />
                     </div>
                   ))} */}
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                      </div>
+                    </TabsContent>
+                  </Tabs>)
+                  : (<NoServicesAvailable />)
+                }
+
+
               </div>
 
               {/* Sidebar */}
@@ -474,21 +512,7 @@ export default function SalonDetailPage() {
             </div>
           </div>
 
-          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur md:hidden">
-            <div className="container mx-auto px-4 py-3 flex items-center gap-3">
-              <Button className="flex-1">
-                <Calendar className="mr-2 h-4 w-4" />
-                Book
-              </Button>
-              <Button asChild variant="outline" className="flex-1 bg-transparent">
-                <a href={`tel:${salon.phone}`}>
-                  <Phone className="mr-2 h-4 w-4" />
-                  Call
-                </a>
-              </Button>
-            </div>
-          </div>
-        </>
+                 </>
 
       }
     </div>
