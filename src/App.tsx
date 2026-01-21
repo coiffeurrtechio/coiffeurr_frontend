@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import Config from "./configs/config";
 import { login } from "./utils/Storage/slice/authSlice";
 import { useNavigate } from "react-router-dom";
+import { ToastProvider } from "./components/Toast";
 
 const App = () => {
   const THIRTY_MINUTES = 30 * 60 * 1000;
@@ -74,7 +75,9 @@ const App = () => {
   }
 
   return (
-    <Router />
+    <ToastProvider>
+      <Router />
+    </ToastProvider>
   );
 };
 

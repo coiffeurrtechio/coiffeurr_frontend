@@ -1,5 +1,6 @@
 
 import { useForm } from "react-hook-form"
+import { useState } from "react"
 import { Button } from "../../components/ui_components/button"
 import { Input } from "../../components/ui_components/input"
 import { Label } from "../../components/ui_components/label"
@@ -8,6 +9,7 @@ import { Card } from "../../components/ui_components/card"
 import { useSelector } from "react-redux";
 import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI"
 import { useNavigate } from "react-router-dom"
+import { useToast } from "../../components/Toast"
 
 
 
@@ -39,6 +41,9 @@ type FormValues = {
 export default function SalonRegistrationForm() {
   const userDetails = useSelector((state: any) => state.auth.user);
   const { apiPost} = useApi();
+  const { showToast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageUrls, setImageUrls] = useState<string[]>([""]);
   
   const form = useForm<FormValues>({
     defaultValues: {
@@ -87,7 +92,7 @@ export default function SalonRegistrationForm() {
 
   async function handleUseLocation() {
     if (!("geolocation" in navigator)) {
-      alert({ title: "Location not available", description: "Your browser does not support geolocation." })
+      showToast({ type: "error", title: "Location not available", message: "Your browser does not support geolocation." })
       return
     }
     navigator.geolocation.getCurrentPosition(
@@ -95,21 +100,22 @@ export default function SalonRegistrationForm() {
         const { latitude, longitude } = pos.coords
         form.setValue("latitude", String(latitude), { shouldValidate: true, shouldDirty: true })
         form.setValue("longitude", String(longitude), { shouldValidate: true, shouldDirty: true })
-        alert({ title: "Location captured", description: "Latitude and longitude have been filled." })
+        showToast({ type: "success", title: "Location captured", message: "Latitude and longitude have been filled." })
       },
       (err) => {
-        alert({ title: "Unable to get location", description: err.message })
+        showToast({ type: "error", title: "Unable to get location", message: err.message })
       },
       { enableHighAccuracy: true, timeout: 10000 },
     )
   }
 
  async function onSubmit() {
-
+  setIsSubmitting(true);
   try {
+    const formData = { ...form.watch(), salonimages: imageUrls.filter(url => url.trim() !== "") };
     const res = await apiPost<[]>(
       "/salon/register",
-      form.watch(), // or just use values
+      formData,
       {
         headers: {
           "Content-Type": "application/json",
@@ -121,14 +127,19 @@ export default function SalonRegistrationForm() {
 
     if (res.error) {
       console.error("Error while registering:", res.error);
+      showToast({ type: "error", title: "Registration Failed", message: res.error });
     } else {
       console.log("Salon registered successfully:", res.data);
-      
-      form.reset(); // Uncomment if you want to clear the form
+      showToast({ type: "success", title: "Success", message: "Salon registered successfully!" });
+      form.reset();
+      setImageUrls([""]);
       navigate("/");
     }
   } catch (err) {
     console.error("Unexpected error:", err);
+    showToast({ type: "error", title: "Error", message: "An unexpected error occurred." });
+  } finally {
+    setIsSubmitting(false);
   }
 }
 
@@ -136,7 +147,7 @@ export default function SalonRegistrationForm() {
 
   return (
     <div className="space-y-6">
-      <Card className="p-4 md:p-6 md:px-20 bg-card text-card-foreground">
+      <Card className="p-4 md:p-6 lg:p-8 lg:px-12 bg-card text-card-foreground max-w-4xl mx-auto">
         <div className="mb-4">
           <div className="flex items-center justify-center flex-col">
             <h2 className="text-xl md:text-2xl font-semibold text-pretty">Register your Salon</h2>
@@ -180,6 +191,10 @@ export default function SalonRegistrationForm() {
             <div className="space-y-2">
               <Label htmlFor="phone">Phone</Label>
               <Input id="phone"  placeholder="+91 98765 43210" {...form.register("phone", { required: true })} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" type="password" placeholder="Enter a secure password" {...form.register("password", { required: true })} />
             </div>
 
             <div className="space-y-2">
@@ -285,18 +300,57 @@ export default function SalonRegistrationForm() {
             <div className="space-y-2">
               <Label htmlFor="logoUrl">Logo URL</Label>
               <Input id="logoUrl" placeholder="https://example.com/logo.png" {...form.register("logoUrl")} />
-              <img src={form.getValues("logoUrl")} alt="" />
+              {form.watch("logoUrl") && (
+                <img src={form.watch("logoUrl")} alt="Salon Logo" className="w-16 h-16 md:w-20 md:h-20 object-cover rounded" />
+              )}
             </div>
           </section>
 
-          
-
-         
+          {/* Salon Images */}
+          <section className="space-y-4">
+            <Label>Salon Images (URLs)</Label>
+            {imageUrls.map((url, index) => (
+              <div key={index} className="flex gap-2 items-end">
+                <div className="flex-1 space-y-2">
+                  <Input
+                    placeholder="https://example.com/image.jpg"
+                    value={url}
+                    onChange={(e) => {
+                      const newUrls = [...imageUrls];
+                      newUrls[index] = e.target.value;
+                      setImageUrls(newUrls);
+                    }}
+                  />
+                  {url && (
+                    <img src={url} alt={`Salon Image ${index + 1}`} className="w-16 h-16 object-cover rounded" />
+                  )}
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    const newUrls = imageUrls.filter((_, i) => i !== index);
+                    setImageUrls(newUrls.length ? newUrls : [""]);
+                  }}
+                  disabled={imageUrls.length === 1}
+                >
+                  Remove
+                </Button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setImageUrls([...imageUrls, ""])}
+            >
+              Add Image
+            </Button>
+          </section>
 
           {/* Submit */}
           <div className="flex items-center justify-end">
-            <Button type="submit" className="min-w-40">
-              Submit for Verification
+            <Button type="submit" className="min-w-40" disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Submit for Verification"}
             </Button>
           </div>
         </form>

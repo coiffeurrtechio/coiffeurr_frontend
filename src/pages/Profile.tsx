@@ -109,6 +109,11 @@ export default function Profile() {
       icon: BookOpen,
       onClick: () => { },
     },
+    {
+      title: "create salon",
+      icon: BookOpen,
+      onClick: () => navigate("/salonRegistration"),
+    },
     userDetails.role === "salon_owner" && {
       title: "Go to Dashboard",
       icon: LayoutDashboard,
