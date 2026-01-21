@@ -9,6 +9,12 @@ import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI"
 import type { salonSlots } from "../../Interfaces/SaloInterface"
 import { BookingLoader } from "../../components/ui_components/BookingLoader"
 import { BookingRequestSuccess } from "../../components/Loaders/BookingRequestSuccess"
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination, Autoplay } from "swiper/modules";
+
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 
 const SalonService: React.FC = () => {
     const [isFavorite, setIsFavorite] = useState(false)
@@ -190,20 +196,44 @@ const SalonService: React.FC = () => {
                 </div>
             </header>
 
+            <div>
+                <Swiper
+                    // key={salon.id}              // 🔥 THIS FIXES IT
+                    modules={[Pagination, Autoplay]}
+                    navigation
+                    pagination={{ clickable: true }}
+                    autoplay={{ delay: 3000, disableOnInteraction: false }}
+                    loop={salonservicedata?.saloninfoDTO?.images?.length > 1}
+                >
+                    {(salonservicedata?.saloninfoDTO?.images?.length > 0
+                        ? salonservicedata?.saloninfoDTO?.images
+                        : ["/placeholder.svg"]
+                    ).map((img, index) => (
+                        <SwiperSlide key={index}>
+                            <img
+                                src={img}
+                                alt="coiffeurr"
+                                className="w-full h-full object-cover"
+                            />
+                        </SwiperSlide>
+                    ))}
+                </Swiper>
+            </div>
+
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 lg:py-12">
                 {/* Gallery Section */}
                 {/* <ServiceGallery images={serviceData.images} serviceName={serviceData.name} /> */}
 
                 {/* Service Info and Booking */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-5">
                     {/* Left Column - Service Details */}
                     <div className="lg:col-span-2 space-y-8">
                         {/* Service Header */}
                         <div className="space-y-4">
                             <div className="flex items-start justify-between gap-4">
                                 <div className="flex-1">
-                                    <p className="text-sm font-semibold text-accent uppercase tracking-wide">{serviceData.category}</p>
+                                    {/* <p className="text-sm font-semibold text-accent uppercase tracking-wide">{serviceData.category}</p> */}
                                     <h1 className="text-4xl lg:text-5xl font-bold text-foreground mt-2 text-balance">
                                         {salonservicedata?.saloninfoDTO?.heading && salonservicedata?.saloninfoDTO?.heading}
                                     </h1>
