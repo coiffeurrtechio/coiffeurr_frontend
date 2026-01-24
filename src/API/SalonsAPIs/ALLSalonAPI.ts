@@ -61,6 +61,8 @@ export function useApi() {
 
       }
 
+            localStorage.setItem("accessToken", json.accessToken);
+
       return json?.accessToken || null;
     } catch (error) {
       console.error("❌ Token refresh failed:", error);

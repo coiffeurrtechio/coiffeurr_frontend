@@ -140,21 +140,36 @@ export default function DashBoardProfile() {
 
     const handleEditSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        setSalonDetails(editFormData);
         console.log("data for update =", editFormData);
 
+        // Compute only changed data
+        const changedData: Partial<SalonInterface> = { id: editFormData?.id }; // Always include id
+
+        if (editFormData && salonData) {
+            Object.keys(editFormData).forEach(key => {
+                const editValue = (editFormData as any)[key];
+                const originalValue = (salonData as any)[key];
+
+                // Special handling for arrays
+                if (Array.isArray(editValue) && Array.isArray(originalValue)) {
+                    if (JSON.stringify(editValue) !== JSON.stringify(originalValue)) {
+                        changedData[key as keyof SalonInterface] = editValue;
+                    }
+                } else if (editValue !== originalValue) {
+                    changedData[key as keyof SalonInterface] = editValue;
+                }
+            });
+        }
+
+        console.log("changed data =", changedData);
 
         try {
-            const res = await apiSalonPut<string>("/update-salon", salonDetails, {
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            })
+            const res = await apiSalonPut<string>("/update-salon", changedData)
             if (res.error) {
                 console.error("Error while registering:", res.error);
             } else {
                 console.log("Salon registered successfully:", res.data);
-                setSalonDetails(editFormData);
+                setsalonData(editFormData);
                 setIsEditModalOpen(false)
             }
 
@@ -176,6 +191,31 @@ export default function DashBoardProfile() {
         setEditFormData((prev) => {
             if (!prev) return prev; // safely handle undefined
             return { ...prev, [name]: value };
+        });
+    };
+
+    const handleImageUrlChange = (index: number, value: string) => {
+        setEditFormData((prev) => {
+            if (!prev) return prev;
+            const newImages = [...(prev.salonimages || [])];
+            newImages[index] = value;
+            return { ...prev, salonimages: newImages };
+        });
+    };
+
+    const removeImage = (index: number) => {
+        setEditFormData((prev) => {
+            if (!prev) return prev;
+            const newImages = (prev.salonimages || []).filter((_, i) => i !== index);
+            return { ...prev, salonimages: newImages };
+        });
+    };
+
+    const addImage = () => {
+        setEditFormData((prev) => {
+            if (!prev) return prev;
+            const newImages = [...(prev.salonimages || []), ''];
+            return { ...prev, salonimages: newImages };
         });
     };
 
@@ -265,28 +305,28 @@ export default function DashBoardProfile() {
     }
 
     return (
-        <div className="p-8 space-y-8">
+        <div className="p-4 md:p-8 space-y-6 md:space-y-8">
             <div>
-                <h1 className="text-4xl font-bold text-foreground mb-2">{salonData?.salonName}</h1>
+                <h1 className="text-2xl md:text-4xl font-bold text-foreground mb-2">{salonData?.salonName}</h1>
                 <p className="text-muted-foreground">{salonData?.salonType}</p>
             </div>
 
             {/* Profile Card */}
             <Card className="bg-card border-border">
                 <CardHeader>
-                    <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-6">
-                            <div className="w-24 h-24 rounded-lg bg-primary flex items-center justify-center">
-                                <span className="text-4xl font-bold text-primary-foreground">JA</span>
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div className="flex flex-col sm:flex-row items-center gap-4 md:gap-6">
+                            <div className="w-16 h-16 md:w-24 md:h-24 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+                                <span className="text-2xl md:text-4xl font-bold text-primary-foreground">JA</span>
                             </div>
-                            <div>
-                                <CardTitle className="text-2xl">{salonData?.ownerName}</CardTitle>
+                            <div className="text-center sm:text-left">
+                                <CardTitle className="text-xl md:text-2xl">{salonData?.ownerName}</CardTitle>
                                 <p className="text-primary mt-1">Owner</p>
                             </div>
                         </div>
                         <Button
                             onClick={handleEditClick}
-                            className="bg-primary text-primary-foreground hover:bg-primary/90">Edit Profile</Button>
+                            className="bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto">Edit Profile</Button>
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -355,7 +395,7 @@ export default function DashBoardProfile() {
                 </CardHeader>
                 <CardContent className="space-y-6">
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div className="flex items-start gap-4">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground">Country</p>
@@ -397,7 +437,7 @@ export default function DashBoardProfile() {
             {/* Salon Staff */}
             <Card className="bg-card border-border">
                 <CardHeader>
-                    <CardTitle className="flex justify-between">
+                    <CardTitle className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 
 
                         <div className="flex gap-4">
@@ -406,7 +446,7 @@ export default function DashBoardProfile() {
                         </div>
                         <div
                             onClick={() => setIsModalOpen(true)}
-                            className="flex gap-4 hover:bg-gray-200 p-2 cursor-pointer rounded-2xl duration-500"
+                            className="flex gap-4 hover:bg-gray-200 p-2 cursor-pointer rounded-2xl duration-500 w-full md:w-auto justify-center md:justify-start"
                         >
                             <Plus className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
                             <p className="text-foreground text-lg ">Add New Staff Member</p>
@@ -418,13 +458,13 @@ export default function DashBoardProfile() {
 
                     {salonData?.salonStaffDTOS && salonData?.salonStaffDTOS.map((item, index) => (
 
-                        <div key={index} className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg">
+                        <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-secondary/50 rounded-lg gap-4">
                             <div>
                                 <p className="font-medium text-foreground">{item?.staffname}</p>
                                 <p className="text-sm text-muted-foreground">{item?.staffexperience}</p>
                                 <p className="text-sm text-muted-foreground">{item?.description}</p>
                             </div>
-                            <div>
+                            <div className="text-left sm:text-right">
                                 <p>{item?.staffphone}</p>
                             </div>
                         </div>
@@ -437,7 +477,7 @@ export default function DashBoardProfile() {
             {/* Salon Services  */}
             <Card className="bg-card border-border">
                 <CardHeader>
-                    <CardTitle className="flex justify-between">
+                    <CardTitle className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 
 
                         <div className="flex gap-4">
@@ -449,7 +489,7 @@ export default function DashBoardProfile() {
                                 fetchServices();
                                 setisEditModalServiceOpen(true)
                             }}
-                            className="flex gap-4 hover:bg-gray-200 p-2 cursor-pointer rounded-2xl duration-500"
+                            className="flex gap-4 hover:bg-gray-200 p-2 cursor-pointer rounded-2xl duration-500 w-full md:w-auto justify-center md:justify-start"
                         >
                             <Plus className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
                             <p className="text-foreground text-lg ">Add New Salon Service</p>
@@ -464,7 +504,7 @@ export default function DashBoardProfile() {
                         <div
                             key={index}
                             className={`${item?.available === true ? "bg-red-200" : "bg-secondary/50"
-                                } flex items-center justify-between p-4 rounded-lg`}
+                                } flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg gap-4`}
                         >
                             <div>
                                 <p className="font-medium text-foreground">{item.serviceName}</p>
@@ -652,9 +692,8 @@ export default function DashBoardProfile() {
                                 <div>
                                     <label className="text-sm font-medium block mb-2">Available</label>
                                     <Select
-                                        value={NewSalonService.available}
                                         onValueChange={(value) => handleServiceSelect(value === "true", "available")}
-                                        value={String(NewSalonService.available)} // store as string
+                                        value={NewSalonService.available} // store as string
 
                                     >
                                         <SelectTrigger>
@@ -827,7 +866,7 @@ export default function DashBoardProfile() {
                                 <X className="w-5 h-5" />
                             </button>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="max-h-[80vh] overflow-y-auto pr-2">
                             <form
                                 onSubmit={handleEditSubmit}
                                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 "
@@ -877,7 +916,7 @@ export default function DashBoardProfile() {
                                 </div>
 
 
-                                <div>
+                                {/* <div>
                                     <label className="text-sm font-medium text-foreground block mb-2">
                                         Phone
                                     </label>
@@ -905,7 +944,7 @@ export default function DashBoardProfile() {
                                         required
                                         className="bg-background border-border"
                                     />
-                                </div>
+                                </div> */}
 
                                 <div>
                                     <label className="text-sm font-medium text-foreground block mb-2">
@@ -979,18 +1018,86 @@ export default function DashBoardProfile() {
                                     />
                                 </div>
 
+                                
+
+                                <div>
+                                    <label className="text-sm font-medium text-foreground block mb-2">
+                                        Registration Number
+                                    </label>
+                                    <Input
+                                        type="text"
+                                        name="registrationNumber"
+                                        value={editFormData?.registrationNumber || ''}
+                                        onChange={handleEditInputChange}
+                                        placeholder="Enter registration number"
+                                        className="bg-background border-border"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-sm font-medium text-foreground block mb-2">
+                                        GST Number
+                                    </label>
+                                    <Input
+                                        type="text"
+                                        name="gstNumber"
+                                        value={editFormData?.gstNumber || ''}
+                                        onChange={handleEditInputChange}
+                                        placeholder="Enter GST number"
+                                        className="bg-background border-border"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-sm font-medium text-foreground block mb-2">
+                                        Opening Hours JSON
+                                    </label>
+                                    <Input
+                                        type="text"
+                                        name="openingHoursJson"
+                                        value={editFormData?.openingHoursJson || ''}
+                                        onChange={handleEditInputChange}
+                                        placeholder="Enter opening hours JSON"
+                                        className="bg-background border-border"
+                                    />
+                                </div>
+
+                                
+
                                 <div className="col-span-1 sm:col-span-2 lg:col-span-3">
                                     <label className="text-sm font-medium text-foreground block mb-2">
-                                        Description
+                                        Salon Images
                                     </label>
-                                    <textarea
-                                        name="description"
-                                        value={editFormData?.description}
-                                        onChange={handleEditInputChange}
-                                        placeholder="Enter salon description"
-                                        rows={3}
-                                        className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                    />
+                                    <div className="space-y-2">
+                                        {editFormData?.images?.map((url, index) => (
+                                            <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                                                <img src={url} alt={`Salon image ${index + 1}`} className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded flex-shrink-0" />
+                                                <Input
+                                                    type="url"
+                                                    value={url}
+                                                    onChange={(e) => handleImageUrlChange(index, e.target.value)}
+                                                    placeholder="Enter image URL"
+                                                    className="flex-1 bg-background border-border"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={() => removeImage(index)}
+                                                    className="text-red-500 w-full sm:w-auto"
+                                                >
+                                                    Remove
+                                                </Button>
+                                            </div>
+                                        ))}
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={addImage}
+                                            className="w-full"
+                                        >
+                                            Add Image
+                                        </Button>
+                                    </div>
                                 </div>
 
                                 <div className="col-span-1 sm:col-span-2 lg:col-span-3 flex gap-3 pt-4">

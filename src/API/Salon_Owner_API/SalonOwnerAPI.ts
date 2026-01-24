@@ -50,6 +50,7 @@ export function useSalonApi() {
           },
         })
       );
+      localStorage.setItem("accessToken", JSON.stringify(json.accessToken));
 
 
       return json;

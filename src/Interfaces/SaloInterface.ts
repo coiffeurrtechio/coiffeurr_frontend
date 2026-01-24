@@ -55,24 +55,29 @@ export interface SalonInterface {
   street: string;
   city: string;
   state: string;
-  pincode: number;
+  pincode: string;
   country: string;
-  openingTime: string;
-  closingTime: string;
-  lunchStart: string;
-  lunchEnd: string;
-  rating: number;
-  reviews: number;
   latitude: string;
   longitude: string;
   salonType: string;
   logoUrl: string;
+  registrationNumber?: string;
+  gstNumber?: string;
+  openingHoursJson?: string;
+  createdAt?: string;
+  salonServices: SalonService[];
+  closingTime: string;
+  lunchEnd: string;
+  lunchStart: string;
+  openingTime: string;
+  images: string[];
   image: string;
   priceRange: string;
-  salonServices: SalonService[];
   salonStaffDTOS: salonStaffDTOS[];
   description?: string;
   distance?: string;
+  rating: number;
+  reviews: number;
 }
 
 

@@ -5,6 +5,8 @@ import { BrowserRouter } from 'react-router-dom'
 import { ToastProvider } from './components/Toast.tsx'
 import { Provider } from "react-redux";
 import store from './utils/Storage/store.ts'
+import * as serviceWorkerRegistration from './serviceWorkerRegistration';
+
 
 createRoot(document.getElementById('root')!).render(
   // <StrictMode>
@@ -18,3 +20,4 @@ createRoot(document.getElementById('root')!).render(
   </Provider>
   // </StrictMode>,
 )
+serviceWorkerRegistration.register();
