@@ -1,24 +1,60 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { VitePWA } from 'vite-plugin-pwa';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
+import { VitePWA } from 'vite-plugin-pwa'
+// Option A: If you must use process.env, keep the import
+import EnvironmentPlugin from 'vite-plugin-environment'
 
 export default defineConfig({
   plugins: [
     react(),
+    tailwindcss(),
+    // Changed 'all' to a specific object to prevent the build error
+    EnvironmentPlugin({
+      NODE_ENV: process.env.NODE_ENV || 'development',
+    }),
     VitePWA({
       registerType: 'autoUpdate',
-      manifest: {
-        name: 'Coiffure Frontend',
-        short_name: 'Coiffure',
-        start_url: '/',
-        display: 'standalone',
-        background_color: '#ffffff',
-        theme_color: '#000000',
-        icons: [
-          { src: 'logo192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'logo512.png', sizes: '512x512', type: 'image/png' },
-        ],
+      injectRegister: 'auto',
+      devOptions: {
+        enabled: true 
       },
-    }),
+      manifest: {
+        name: 'Coiffure App',
+        short_name: 'Coiffure',
+        description: 'Premium Hair Styling PWA',
+        theme_color: '#000000',
+        background_color: '#000000',
+        display: 'standalone',
+        icons: [
+          {
+            src: 'maskable.png',
+            sizes: '1136x1136',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: 'logo192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'logo512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          }
+        ]
+      }
+    })
   ],
-});
+  build: {
+    outDir: 'dist',
+    // Helpful for debugging PWA builds
+    sourcemap: false, 
+  },
+  resolve: {
+    alias: {
+      '@': '/src',
+    },
+  },
+})
