@@ -52,7 +52,7 @@ function Footer() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-2xl font-bold mb-4">Coiffure</h3>
+              <h3 className="text-2xl font-bold mb-4">Coiffeurr</h3>
               <p className="text-primary-foreground/80 text-sm mb-4">
                 Premium beauty services delivered by expert professionals.
                 Transform your look with our luxury treatments.
@@ -137,7 +137,7 @@ function Footer() {
           </div>
 
           <div className="border-t border-primary-foreground/20 mt-8 pt-8 text-center text-sm text-primary-foreground/60">
-            <p>&copy; 2025 Coiffure. All rights reserved.</p>
+            <p>&copy; 2025 Coiffeurr. All rights reserved.</p>
           </div>
         </div>
       </footer>

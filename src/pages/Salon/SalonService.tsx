@@ -151,11 +151,13 @@ const SalonService: React.FC = () => {
             const localDateTime = new Date(isoString);
             console.log("localDateTime=", localDateTime);
 
+            const appointmentDateTime = isoString;
+            console.log("appointmentDateTime=", appointmentDateTime);
 
             const data = {
                 bookedPrice: salonservicedata?.price,
                 durationMinutes: salonservicedata?.slotTime,
-                appointmentDateTime: localDateTime,
+                appointmentDateTime: appointmentDateTime,
             }
             console.log("data = ", data);
 

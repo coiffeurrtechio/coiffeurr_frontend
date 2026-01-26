@@ -34,7 +34,7 @@ export function Loader({ isVisible = true }: LoaderProps) {
         {/* Logo and Branding */}
         <div className="text-center">
           <h1 className="text-5xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent mb-2">
-            Coiffure
+            Coiffeurr
           </h1>
           <p className="text-sm font-medium text-accent">Premium Salon Services</p>
         </div>

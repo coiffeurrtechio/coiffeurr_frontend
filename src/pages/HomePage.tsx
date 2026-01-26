@@ -106,7 +106,7 @@ export default function HomePage() {
             <Header/>
      <div className="w-full sticky bg-background top-0 z-50">
       {/* Tabs */}
-      <div className="relative flex w-full justify-center border-b border-gray-300">
+      {/* <div className="relative flex w-full justify-center border-b border-gray-300">
         <button
           onClick={() => setActive("salon")}
           className="relative w-1/2 py-3 text-center font-semibold flex justify-center items-center gap-2"
@@ -123,7 +123,6 @@ export default function HomePage() {
           Artist
         </button>
 
-        {/* SUPER SMOOTH SLIDING BAR */}
         <div
           className={`absolute bottom-0 h-1.5 bg-black rounded-full 
             transition-all duration-500 ease-[cubic-bezier(.25,.8,.25,1)]
@@ -133,7 +132,7 @@ export default function HomePage() {
             left: active === "salon" ? "12.5%" : "62.5%", // perfect smooth slide
           }}
         ></div>
-      </div>
+      </div> */}
 
       
 

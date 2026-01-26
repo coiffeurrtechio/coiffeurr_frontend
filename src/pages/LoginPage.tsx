@@ -3,7 +3,7 @@ import React from "react"
 import { useState } from "react"
 import { Button } from "../components/ui_components/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui_components/card"
-import { Eye, EyeOff, Mail, Lock, ArrowLeft } from "lucide-react"
+import { Eye, EyeOff, Mail, Lock, ArrowLeft, Users, Building2, Scissors } from "lucide-react"
 import { Link } from "react-router-dom"
 import Config from '../configs/config'
 import { useToast } from "../components/Toast"
@@ -11,8 +11,13 @@ import { useDispatch } from "react-redux";
 import { login } from "../utils/Storage/slice/authSlice"
 import { useNavigate } from "react-router-dom";
 
+interface LoginSlideProps {
+  role: string
+  onBack: () => void
+  roles: Array<{ id: string; title: string; icon: any; color: string }>
+}
 
-export default function LoginPage() {
+function LoginPage({ role, onBack, roles }: LoginSlideProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
     usernameoremail: "",
@@ -23,6 +28,8 @@ export default function LoginPage() {
   const { showToast } = useToast();
   const dispatch = useDispatch();
   const navigate = useNavigate(); // ✅ hook for navigation
+
+  const roleData = roles.find((r) => r.id === role)
 
 
 
@@ -42,7 +49,7 @@ export default function LoginPage() {
 
     if (!formData.password) {
       newErrors.password = "Password is required"
-    } else if (formData.password.length < 3) {
+    } else if (formData.password.length < 6) {
       newErrors.password = "Password must be at least 6 characters"
     }
 
@@ -56,6 +63,7 @@ export default function LoginPage() {
     if (!validateForm()) return;
 
     setIsLoading(true);
+    console.log("formData =", formData);
 
     try {
       // Make API request
@@ -94,7 +102,7 @@ export default function LoginPage() {
       showToast({
         type: "success",
         title: "Login Successful",
-        message: "Welcome to Coiffure!",
+        message: "Welcome to Coiffeurr!",
         duration: 5000,
       });
 
@@ -154,14 +162,13 @@ export default function LoginPage() {
 
       <div className="relative w-full max-w-md">
         {/* Back to home link */}
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
+        <button
+          onClick={onBack}
+          className="self-start text-muted-foreground hover:text-foreground transition-colors text-sm font-medium mb-2"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Coiffure
-        </Link>
-
+          ← Back
+        </button>
+        
         <Card className="border-0 bg-card/50 backdrop-blur-sm shadow-2xl">
           <CardHeader className="text-center pb-6">
             <div className="mx-auto w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
@@ -284,5 +291,102 @@ export default function LoginPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+
+export default function Home() {
+  const [selectedRole, setSelectedRole] = useState<string | null>(null)
+
+  const roles = [
+    {
+      id: "customer",
+      title: "Customer",
+      icon: Users,
+      color: "bg-blue-500",
+    },
+    {
+      id: "salon-owner",
+      title: "Salon Owner",
+      icon: Building2,
+      color: "bg-purple-500",
+    },
+    {
+      id: "artist",
+      title: "Artist",
+      icon: Scissors,
+      color: "bg-pink-500",
+    },
+  ]
+
+  return (
+    <main className="min-h-screen bg-background flex items-center justify-center overflow-hidden">
+      {/* Slide Container */}
+      <div className="relative w-full h-screen flex">
+        {/* Role Selection Slide */}
+        <div
+          className={`absolute w-full h-screen flex items-center justify-center transition-all duration-500 ease-out ${selectedRole ? "-translate-x-full" : "translate-x-0"
+            }`}
+        >
+          {/* Logo */}
+          <div className="absolute top-8 left-1/2 transform -translate-x-1/2 md:top-12">
+            <div className="rounded-lg flex items-center justify-center">
+              <Link to="/">
+                <div className="flex items-center gap-2">
+                  <img src="/dummy_logo.png" alt="" className="h-10" />
+                  <h1 className="text-2xl font-bold tracking-tight">Coiffeurr</h1>
+                </div>
+              </Link>            </div>
+          </div>
+
+          {/* Role Selection Content */}
+          <div className="w-full px-6 py-12 flex flex-col items-center justify-center gap-8 max-w-md">
+            <div className="text-center mb-4">
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+                Choose Your Role
+              </h1>
+              <p className="text-muted-foreground">Select how you want to use SalonPro</p>
+            </div>
+
+            {/* Role Options */}
+            <div className="w-full flex flex-col gap-4">
+              {roles.map((role) => {
+                const IconComponent = role.icon
+                return (
+                  <button
+                    key={role.id}
+                    onClick={() => setSelectedRole(role.id)}
+                    className="group w-full p-6 rounded-xl border-2 border-border hover:border-foreground bg-card transition-all duration-300 hover:shadow-lg active:scale-95"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`${role.color} p-3 rounded-lg flex-shrink-0`}>
+                        <IconComponent className="w-6 h-6 text-white" />
+                      </div>
+                      <span className="text-lg font-semibold text-foreground group-hover:text-foreground">
+                        {role.title}
+                      </span>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Login Slide */}
+        <div
+          className={`absolute w-full h-screen flex items-center justify-center transition-all duration-500 ease-out ${selectedRole ? "translate-x-0" : "translate-x-full"
+            }`}
+        >
+          {selectedRole && (
+            <LoginPage
+              role={selectedRole}
+              onBack={() => setSelectedRole(null)}
+              roles={roles}
+            />
+          )}
+        </div>
+      </div>
+    </main>
   )
 }

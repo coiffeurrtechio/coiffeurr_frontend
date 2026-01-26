@@ -1,7 +1,8 @@
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Config from "../../configs/config";
-import { logout } from "../../utils/Storage/slice/authSlice";
+import { login, logout } from "../../utils/Storage/slice/authSlice";
+import { logoutUser } from "../APIs";
 
 export interface ApiResponse<T> {
   data: T | null;
@@ -24,36 +25,43 @@ export function useSalonApi() {
       const response = await fetch(`${Config.API_BASE_URL}/refreshtoken`, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: accessToken ? `Bearer ${accessToken}` : "",
+          // Authorization: accessToken ? `Bearer ${accessToken}` : "",
           "X-Refresh-Token": refreshToken, // 👈 send refresh token in header
         },
         credentials: "include",
       });
 
       if (!response.ok) {
-        dispatch(logout());
+        // dispatch(logout());
+        dispatch(logoutUser());
+
         navigate("/login");
         return null;
       }
 
-
-
-
-      const json = await response.json();
-
-      localStorage.setItem(
-        "authState",
-        JSON.stringify({
-          ...parsed,
-          user: {
-            json
-          },
+      const result = await response.json();
+      dispatch(
+        login({
+          user: result             // user details (id, email, etc.)
         })
       );
-      localStorage.setItem("accessToken", JSON.stringify(json.accessToken));
 
 
-      return json;
+      // const json = await response.json();
+
+      // localStorage.setItem(
+      //   "authState",
+      //   JSON.stringify({
+      //     ...parsed,
+      //     user: {
+      //       json
+      //     },
+      //   })
+      // );
+      // localStorage.setItem("accessToken", JSON.stringify(json.accessToken));
+
+
+      return result;
     } catch {
       navigate("/login");
       return null;
@@ -77,7 +85,7 @@ export function useSalonApi() {
       const response = await fetch(`${Config.API_Salon_owner}${endpoint}`, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
+          // Authorization: `Bearer ${accessToken}`,
           ...(options.headers || {}),
         },
         credentials: "include",
@@ -150,7 +158,7 @@ export function useSalonApi() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
+          // Authorization: `Bearer ${accessToken}`,
           ...(options.headers || {}),
         },
         body: JSON.stringify(body),
@@ -176,7 +184,7 @@ export function useSalonApi() {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${newToken}`,
+              // Authorization: `Bearer ${newToken}`,
               ...(options.headers || {}),
             },
             body: JSON.stringify(body),
@@ -228,7 +236,7 @@ export function useSalonApi() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
+          // Authorization: `Bearer ${accessToken}`,
 
           ...(options.headers || {}),
         },
@@ -255,7 +263,7 @@ export function useSalonApi() {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${newToken}`,
+              // Authorization: `Bearer ${newToken}`,
               ...(options.headers || {}),
             },
             body: JSON.stringify(body),

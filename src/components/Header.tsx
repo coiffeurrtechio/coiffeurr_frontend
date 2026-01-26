@@ -56,7 +56,7 @@ export function Header() {
             <Link to="/">
               <div className="flex items-center gap-2">
                 <img src="/dummy_logo.png" alt="" className="h-10" />
-                <h1 className="text-2xl font-bold tracking-tight">Coiffure</h1>
+                <h1 className="text-2xl font-bold tracking-tight">Coiffeurr</h1>
               </div>
             </Link>
 

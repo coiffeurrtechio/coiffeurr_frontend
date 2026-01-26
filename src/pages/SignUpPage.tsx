@@ -158,7 +158,7 @@ export default function SignUpPage() {
                     className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    Back to Coiffure
+                    Back to Coiffeurr
                 </Link>
 
                 <Card className="border-0 bg-card/50 backdrop-blur-sm shadow-2xl">
@@ -168,7 +168,7 @@ export default function SignUpPage() {
                         </div>
                         <CardTitle className="text-2xl font-bold">Create your account</CardTitle>
                         <CardDescription className="text-muted-foreground">
-                            Join Coiffure to book premium salon services
+                            Join Coiffeurr to book premium salon services
                         </CardDescription>
                     </CardHeader>
 

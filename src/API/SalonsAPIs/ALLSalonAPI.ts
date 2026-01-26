@@ -1,7 +1,8 @@
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Config from "../../configs/config";
-import { logout } from "../../utils/Storage/slice/authSlice";
+import { login, logout } from "../../utils/Storage/slice/authSlice";
+import { logoutUser } from "../APIs";
 
 export interface ApiResponse<T> {
   data: T | null;
@@ -14,56 +15,52 @@ export function useApi() {
   const navigate = useNavigate();
 
   const generateAccessToken = async (): Promise<string | null> => {
-    const userData = localStorage.getItem("authState");
-    if (!userData) return null;
-    const parsed = JSON.parse(userData);
-    const accessToken = parsed?.user?.accessToken
-    const refreshToken = parsed?.user?.refreshToken
+    // const userData = localStorage.getItem("authState");
+    // if (!userData) return null;
+    // const parsed = JSON.parse(userData);
+    // const accessToken = parsed?.user?.accessToken
+    // const refreshToken = parsed?.user?.refreshToken
     try {
       // ✅ Read tokens from localStorage
 
-      if (!refreshToken) {
-        console.warn("⚠️ No refresh token found in localStorage");
-        dispatch(logout());
-        navigate("/login");
-        return null;
-      }
+      // if (!refreshToken) {
+      //   console.warn("⚠️ No refresh token found in localStorage");
+      //   dispatch(logout());
+      //   navigate("/login");
+      //   return null;
+      // }
 
       // ✅ Call backend refresh API
       const response = await fetch(`${Config.API_BASE_URL}/refreshtoken`, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: accessToken ? `Bearer ${accessToken}` : "",
-          "X-Refresh-Token": refreshToken, // 👈 send refresh token in header
+          // Authorization: accessToken ? `Bearer ${accessToken}` : "",
+          // "X-Refresh-Token": refreshToken, // 👈 send refresh token in header
         },
         credentials: "include",
       });
 
       if (!response.ok) {
-        dispatch(logout());
+        // dispatch(logout());
+            dispatch(logoutUser()); 
         navigate("/login");
         return null;
       }
+       const result = await response.json();
+            dispatch(
+              login({
+                user: result             // user details (id, email, etc.)
+              })
+            );
 
-      const json = await response.json();
+      // const json = await response.json();
 
       // ✅ Update localStorage with new access token
-      if (json?.accessToken) {
-        localStorage.setItem(
-          "authState",
-          JSON.stringify({
-            ...parsed,
-            user: {
-              json
-            },
-          })
-        );
+      
 
-      }
+            // localStorage.setItem("accessToken", result);
 
-            localStorage.setItem("accessToken", json.accessToken);
-
-      return json?.accessToken || null;
+      return result || null;
     } catch (error) {
       console.error("❌ Token refresh failed:", error);
       navigate("/login");
@@ -77,19 +74,19 @@ export function useApi() {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> => {
     try {
-      const userData = localStorage.getItem("authState");
-      if (!userData) return { data: null, error: "No user data", status: 401 };
+      // const userData = localStorage.getItem("authState");
+      // if (!userData) return { data: null, error: "No user data", status: 401 };
 
-      const parsed = JSON.parse(userData);
-      const accessToken = parsed?.user?.accessToken;
-      console.log("parsed =", parsed);
-      console.log("accessToken =", accessToken);
+      // const parsed = JSON.parse(userData);
+      // const accessToken = parsed?.user?.accessToken;
+      // console.log("parsed =", parsed);
+      // console.log("accessToken =", accessToken);
 
 
       const response = await fetch(`${Config.API_Customers}${endpoint}`, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
+          // Authorization: `Bearer ${accessToken}`,
           ...(options.headers || {}),
         },
         credentials: "include",
@@ -97,6 +94,8 @@ export function useApi() {
       });
 
       const status = response.status;
+      console.log("response",response);
+      
       let json: any = null;
       try {
         json = await response.json();
@@ -109,17 +108,17 @@ export function useApi() {
         const newToken = await generateAccessToken();
         if (newToken) {
           // Save new token to localStorage
-          localStorage.setItem(
-            "authState",
-            JSON.stringify({ ...parsed, accessToken: newToken })
-          );
+          // localStorage.setItem(
+          //   "authState",
+          //   JSON.stringify({ ...parsed, accessToken: newToken })
+          // );
 
           // Retry original request with new token
           const retryResponse = await fetch(`${Config.API_Customers}${endpoint}`, {
             ...options,
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${newToken}`,
+              // Authorization: `Bearer ${newToken}`,
               ...(options.headers || {}),
             },
             credentials: "include",
@@ -171,7 +170,7 @@ export function useApi() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
+          // Authorization: `Bearer ${accessToken}`,
           ...(options.headers || {}),
         },
         body: JSON.stringify(body),
@@ -197,7 +196,7 @@ export function useApi() {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${newToken}`,
+              // Authorization: `Bearer ${newToken}`,
               ...(options.headers || {}),
             },
             body: JSON.stringify(body),
@@ -247,7 +246,7 @@ export function useApi() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
+          // Authorization: `Bearer ${accessToken}`,
           ...(options.headers || {}),
         },
         body: JSON.stringify(body),
@@ -273,7 +272,7 @@ export function useApi() {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${newToken}`,
+              // "Authorization": `Bearer ${newToken}`,
               ...(options.headers || {}),
             },
             body: JSON.stringify(body),

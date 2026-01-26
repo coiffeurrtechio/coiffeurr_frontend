@@ -13,7 +13,6 @@ export default function DashBoardProfile() {
         role: "Salon Manager",
         email: "john@luxebeauty.com",
         phone: "+1 (555) 123-4567",
-        location: "New York, NY",
         joinDate: "January 2015",
         bio: "Experienced salon manager with 10+ years in the beauty industry.",
     }
@@ -186,11 +185,15 @@ export default function DashBoardProfile() {
     const handleEditInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => {
-        const { name, value } = e.target;
+        const { name, value, type } = e.target;
 
         setEditFormData((prev) => {
             if (!prev) return prev; // safely handle undefined
-            return { ...prev, [name]: value };
+            let processedValue: any = value;
+            if (type === 'number') {
+                processedValue = value === '' ? '' : (name === 'rating' ? parseFloat(value) : parseInt(value, 10));
+            }
+            return { ...prev, [name]: processedValue };
         });
     };
 
@@ -888,44 +891,28 @@ export default function DashBoardProfile() {
 
                                 <div>
                                     <label className="text-sm font-medium text-foreground block mb-2">
-                                        Country
+                                        Logo URL
                                     </label>
                                     <Input
-                                        type="text"
-                                        name="country"
-                                        value={editFormData?.country}
+                                        type="url"
+                                        name="logoUrl"
+                                        value={editFormData?.logoUrl}
                                         onChange={handleEditInputChange}
-                                        placeholder="Enter salon address"
-                                        required
+                                        placeholder="Enter logo URL"
                                         className="bg-background border-border"
                                     />
                                 </div>
+
                                 <div>
                                     <label className="text-sm font-medium text-foreground block mb-2">
-                                        State
+                                        Owner Name
                                     </label>
                                     <Input
                                         type="text"
-                                        name="state"
-                                        value={editFormData?.state}
+                                        name="ownerName"
+                                        value={editFormData?.ownerName}
                                         onChange={handleEditInputChange}
-                                        placeholder="Enter salon address"
-                                        required
-                                        className="bg-background border-border"
-                                    />
-                                </div>
-
-
-                                {/* <div>
-                                    <label className="text-sm font-medium text-foreground block mb-2">
-                                        Phone
-                                    </label>
-                                    <Input
-                                        type="tel"
-                                        name="phone"
-                                        value={editFormData?.phone}
-                                        onChange={handleEditInputChange}
-                                        placeholder="Enter phone number"
+                                        placeholder="Enter owner name"
                                         required
                                         className="bg-background border-border"
                                     />
@@ -944,7 +931,166 @@ export default function DashBoardProfile() {
                                         required
                                         className="bg-background border-border"
                                     />
-                                </div> */}
+                                </div>
+
+                                <div>
+                                    <label className="text-sm font-medium text-foreground block mb-2">
+                                        Phone
+                                    </label>
+                                    <Input
+                                        type="tel"
+                                        name="phone"
+                                        value={editFormData?.phone}
+                                        onChange={handleEditInputChange}
+                                        placeholder="Enter phone number"
+                                        required
+                                        className="bg-background border-border"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-sm font-medium text-foreground block mb-2">
+                                        City
+                                    </label>
+                                    <Input
+                                        type="text"
+                                        name="city"
+                                        value={editFormData?.city}
+                                        onChange={handleEditInputChange}
+                                        placeholder="Enter city"
+                                        required
+                                        className="bg-background border-border"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-sm font-medium text-foreground block mb-2">
+                                        Pincode
+                                    </label>
+                                    <Input
+                                        type="text"
+                                        name="pincode"
+                                        value={editFormData?.pincode}
+                                        onChange={handleEditInputChange}
+                                        placeholder="Enter pincode"
+                                        required
+                                        className="bg-background border-border"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-sm font-medium text-foreground block mb-2">
+                                        Country
+                                    </label>
+                                    <Input
+                                        type="text"
+                                        name="country"
+                                        value={editFormData?.country}
+                                        onChange={handleEditInputChange}
+                                        placeholder="Enter country"
+                                        required
+                                        className="bg-background border-border"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-foreground block mb-2">
+                                        State
+                                    </label>
+                                    <Input
+                                        type="text"
+                                        name="state"
+                                        value={editFormData?.state}
+                                        onChange={handleEditInputChange}
+                                        placeholder="Enter state"
+                                        required
+                                        className="bg-background border-border"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-sm font-medium text-foreground block mb-2">
+                                        Rating
+                                    </label>
+                                    <Input
+                                        type="number"
+                                        step="0.1"
+                                        name="rating"
+                                        value={editFormData?.rating}
+                                        onChange={handleEditInputChange}
+                                        placeholder="Enter rating"
+                                        className="bg-background border-border"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-sm font-medium text-foreground block mb-2">
+                                        Reviews
+                                    </label>
+                                    <Input
+                                        type="number"
+                                        name="reviews"
+                                        value={editFormData?.reviews}
+                                        onChange={handleEditInputChange}
+                                        placeholder="Enter reviews count"
+                                        className="bg-background border-border"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-sm font-medium text-foreground block mb-2">
+                                        Price Range
+                                    </label>
+                                    <Input
+                                        type="text"
+                                        name="priceRange"
+                                        value={editFormData?.priceRange}
+                                        onChange={handleEditInputChange}
+                                        placeholder="Enter price range"
+                                        className="bg-background border-border"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-sm font-medium text-foreground block mb-2">
+                                        Latitude
+                                    </label>
+                                    <Input
+                                        type="text"
+                                        name="latitude"
+                                        value={editFormData?.latitude}
+                                        onChange={handleEditInputChange}
+                                        placeholder="Enter latitude"
+                                        className="bg-background border-border"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-sm font-medium text-foreground block mb-2">
+                                        Longitude
+                                    </label>
+                                    <Input
+                                        type="text"
+                                        name="longitude"
+                                        value={editFormData?.longitude}
+                                        onChange={handleEditInputChange}
+                                        placeholder="Enter longitude"
+                                        className="bg-background border-border"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-sm font-medium text-foreground block mb-2">
+                                        Salon Type
+                                    </label>
+                                    <Input
+                                        type="text"
+                                        name="salonType"
+                                        value={editFormData?.salonType}
+                                        onChange={handleEditInputChange}
+                                        placeholder="Enter salon type"
+                                        className="bg-background border-border"
+                                    />
+                                </div>
 
                                 <div>
                                     <label className="text-sm font-medium text-foreground block mb-2">

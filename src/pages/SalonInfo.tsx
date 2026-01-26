@@ -348,7 +348,7 @@ const [searchTerm, setSearchTerm] = useState<string>("");
             </div>
 
             {/* Hero Section */}
-            <section className="relative py-20 lg:py-32 overflow-hidden" >
+            {/* <section className="relative py-20 lg:py-32 overflow-hidden" >
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="max-w-4xl mx-auto text-center">
                         <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-balance mb-6">
@@ -370,7 +370,6 @@ const [searchTerm, setSearchTerm] = useState<string>("");
                     </div>
                 </div>
 
-                {/* Hero Image */}
                 <div className="mt-16 relative">
                     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="relative rounded-2xl overflow-hidden shadow-2xl">
@@ -384,10 +383,10 @@ const [searchTerm, setSearchTerm] = useState<string>("");
                         </div>
                     </div>
                 </div>
-            </section >
+            </section > */}
 
             {/* Stats Section */}
-            <section className="py-16 bg-secondary/30" >
+            {/* <section className="py-16 bg-secondary/30" >
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
                         <div className="text-center">
@@ -420,10 +419,10 @@ const [searchTerm, setSearchTerm] = useState<string>("");
                         </div>
                     </div>
                 </div>
-            </section >
+            </section > */}
 
             {/* CTA Section */}
-            <section className="py-20" >
+            {/* <section className="py-20" >
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <Card className="border-0 bg-primary text-primary-foreground overflow-hidden">
                         <CardContent className="p-12 text-center">
@@ -448,7 +447,7 @@ const [searchTerm, setSearchTerm] = useState<string>("");
                         </CardContent>
                     </Card>
                 </div>
-            </section >
+            </section > */}
 
         </>
     )

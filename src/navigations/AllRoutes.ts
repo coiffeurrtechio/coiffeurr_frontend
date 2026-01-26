@@ -13,6 +13,7 @@ import SalonService from "../pages/Salon/SalonService";
 import DashBoardBusiness from "../pages/Salon/SalonOwner/DashBoardPages.tsx/DashBoardBusiness";
 import WorkInProgress from "../components/WorkInProgress";
 import BookingPage from "../pages/BookingPage";
+import Home from "../pages/LoginPage";
 
 export interface AppRoute {
   key: number;
@@ -45,7 +46,7 @@ const routes: AppRoute[] = [
   {
     key: 2,
     path: "/login",
-    Element: LoginPage,
+    Element: Home,
     isProtected: false,
   },
   {

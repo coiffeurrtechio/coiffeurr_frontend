@@ -25,6 +25,7 @@ import { useNavigate } from "react-router-dom";
 import { logout } from "../utils/Storage/slice/authSlice"
 import { useApi } from "../API/SalonsAPIs/ALLSalonAPI"
 import type { BookingResponse } from "../Interfaces/BookingInterface"
+import { logoutUser } from "../API/APIs"
 
 
 export default function Profile() {
@@ -45,7 +46,6 @@ export default function Profile() {
     userType: userDetails.role,
     joinDate: "March 2023",
     profileImage: "/professional-woman-smiling.png",
-    location: "New York, NY",
     loyaltyPoints: 1250,
     totalBookings: 24,
     favoriteServices: ["Hair Cut & Style", "Facial Treatment", "Manicure"],
@@ -54,8 +54,9 @@ export default function Profile() {
 
 
   const handleLogout = () => {
-    dispatch(logout());
-    navigate("/");
+    // dispatch(logout());
+    dispatch(logoutUser());
+    navigate("/login");
   };
 
 
@@ -77,7 +78,7 @@ export default function Profile() {
     { id: "overview", label: "Overview", icon: Settings },
     { id: "bookings", label: "Bookings", icon: Calendar },
     { id: "favorites", label: "Favorites", icon: Heart },
-    { id: "rewards", label: "Rewards", icon: Gift },
+    // { id: "rewards", label: "Rewards", icon: Gift },
   ]
 
 
@@ -104,12 +105,12 @@ export default function Profile() {
 
 
   const your_information = [
-    {
-      title: "Address Book",
-      icon: BookOpen,
-      onClick: () => { },
-    },
-    {
+    // {
+    //   title: "Address Book",
+    //   icon: BookOpen,
+    //   onClick: () => { },
+    // },
+    userDetails.role !== "salon_owner" && {
       title: "create salon",
       icon: BookOpen,
       onClick: () => navigate("/salonRegistration"),
@@ -128,11 +129,11 @@ export default function Profile() {
       icon: LogOut,
       onclick: handleLogout,
     },
-    {
-      tittle: "Address Book",
-      icon: BookOpen,
-      onclick: () => { },
-    },
+    // {
+    //   tittle: "Address Book",
+    //   icon: BookOpen,
+    //   onclick: () => { },
+    // },
   ]
   return (
     <div className="min-h-screen">
@@ -193,10 +194,7 @@ export default function Profile() {
                 <Phone className="h-4 w-4" />
                 <span>{user.phone}</span>
               </div>
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4" />
-                <span>{user.location}</span>
-              </div>
+             
             </div>
 
 
@@ -211,14 +209,14 @@ export default function Profile() {
                   </div>
                 </div>
               </div>
-              <div className="bg-card text-card-foreground rounded-xl border p-3 shadow-sm flex items-center justify-center">
+              {/* <div className="bg-card text-card-foreground rounded-xl border p-3 shadow-sm flex items-center justify-center">
                 <div className="flex flex-col items-center text-center">
                   <Gift className="h-6 w-6 text-primary" />
                   <div className="text-sm font-bold text-muted-foreground mt-2">
                     Rewards
                   </div>
                 </div>
-              </div>
+              </div> */}
               <div className="bg-card text-card-foreground rounded-xl border p-3 shadow-sm flex items-center justify-center">
                 <div className="flex flex-col items-center text-center">
                   <MessageCircleQuestionMark className="h-6 w-6 text-primary" />

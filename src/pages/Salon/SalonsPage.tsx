@@ -250,10 +250,10 @@ export default function SalonsPage(): JSX.Element {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    {salon.priceRange && <div className="text-sm">
+                    {/* {salon.priceRange && <div className="text-sm">
                       <span className="text-muted-foreground">Price range: </span>
                       <span className="font-medium">{salon.priceRange}</span>
-                    </div>}
+                    </div>} */}
                     <Link to={`/salons/${salon.id}`}>
                       <Button size="sm" className="group">
                         View Details

@@ -1,5 +1,5 @@
 
-import { useForm } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form"
 import { useState } from "react"
 import { Button } from "../../components/ui_components/button"
 import { Input } from "../../components/ui_components/input"
@@ -10,6 +10,7 @@ import { useSelector } from "react-redux";
 import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI"
 import { useNavigate } from "react-router-dom"
 import { useToast } from "../../components/Toast"
+import type { ReactFormState } from "react-dom/client"
 
 
 
@@ -166,16 +167,22 @@ export default function SalonRegistrationForm() {
               <Input
                 id="salonName"
                 placeholder="e.g., Urban Cuts"
-                {...form.register("salonName", { required: true })}
+                {...form.register("salonName", { required: "Salon name is required" })}
               />
+              {form.formState.errors.salonName && (
+                <p className="text-red-500 text-sm">{form.formState.errors.salonName.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="ownerName">Owner Name</Label>
               <Input
                 id="ownerName"
                 placeholder="e.g., Priya Sharma"
-                {...form.register("ownerName", { required: true })}
+                {...form.register("ownerName", { required: "Owner name is required" })}
               />
+              {form.formState.errors.ownerName && (
+                <p className="text-red-500 text-sm">{form.formState.errors.ownerName.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -185,16 +192,25 @@ export default function SalonRegistrationForm() {
                 type="email"
                 placeholder="name@example.com"
                 
-                {...form.register("email", { required: true })}
+                {...form.register("email", { required: "Email is required" })}
               />
+              {form.formState.errors.email && (
+                <p className="text-red-500 text-sm">{form.formState.errors.email.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Phone</Label>
-              <Input id="phone"  placeholder="+91 98765 43210" {...form.register("phone", { required: true })} />
+              <Input id="phone"  placeholder="+91 98765 43210" {...form.register("phone", { required: "Phone number is required" })} />
+              {form.formState.errors.phone && (
+                <p className="text-red-500 text-sm">{form.formState.errors.phone.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" placeholder="Enter a secure password" {...form.register("password", { required: true })} />
+              <Input id="password" type="password" placeholder="Enter a secure password" {...form.register("password", { required: "Password is required" })} />
+              {form.formState.errors.password && (
+                <p className="text-red-500 text-sm">{form.formState.errors.password.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -215,11 +231,17 @@ export default function SalonRegistrationForm() {
           <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="openingTime">Opening Time</Label>
-              <Input id="openingTime" type="time" {...form.register("openingTime", { required: true })} />
+              <Input id="openingTime" type="time" {...form.register("openingTime", { required: "Opening time is required" })} />
+              {form.formState.errors.openingTime && (
+                <p className="text-red-500 text-sm">{form.formState.errors.openingTime.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="closingTime">Closing Time</Label>
-              <Input id="closingTime" type="time" {...form.register("closingTime", { required: true })} />
+              <Input id="closingTime" type="time" {...form.register("closingTime", { required: "Closing time is required" })} />
+              {form.formState.errors.closingTime && (
+                <p className="text-red-500 text-sm">{form.formState.errors.closingTime.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="lunchStart">Lunch Start</Label>
@@ -238,24 +260,39 @@ export default function SalonRegistrationForm() {
               <Input
                 id="street"
                 placeholder="House/Flat, Street, Area"
-                {...form.register("street", { required: true })}
+                {...form.register("street", { required: "Street address is required" })}
               />
+              {form.formState.errors.street && (
+                <p className="text-red-500 text-sm">{form.formState.errors.street.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="city">City</Label>
-              <Input id="city" placeholder="e.g., Mumbai" {...form.register("city", { required: true })} />
+              <Input id="city" placeholder="e.g., Mumbai" {...form.register("city", { required: "City is required" })} />
+              {form.formState.errors.city && (
+                <p className="text-red-500 text-sm">{form.formState.errors.city.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="state">State</Label>
-              <Input id="state" placeholder="e.g., Maharashtra" {...form.register("state", { required: true })} />
+              <Input id="state" placeholder="e.g., Maharashtra" {...form.register("state", { required: "State is required" })} />
+              {form.formState.errors.state && (
+                <p className="text-red-500 text-sm">{form.formState.errors.state.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="pincode">Pincode</Label>
-              <Input id="pincode" placeholder="e.g., 400001" {...form.register("pincode", { required: true })} />
+              <Input id="pincode" placeholder="e.g., 400001" {...form.register("pincode", { required: "Pincode is required" })} />
+              {form.formState.errors.pincode && (
+                <p className="text-red-500 text-sm">{form.formState.errors.pincode.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="country">Country</Label>
-              <Input id="country" placeholder="e.g., India" {...form.register("country", { required: true })} />
+              <Input id="country" placeholder="e.g., India" {...form.register("country", { required: "Country is required" })} />
+              {form.formState.errors.country && (
+                <p className="text-red-500 text-sm">{form.formState.errors.country.message}</p>
+              )}
             </div>
           </section>
 
@@ -280,21 +317,28 @@ export default function SalonRegistrationForm() {
           <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Salon Type</Label>
-              <Select
-                onValueChange={(v) => form.setValue("salonType", v, { shouldValidate: true, shouldDirty: true })}
-                value={form.watch("salonType")}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select salon type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SALON_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                name="salonType"
+                control={form.control}
+                rules={{ required: "Salon type is required" }}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select salon type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SALON_TYPES.map((t) => (
+                        <SelectItem key={t} value={t}>
+                          {t}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {form.formState.errors.salonType && (
+                <p className="text-red-500 text-sm">{form.formState.errors.salonType.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
