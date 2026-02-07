@@ -1,159 +1,233 @@
-import { Button } from "../components/ui_components/button"
-import { Card, CardContent } from "../components/ui_components/card"
-import { ServiceCard } from "../components/service_card"
-import {
-  Scissors,
-  Sparkles,
-  Heart,
-  Star,
-  MapPin,
-  Phone,
-  ChevronRight,
-  Users,
-  Award,
-  Calendar,
-  ScissorsLineDashed,
-  User,
-} from "lucide-react"
+import React, { useEffect, useRef, useState } from 'react';
+import { MapPin, Bell, User, Search, Star, ChevronRight, Home, Scissors, Gift, UserCircle, Loader2, Clock, ArrowLeft, X } from 'lucide-react';
+import { Loader } from '../components/ui_components/Loader';
 
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination, Autoplay } from "swiper/modules";
+interface SalonCard {
+  id: string;
+  name: string;
+  rating: number;
+  distance: string;
+  nextAvailable: string;
+  image: string;
+}
 
-import "swiper/css";
-import "swiper/css/navigation";
-import "swiper/css/pagination";
-import type { Salon } from "../Interfaces/SaloInterface";
-import { useEffect, useState } from "react";
-import { Header } from "../components/Header";
-import SalonInfo from "./SalonInfo";
+const HomePage: React.FC = () => {
 
+  const [address, setAddress] = useState<string>("Locating you...");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
+  const nearbySalons: SalonCard[] = [
+    {
+      id: '1',
+      name: 'GlowUp Salon',
+      rating: 4.5,
+      distance: '1.2 km',
+      nextAvailable: '120 min',
+      image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=400&q=80'
+    },
+    {
+      id: '2',
+      name: 'Elegance Spa',
+      rating: 4.8,
+      distance: '2.0 km',
+      nextAvailable: '30 min',
+      image: 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=400&q=80'
+    }
+  ];
 
-export default function HomePage() {
-  const [active, setActive] = useState("salon");
+  useEffect(() => {
+    // 1. Get User Coordinates
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          try {
+            // 2. Free Reverse Geocoding API (OpenStreetMap Nominatim)
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
+            );
+            const data = await response.json();
 
+            // Format a clean address (Suburb/City)
+            const city = data.address.city || data.address.town || data.address.village || "";
+            const suburb = data.address.suburb || data.address.neighbourhood || "";
 
-  const services = [
-    {
-      title: "Premium Haircut & Styling",
-      description: "Expert cuts and styling for all hair types with premium products",
-      price: "$85",
-      duration: "60 min",
-      icon: <Scissors className="w-6 h-6 text-accent-foreground" />,
-    },
-    {
-      title: "Luxury Manicure",
-      description: "Complete nail care with gel polish and cuticle treatment",
-      price: "$45",
-      duration: "45 min",
-      icon: <Sparkles className="w-6 h-6 text-accent-foreground" />,
-    },
-    {
-      title: "Signature Pedicure",
-      description: "Relaxing foot treatment with massage and premium polish",
-      price: "$55",
-      duration: "60 min",
-      icon: <Heart className="w-6 h-6 text-accent-foreground" />,
-    },
-    {
-      title: "Rejuvenating Facial",
-      description: "Deep cleansing facial with personalized skincare treatment",
-      price: "$95",
-      duration: "75 min",
-      icon: <Star className="w-6 h-6 text-accent-foreground" />,
-    },
-    {
-      title: "Hair Coloring",
-      description: "Professional color services from highlights to full color",
-      price: "$120",
-      duration: "120 min",
-      icon: <Sparkles className="w-6 h-6 text-accent-foreground" />,
-    },
-    {
-      title: "Bridal Package",
-      description: "Complete bridal beauty package for your special day",
-      price: "$250",
-      duration: "180 min",
-      icon: <Heart className="w-6 h-6 text-accent-foreground" />,
-    },
-  ]
+            setAddress(`${suburb}${suburb ? ', ' : ''}${city}`);
 
-  const artists = [
-    {
-      name: "Sofia Martinez",
-      specialty: "Hair Styling & Color",
-      experience: "8 years",
-      image: "/professional-female-hairstylist.jpg",
-    },
-    {
-      name: "Emma Chen",
-      specialty: "Nail Art & Manicure",
-      experience: "6 years",
-      image: "/facial_service.jpg",
-    },
-    {
-      name: "Isabella Rodriguez",
-      specialty: "Skincare & Facials",
-      experience: "10 years",
-      image: "/professional-esthetician.jpg",
-    },
-  ]
+            // Simulate Blinkit's slight delay for the "premium" loader feel
+            setTimeout(() => setIsLoading(false), 1200);
+          } catch (error) {
+            setAddress("Address Fetch Failed");
+            setIsLoading(false);
+          }
+        },
+        () => {
+          setAddress("Permission Denied");
+          setIsLoading(false);
+        }
+      );
+    }
+  }, []);
+
+  if (isLoading) {
+    return (
+      <Loader />
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-50 max-w-md mx-auto font-sans pb-24">
 
 
-            <Header/>
-     <div className="w-full sticky bg-background top-0 z-50">
-      {/* Tabs */}
-      {/* <div className="relative flex w-full justify-center border-b border-gray-300">
-        <button
-          onClick={() => setActive("salon")}
-          className="relative w-1/2 py-3 text-center font-semibold flex justify-center items-center gap-2"
-        >
-          <ScissorsLineDashed />
-          Salon
-        </button>
+      {/* --- MORPHING SEARCH OVERLAY --- */}
+      <div
+        className={`fixed inset-0 z-50 bg-white transition-all duration-300 ease-in-out ${isSearchOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          }`}
+      >
+        {/* Header that looks like the search bar moved to top */}
+        <div className="flex items-center gap-3 p-4 border-b bg-white">
+          <button onClick={() => setIsSearchOpen(false)} className="p-1">
+            <ArrowLeft className="w-6 h-6 text-gray-700" />
+          </button>
+          <div className="flex-1 relative">
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search for services..."
+              className="w-full bg-gray-100 rounded-xl px-4 py-3 outline-none text-sm"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <X
+                className="absolute right-3 top-3 w-4 h-4 text-gray-400"
+                onClick={() => setSearchQuery("")}
+              />
+            )}
+          </div>
+        </div>
 
-        <button
-          onClick={() => setActive("artist")}
-          className="relative w-1/2 py-3 text-center font-semibold flex justify-center items-center gap-2"
-        >
-          <User />
-          Artist
-        </button>
+        {/* Search Results Area (White background below) */}
+        <div className="p-4 bg-white min-h-screen">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold text-gray-800">Recent Searches</h3>
+            <button className="text-xs text-blue-600">Clear</button>
+          </div>
+          <div className="space-y-4">
+            {['Haircut near me', 'Facial for men', 'Bridal Package'].map((item) => (
+              <div key={item} className="flex items-center gap-3 text-gray-500 py-1">
+                <Clock className="w-4 h-4 text-gray-300" />
+                <span className="text-sm">{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
-        <div
-          className={`absolute bottom-0 h-1.5 bg-black rounded-full 
-            transition-all duration-500 ease-[cubic-bezier(.25,.8,.25,1)]
-          `}
-          style={{
-            width: "25%",           // matches w-1/4 width
-            left: active === "salon" ? "12.5%" : "62.5%", // perfect smooth slide
-          }}
-        ></div>
-      </div> */}
+      {/* Blue Header Section */}
+      <div className="bg-[#1E4D8C] p-6 text-white rounded-b-[2rem] shadow-lg">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <MapPin className="w-5 h-5 text-blue-200" />
+            <span className="font-medium">{address}</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <Bell className="w-6 h-6" />
+              <span className="absolute -top-1 -right-0.5 bg-red-500 w-2.5 h-2.5 rounded-full border-2 border-[#1E4D8C]"></span>
+            </div>
+            <User className="w-6 h-6 p-1 bg-white/20 rounded-full" />
+          </div>
+        </div>
 
-      
+        {/* Search Bar Card */}
+        <div 
+        onClick={() => setIsSearchOpen(true)}
+        className="bg-white rounded-2xl p-4 shadow-xl -mb-12 border border-gray-100">
+          <div className="flex items-center gap-2 mb-3">
+            <Search className="w-5 h-5 text-[#1E4D8C]" />
+            <span className="text-gray-900 font-bold">Find a Salon Near You</span>
+          </div>
+          <div className="flex gap-2">
+            <div className="flex-1 bg-gray-50 rounded-lg px-3 py-2 flex items-center justify-between border border-gray-100">
+              <span className="text-xs text-gray-500">Location • Today • 12 PM</span>
+            </div>
+            <button className="bg-[#1E4D8C] text-white px-5 py-2 rounded-lg font-bold text-sm shadow-md">
+              Search
+            </button>
+          </div>
+        </div>
+      </div>
 
-      {/* Inline CSS for fade + slide animation */}
-      <style>{`
-        @keyframes fadeSlide {
-          0% { opacity: 0; transform: translateY(8px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fadeSlide {
-          animation: fadeSlide 0.5s ease-out;
-        }
-      `}</style>
+      {/* Your Bookings Section */}
+      <div className="px-4 mt-16 mb-8">
+        <h2 className="text-gray-800 font-bold mb-4">Your Bookings</h2>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <img src="/dummy_logo.png" alt="salon" className="w-12 h-12 rounded-lg object-cover" />
+              <div>
+                <h3 className="font-bold text-gray-900">StyleHub Salon</h3>
+                <p className="text-xs text-gray-500">Haircut & Beard</p>
+              </div>
+            </div>
+            <button className="text-gray-300">•••</button>
+          </div>
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center gap-2 text-xs font-medium text-gray-700">
+              <span className="w-4 h-4 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-[10px]">✓</span>
+              Today, 6:30 PM
+            </div>
+            <span className="bg-[#4CAF50] text-white px-3 py-1 rounded-md text-[11px] font-bold">Confirmed</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Nearby Salons Horizontal Scroll */}
+      <div className="px-4 mb-8">
+        <h2 className="text-gray-800 font-bold mb-4">Nearby Salons</h2>
+        <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+          {nearbySalons.map((salon) => (
+            <div key={salon.id} className="min-w-[200px] bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="relative h-28">
+                <img src={salon.image} alt={salon.name} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                <div className="absolute bottom-2 left-2 text-white">
+                  <p className="font-bold text-sm">{salon.name}</p>
+                </div>
+              </div>
+              <div className="p-3">
+                <div className="flex items-center gap-3 text-[10px] text-gray-600 font-medium">
+                  <span className="flex items-center gap-1"><Star className="w-3 h-3 text-orange-400 fill-orange-400" /> {salon.rating}</span>
+                  <span>{salon.distance}</span>
+                  <span>Next {salon.nextAvailable}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Offers Section */}
+      <div className="px-4 mb-8">
+        <h2 className="text-gray-800 font-bold mb-4">Offers Near You</h2>
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+              <Gift className="w-6 h-6 text-orange-500" />
+            </div>
+            <p className="text-sm font-bold text-gray-800">20% OFF at StyleHub - Only Today!</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-300" />
+        </div>
+      </div>
+
+
     </div>
+  );
+};
 
-
-      {active === "salon" 
-      ? (<SalonInfo/>)
-    :<></>
-    }
-
-    </div>
-  )
-}
+export default HomePage;

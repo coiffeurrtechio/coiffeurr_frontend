@@ -1,61 +1,66 @@
-
-import React from "react"
-import { useState } from "react"
-import { Button } from "../components/ui_components/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui_components/card"
-import { Eye, EyeOff, Mail, Lock, ArrowLeft, Users, Building2, Scissors } from "lucide-react"
-import { Link } from "react-router-dom"
-import Config from '../configs/config'
-import { useToast } from "../components/Toast"
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { 
+  Users, Building2, Scissors, ArrowLeft, 
+  Mail, Lock, Eye, EyeOff 
+} from "lucide-react";
+import { Button } from "../components/ui_components/button";
+import { 
+  Card, CardContent, CardHeader, 
+  CardTitle, CardDescription 
+} from "../components/ui_components/card";
+import { useToast } from "../components/Toast";
 import { useDispatch } from "react-redux";
-import { login } from "../utils/Storage/slice/authSlice"
-import { useNavigate } from "react-router-dom";
+import { login } from "../utils/Storage/slice/authSlice";
+import Config from '../configs/config';
 
-interface LoginSlideProps {
-  role: string
-  onBack: () => void
-  roles: Array<{ id: string; title: string; icon: any; color: string }>
+// --- SUB-COMPONENT: LOGIN PAGE ---
+interface LoginPageProps {
+  role: string;
+  onBack: () => void;
 }
 
-function LoginPage({ role, onBack, roles }: LoginSlideProps) {
-  const [showPassword, setShowPassword] = useState(false)
-  const [formData, setFormData] = useState({
-    usernameoremail: "",
-    password: "",
-  })
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+const LoginPage: React.FC<LoginPageProps> = ({ role, onBack }) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({ usernameoremail: "", password: "" });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  
   const { showToast } = useToast();
   const dispatch = useDispatch();
-  const navigate = useNavigate(); // ✅ hook for navigation
-
-  const roleData = roles.find((r) => r.id === role)
-
-
+  const navigate = useNavigate();
 
   const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
-  }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {}
+    const newErrors: Record<string, string> = {};
 
     if (!formData.usernameoremail) {
-      newErrors.email = "Email is required"
+      newErrors.email = "Email is required";
     } else if (!validateEmail(formData.usernameoremail)) {
-      newErrors.email = "Please enter a valid email address"
+      newErrors.email = "Please enter a valid email address";
     }
 
     if (!formData.password) {
-      newErrors.password = "Password is required"
+      newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters"
+      newErrors.password = "Password must be at least 6 characters";
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData({ ...formData, [field]: value });
+    // Clear error when user starts typing
+    if (errors[field] || errors.email) {
+      setErrors((prev) => ({ ...prev, [field]: "", email: "" }));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,22 +68,19 @@ function LoginPage({ role, onBack, roles }: LoginSlideProps) {
     if (!validateForm()) return;
 
     setIsLoading(true);
-    console.log("formData =", formData);
 
     try {
-      // Make API request
       const response = await fetch(`${Config.API_BASE_URL}/login`, {
         method: "POST",
-        credentials: "include", // for cookies
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
 
-      // Handle non-2xx status codes
       if (!response.ok) {
-        const errorMessage = await response.text(); // get message from backend
+        const errorMessage = await response.text();
         showToast({
           type: "error",
           title: "Login Failed",
@@ -88,37 +90,23 @@ function LoginPage({ role, onBack, roles }: LoginSlideProps) {
         return;
       }
 
-      // Parse successful response
       const result = await response.json();
-      dispatch(
-        login({
-          user: result             // user details (id, email, etc.)
-        })
-      );
-      console.log(result);
-      navigate("/profile");
-
-      // Show success toast
+      dispatch(login({ user: result }));
+      
       showToast({
         type: "success",
         title: "Login Successful",
-        message: "Welcome to Coiffeurr!",
+        message: "Welcome back to Coiffeurr!",
         duration: 5000,
       });
 
-      // Optionally, save access token in memory (or context)
-      // e.g., setToken(result.accessToken);
-
-      console.log("Login result:", result);
+      navigate("/profile");
 
     } catch (error: any) {
-      // Network or unexpected errors
-      console.log(error);
-
       showToast({
         type: "error",
         title: "Login Failed",
-        message: "Something went wrong. Please try again.",
+        message: "Network error. Please check your connection.",
         duration: 5000,
       });
     } finally {
@@ -126,267 +114,166 @@ function LoginPage({ role, onBack, roles }: LoginSlideProps) {
     }
   };
 
-
-  const handleGoogleLogin = async () => {
-    setIsLoading(true)
-    try {
-      // Simulate Google login
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      console.log("Google login attempt")
-    } catch (error) {
-      setErrors({ general: "Google login failed. Please try again." })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData({ ...formData, [field]: value })
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors({ ...errors, [field]: "" })
-    }
-    // Clear general error
-    if (errors.general) {
-      setErrors({ ...errors, general: "" })
-    }
-  }
-
   return (
-    <div className="min-h-screen relative bg-background flex items-center justify-center p-4">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-accent/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
-      </div>
+    <div className="w-full max-w-md px-4 animate-in fade-in slide-in-from-right-8 duration-500">
+      <button
+        onClick={onBack}
+        className="flex items-center gap-2 text-gray-500 hover:text-[#1E4D8C] transition-colors text-sm font-bold mb-6 group"
+      >
+        <div className="p-1.5 bg-white rounded-lg shadow-sm group-hover:bg-blue-50">
+          <ArrowLeft size={16} />
+        </div>
+        Change Role
+      </button>
 
-      <div className="relative w-full max-w-md">
-        {/* Back to home link */}
-        <button
-          onClick={onBack}
-          className="self-start text-muted-foreground hover:text-foreground transition-colors text-sm font-medium mb-2"
-        >
-          ← Back
-        </button>
-        
-        <Card className="border-0 bg-card/50 backdrop-blur-sm shadow-2xl">
-          <CardHeader className="text-center pb-6">
-            <div className="mx-auto w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-              <Lock className="w-6 h-6 text-primary" />
-            </div>
-            <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Sign in to your account to book appointments
-            </CardDescription>
-          </CardHeader>
+      <Card className="border-0 bg-white/80 backdrop-blur-xl shadow-[0_20px_50px_rgba(30,77,140,0.1)] rounded-[2.5rem] overflow-hidden">
+        <CardHeader className="text-center pb-2 pt-10">
+          <div className="mx-auto w-16 h-16 bg-[#1E4D8C] rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-blue-900/20 rotate-3">
+            <Scissors className="w-8 h-8 text-white -rotate-3" />
+          </div>
+          <CardTitle className="text-3xl font-black text-gray-900 tracking-tight text-capitalize">
+            Login as {role.replace("-", " ")}
+          </CardTitle>
+          <CardDescription className="text-gray-500 font-medium mt-2">
+            Enter your credentials to access your account
+          </CardDescription>
+        </CardHeader>
 
-          <CardContent className="space-y-6">
-            {errors.general && (
-              <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
-                {errors.general}
+        <CardContent className="space-y-6 px-8 pb-10">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Email or Username</label>
+              <div className="relative group">
+                <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${errors.email ? "text-destructive" : "text-gray-400 group-focus-within:text-[#1E4D8C]"}`} />
+                <input
+                  type="text"
+                  placeholder="name@example.com"
+                  value={formData.usernameoremail}
+                  onChange={(e) => handleInputChange("usernameoremail", e.target.value)}
+                  disabled={isLoading}
+                  className={`w-full h-12 pl-12 pr-4 bg-gray-50 border-2 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all ${errors.email ? "border-destructive/50" : "border-transparent"}`}
+                />
               </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="email">Email</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    id="usernameoremail"
-                    type="usernameoremail"
-                    placeholder="Enter your email"
-                    value={formData.usernameoremail}
-                    onChange={(e) => handleInputChange("usernameoremail", e.target.value)}
-                    className={`pl-10 w-full border border-gray-300 rounded-xl${errors.email ? "border-destructive" : ""}`}
-                    disabled={isLoading}
-                    required
-                  />
-                </div>
-                {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="password">Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    value={formData.password}
-                    onChange={(e) => handleInputChange("password", e.target.value)}
-                    className={`pl-10 pr-10 w-full border border-gray-300 rounded-xl ${errors.password ? "border-destructive" : ""}`}
-                    disabled={isLoading}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground disabled:opacity-50"
-                    disabled={isLoading}
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-                {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Link to="#" className="text-sm text-primary hover:text-primary/80 transition-colors">
-                  Forgot password?
-                </Link>
-              </div>
-
-              <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
-                {isLoading ? "Signing In..." : "Sign In"}
-              </Button>
-            </form>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                {/* <Separator className="w-full" /> */}
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-              </div>
+              {errors.email && <p className="text-[10px] text-destructive font-bold ml-1">{errors.email}</p>}
             </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              className="w-full bg-transparent"
-              onClick={handleGoogleLogin}
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center px-1">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Password</label>
+                <Link to="#" className="text-[10px] font-black text-[#1E4D8C] hover:underline tracking-widest">Forgot?</Link>
+              </div>
+              <div className="relative group">
+                <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${errors.password ? "text-destructive" : "text-gray-400 group-focus-within:text-[#1E4D8C]"}`} />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={(e) => handleInputChange("password", e.target.value)}
+                  disabled={isLoading}
+                  className={`w-full h-12 pl-12 pr-12 bg-gray-50 border-2 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all ${errors.password ? "border-destructive/50" : "border-transparent"}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+              {errors.password && <p className="text-[10px] text-destructive font-bold ml-1">{errors.password}</p>}
+            </div>
+
+            <Button 
+              type="submit" 
+              className="w-full h-12 bg-[#1E4D8C] hover:bg-[#153a6b] text-white font-black text-sm rounded-2xl shadow-lg shadow-blue-900/20 active:scale-[0.98] transition-all" 
               disabled={isLoading}
             >
-              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                <path
-                  fill="currentColor"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="currentColor"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="currentColor"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                />
-                <path
-                  fill="currentColor"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                />
-              </svg>
-              {isLoading ? "Connecting..." : "Continue with Google"}
+              {isLoading ? "Connecting..." : "Sign In"}
             </Button>
+          </form>
 
-            <div className="text-center text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <Link to="/signup" className="text-primary hover:text-primary/80 font-medium transition-colors">
-                Sign up
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          <div className="text-center">
+            <p className="text-xs font-bold text-gray-400">
+              Don't have an account? <Link to="/signup" className="text-[#1E4D8C] hover:underline ml-1">Create account</Link>
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
-  )
-}
+  );
+};
 
-
+// --- MAIN COMPONENT: HOME ---
 export default function Home() {
-  const [selectedRole, setSelectedRole] = useState<string | null>(null)
+  const [selectedRole, setSelectedRole] = useState<string | null>(null);
 
   const roles = [
-    {
-      id: "customer",
-      title: "Customer",
-      icon: Users,
-      color: "bg-blue-500",
-    },
-    {
-      id: "salon-owner",
-      title: "Salon Owner",
-      icon: Building2,
-      color: "bg-purple-500",
-    },
-    {
-      id: "artist",
-      title: "Artist",
-      icon: Scissors,
-      color: "bg-pink-500",
-    },
-  ]
+    { id: "customer", title: "Customer", icon: Users, color: "bg-blue-500", desc: "Book appointments" },
+    { id: "salon-owner", title: "Salon Owner", icon: Building2, color: "bg-[#1E4D8C]", desc: "Manage your business" },
+    { id: "artist", title: "Artist", icon: Scissors, color: "bg-orange-500", desc: "View your schedule" },
+  ];
 
   return (
-    <main className="min-h-screen bg-background flex items-center justify-center overflow-hidden">
-      {/* Slide Container */}
-      <div className="relative w-full h-screen flex">
-        {/* Role Selection Slide */}
-        <div
-          className={`absolute w-full h-screen flex items-center justify-center transition-all duration-500 ease-out ${selectedRole ? "-translate-x-full" : "translate-x-0"
-            }`}
-        >
-          {/* Logo */}
-          <div className="absolute top-8 left-1/2 transform -translate-x-1/2 md:top-12">
-            <div className="rounded-lg flex items-center justify-center">
-              <Link to="/">
-                <div className="flex items-center gap-2">
-                  <img src="/dummy_logo.png" alt="" className="h-10" />
-                  <h1 className="text-2xl font-bold tracking-tight">Coiffeurr</h1>
-                </div>
-              </Link>            </div>
+    <main className="min-h-screen bg-[#F4F7FE] flex items-center justify-center overflow-hidden relative">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-[#1E4D8C]/5 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-orange-400/5 rounded-full blur-3xl" />
+      </div>
+
+      <div className="relative w-full h-screen overflow-hidden">
+        <div className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-in-out px-6 ${selectedRole ? "-translate-x-full opacity-0 scale-95" : "translate-x-0 opacity-100 scale-100"}`}>
+          <div className="mb-10 text-center">
+            <div className="flex items-center justify-center gap-3 mb-4">
+               <div className="bg-[#1E4D8C] p-2 rounded-xl rotate-3 shadow-lg">
+                  <Scissors className="text-white w-6 h-6 -rotate-3" />
+               </div>
+               <h1 className="text-3xl font-black tracking-tighter text-[#1E4D8C] uppercase">Coiffeurr</h1>
+            </div>
+            <h2 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">Who are you?</h2>
+            <p className="text-gray-500 font-medium">Choose your role to continue</p>
           </div>
 
-          {/* Role Selection Content */}
-          <div className="w-full px-6 py-12 flex flex-col items-center justify-center gap-8 max-w-md">
-            <div className="text-center mb-4">
-              <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-                Choose Your Role
-              </h1>
-              <p className="text-muted-foreground">Select how you want to use SalonPro</p>
-            </div>
-
-            {/* Role Options */}
-            <div className="w-full flex flex-col gap-4">
-              {roles.map((role) => {
-                const IconComponent = role.icon
-                return (
-                  <button
-                    key={role.id}
-                    onClick={() => setSelectedRole(role.id)}
-                    className="group w-full p-6 rounded-xl border-2 border-border hover:border-foreground bg-card transition-all duration-300 hover:shadow-lg active:scale-95"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`${role.color} p-3 rounded-lg flex-shrink-0`}>
-                        <IconComponent className="w-6 h-6 text-white" />
-                      </div>
-                      <span className="text-lg font-semibold text-foreground group-hover:text-foreground">
-                        {role.title}
-                      </span>
+          <div className="w-full max-w-md space-y-4">
+            {roles.map((role) => {
+              const Icon = role.icon;
+              return (
+                <button
+                  key={role.id}
+                  onClick={() => setSelectedRole(role.id)}
+                  className="group w-full p-5 rounded-3xl bg-white border border-gray-100 hover:border-[#1E4D8C] transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-1 active:scale-[0.98] flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`${role.color} p-3 rounded-2xl shadow-lg transition-transform group-hover:rotate-6`}>
+                      <Icon className="w-6 h-6 text-white" />
                     </div>
-                  </button>
-                )
-              })}
-            </div>
+                    <div className="text-left">
+                      <p className="text-lg font-bold text-gray-900">{role.title}</p>
+                      <p className="text-xs text-gray-400 font-medium">{role.desc}</p>
+                    </div>
+                  </div>
+                  <div className="p-2 rounded-full bg-gray-50 text-gray-300 group-hover:bg-blue-50 group-hover:text-[#1E4D8C] transition-colors">
+                    <ArrowLeft className="rotate-180 w-4 h-4" />
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Login Slide */}
-        <div
-          className={`absolute w-full h-screen flex items-center justify-center transition-all duration-500 ease-out ${selectedRole ? "translate-x-0" : "translate-x-full"
-            }`}
-        >
+        <div className={`absolute inset-0 flex items-center justify-center transition-all duration-700 ease-in-out ${selectedRole ? "translate-x-0 opacity-100 scale-100" : "translate-x-full opacity-0 scale-95"}`}>
           {selectedRole && (
             <LoginPage
               role={selectedRole}
               onBack={() => setSelectedRole(null)}
-              roles={roles}
             />
           )}
         </div>
       </div>
+
+      <div className="absolute bottom-8 flex items-center gap-2 opacity-20 select-none">
+        <Scissors size={14} className="text-gray-400 rotate-45" />
+        <p className="text-[10px] font-black italic tracking-tighter text-gray-400 uppercase">Coiffeurr Salon Suite</p>
+      </div>
     </main>
-  )
+  );
 }

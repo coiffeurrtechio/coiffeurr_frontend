@@ -1,208 +1,177 @@
-import { Calendar, X } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui_components/card"
-import { useSalonApi } from "../../../../API/Salon_Owner_API/SalonOwnerAPI"
-import { useEffect, useState } from "react";
-import { Button } from "../../../../components/ui_components/button";
-import type { salonBookingResponse } from "../../../../Interfaces/BookingInterface";
+import React from 'react';
+import { 
+  IndianRupee, 
+  Users, 
+  Calendar, 
+  XCircle, 
+  MoreVertical, 
+  ShoppingBag, 
+  UserCheck, 
+  TrendingUp, 
+  ArrowUpRight, 
+  ArrowDownRight, 
+  Star 
+} from 'lucide-react';
 
-const DashBoardBusiness: React.FC = () => {
-
-  const { apiSalonRequest } = useSalonApi();
-  const [appointmentdata, setappointmentdata] = useState<salonBookingResponse[]>([]);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [Selectbooking, setSelectbooking] = useState<salonBookingResponse | null>(null)
-
-
-  useEffect(() => {
-    fetchsalonAppointments();
-  }, [])
-
-  const fetchsalonAppointments = async () => {
-    try {
-      const res = await apiSalonRequest<salonBookingResponse[]>("/salon-appointments")
-      if (res.error) {
-        console.log("error =", res.error);
-      }
-      else {
-        console.log(" data =", res.data);
-        if (Array.isArray(res.data)) {
-          setappointmentdata(res.data as salonBookingResponse[]);
-        }
-      }
-    } catch (error) {
-      console.log("error = ", error);
-
-    }
-  }
-
-  function extractDateAndTime(isoString?: string) {
-    if (!isoString) return "";
-    const localDate = new Date(isoString);
-
-    // Guard against invalid date
-    if (isNaN(localDate.getTime())) return "";
-
-    // Format it as a readable string
-    const formatted = localDate.toLocaleString("en-IN", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-    return formatted;
-  }
-
-  const handleconfirmBooking = async (e: React.FormEvent) => {
-    e.preventDefault()
-    try {
-      const res = await apiSalonRequest(`/salon-appointment/verification?appointmentId=${Selectbooking?.appointmentID}`);
-      if (res.error) {
-        console.log("error =", res.error);
-      }
-      else {
-        console.log(" data =", res.data);
-
-      }
-      setIsEditModalOpen(false);
-      setSelectbooking(null)
-    } catch (error) {
-      console.log("error =", error);
-
-    }
-
-  }
-
-  const handleRejectBooking = async (e: React.FormEvent) => {
-    e.preventDefault()
-    try {
-      const res = await apiSalonRequest(`/salon-appointment/rejected?appointmentId=${Selectbooking?.appointmentID}`);
-      if (res.error) {
-        console.log("error =", res.error);
-      }
-      else {
-        console.log(" data =", res.data);
-
-      }
-      setIsEditModalOpen(false);
-      setSelectbooking(null);
-    } catch (error) {
-      console.log("error =", error);
-
-    }
-  }
-  return (
-    <div className='w-auto'>
-      <CardContent>
-        <div className="space-y-4">
-          {appointmentdata?.length > 0 && appointmentdata?.map((booking, index) => (
-            <div
-              key={index}
-              className={`${booking?.status === "pending" ? "bg-yellow-200" : ""}flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent/5 transition-colors`}
-              onClick={() => {
-                setSelectbooking(booking);
-                setIsEditModalOpen(true);
-              }}
-            >
-              <div className="flex-1">
-                <h4 className="font-medium text-lg">{booking.salonname}</h4>
-                <h4 className="font-medium ">{booking.serviceName}</h4>
-                {/* <p className="text-sm text-muted-foreground">with {booking.artist}</p> */}
-                <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    {extractDateAndTime(booking?.appointmentDate)}
-                  </span>
-
-                </div>
-              </div>
-              <div className="text-right">
-
-                {booking?.status}
-
-                <p className="text-lg font-semibold">{booking.price}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-
-
-
-
-
-
-
-      {isEditModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-3xl bg-card border-border">
-            <CardHeader className="flex flex-row items-center justify-between pb-4">
-              <CardTitle>Approve Appointment</CardTitle>
-              <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </CardHeader>
-            <CardContent>
-
-              <div>
-
-                <div
-                  className={`${Selectbooking?.status === "pending" ? "bg-yellow-200" : ""}flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent/5 transition-colors`}
-                >
-                  <div className="flex-1">
-                    <h4 className="font-medium text-lg">{Selectbooking?.salonname}</h4>
-                    <h4 className="font-medium ">{Selectbooking?.serviceName}</h4>
-                    {/* <p className="text-sm text-muted-foreground">with {booking.artist}</p> */}
-                    <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {extractDateAndTime(Selectbooking?.appointmentDate)}
-                      </span>
-
-                    </div>
-                  </div>
-                  <div className="text-right">
-
-                    {Selectbooking?.status}
-
-                    <p className="text-lg font-semibold">{Selectbooking?.price}</p>
-                  </div>
-                </div>
-
-
-
-
-                <div className="col-span-1 sm:col-span-2 lg:col-span-3 flex gap-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleRejectBooking}
-                    className="flex-1 bg-transparent"
-                  >
-                    Reject
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="flex-1"
-                    onClick={handleconfirmBooking}
-                  >
-                    Approved
-                  </Button>
-                </div>
-
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-
-
-
-
-
-    </div>
-  )
+// 1. Define specific props for the StatCard component
+interface StatCardProps {
+  label: string;
+  value: string | number;
+  icon: React.ReactNode;
+  trend: string;
+  isPositive: boolean;
 }
 
-export default DashBoardBusiness
+// 2. Extracted StatCard for cleaner code
+const StatCard: React.FC<StatCardProps> = ({ label, value, icon, trend, isPositive }) => (
+  <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+    <div className="flex justify-between items-center mb-4">
+      <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+        {icon}
+      </div>
+      <div className={`flex items-center text-xs font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+        {isPositive ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+        {trend}
+      </div>
+    </div>
+    <p className="text-gray-500 text-sm font-medium">{label}</p>
+    <h3 className="text-2xl font-bold text-gray-900 mt-1">{value}</h3>
+  </div>
+);
+
+const DashBoardBusiness: React.FC = () => {
+  // Dummy Data
+  const businessStats = [
+    { label: 'Total Customers', value: '1,284', trend: '+14%', isPositive: true, icon: <Users size={20} /> },
+    { label: 'Avg. Ticket Size', value: '₹850', trend: '+5%', isPositive: true, icon: <ShoppingBag size={20} /> },
+    { label: 'Retention Rate', value: '64%', trend: '-2%', isPositive: false, icon: <UserCheck size={20} /> },
+    { label: 'Net Profit', value: '₹42,000', trend: '+18%', isPositive: true, icon: <TrendingUp size={20} /> },
+  ];
+
+  const topServices = [
+    { name: 'Haircut & Styling', bookings: 145, revenue: '₹43,500', growth: 12 },
+    { name: 'Bridal Makeup', bookings: 12, revenue: '₹60,000', growth: 24 },
+    { name: 'Facial Therapy', bookings: 88, revenue: '₹22,000', growth: -5 },
+  ];
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500">
+      {/* HEADER SECTION */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Business Analytics</h1>
+          <p className="text-sm text-gray-500">Track your salon's growth and performance metrics.</p>
+        </div>
+        <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <MoreVertical className="text-gray-400" />
+        </button>
+      </div>
+
+      {/* ANALYTICS GRID */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {businessStats.map((stat, i) => (
+          <StatCard 
+            key={i}
+            label={stat.label}
+            value={stat.value}
+            icon={stat.icon}
+            trend={stat.trend}
+            isPositive={stat.isPositive}
+          />
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* REVENUE CHART PLACEHOLDER */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="font-bold text-gray-800">Revenue Forecast</h3>
+            <select className="text-xs border-gray-200 rounded-md bg-gray-50 p-1 outline-none cursor-pointer">
+              <option>Last 7 Days</option>
+              <option>Last 30 Days</option>
+            </select>
+          </div>
+          <div className="h-64 w-full bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center">
+            <div className="text-gray-400 text-sm flex flex-col items-center gap-2">
+              <TrendingUp size={32} />
+              <p>Chart Visualization (Integrate Recharts here)</p>
+            </div>
+          </div>
+        </div>
+
+        {/* TOP SERVICES TABLE */}
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <h3 className="font-bold text-gray-800 mb-6">Top Services</h3>
+          <div className="space-y-6">
+            {topServices.map((service, i) => (
+              <div key={i} className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-gray-800">{service.name}</p>
+                  <p className="text-xs text-gray-400">{service.bookings} Bookings</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-gray-900">{service.revenue}</p>
+                  <p className={`text-[10px] font-bold ${service.growth >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {service.growth >= 0 ? '+' : ''}{service.growth}%
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <button className="w-full mt-8 py-3 text-xs font-bold text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors">
+            View Service Reports
+          </button>
+        </div>
+      </div>
+
+      {/* STAFF PERFORMANCE TABLE */}
+      <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-gray-50">
+          <h3 className="font-bold text-gray-800">Staff Performance</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-gray-50/50">
+              <tr className="text-[11px] uppercase text-gray-400 font-bold">
+                <th className="px-6 py-4">Staff Member</th>
+                <th className="px-6 py-4">Rating</th>
+                <th className="px-6 py-4 text-center">Appointments</th>
+                <th className="px-6 py-4 text-right">Total Sales</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              <tr className="hover:bg-gray-50/50 transition-colors">
+                <td className="px-6 py-4 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">R</div>
+                  <span className="text-sm font-bold text-gray-700">Rahul Sharma</span>
+                </td>
+                <td className="px-6 py-4 text-sm font-bold text-orange-500">
+                  <div className="flex items-center gap-1">
+                    <Star size={14} fill="currentColor" /> 4.9
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-600 text-center">142</td>
+                <td className="px-6 py-4 text-sm font-bold text-gray-800 text-right">₹48,200</td>
+              </tr>
+              <tr className="hover:bg-gray-50/50 transition-colors">
+                <td className="px-6 py-4 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold">A</div>
+                  <span className="text-sm font-bold text-gray-700">Aman Varma</span>
+                </td>
+                <td className="px-6 py-4 text-sm font-bold text-orange-500">
+                  <div className="flex items-center gap-1">
+                    <Star size={14} fill="currentColor" /> 4.7
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-600 text-center">98</td>
+                <td className="px-6 py-4 text-sm font-bold text-gray-800 text-right">₹32,150</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default DashBoardBusiness;

@@ -7,7 +7,7 @@ const MainLayout: React.FC = () => {
   return (
     <>
       {/* <Header /> */}
-      <main className="min-h-screen">
+      <main className="">
       <Outlet />
       </main>
       <Footer />

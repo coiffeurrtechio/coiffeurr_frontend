@@ -1,520 +1,230 @@
-import { Button } from "../../components/ui_components/button"
-import { Card, CardContent } from "../../components/ui_components/card"
-import { Badge } from "../../components/ui_components/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui_components/tabs"
-import {
-  ArrowLeft,
-  MapPin,
-  Clock,
-  Phone,
-  Star,
-  // Wifi,
-  // Car,
-  // CreditCard,
-  Calendar,
-  Heart,
-  Share2,
-  Mail,
-  // Globe,
-  CheckCircle,
-} from "lucide-react"
-import { useEffect, useState } from "react"
-// import { CalendarIcon } from "lucide-react"
-import { Link, useNavigate, useParams } from "react-router-dom"
-import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI"
-import type { Salon, SalonService, salonStaffDTOS } from "../../Interfaces/SaloInterface"
-import { Loader } from "../../components/ui_components/Loader"
-import { BookingLoader } from "../../components/ui_components/BookingLoader"
-
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { 
+  ArrowLeft, MapPin, Clock, Phone, Star, Heart, Share2, 
+  Mail, CheckCircle, Award, ChevronRight, Scissors 
+} from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination, Autoplay } from "swiper/modules";
+import { Pagination, Autoplay, EffectFade } from "swiper/modules";
 
+// UI Components
+import { Button } from "../../components/ui_components/button";
+import { Badge } from "../../components/ui_components/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui_components/tabs";
+import { Loader } from "../../components/ui_components/Loader";
+import NoServicesAvailable from "../../components/NoServicesAvailable";
+
+// API & Interfaces
+import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI";
+import type { Salon } from "../../Interfaces/SaloInterface";
+
+// Swiper Styles
 import "swiper/css";
-import "swiper/css/navigation";
 import "swiper/css/pagination";
-import NoServicesAvailable from "../../components/NoServicesAvailable"
-
-
-
-
+import "swiper/css/effect-fade";
 
 export default function SalonDetailPage() {
-  const [isFavorite, setIsFavorite] = useState(false)
-  const [salon, setsalon] = useState<Salon | null>(null);
-  const params = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>();
   const { apiRequest } = useApi();
   const navigate = useNavigate();
-  const [FetchSalonByIdAPI, setFetchSalonByIdAPI] = useState(true);
+  
+  const [salon, setSalon] = useState<Salon | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isFavorite, setIsFavorite] = useState(false);
 
+  useEffect(() => {
+    fetchSalonById();
+  }, [id]);
 
   const handleViewService = (serviceId?: number) => {
     if (serviceId == null) return;
     navigate(`/salon/${salon?.id}/service/${serviceId}`);
   };
 
-  const FetchSalonById = async () => {
-    setFetchSalonByIdAPI(true)
+  const fetchSalonById = async () => {
+    setLoading(true);
     try {
-      console.log("id =", params.id);
-
-      let res = await apiRequest<Salon>(`/salon/${params.id}`);
-
-      if (res.error) {
-        console.log("error", res.error);
-      }
-
-      else {
-        setsalon(res.data);
-      }
-
+      const res = await apiRequest<Salon>(`/salon/${id}`);
+      if (res.data) setSalon(res.data);
     } catch (error) {
-      console.error("error =", error)
+      console.error("Fetch error:", error);
+    } finally {
+      setLoading(false);
     }
-    finally {
-      setFetchSalonByIdAPI(false)
-    }
-  }
+  };
 
-  useEffect(() => {
-    FetchSalonById();
-  }, [])
-
-
-
-
-
-  // const salon = {
-  //   id: "1",
-  //   name: "Coiffure Downtown",
-  //   type: "Unisex",
-  //   rating: 4.9,
-  //   reviews: 324,
-  //   address: "123 Main Street, Downtown",
-  //   phone: "(555) 123-4567",
-  //   email: "info@coiffuredowntown.com",
-  //   website: "www.coiffuredowntown.com",
-  //   openTime: "9:00 AM",
-  //   closeTime: "8:00 PM",
-  //   image: "/luxury-salon-interior-with-modern-styling-chairs.jpg",
-  //   images: [
-  //     "/luxury-salon-interior-with-modern-styling-chairs.jpg",
-  //     "/salon-login-bg.jpg",
-  //     "/professional-female-hairstylist.jpg",
-  //     "/professional-esthetician.jpg",
-  //   ],
-  //   logo: "/salon-logo.png",
-  //   servicesShort: ["Haircut", "Coloring", "Styling", "Manicure", "Pedicure", "Facial"],
-  //   amenitiesKeys: ["wifi", "parking", "card", "online"],
-  //   description: "Premium salon experience in the heart of downtown with expert stylists and luxury treatments.",
-  //   priceRange: "$50-$200",
-  //   distance: "0.5 miles",
-  //   services: baseServices,
-  //   staff: [
-  //     {
-  //       name: "Sofia Martinez",
-  //       role: "Senior Hair Stylist",
-  //       experience: "8 years",
-  //       specialties: ["Hair Coloring", "Balayage", "Styling"],
-  //       image: "/professional-female-hairstylist.jpg",
-  //       rating: 4.9,
-  //     },
-  //     {
-  //       name: "Emma Chen",
-  //       role: "Nail Technician",
-  //       experience: "6 years",
-  //       specialties: ["Gel Manicure", "Nail Art", "Spa Pedicure"],
-  //       image: "/placeholder-dh3pw.png",
-  //       rating: 4.8,
-  //     },
-  //     {
-  //       name: "Isabella Rodriguez",
-  //       role: "Esthetician",
-  //       experience: "10 years",
-  //       specialties: ["Anti-Aging", "Acne Treatment", "Hydrating Facials"],
-  //       image: "/professional-esthetician.jpg",
-  //       rating: 4.9,
-  //     },
-  //   ],
-  //   hours: baseHours,
-  //   reviewsList: baseReviews,
-  // }
-
-
-  if (!salon) {
-    return (
-      <div className="min-h-screen bg-background">
-
-        <header className="border-b border-border">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center">
-            <Link to="/salons" className="text-sm hover:underline">
-              ← Back to Salons
-            </Link>
-          </div>
-        </header>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-          <h1 className="text-2xl font-semibold mb-2">Salon not found</h1>
-          <p className="text-muted-foreground">Please select a salon from the list.</p>
-        </div>
-      </div>
-    )
-  }
+  if (!loading && !salon) return <div className="p-20 text-center font-light">Salon not found.</div>;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-slate-100">
+      <Loader isVisible={loading} />
 
-      <Loader isVisible={FetchSalonByIdAPI} />
+      {/* --- Elegant Floating Header --- */}
+      <nav className="fixed top-0 inset-x-0 z-50 bg-white/70 backdrop-blur-md border-b border-slate-100">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <button onClick={() => navigate(-1)} className="p-2 -ml-2 hover:bg-slate-50 rounded-full transition-all">
+            <ArrowLeft className="w-5 h-5 text-slate-700" />
+          </button>
+          <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">Salon Details</span>
+          <div className="flex gap-1">
+            <button onClick={() => setIsFavorite(!isFavorite)} className={`p-2 rounded-full hover:bg-slate-50 transition-all ${isFavorite ? "text-red-500" : "text-slate-400"}`}>
+              <Heart className={`w-5 h-5 ${isFavorite ? "fill-current" : ""}`} />
+            </button>
+            <button className="p-2 rounded-full hover:bg-slate-50 text-slate-400 transition-all">
+              <Share2 className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </nav>
 
-      {/* Header */}
-      {!FetchSalonByIdAPI &&
-
-
-        <>
-          <header className="top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex h-16 items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <Link
-                    to="/salons"
-                    className="flex items-center gap-2 text-sm font-medium hover:text-accent-foreground transition-colors"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    Back to Salons
-                  </Link>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsFavorite(!isFavorite)}
-                    className={isFavorite ? "text-red-500" : ""}
-                  >
-                    <Heart className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Share2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </header>
-
-          {/* Hero Section */}
-          <section className="relative">
-            <div className="">
-              <div className="w-full">
-                <Swiper
-                  // key={salon.id}              // 🔥 THIS FIXES IT
-                  modules={[Pagination, Autoplay]}
-                  navigation
-                  pagination={{ clickable: true }}
-                  autoplay={{ delay: 3000, disableOnInteraction: false }}
-                  loop={salon?.images?.length > 1}
-                >
-                  {(salon?.images?.length > 0
-                    ? salon.images
-                    : ["/placeholder.svg"]
-                  ).map((img, index) => (
-                    <SwiperSlide key={index}>
-                      <img
-                        src={img}
-                        alt={salon.salonName}
-                        className="w-full h-full object-cover"
-                      />
-                    </SwiperSlide>
-                  ))}
-                </Swiper>
-                {/* <img src={"/placeholder.svg"} alt={salon?.salonName} className="w-full h-[500px]" /> */}
-              </div>
-
-            </div>
-          </section>
-
-
-          {/* Main Content */}
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Main Info */}
-              <div className="lg:col-span-2 space-y-8">
-                {/* Basic Info */}
-                <div>
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-4">
-                      <img
-                        src={salon?.logoUrl || "/placeholder.svg"}
-                        alt={`${salon.salonName} logo`}
-                        className="w-16 h-16 rounded-full object-cover"
-                      />
-                      <div>
-                        <h1 className="text-3xl font-bold mb-2">{salon.salonName}</h1>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <Badge variant="secondary">{salon.salonType}</Badge>
-                          <div className="flex items-center gap-1">
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <span className="font-medium">{salon.rating}</span>
-                            <span>({salon.reviews} reviews)</span>
-                          </div>
-                          <span>{salon.priceRange}</span>
-                        </div>
-                      </div>
-                    </div>
+      <main className="pt-16">
+        {/* --- Full-Width Visual Hero --- */}
+        <section className="relative h-[60vh] md:h-[75vh] w-full bg-slate-100">
+          <Swiper
+            modules={[Pagination, Autoplay, EffectFade]}
+            effect="fade"
+            pagination={{ clickable: true }}
+            autoplay={{ delay: 5000 }}
+            className="h-full w-full"
+          >
+            {(salon?.images?.length ? salon.images : ["/placeholder.svg"]).map((img, i) => (
+              <SwiperSlide key={i}>
+                <img src={img} alt="Salon" className="w-full h-full object-cover" />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+          
+          {/* Overlay Info */}
+          <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-8 md:p-16 z-10">
+            <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-6">
+              <div className="text-white space-y-3">
+                <Badge className="bg-white/20 backdrop-blur-md text-white border-none text-[10px] tracking-widest px-3 py-1">
+                  {salon?.salonType}
+                </Badge>
+                <h1 className="text-4xl md:text-6xl font-light tracking-tight leading-tight">{salon?.salonName}</h1>
+                <div className="flex items-center gap-4 text-sm font-medium opacity-90">
+                  <div className="flex items-center gap-1.5">
+                    <Star className="w-4 h-4 fill-white text-white" />
+                    <span>{salon?.rating || "4.9"}</span>
                   </div>
-                  <p className="text-muted-foreground leading-relaxed">{salon.description}</p>
+                  <span className="opacity-50">•</span>
+                  <span>{salon?.reviews || "120"} Reviews</span>
                 </div>
-
-
-
-
-
-
-                {/* Tabs */}
-                {salon?.salonServices?.length > 0
-                  ? (<Tabs defaultValue="services" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4">
-                      <TabsTrigger value="services">Services</TabsTrigger>
-                      <TabsTrigger value="staff">Staff</TabsTrigger>
-                      <TabsTrigger value="reviews">Reviews</TabsTrigger>
-                      <TabsTrigger value="photos">Photos</TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="services" className="space-y-6">
-                      {salon?.salonServices?.map((category: SalonService, index: number) => (
-                        <div key={index}>
-                          {/* <h3 className="text-xl font-semibold mb-4 flex items-center gap-2"> */}
-                          {/* {category.serviceName === "Hair Services" && <Scissors className="h-5 w-5" />}
-                      {category.serviceName === "Nail Services" && <Sparkles className="h-5 w-5" />}
-                      {category.serviceName === "Facial Services" && <Star className="h-5 w-5" />}
-                      {category.serviceName} */}
-                          {/* </h3> */}
-                          <div className="grid gap-4">
-                            <Card className="border-0 bg-card/50 backdrop-blur-sm">
-                              <CardContent className="p-4">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex-1">
-                                    <div className="flex items-center justify-between mb-2">
-                                      <h4 className="font-medium">{category.serviceName}</h4>
-                                      <div className="text-right">
-                                        <div className="font-semibold text-accent-foreground">{category.price}</div>
-                                      </div>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground">{category.description}</p>
-                                  </div>
-                                  <Button size="sm" className="ml-4"
-                                    onClick={() => handleViewService(category?.serviceID)}
-                                  >
-                                    Book Now
-                                  </Button>
-                                </div>
-                              </CardContent>
-                            </Card>
-
-                          </div>
-                        </div>
-                      ))}
-                    </TabsContent>
-
-                    <TabsContent value="staff" className="space-y-4">
-                      <div className="grid gap-6">
-                        {salon?.salonStaffDTOS && salon?.salonStaffDTOS.map((member: salonStaffDTOS, index: number) => (
-                          <Card key={index} className="border-0 bg-card/50 backdrop-blur-sm">
-                            <CardContent className="p-6">
-                              <div className="flex items-start gap-4">
-                                <img
-                                  src={member.staffimage || "/placeholder.svg"}
-                                  alt={member.staffname}
-                                  className="w-16 h-16 rounded-full object-cover"
-                                />
-                                <div className="flex-1">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div>
-
-                                      <p className="text-md">{member.staffname}</p>
-                                      <p className="text-sm text-muted-foreground">{member.description}</p>
-                                      <p className="text-sm text-muted-foreground">{member.staffexperience} years</p>
-                                    </div>
-                                    <div className="text-right">
-                                      <div className="flex items-center gap-1 mb-1">
-                                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                                        {/* <span className="text-sm font-medium">{member.rating}</span> */}
-                                      </div>
-                                      <p className="text-xs text-muted-foreground">{member?.staffexperience}</p>
-                                    </div>
-                                  </div>
-                                  {/* <div className="flex flex-wrap gap-1">
-                              {member.specialties.map((specialty, specIndex) => (
-                                <Badge key={specIndex} variant="outline" className="text-xs">
-                                  {specialty}
-                                </Badge>
-                              ))}
-                            </div> */}
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="reviews" className="space-y-4">
-                      <div className="grid gap-4">
-                        {/* {salon.reviewsList && salon.reviewsList?.map((review, index) => (
-                    <Card key={index} className="border-0 bg-card/50 backdrop-blur-sm">
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <h4 className="font-medium">{review.name}</h4>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star
-                                    key={i}
-                                    className={`h-3 w-3 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-                                      }`}
-                                  />
-                                ))}
-                              </div>
-                              <span>•</span>
-                              <span>{review.date}</span>
-                              <span>•</span>
-                              <span>{review.service}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <p className="text-muted-foreground">{review.comment}</p>
-                      </CardContent>
-                    </Card>
-                  ))} */}
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="photos" className="space-y-4">
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {/* {salon?.images && salon.images.map((image, index) => (
-                    <div key={index} className="aspect-square overflow-hidden rounded-lg">
-                      <img
-                        src={image || "/placeholder.svg"}
-                        alt={`${salon.name} photo ${index + 1}`}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  ))} */}
-                      </div>
-                    </TabsContent>
-                  </Tabs>)
-                  : (<NoServicesAvailable />)
-                }
-
-
               </div>
-
-              {/* Sidebar */}
-              <div className="space-y-6">
-                {/* Quick Actions */}
-                <Card className="border-0 bg-card/50 backdrop-blur-sm">
-                  <CardContent className="p-6">
-                    <div className="space-y-4">
-                      <Button className="w-full" size="lg">
-                        <Calendar className="mr-2 h-4 w-4" />
-                        Book Appointment
-                      </Button>
-                      <Button asChild variant="outline" className="w-full bg-transparent">
-                        <a href={`tel:${salon?.phone}`}>
-                          <Phone className="mr-2 h-4 w-4" />
-                          Call Now
-                        </a>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Contact Info */}
-                <Card className="border-0 bg-card/50 backdrop-blur-sm">
-                  <CardContent className="p-6">
-                    <h3 className="font-semibold mb-4">Contact Information</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm"> {salon.street}, {salon.city}, {salon.state}, {salon.pincode}</p>
-                          {/* <p className="text-xs text-muted-foreground">{salon.distance} </p> */}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <p className="text-sm">{salon.phone}</p>
-                      </div>
-                      {salon.email && (
-                        <div className="flex items-center gap-3">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <p className="text-sm">{salon.email}</p>
-                        </div>
-                      )}
-                      {/* {salon.website && (
-                    <div className="flex items-center gap-3">
-                      <Globe className="h-4 w-4 text-muted-foreground" />
-                      <a href={`https://${salon.website}`} className="text-sm text-accent-foreground hover:underline">
-                        {salon.website}
-                      </a>
-                    </div>
-                  )} */}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Hours */}
-                <Card className="border-0 bg-card/50 backdrop-blur-sm">
-                  <CardContent className="p-6">
-                    <h3 className="font-semibold mb-4 flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      Opening Hours
-                    </h3>
-                    <div className="space-y-2">
-                      {/* {salon?.hours && salon.hours.map((schedule, index) => (
-                    <div key={index} className="flex justify-between text-sm">
-                      <span className={schedule.day === "Sunday" ? "text-accent-foreground font-medium" : ""}>
-                        {schedule.day}
-                      </span>
-                      <span className="text-muted-foreground">{schedule.hours}</span>
-                    </div>
-                  ))} */}
-                    </div>
-                    <div className="mt-3 pt-3 border-t border-border">
-                      <div className="flex items-center gap-2 text-sm">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                        <span className="text-green-600 font-medium">Open Now</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Amenities */}
-                <Card className="border-0 bg-card/50 backdrop-blur-sm">
-                  <CardContent className="p-6">
-                    <h3 className="font-semibold mb-4">Amenities</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      {/* {salon?.amenitiesKeys && salon.amenitiesKeys.map((key, index) => (
-                    <div key={index} className="flex items-center gap-2 text-sm">
-                      {key === "wifi" && <Wifi className="h-4 w-4" />}
-                      {key === "parking" && <Car className="h-4 w-4" />}
-                      {key === "card" && <CreditCard className="h-4 w-4" />}
-                      {key === "online" && <CalendarIcon className="h-4 w-4" />}
-                      <span>
-                        {key === "wifi" && "Free WiFi"}
-                        {key === "parking" && "Free Parking"}
-                        {key === "card" && "Card Payment"}
-                        {key === "online" && "Online Booking"}
-                      </span>
-                    </div>
-                  ))} */}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+              <Button className="bg-white text-black hover:bg-slate-100 rounded-none px-10 h-14 text-xs font-bold uppercase tracking-widest transition-all">
+                Reserve Experience
+              </Button>
             </div>
           </div>
+        </section>
 
-                 </>
+        {/* --- Content Body --- */}
+        <section className="max-w-7xl mx-auto px-6 py-20 grid grid-cols-1 lg:grid-cols-12 gap-20">
+          
+          {/* Detailed Information */}
+          <div className="lg:col-span-8 space-y-16">
+            
+            {/* About Section */}
+            <div>
+              <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-6">The Studio</h2>
+              <p className="text-lg md:text-xl text-slate-600 font-light leading-relaxed">
+                {salon?.description || "A curation of style, wellness, and luxury. We specialize in transforming your personal aesthetic with precision and care."}
+              </p>
+            </div>
 
-      }
+            {/* Menu / Tabs */}
+            <Tabs defaultValue="services" className="w-full">
+              <TabsList className="w-full justify-start bg-transparent border-b border-slate-100 h-auto p-0 gap-10">
+                {["services", "stylists", "reviews"].map((tab) => (
+                  <TabsTrigger 
+                    key={tab} 
+                    value={tab} 
+                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-black rounded-none px-0 py-4 text-xs font-bold uppercase tracking-widest text-slate-400 data-[state=active]:text-black"
+                  >
+                    {tab}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+
+              <TabsContent value="services" className="pt-10 space-y-0 divide-y divide-slate-100">
+                {salon?.salonServices?.map((service, idx) => (
+                  <div
+                    onClick={() => handleViewService(service?.serviceID)}
+                  key={idx} className="group flex items-center justify-between py-8 hover:px-4 transition-all duration-300 cursor-pointer">
+                    <div className="space-y-2">
+                      <h4 className="text-lg font-medium text-slate-900 group-hover:text-[#1E4D8C] transition-colors">{service.serviceName}</h4>
+                      <p className="text-sm text-slate-400 font-light">{service.description || "Tailored professional service."}</p>
+                    </div>
+                    <div className="flex items-center gap-10">
+                      <div className="text-right">
+                        <p className="text-lg font-light">₹{service.price}</p>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-slate-200 group-hover:text-black transition-all" />
+                    </div>
+                  </div>
+                ))}
+              </TabsContent>
+
+              <TabsContent value="stylists" className="pt-10 grid grid-cols-1 md:grid-cols-2 gap-12">
+                {salon?.salonStaffDTOS?.map((staff, idx) => (
+                  <div key={idx} className="space-y-4">
+                    <div className="aspect-[4/5] bg-slate-50 overflow-hidden grayscale hover:grayscale-0 transition-all duration-700">
+                      <img src={staff.staffimage || "/placeholder.svg"} className="w-full h-full object-cover" alt={staff.staffname} />
+                    </div>
+                    <div>
+                      <h5 className="text-sm font-bold uppercase tracking-widest">{staff.staffname}</h5>
+                      <p className="text-xs text-slate-400 mt-1">{staff.description || "Master Stylist"}</p>
+                    </div>
+                  </div>
+                ))}
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {/* Sidebar: Essential Info */}
+          <div className="lg:col-span-4 space-y-12">
+            <div>
+              <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-6 border-b border-slate-100 pb-4">Concierge</h3>
+              <div className="space-y-6">
+                <div className="flex gap-4">
+                  <MapPin className="w-4 h-4 text-slate-900 shrink-0" />
+                  <p className="text-sm text-slate-600 font-light leading-relaxed">
+                    {salon?.street}, {salon?.city}, {salon?.state} {salon?.pincode}
+                  </p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Phone className="w-4 h-4 text-slate-900" />
+                  <p className="text-sm text-slate-600 font-light">{salon?.phone}</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Clock className="w-4 h-4 text-slate-900" />
+                  <div className="flex items-center gap-3">
+                    <p className="text-sm text-slate-600 font-light">09:00 AM - 08:00 PM</p>
+                    <span className="text-[9px] font-bold text-green-600 border border-green-200 px-2 py-0.5 tracking-tighter">OPEN</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-8 border border-slate-100 space-y-4">
+              <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Our Standards</h4>
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-4 h-4 text-[#1E4D8C]" />
+                <span className="text-xs font-medium">Eco-Friendly Products</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-4 h-4 text-[#1E4D8C]" />
+                <span className="text-xs font-medium">Sanitized Stations</span>
+              </div>
+            </div>
+            
+            <Button variant="outline" className="w-full h-14 rounded-none border-slate-900 text-black text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-black hover:text-white transition-all">
+              Contact Concierge
+            </Button>
+          </div>
+
+        </section>
+      </main>
     </div>
-  )
+  );
 }

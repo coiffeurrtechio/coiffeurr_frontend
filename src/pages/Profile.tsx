@@ -1,336 +1,158 @@
-import { useEffect, useState } from "react"
-import {
-  Camera,
-  Edit3,
-  Calendar,
-  Heart,
-  MapPin,
-  Phone,
-  Mail,
-  Clock,
-  Gift,
-  Settings,
-  LogOut,
-  MessageCircleQuestionMark,
-  BookOpen,
-  LayoutDashboard,
-  ArrowLeft,
-} from "lucide-react"
-import { Button } from "../components/ui_components/button"
-import { Badge } from "../components/ui_components/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "../components/ui_components/avatar"
-import { useSelector } from "react-redux";
-import { useDispatch } from "react-redux";
+import React from "react";
+import { 
+  Camera, ArrowLeft, Mail, Phone, Calendar, 
+  MessageCircleQuestion, LayoutDashboard, LogOut, 
+  Store, ChevronRight, Award, Scissors
+} from "lucide-react";
+import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { logout } from "../utils/Storage/slice/authSlice"
-import { useApi } from "../API/SalonsAPIs/ALLSalonAPI"
-import type { BookingResponse } from "../Interfaces/BookingInterface"
-import { logoutUser } from "../API/APIs"
-
+import { logoutUser } from "../API/APIs";
 
 export default function Profile() {
   const dispatch = useDispatch();
-  const navigate = useNavigate(); // ✅ hook for navigation
-  const { apiRequest } = useApi()
-  const [bookingdata, setbookingdata] = useState<BookingResponse[]>([])
-
+  const navigate = useNavigate();
   const userDetails = useSelector((state: any) => state.auth.user);
 
-  console.log("userdetails =", userDetails);
-
-  // Dummy user data
+  // Fallback dummy data if userDetails is missing
   const user = {
-    name: userDetails.username,
-    email: userDetails.email,
-    phone: userDetails.phone,
-    userType: userDetails.role,
-    joinDate: "March 2023",
-    profileImage: "/professional-woman-smiling.png",
-    loyaltyPoints: 1250,
-    totalBookings: 24,
-    favoriteServices: ["Hair Cut & Style", "Facial Treatment", "Manicure"],
-    preferredArtist: "Emma Rodriguez",
-  }
-
+    name: userDetails?.username || "Guest User",
+    email: userDetails?.email || "guest@example.com",
+    phone: userDetails?.phone || "+91 0000000000",
+    role: userDetails?.role || "customer",
+    profileImage: userDetails?.avatar || null,
+  };
 
   const handleLogout = () => {
-    // dispatch(logout());
     dispatch(logoutUser());
     navigate("/login");
   };
 
-
-
-
-  const upcomingBookings = [
+  const menuSections = [
     {
-      id: 4,
-      service: "Hair Color & Highlights",
-      artist: "Emma Rodriguez",
-      date: "Jan 5, 2025",
-      time: "1:00 PM",
-      status: "Confirmed",
-      price: "$180",
+      title: "Your Information",
+      items: [
+        {
+          label: "My Bookings",
+          icon: Calendar,
+          onClick: () => navigate("/bookings"),
+          color: "text-blue-600",
+        },
+        user.role === "salon_owner" && {
+          label: "Go to Dashboard",
+          icon: LayoutDashboard,
+          onClick: () => navigate("/dashboard"),
+          color: "text-orange-600",
+        } 
+      ].filter(Boolean)
     },
-  ]
-
-  const tabs = [
-    { id: "overview", label: "Overview", icon: Settings },
-    { id: "bookings", label: "Bookings", icon: Calendar },
-    { id: "favorites", label: "Favorites", icon: Heart },
-    // { id: "rewards", label: "Rewards", icon: Gift },
-  ]
-
-
-
-  function extractDateAndTime(isoString: string) {
-    const dateObj = new Date(isoString);
-
-    // Extract date parts
-    const year = dateObj.getFullYear();
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const day = String(dateObj.getDate()).padStart(2, '0');
-
-    // Extract time parts
-    const hours = String(dateObj.getHours()).padStart(2, '0');
-    const minutes = String(dateObj.getMinutes()).padStart(2, '0');
-    const seconds = String(dateObj.getSeconds()).padStart(2, '0');
-
-    // Return formatted date and time
-    return {
-      date: `${day}-${month}-${year}`,
-      time: `${hours}:${minutes}:${seconds}`
-    };
-  }
-
-
-  const your_information = [
-    // {
-    //   title: "Address Book",
-    //   icon: BookOpen,
-    //   onClick: () => { },
-    // },
-    userDetails.role !== "salon_owner" && {
-      title: "create salon",
-      icon: BookOpen,
-      onClick: () => navigate("/salonRegistration"),
-    },
-    userDetails.role === "salon_owner" && {
-      title: "Go to Dashboard",
-      icon: LayoutDashboard,
-      onClick: () => navigate("/dashboard"),
-    },
-  ].filter(Boolean);
-
-
-  const other_information = [
     {
-      tittle: "Logout",
-      icon: LogOut,
-      onclick: handleLogout,
-    },
-    // {
-    //   tittle: "Address Book",
-    //   icon: BookOpen,
-    //   onclick: () => { },
-    // },
-  ]
+      title: "Support & Legal",
+      items: [
+        { label: "Help & Support", icon: MessageCircleQuestion, onClick: () => {} },
+        { label: "Terms & Conditions", icon: Award, onClick: () => {} },
+        { label: "Logout", icon: LogOut, onClick: handleLogout, color: "text-red-500" },
+      ]
+    }
+  ];
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Header Banner */}
+      <div className="h-32 bg-[#1E4D8C] relative">
+        <button 
+          onClick={() => navigate("/")}
+          className="absolute top-6 left-4 p-2 bg-white/20 rounded-full text-white backdrop-blur-md"
+        >
+          <ArrowLeft size={20} />
+        </button>
+      </div>
 
+      <div className="max-w-xl mx-auto px-4">
+        {/* Profile Card */}
+        <div className="relative -mt-16 bg-white rounded-2xl shadow-sm p-6 text-center border border-gray-100">
+          <div className="relative inline-block">
+            <div className="w-24 h-24 rounded-full border-4 border-white overflow-hidden bg-gray-100 shadow-md">
+              {user.profileImage ? (
+                <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-orange-100 text-orange-600 text-3xl font-bold">
+                  {user.name.charAt(0)}
+                </div>
+              )}
+            </div>
+            <button className="absolute bottom-0 right-0 p-2 bg-[#1E4D8C] text-white rounded-full border-2 border-white shadow-lg">
+              <Camera size={14} />
+            </button>
+          </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Profile Sidebar */}
-          <div className="lg:col-span-1">
+          <h2 className="mt-4 text-xl font-bold text-gray-900">{user.name}</h2>
+          <span className="inline-block mt-1 px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase rounded-full">
+            {user.role.replace("_", " ")}
+          </span>
 
-            <div className="relative text-center">
+          {/* <div className="mt-6 grid grid-cols-2 gap-4 border-t border-gray-50 pt-6">
+            <div className="flex flex-col items-center">
+              <p className="text-lg font-bold text-[#1E4D8C]">24</p>
+              <p className="text-[10px] text-gray-400 font-bold uppercase">Visits</p>
+            </div>
+            <div className="flex flex-col items-center border-l border-gray-100">
+              <p className="text-lg font-bold text-orange-600">1250</p>
+              <p className="text-[10px] text-gray-400 font-bold uppercase">Points</p>
+            </div>
+          </div> */}
+        </div>
 
-              {/* Back Button */}
-              <button
-                onClick={() => navigate("/")}
-                className="absolute left-0 top-0 p-2 rounded-full 
-             bg-muted/60 backdrop-blur-sm 
-             hover:bg-muted transition"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </button>
+        {/* Info Strip */}
+        <div className="mt-4 bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex flex-col gap-3">
+          <div className="flex items-center gap-3 text-sm">
+            <Mail size={16} className="text-gray-400" />
+            <span className="text-gray-600">{user.email}</span>
+          </div>
+          <div className="flex items-center gap-3 text-sm">
+            <Phone size={16} className="text-gray-400" />
+            <span className="text-gray-600">{user.phone}</span>
+          </div>
+        </div>
 
-
-              <div className="relative inline-block mt-4">
-                <Avatar className="w-24 h-24 mx-auto border-4 border-accent/20">
-                  <AvatarImage
-                    src={user.profileImage || "/placeholder.svg"}
-                    alt={user.name}
-                  />
-                  <AvatarFallback className="bg-accent text-accent-foreground text-xl font-semibold">
-                    {user.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </AvatarFallback>
-                </Avatar>
-
-                <Button
-                  size="icon"
-                  className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full shadow-lg"
+        {/* Menu Sections */}
+        {menuSections.map((section, idx) => (
+          <div key={idx} className="mt-6">
+            <p className="px-1 text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2">
+              {section.title}
+            </p>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              {section.items.map((item: any, i) => (
+                <button
+                  key={i}
+                  onClick={item.onClick}
+                  className="w-full flex items-center justify-between p-4 hover:bg-gray-50 active:bg-gray-100 transition-colors border-b last:border-0 border-gray-50"
                 >
-                  <Camera className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <h2 className="mt-4 text-xl font-semibold">{user.name}</h2>
-              <Badge variant="secondary" className="mt-2">
-                {user.userType}
-              </Badge>
-            </div>
-
-            <div className="mt-6 space-y-4">
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <Mail className="h-4 w-4" />
-                <span className="truncate">{user.email}</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <Phone className="h-4 w-4" />
-                <span>{user.phone}</span>
-              </div>
-             
-            </div>
-
-
-
-            <div className="mt-4 grid grid-cols-3 sm:grid-cols-3 gap-2">
-
-              <div className="bg-card text-card-foreground rounded-xl border p-3 shadow-sm flex items-center justify-center">
-                <div className="flex flex-col items-center text-center" onClick={() => {navigate("/Bookings")}}>
-                  <Calendar className="h-6 w-6 text-primary" />
-                  <div className="text-sm font-bold text-muted-foreground mt-2">
-                    Your Bookings
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg bg-gray-50 ${item.color || 'text-gray-600'}`}>
+                      <item.icon size={18} />
+                    </div>
+                    <span className={`text-sm font-bold ${item.color || 'text-gray-700'}`}>
+                      {item.label}
+                    </span>
                   </div>
-                </div>
-              </div>
-              {/* <div className="bg-card text-card-foreground rounded-xl border p-3 shadow-sm flex items-center justify-center">
-                <div className="flex flex-col items-center text-center">
-                  <Gift className="h-6 w-6 text-primary" />
-                  <div className="text-sm font-bold text-muted-foreground mt-2">
-                    Rewards
-                  </div>
-                </div>
-              </div> */}
-              <div className="bg-card text-card-foreground rounded-xl border p-3 shadow-sm flex items-center justify-center">
-                <div className="flex flex-col items-center text-center">
-                  <MessageCircleQuestionMark className="h-6 w-6 text-primary" />
-                  <div className="text-sm font-bold text-muted-foreground mt-2">
-                    Need Helps?
-                  </div>
-                </div>
-              </div>
-
-
-
-
-            </div>
-
-
-
-            {/* your information  */}
-            <div className="mt-4">
-              {/* Section Header */}
-              <div className="bg-card px-3 rounded-xl">
-
-                <div className=" text-card-foreground border-b border-border py-3">
-                  <h2 className="text-md font-bold">
-                    Your Information
-                  </h2>
-                </div>
-
-                {/* Information List */}
-                <div className="text-card-foreground rounded-b-xl overflow-hidden">
-                  {your_information.map((item, index) => {
-                    const Icon = item.icon;
-
-                    return (
-                      <div
-                        key={index}
-                        onClick={item.onClick}
-                        className="py-3 cursor-pointer hover:bg-muted/40 transition border-b"
-                      >
-                        <div className="flex items-center">
-                          <Icon className="h-4 w-4 mr-2 text-muted-foreground" />
-                          <span className="text-sm font-medium">
-                            {item.title}
-                          </span>
-                        </div>
-
-
-                      </div>
-                    );
-                  })}
-
-                </div>
-
-
-              </div>
-
-            </div>
-
-            {/* other information  */}
-            <div className="mt-4">
-              {/* Section Header */}
-              <div className="bg-card px-3 rounded-xl">
-
-                <div className=" text-card-foreground border-b border-border py-3">
-                  <h2 className="text-md font-bold">
-                    Other Information
-                  </h2>
-                </div>
-
-                {/* Information List */}
-                <div className="text-card-foreground rounded-b-xl overflow-hidden">
-                  {other_information.map((item, index) => {
-                    const Icon = item.icon;
-
-                    return (
-                      <div
-                        key={index}
-                        className=" py-3 cursor-pointer border-b border-border"
-                        onClick={item?.onclick}
-                      >
-
-                        {/* Row */}
-                        <div className="flex items-center">
-                          <Icon className="h-4 w-4 mr-2 text-muted-foreground" />
-                          <span className="text-sm font-medium">
-                            {item.tittle}
-                          </span>
-                        </div>
-
-                      </div>
-                    );
-                  })}
-                </div>
-
-
-              </div>
-
+                  <ChevronRight size={16} className="text-gray-300" />
+                </button>
+              ))}
             </div>
           </div>
+        ))}
 
-
-          <div className="mt-2 py-2 flex flex-col items-center">
-            <span className="text-[21px] text-muted-foreground">
-              Mr & Mrs Coiffeurr
-            </span>
-            <span className="text-[19px] text-muted-foreground opacity-60">
-              © {new Date().getFullYear()}
-            </span>
+        {/* Footer */}
+        <div className="mt-10 mb-6 text-center">
+          <div className="flex items-center justify-center gap-2 text-gray-300 mb-1">
+            <Scissors size={16} />
+            <p className="text-sm font-black italic tracking-tighter">Coiffeurr</p>
           </div>
-
-
-
-
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+            Version 2.0.1 • © {new Date().getFullYear()}
+          </p>
         </div>
       </div>
-    </div >
-  )
+    </div>
+  );
 }

@@ -14,6 +14,11 @@ import DashBoardBusiness from "../pages/Salon/SalonOwner/DashBoardPages.tsx/Dash
 import WorkInProgress from "../components/WorkInProgress";
 import BookingPage from "../pages/BookingPage";
 import Home from "../pages/LoginPage";
+import SalonOwnerHomePage from "../pages/Salon/SalonOwner/SalonOwnerHomePage/SalonOwnerHomePage";
+import StaffManagement from "../pages/Salon/SalonOwner/SalonStaffPage.tsx/StaffManagement";
+import BookingsPage from "../pages/Salon/SalonOwner/BookingsPage/BookingsPage";
+import NotFoundPage from "../pages/NotFoundPage";
+import SalonRegistration from "../pages/Salon/SalonRegistration";
 
 export interface AppRoute {
   key: number;
@@ -41,6 +46,8 @@ const routes: AppRoute[] = [
       { key: 15, path: "/salons/:id", Element: SingleSalonPage, isProtected: true },
       { key: 16, path: "/salonRegistration", Element: SalonRegistrationForm, isProtected: true },
       { key: 17, path: "/salon/:id/service/:serviceID", Element: SalonService, isProtected: true },
+      { key: 18, path: "salonowner", Element: SalonOwnerHomePage, isProtected: true },
+
     ],
   },
   {
@@ -49,16 +56,24 @@ const routes: AppRoute[] = [
     Element: Home,
     isProtected: false,
   },
+
+
   {
     key: 3,
     path: "/signup",
     Element: SignUpPage,
     isProtected: false,
   },
+  {
+    key: 4,
+    path: "/salonregister",
+    Element: SalonRegistration,
+    isProtected: false,
+  },
 
   // ✅ Dashboard (without header/footer)
   {
-    key: 4,
+    key: 5,
     path: "/dashboard",
     Element: DashboardLayout,
     isProtected: true,
@@ -67,12 +82,22 @@ const routes: AppRoute[] = [
       { key: 21, path: "", Element: DashBoardBusiness, isProtected: true },
       { key: 22, path: "business", Element: DashBoardBusiness, isProtected: true },
       { key: 22, path: "SalonProfile", Element: DashBoardProfile, isProtected: true },
-      { key: 23, path: "sales", Element: WorkInProgress, isProtected: true },
-      { key: 24, path: "performance", Element: WorkInProgress, isProtected: true },
-      { key: 25, path: "data", Element: WorkInProgress, isProtected: true },
+      // { key: 23, path: "sales", Element: WorkInProgress, isProtected: true },
+      // { key: 24, path: "performance", Element: WorkInProgress, isProtected: true },
+      // { key: 25, path: "data", Element: WorkInProgress, isProtected: true },
+      { key: 26, path: "staff", Element: StaffManagement, isProtected: true },
+      { key: 27, path: "booking", Element: BookingsPage, isProtected: true },
+
+      // { key: 26, path: "salonowner", Element: SalonOwnerHomePage, isProtected: true },
     ],
   },
-  
+  {
+    key: 4,
+    path: '*', // 👈 This wildcard catches every undefined URL
+    Element: NotFoundPage,
+    isProtected: false, // Usually 404 is public
+  },
+
 ];
 
 export default routes;
