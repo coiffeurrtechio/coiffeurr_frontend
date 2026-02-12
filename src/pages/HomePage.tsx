@@ -50,25 +50,38 @@ const HomePage: React.FC = () => {
   ];
 
   useEffect(() => {
-    // 1. Get User Coordinates
+    // 1. Check Authentication
+    const authData = localStorage.getItem("authState");
+    const parsedAuth = authData ? JSON.parse(authData) : null;
+    
+    // Check if user object exists (Adjust path based on your exact login response structure)
+    const user = parsedAuth?.user?.user;
+
+    if (!user) {
+      navigate("/login");
+      return; // Exit early if not logged in
+    }
+
+    // 2. Get User Coordinates & Address
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
           try {
-            // 2. Free Reverse Geocoding API (OpenStreetMap Nominatim)
             const response = await fetch(
               `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
             );
             const data = await response.json();
 
-            // Format a clean address (Suburb/City)
-            const city = data.address.city || data.address.town || data.address.village || "";
+            const city = data.address.city || data.address.town || data.address.village || "Unknown";
             const suburb = data.address.suburb || data.address.neighbourhood || "";
+            
             localStorage.setItem("Address", city);
             setAddress(`${suburb}${suburb ? ', ' : ''}${city}`);
-
-            // Simulate Blinkit's slight delay for the "premium" loader feel
+            
+            // Fetch salons after address is set
+            FetchAllSalons(city);
+            
             setTimeout(() => setIsLoading(false), 1200);
           } catch (error) {
             setAddress("Address Fetch Failed");
@@ -78,19 +91,19 @@ const HomePage: React.FC = () => {
         () => {
           setAddress("Permission Denied");
           setIsLoading(false);
+          // Fetch default salons even if location is denied
+          FetchAllSalons("Mumbai"); 
         }
       );
+    } else {
+        FetchAllSalons("Mumbai");
     }
-
-
-
-    FetchAllSalons();
   }, []);
 
-
-  const FetchAllSalons = async () => {
+  // Update Fetch function to accept city directly to avoid race conditions with localStorage
+  const FetchAllSalons = async (cityName?: string) => {
     try {
-      const city = localStorage.getItem("Address");
+      const city = cityName || localStorage.getItem("Address") || "Mumbai";
       const res = await apiRequest<any[]>(`/salons/search?city=${city}&limit=10`);
       if (res.data) setsalons(res.data);
     } catch (err) {
@@ -182,7 +195,7 @@ const HomePage: React.FC = () => {
         <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
           {salons.map((salon: any, index: number) => (
             <Link to={`/salons/${salon.id}`}
-             key={salon.id || index} className="min-w-[240px] bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              key={salon.id || index} className="min-w-[240px] bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 
               {/* Top Section: Image Swiper */}
               <div className="relative h-32 w-full">
