@@ -1,68 +1,38 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MapPin, Bell, User, Search, Star, ChevronRight, Home, Scissors, Gift, UserCircle, Loader2, Clock, ArrowLeft, X } from 'lucide-react';
+import { MapPin, Bell, User, Search, Star, Home, Scissors, Gift, Loader2, Clock, ArrowLeft, X } from 'lucide-react';
 import { Loader } from '../components/ui_components/Loader';
 import { useApi } from '../API/SalonsAPIs/ALLSalonAPI';
-import type { Salon } from '../Interfaces/SaloInterface';
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import { Badge } from '../components/ui_components/badge';
 import { Link, useNavigate } from 'react-router-dom';
 
-interface SalonCard {
-  id: string;
-  name: string;
-  rating: number;
-  distance: string;
-  nextAvailable: string;
-  image: string;
-}
-
 const HomePage: React.FC = () => {
-
   const [address, setAddress] = useState<string>("Locating you...");
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const searchInputRef = useRef<HTMLInputElement>(null);
   const { apiRequest } = useApi();
-  const [salons, setsalons] = useState<any>([]);
-  const [fetchSalonAPI, setfetchSalonAPI] = useState<boolean>(true);
+  const [salons, setsalons] = useState<any[]>([]);
   const navigate = useNavigate();
 
-
-  const nearbySalons: SalonCard[] = [
-    {
-      id: '1',
-      name: 'GlowUp Salon',
-      rating: 4.5,
-      distance: '1.2 km',
-      nextAvailable: '120 min',
-      image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=400&q=80'
-    },
-    {
-      id: '2',
-      name: 'Elegance Spa',
-      rating: 4.8,
-      distance: '2.0 km',
-      nextAvailable: '30 min',
-      image: 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=400&q=80'
-    }
-  ];
-
   useEffect(() => {
-    // 1. Check Authentication
+    // 1. AUTH CHECK - Immediate redirect if no session
     const authData = localStorage.getItem("authState");
-    const parsedAuth = authData ? JSON.parse(authData) : null;
-    
-    // Check if user object exists (Adjust path based on your exact login response structure)
-    const user = parsedAuth?.user?.user;
-
-    if (!user) {
+    if (!authData) {
       navigate("/login");
-      return; // Exit early if not logged in
+      return;
     }
 
-    // 2. Get User Coordinates & Address
+    // 2. MOBILE FAIL-SAFE: If GPS takes > 5 seconds, load default
+    const forceLoadTimer = setTimeout(() => {
+      if (isLoading) {
+        console.warn("Geolocation timed out. Loading default city.");
+        setAddress("Navi Mumbai (Default)");
+        FetchAllSalons("Navi Mumbai");
+        setIsLoading(false);
+      }
+    }, 5000);
+
+    // 3. GEOLOCATION LOGIC
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
@@ -73,92 +43,81 @@ const HomePage: React.FC = () => {
             );
             const data = await response.json();
 
-            const city = data.address.city || data.address.town || data.address.village || "Unknown";
+            const city = data.address.city || data.address.town || data.address.village || "Navi Mumbai";
             const suburb = data.address.suburb || data.address.neighbourhood || "";
             
-            localStorage.setItem("Address", city);
             setAddress(`${suburb}${suburb ? ', ' : ''}${city}`);
+            localStorage.setItem("Address", city);
             
-            // Fetch salons after address is set
+            // Clear timer and fetch data
+            clearTimeout(forceLoadTimer);
             FetchAllSalons(city);
-            
-            setTimeout(() => setIsLoading(false), 1200);
+            setTimeout(() => setIsLoading(false), 800);
           } catch (error) {
-            setAddress("Address Fetch Failed");
-            setIsLoading(false);
+            handleLocationError(forceLoadTimer);
           }
         },
-        () => {
-          setAddress("Permission Denied");
-          setIsLoading(false);
-          // Fetch default salons even if location is denied
-          FetchAllSalons("Mumbai"); 
-        }
+        () => handleLocationError(forceLoadTimer),
+        { timeout: 10000, enableHighAccuracy: false } // Options for better mobile support
       );
     } else {
-        FetchAllSalons("Mumbai");
+      handleLocationError(forceLoadTimer);
     }
+
+    return () => clearTimeout(forceLoadTimer);
   }, []);
 
-  // Update Fetch function to accept city directly to avoid race conditions with localStorage
-  const FetchAllSalons = async (cityName?: string) => {
+  const handleLocationError = (timer: NodeJS.Timeout) => {
+    clearTimeout(timer);
+    const fallbackCity = "Navi Mumbai";
+    setAddress(fallbackCity);
+    FetchAllSalons(fallbackCity);
+    setIsLoading(false);
+  };
+
+  const FetchAllSalons = async (city: string) => {
     try {
-      const city = cityName || localStorage.getItem("Address") || "Mumbai";
       const res = await apiRequest<any[]>(`/salons/search?city=${city}&limit=10`);
       if (res.data) setsalons(res.data);
     } catch (err) {
-      console.error("Unexpected error fetching salons:", err);
-    } finally {
-      setfetchSalonAPI(false);
+      console.error("Fetch error:", err);
     }
   };
 
-
-  if (isLoading) {
-    return (
-      <Loader />
-    );
-  }
-
-
+  if (isLoading) return <Loader />;
 
   return (
-    <div className="min-h-screen bg-gray-50 max-w-md mx-auto font-sans pb-24">
-
-
-
-
+    <div className="min-h-screen bg-gray-50 max-w-md mx-auto font-sans pb-24 relative">
       {/* Blue Header Section */}
       <div className="bg-[#1E4D8C] p-6 text-white rounded-b-[2rem] shadow-lg">
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-blue-200" />
-            <span className="font-medium">{address}</span>
+          <div className="flex items-center gap-2 max-w-[70%]">
+            <MapPin className="w-4 h-4 text-blue-200 shrink-0" />
+            <span className="font-medium text-xs truncate">{address}</span>
           </div>
           <div className="flex items-center gap-4">
             <div className="relative">
               <Bell className="w-6 h-6" />
-              <span className="absolute -top-1 -right-0.5 bg-red-500 w-2.5 h-2.5 rounded-full border-2 border-[#1E4D8C]"></span>
+              <span className="absolute -top-1 -right-0.5 bg-red-500 w-2 h-2 rounded-full border-2 border-[#1E4D8C]"></span>
             </div>
-            <User className="w-6 h-6 p-1 bg-white/20 rounded-full" onClick={() => navigate("/profile")} />
+            <User className="w-8 h-8 p-1.5 bg-white/20 rounded-full cursor-pointer" onClick={() => navigate("/profile")} />
           </div>
         </div>
 
-        {/* Search Bar Card */}
-        {/* Search Bar Card */}
+        {/* Search Bar Redirect */}
         <div
-          onClick={() => navigate("/search")} // Redirect to search page
+          onClick={() => navigate("/search")}
           className="bg-white rounded-2xl p-4 shadow-xl -mb-12 border border-gray-100 cursor-pointer active:scale-95 transition-transform"
         >
           <div className="flex items-center gap-2 mb-3">
             <Search className="w-5 h-5 text-[#1E4D8C]" />
-            <span className="text-gray-900 font-bold">Find a Salon Near You</span>
+            <span className="text-gray-900 font-bold text-sm">Find a Salon Near You</span>
           </div>
           <div className="flex gap-2">
-            <div className="flex-1 bg-gray-50 rounded-lg px-3 py-2 flex items-center justify-between border border-gray-100">
-              <span className="text-xs text-gray-500">Location • Today • 12 PM</span>
+            <div className="flex-1 bg-gray-50 rounded-lg px-3 py-2 flex items-center border border-gray-100">
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Mumbai • Today • 12 PM</span>
             </div>
-            <button className="bg-[#1E4D8C] text-white px-5 py-2 rounded-lg font-bold text-sm shadow-md">
+            <button className="bg-[#1E4D8C] text-white px-4 py-2 rounded-lg font-bold text-xs shadow-md">
               Search
             </button>
           </div>
@@ -167,127 +126,64 @@ const HomePage: React.FC = () => {
 
       {/* Your Bookings Section */}
       <div className="px-4 mt-16 mb-8">
-        <h2 className="text-gray-800 font-bold mb-4">Your Bookings</h2>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-gray-800 font-bold">Your Bookings</h2>
+          <span className="text-[10px] font-bold text-[#1E4D8C] uppercase">View All</span>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 active:bg-gray-50 transition-colors">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <img src="/dummy_logo.png" alt="salon" className="w-12 h-12 rounded-lg object-cover" />
+              <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 font-bold">S</div>
               <div>
-                <h3 className="font-bold text-gray-900">StyleHub Salon</h3>
-                <p className="text-xs text-gray-500">Haircut & Beard</p>
+                <h3 className="font-bold text-sm text-gray-900">StyleHub Salon</h3>
+                <p className="text-[10px] text-gray-400 uppercase">Haircut • 45m</p>
               </div>
             </div>
-            <button className="text-gray-300">•••</button>
+            <span className="bg-green-50 text-green-600 px-2 py-1 rounded text-[9px] font-bold uppercase border border-green-100">Confirmed</span>
           </div>
-          <div className="flex items-center justify-between pt-2">
-            <div className="flex items-center gap-2 text-xs font-medium text-gray-700">
-              <span className="w-4 h-4 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-[10px]">✓</span>
-              Today, 6:30 PM
-            </div>
-            <span className="bg-[#4CAF50] text-white px-3 py-1 rounded-md text-[11px] font-bold">Confirmed</span>
+          <div className="flex items-center gap-2 text-xs font-bold text-gray-600">
+            <Clock size={14} className="text-gray-400" /> Today, 6:30 PM
           </div>
         </div>
       </div>
 
-      {/* Nearby Salons Horizontal Scroll */}
+      {/* Nearby Salons */}
       <div className="px-4 mb-8">
-        <h2 className="text-gray-800 font-bold mb-4">Nearby Salons</h2>
-        <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-          {salons.map((salon: any, index: number) => (
-            <Link to={`/salons/${salon.id}`}
-              key={salon.id || index} className="min-w-[240px] bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-
-              {/* Top Section: Image Swiper */}
-              <div className="relative h-32 w-full">
-                <Swiper
-                  modules={[Pagination, Autoplay]}
-                  pagination={{ clickable: true }}
-                  autoplay={{ delay: 4000 }}
-                  className="h-full w-full"
-                >
-                  {(salon?.branding?.coverImages?.length > 0
-                    ? salon.branding.coverImages
-                    : ["/placeholder.svg"]
-                  ).map((img: string, i: number) => (
-                    <SwiperSlide key={i}>
-                      <img src={img} alt={salon.salonName} className="w-full h-full object-cover" />
-                    </SwiperSlide>
-                  ))}
-                </Swiper>
-
-                <div className="absolute top-2 left-2 z-10">
-                  <Badge className="bg-[#1E4D8C]/90 text-white border-none px-2 py-0.5 font-black text-[9px] uppercase tracking-wider rounded-lg">
-                    {salon.salonType || "Unisex"}
-                  </Badge>
-                </div>
-
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent z-[5]" />
-                <div className="absolute bottom-2 left-3 z-[6] text-white">
-                  <p className="font-bold text-xs truncate w-[200px]">{salon.salonName}</p>
-                </div>
-              </div>
-
-              {/* Bottom Section: Logo + Info */}
-              <div className="p-3">
-                <div className="flex items-center gap-3">
-                  {/* 1. Logo on the Left */}
-                  <div className="relative shrink-0">
-                    <div className="w-10 h-10 rounded-full border-2 border-white shadow-sm overflow-hidden bg-gray-50 flex items-center justify-center">
-                      {salon?.branding?.logoUrl ? (
-                        <img
-                          src={salon.branding.logoUrl}
-                          alt="logo"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <Scissors size={18} className="text-gray-300" />
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 2. Content on the Right */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 text-orange-400 fill-orange-400" />
-                        <span className="text-[11px] font-black text-gray-700">
-                          {salon.ratings?.average || "5.0"}
-                        </span>
-                      </div>
-                      <span className="text-[10px] font-black text-[#1E4D8C]">
-                        {salon.pricing?.priceRange || "₹₹"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1 mt-0.5 text-gray-400">
-                      <MapPin size={10} className="shrink-0" />
-                      <span className="text-[9px] font-bold truncate tracking-tight uppercase">
-                        {salon.address?.city || "Nearby"}
-                      </span>
-                    </div>
+        <h2 className="text-gray-800 font-bold mb-4">Recommended for You</h2>
+        <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4 snap-x">
+          {salons.length > 0 ? (
+            salons.map((salon) => (
+              <Link to={`/salons/${salon.id}`} key={salon.id} className="min-w-[260px] snap-center bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="relative h-32">
+                  <img 
+                    src={salon.branding?.coverImages?.[0] || "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=400"} 
+                    className="w-full h-full object-cover" 
+                    alt={salon.salonName}
+                  />
+                  <div className="absolute top-2 right-2 bg-white/90 backdrop-blur px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                    <Star size={10} className="fill-orange-400 text-orange-400" />
+                    <span className="text-[10px] font-black">{salon.ratings?.average || "5.0"}</span>
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+                <div className="p-3">
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="font-bold text-sm text-gray-800 truncate pr-2">{salon.salonName}</h3>
+                    <span className="text-[10px] font-bold text-[#1E4D8C]">{salon.pricing?.priceRange || "₹₹"}</span>
+                  </div>
+                  <p className="text-[10px] text-gray-400 flex items-center gap-1 font-medium">
+                    <MapPin size={10} /> {salon.address?.city || "Nearby"}
+                  </p>
+                </div>
+              </Link>
+            ))
+          ) : (
+            <div className="w-full text-center py-10 text-gray-400 text-xs">No salons found in your area.</div>
+          )}
         </div>
       </div>
 
-      {/* Offers Section */}
-      {/* <div className="px-4 mb-8">
-        <h2 className="text-gray-800 font-bold mb-4">Offers Near You</h2>
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-              <Gift className="w-6 h-6 text-orange-500" />
-            </div>
-            <p className="text-sm font-bold text-gray-800">20% OFF at StyleHub - Only Today!</p>
-          </div>
-          <ChevronRight className="w-5 h-5 text-gray-300" />
-        </div>
-      </div> */}
-
-
+      {/* Navigation Padding */}
+      <div className="h-4" />
     </div>
   );
 };
