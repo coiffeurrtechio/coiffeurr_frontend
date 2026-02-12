@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { 
-  ArrowLeft, MapPin, Clock, Phone, Star, Heart, Share2, 
-  Mail, CheckCircle, Award, ChevronRight, Scissors 
+import {
+  ArrowLeft, MapPin, Clock, Phone, Star, Heart, Share2,
+  Mail, CheckCircle, Award, ChevronRight, Scissors
 } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay, EffectFade } from "swiper/modules";
@@ -12,40 +12,40 @@ import { Button } from "../../components/ui_components/button";
 import { Badge } from "../../components/ui_components/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui_components/tabs";
 import { Loader } from "../../components/ui_components/Loader";
-import NoServicesAvailable from "../../components/NoServicesAvailable";
 
-// API & Interfaces
+// API
 import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI";
-import type { Salon } from "../../Interfaces/SaloInterface";
 
 // Swiper Styles
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
+import { Card, CardContent } from "../../components/ui_components/card";
 
 export default function SalonDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { salonId } = useParams<{ salonId: string }>();
   const { apiRequest } = useApi();
   const navigate = useNavigate();
-  
-  const [salon, setSalon] = useState<Salon | null>(null);
+
+  const [salon, setSalon] = useState<any>(null);
+  const [salonService, setSalonService] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [salonStaff, setSalonStaff] = useState<any[]>([]);
 
   useEffect(() => {
     fetchSalonById();
-  }, [id]);
-
-  const handleViewService = (serviceId?: number) => {
-    if (serviceId == null) return;
-    navigate(`/salon/${salon?.id}/service/${serviceId}`);
-  };
+  }, [salonId]);
 
   const fetchSalonById = async () => {
     setLoading(true);
     try {
-      const res = await apiRequest<Salon>(`/salon/${id}`);
-      if (res.data) setSalon(res.data);
+      const res = await apiRequest<any>(`/salons/${salonId}`);
+      if (res.data) {
+        setSalon(res.data);
+        await fetchSalonService()
+        await fetchSalonStaff();
+      }
     } catch (error) {
       console.error("Fetch error:", error);
     } finally {
@@ -53,7 +53,60 @@ export default function SalonDetailPage() {
     }
   };
 
+  const fetchSalonService = async () => {
+    try {
+      const res = await apiRequest<any>(`/salons/${salonId}/services`);
+      if (res.data) setSalonService(res.data);
+    } catch (error) {
+      console.error("Fetch error:", error);
+    } finally {
+      // setLoading(false);
+    }
+  }
+
+
+  const fetchSalonStaff = async () => {
+    try {
+      const res = await apiRequest<any>(`/salons/${salonId}/staff`);
+      if (res.data) setSalonStaff(res.data);
+    } catch (error) {
+      console.error("staff Fetch error:", error);
+    } finally {
+      // setLoading(false);
+    }
+  }
+
+  const handleViewService = (service_id?: any) => {
+    navigate(`/salon/${salonId}/service/${service_id}`);
+  };
+
+  const formatTime = (time: string) => {
+    if (!time) return "";
+    return new Date(`1970-01-01T${time}`).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const checkIsOpen = () => {
+    if (!salon?.timing) return false;
+    const now = new Date();
+    const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
+
+    // Check if today is a weekly off
+    if (salon.timing.weeklyOff?.includes(dayName)) return false;
+
+    const currentTime = now.getHours() * 100 + now.getMinutes();
+    const open = parseInt(salon.timing.openingTime.replace(/:/g, ''));
+    const close = parseInt(salon.timing.closingTime.replace(/:/g, ''));
+
+    return currentTime >= open && currentTime <= close;
+  };
+
   if (!loading && !salon) return <div className="p-20 text-center font-light">Salon not found.</div>;
+
+  const isOpen = checkIsOpen();
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-slate-100">
@@ -87,14 +140,13 @@ export default function SalonDetailPage() {
             autoplay={{ delay: 5000 }}
             className="h-full w-full"
           >
-            {(salon?.images?.length ? salon.images : ["/placeholder.svg"]).map((img, i) => (
+            {(salon?.branding?.coverImages?.length ? salon.branding.coverImages : ["/placeholder.svg"]).map((img: string, i: number) => (
               <SwiperSlide key={i}>
-                <img src={img} alt="Salon" className="w-full h-full object-cover" />
+                <img src={img.trim()} alt="Salon" className="w-full h-full object-cover" />
               </SwiperSlide>
             ))}
           </Swiper>
-          
-          {/* Overlay Info */}
+
           <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-8 md:p-16 z-10">
             <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div className="text-white space-y-3">
@@ -105,10 +157,12 @@ export default function SalonDetailPage() {
                 <div className="flex items-center gap-4 text-sm font-medium opacity-90">
                   <div className="flex items-center gap-1.5">
                     <Star className="w-4 h-4 fill-white text-white" />
-                    <span>{salon?.rating || "4.9"}</span>
+                    <span>{salon?.ratings?.average || "5.0"}</span>
                   </div>
                   <span className="opacity-50">•</span>
-                  <span>{salon?.reviews || "120"} Reviews</span>
+                  <span>{salon?.ratings?.reviewsCount || "0"} Reviews</span>
+                  <span className="opacity-50">•</span>
+                  <span className="text-orange-300">{salon?.pricing?.priceRange}</span>
                 </div>
               </div>
               <Button className="bg-white text-black hover:bg-slate-100 rounded-none px-10 h-14 text-xs font-bold uppercase tracking-widest transition-all">
@@ -120,25 +174,29 @@ export default function SalonDetailPage() {
 
         {/* --- Content Body --- */}
         <section className="max-w-7xl mx-auto px-6 py-20 grid grid-cols-1 lg:grid-cols-12 gap-20">
-          
-          {/* Detailed Information */}
+
           <div className="lg:col-span-8 space-y-16">
-            
-            {/* About Section */}
             <div>
               <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-6">The Studio</h2>
               <p className="text-lg md:text-xl text-slate-600 font-light leading-relaxed">
-                {salon?.description || "A curation of style, wellness, and luxury. We specialize in transforming your personal aesthetic with precision and care."}
+                {salon?.description}
               </p>
+
+              <div className="mt-8 flex flex-wrap gap-2">
+                {salon?.expertise?.map((exp: string, i: number) => (
+                  <Badge key={i} variant="outline" className="rounded-full px-4 py-1 text-slate-500 border-slate-200">
+                    {exp}
+                  </Badge>
+                ))}
+              </div>
             </div>
 
-            {/* Menu / Tabs */}
             <Tabs defaultValue="services" className="w-full">
               <TabsList className="w-full justify-start bg-transparent border-b border-slate-100 h-auto p-0 gap-10">
                 {["services", "stylists", "reviews"].map((tab) => (
-                  <TabsTrigger 
-                    key={tab} 
-                    value={tab} 
+                  <TabsTrigger
+                    key={tab}
+                    value={tab}
                     className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-black rounded-none px-0 py-4 text-xs font-bold uppercase tracking-widest text-slate-400 data-[state=active]:text-black"
                   >
                     {tab}
@@ -146,37 +204,97 @@ export default function SalonDetailPage() {
                 ))}
               </TabsList>
 
-              <TabsContent value="services" className="pt-10 space-y-0 divide-y divide-slate-100">
-                {salon?.salonServices?.map((service, idx) => (
-                  <div
-                    onClick={() => handleViewService(service?.serviceID)}
-                  key={idx} className="group flex items-center justify-between py-8 hover:px-4 transition-all duration-300 cursor-pointer">
-                    <div className="space-y-2">
-                      <h4 className="text-lg font-medium text-slate-900 group-hover:text-[#1E4D8C] transition-colors">{service.serviceName}</h4>
-                      <p className="text-sm text-slate-400 font-light">{service.description || "Tailored professional service."}</p>
-                    </div>
-                    <div className="flex items-center gap-10">
-                      <div className="text-right">
-                        <p className="text-lg font-light">₹{service.price}</p>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-slate-200 group-hover:text-black transition-all" />
-                    </div>
+              <TabsContent value="services" className="pt-10">
+                {salonService && salonService.length > 0 ? (
+                  <div className="grid gap-4"> {/* Moved the grid outside the map for better layout */}
+                    {salonService.map((item: any, index: number) => (
+                      <Card key={index} className="border-0 bg-card/50 backdrop-blur-sm">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className="font-medium">{item.serviceName}</h4>
+                                <div className="text-right">
+                                  <div className="font-semibold text-accent-foreground">
+                                    ₹{item.price}
+                                  </div>
+                                </div>
+                              </div>
+                              <p className="text-sm text-muted-foreground">{item.description}</p>
+                            </div>
+                            <Button size="sm" className="ml-4"
+                              onClick={() => handleViewService(item?.service_id)}
+                            >             Book Now
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
-                ))}
+                ) : (
+                  <div className="py-20 text-center border border-dashed border-slate-100 rounded-xl">
+                    <Scissors className="w-8 h-8 text-slate-200 mx-auto mb-4" />
+                    <p className="text-sm text-slate-400 font-light">
+                      Digital Menu currently being updated.
+                    </p>
+                  </div>
+                )}
               </TabsContent>
 
-              <TabsContent value="stylists" className="pt-10 grid grid-cols-1 md:grid-cols-2 gap-12">
-                {salon?.salonStaffDTOS?.map((staff, idx) => (
-                  <div key={idx} className="space-y-4">
-                    <div className="aspect-[4/5] bg-slate-50 overflow-hidden grayscale hover:grayscale-0 transition-all duration-700">
-                      <img src={staff.staffimage || "/placeholder.svg"} className="w-full h-full object-cover" alt={staff.staffname} />
-                    </div>
-                    <div>
-                      <h5 className="text-sm font-bold uppercase tracking-widest">{staff.staffname}</h5>
-                      <p className="text-xs text-slate-400 mt-1">{staff.description || "Master Stylist"}</p>
-                    </div>
+              <TabsContent value="stylists" className="pt-10">
+                {salonStaff && salonStaff.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {salonStaff.map((staff: any) => (
+                      <div key={staff.staff_id} className="group relative bg-slate-50 p-6 transition-all hover:bg-white hover:shadow-xl hover:shadow-slate-100 border border-transparent hover:border-slate-100">
+                        <div className="flex items-start gap-6">
+                          {/* Minimalist Avatar Placeholder */}
+                          <div className="w-20 h-20 bg-slate-200 shrink-0 overflow-hidden grayscale group-hover:grayscale-0 transition-all">
+                            <div className="w-full h-full flex items-center justify-center text-slate-400">
+                              <Scissors className="w-8 h-8 opacity-20" />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2 flex-1">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h3 className="text-lg font-light tracking-tight text-slate-900">{staff.name}</h3>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-[#1E4D8C]">
+                                  {`${staff.experienceYears} Years Experience`}
+                                </p>
+                              </div>
+                              {staff.rating?.average && (
+                                <div className="flex items-center gap-1 text-xs font-bold">
+                                  <Star className="w-3 h-3 fill-slate-900" />
+                                  <span>{staff.rating.average}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="pt-2 flex flex-wrap gap-1.5">
+                              {staff.expertise && staff.expertise.map((skill: string, idx: number) => (
+                                <span key={idx} className="text-[9px] border border-slate-200 px-2 py-0.5 text-slate-500 uppercase tracking-tighter">
+                                  {skill}
+                                </span>
+                              ))}
+                            </div>
+
+                            <div className="pt-4 flex items-center gap-4">
+                              <button className="text-[10px] font-bold uppercase tracking-widest border-b border-black pb-0.5 hover:text-[#1E4D8C] hover:border-[#1E4D8C] transition-all">
+                                View Portfolio
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                ) : (
+                  <div className="py-20 text-center border border-dashed border-slate-100 rounded-xl">
+                    <p className="text-sm text-slate-400 font-light italic">
+                      Our master stylists are currently preparing for their next session.
+                    </p>
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           </div>
@@ -189,38 +307,47 @@ export default function SalonDetailPage() {
                 <div className="flex gap-4">
                   <MapPin className="w-4 h-4 text-slate-900 shrink-0" />
                   <p className="text-sm text-slate-600 font-light leading-relaxed">
-                    {salon?.street}, {salon?.city}, {salon?.state} {salon?.pincode}
+                    {salon?.address?.street}, {salon?.address?.city},<br />
+                    {salon?.address?.state} - {salon?.address?.pincode}
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
                   <Phone className="w-4 h-4 text-slate-900" />
-                  <p className="text-sm text-slate-600 font-light">{salon?.phone}</p>
+                  <p className="text-sm text-slate-600 font-light">{salon?.primaryPhone}</p>
                 </div>
                 <div className="flex items-center gap-4">
                   <Clock className="w-4 h-4 text-slate-900" />
                   <div className="flex items-center gap-3">
-                    <p className="text-sm text-slate-600 font-light">09:00 AM - 08:00 PM</p>
-                    <span className="text-[9px] font-bold text-green-600 border border-green-200 px-2 py-0.5 tracking-tighter">OPEN</span>
+                    <p className="text-sm text-slate-600 font-light">
+                      {formatTime(salon?.timing?.openingTime)} - {formatTime(salon?.timing?.closingTime)}
+                    </p>
+                    {isOpen ? (
+                      <span className="text-[9px] font-bold text-green-600 border border-green-200 px-2 py-0.5 tracking-tighter">OPEN</span>
+                    ) : (
+                      <span className="text-[9px] font-bold text-red-600 border border-red-200 px-2 py-0.5 tracking-tighter">CLOSED</span>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="p-8 border border-slate-100 space-y-4">
-              <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Our Standards</h4>
+              <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Ownership</h4>
               <div className="flex items-center gap-3">
                 <CheckCircle className="w-4 h-4 text-[#1E4D8C]" />
-                <span className="text-xs font-medium">Eco-Friendly Products</span>
+                <span className="text-xs font-medium">Managed by {salon?.ownerName}</span>
               </div>
               <div className="flex items-center gap-3">
-                <CheckCircle className="w-4 h-4 text-[#1E4D8C]" />
-                <span className="text-xs font-medium">Sanitized Stations</span>
+                <Mail className="w-4 h-4 text-[#1E4D8C]" />
+                <span className="text-xs font-medium">{salon?.email}</span>
               </div>
             </div>
-            
-            <Button variant="outline" className="w-full h-14 rounded-none border-slate-900 text-black text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-black hover:text-white transition-all">
-              Contact Concierge
-            </Button>
+
+            <a href={`tel:${salon?.primaryPhone}`} className="block">
+              <Button variant="outline" className="w-full h-14 rounded-none border-slate-900 text-black text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-black hover:text-white transition-all">
+                Contact Concierge
+              </Button>
+            </a>
           </div>
 
         </section>

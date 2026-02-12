@@ -14,11 +14,12 @@ function SalonDashboard({ open, setOpen }: SidebarProps) {
   const menuItems = [
     { id: "profile", label: "Profile", icon: Settings, path: "/dashboard/SalonProfile" },
     { id: "staff", label: "Staff", icon: Users, path: "/dashboard/staff" },
-    { id: "business", label: "Business", icon: LayoutDashboard, path: "/dashboard/business" },
+    { id: "services", label: "Services", icon: LayoutDashboard, path: "/dashboard/services" },
     { id: "booking", label: "Bookings", icon: Notebook, path: "/dashboard/booking" },
-    { id: "data", label: "Data", icon: Database, path: "/dashboard/data" },
-    { id: "sales", label: "Sales", icon: TrendingUp, path: "/dashboard/sales" },
-    { id: "performance", label: "Performance", icon: BarChart3, path: "/dashboard/performance" },
+    // { id: "business", label: "Business", icon: LayoutDashboard, path: "/dashboard/business" },
+    // { id: "data", label: "Data", icon: Database, path: "/dashboard/data" },
+    // { id: "sales", label: "Sales", icon: TrendingUp, path: "/dashboard/sales" },
+    // { id: "performance", label: "Performance", icon: BarChart3, path: "/dashboard/performance" },
   ];
 
   return (

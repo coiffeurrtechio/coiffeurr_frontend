@@ -17,7 +17,12 @@ function BookingPage() {
     const fetchAppointmentBookings = async () => {
         try {
             setloading(true);
-            const res = await apiRequest<BookingResponse[]>("/salon/appointments");
+            const authData = localStorage.getItem("authState");
+            const parsedAuth = authData ? JSON.parse(authData) : null;
+
+            // Adjusted based on your path: user?.user?.user?.id
+            const userid = parsedAuth?.user?.user?.id || parsedAuth?.user?.id;
+            const res = await apiRequest<BookingResponse[]>(`/bookings/user/${userid}`);
             if (res?.data) setBookingData(res.data);
         } catch (error) {
             console.error("Error fetching user bookings:", error);
@@ -35,6 +40,27 @@ function BookingPage() {
         };
     };
 
+    const formatTo12Hour = (timeString: string) => {
+        // 1. Split the "HH:mm" string into numbers
+        // Example: "14:30" becomes [14, 30]
+        const [hour, minute] = timeString.split(":").map(Number);
+
+        // 2. Determine if it is AM or PM
+        const ampm = hour >= 12 ? "PM" : "AM";
+
+        // 3. Convert hour to 12-hour format
+        // (hour % 12) converts 13 to 1, 14 to 2, etc. 
+        // || 12 ensures that 0 (midnight) or 12 (noon) stay as 12.
+        const h = hour % 12 || 12;
+
+        // 4. Handle the minutes padding
+        // If minutes are 0, return "h AM/PM" (e.g., "10 AM")
+        // Otherwise, return "h:mm AM/PM" (e.g., "10:30 AM")
+        return minute === 0
+            ? `${h} ${ampm}`
+            : `${h}:${minute.toString().padStart(2, "0")} ${ampm}`;
+    };
+
     return (
         <div className="min-h-screen bg-[#F8FAFC] text-slate-900">
             <Loader isVisible={loading} />
@@ -42,7 +68,7 @@ function BookingPage() {
             {/* --- Minimalist User Header --- */}
             <header className="bg-white border-b border-slate-100 sticky top-0 z-30">
                 <div className="max-w-2xl mx-auto px-6 h-16 flex items-center justify-between">
-                    <button 
+                    <button
                         onClick={() => window.history.back()}
                         className="p-2 -ml-2 hover:bg-slate-50 rounded-full transition-colors"
                     >
@@ -56,7 +82,7 @@ function BookingPage() {
             </header>
 
             <main className="max-w-2xl mx-auto px-4 py-8">
-                
+
                 {/* --- Quick Status Cards --- */}
                 <div className="flex gap-4 mb-10 overflow-x-auto pb-2 no-scrollbar">
                     <div className="min-w-[140px] bg-[#1E4D8C] p-4 rounded-2xl shadow-sm text-white">
@@ -76,27 +102,43 @@ function BookingPage() {
                 {/* --- Elegant Booking List --- */}
                 <div className="space-y-4">
                     {bookingdata.length > 0 ? (
-                        bookingdata.map((booking, index) => {
-                            const { date, fullDate, time } = formatAppointment(booking.appointmentDate);
-                            const isConfirmed = booking.status.toLowerCase() === 'confirmed';
+                        bookingdata.map((booking: any, index) => {
+                            // Accessing nested slot data from the new response format
+                            const appointmentDate = booking.slot?.date;
+                            const appointmentTime = booking.slot?.time;
+
+                            // Logic for formatting (using your existing formatAppointment helper)
+                            // Note: We pass appointmentDate directly if formatAppointment handles "YYYY-MM-DD"
+                            const { date, fullDate } = formatAppointment(appointmentDate);
+
+                            // Convert 24h to 12h if your helper doesn't already do it
+                            const displayTime = formatTo12Hour(appointmentTime);
+
+                            const status = booking.status || 'PENDING';
+                            const isConfirmed = status.toLowerCase() === 'confirmed';
+                            const isPending = status.toLowerCase() === 'pending';
 
                             return (
-                                <div 
-                                    key={index}
+                                <div
+                                    key={booking.id || index}
                                     className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer relative overflow-hidden"
                                 >
-                                    {/* Status Accent Bar */}
-                                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${isConfirmed ? 'bg-green-400' : 'bg-[#1E4D8C]'}`} />
+                                    {/* Status Accent Bar - Dynamic colors based on status */}
+                                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${isConfirmed ? 'bg-green-400' : isPending ? 'bg-amber-400' : 'bg-[#1E4D8C]'
+                                        }`} />
 
                                     <div className="flex justify-between items-start">
                                         <div className="space-y-3 flex-1">
                                             <div className="flex items-center gap-2">
-                                                <Badge className={`text-[9px] font-bold px-2 py-0.5 rounded-md border-none ${
-                                                    isConfirmed ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-[#1E4D8C]'
-                                                }`}>
-                                                    {booking.status.toUpperCase()}
+                                                <Badge className={`text-[9px] font-bold px-2 py-0.5 rounded-md border-none ${isConfirmed
+                                                    ? 'bg-green-50 text-green-600'
+                                                    : isPending
+                                                        ? 'bg-amber-50 text-amber-600'
+                                                        : 'bg-blue-50 text-[#1E4D8C]'
+                                                    }`}>
+                                                    {status.toUpperCase()}
                                                 </Badge>
-                                                <span className="text-xs text-slate-300">#BK-00{index + 1}</span>
+                                                <span className="text-xs text-slate-300">#BK-{booking.id?.slice(-4) || (index + 1)}</span>
                                             </div>
 
                                             <div>
@@ -118,7 +160,7 @@ function BookingPage() {
                                                     <div className="p-1.5 bg-slate-50 rounded-lg">
                                                         <Clock className="w-3.5 h-3.5 text-slate-500" />
                                                     </div>
-                                                    <span className="text-xs font-semibold text-slate-600">{time}</span>
+                                                    <span className="text-xs font-semibold text-slate-600">{displayTime}</span>
                                                 </div>
                                             </div>
                                         </div>

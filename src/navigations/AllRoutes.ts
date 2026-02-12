@@ -19,6 +19,8 @@ import StaffManagement from "../pages/Salon/SalonOwner/SalonStaffPage.tsx/StaffM
 import BookingsPage from "../pages/Salon/SalonOwner/BookingsPage/BookingsPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import SalonRegistration from "../pages/Salon/SalonRegistration";
+import SearchPage from "../pages/SearchPage";
+import ServiceManagement from "../pages/Salon/SalonOwner/SalonServicePage/ServiceManagement";
 
 export interface AppRoute {
   key: number;
@@ -43,17 +45,18 @@ const routes: AppRoute[] = [
       { key: 12, path: "/profile", Element: Profile, isProtected: false },
       { key: 14, path: "/salons", Element: SalonsPage, isProtected: false },
       { key: 14, path: "/Bookings", Element: BookingPage, isProtected: false },
-      { key: 15, path: "/salons/:id", Element: SingleSalonPage, isProtected: true },
+      { key: 15, path: "/salons/:salonId", Element: SingleSalonPage, isProtected: true },
       { key: 16, path: "/salonRegistration", Element: SalonRegistrationForm, isProtected: true },
-      { key: 17, path: "/salon/:id/service/:serviceID", Element: SalonService, isProtected: true },
-      { key: 18, path: "salonowner", Element: SalonOwnerHomePage, isProtected: true },
+      { key: 17, path: "/salon/:salonId/service/:serviceId", Element: SalonService, isProtected: true },
+      { key: 18, path: "/salonowner", Element: SalonOwnerHomePage, isProtected: true },
+      { key: 19, path: "/search", Element: SearchPage, isProtected: true },
 
     ],
   },
   {
     key: 2,
     path: "/login",
-    Element: Home,
+    Element: LoginPage,
     isProtected: false,
   },
 
@@ -77,7 +80,7 @@ const routes: AppRoute[] = [
     path: "/dashboard",
     Element: DashboardLayout,
     isProtected: true,
-    allowedRoles: ["salon_owner", "admin"],
+    allowedRoles: ["OWNER"],
     children: [
       { key: 21, path: "", Element: DashBoardBusiness, isProtected: true },
       { key: 22, path: "business", Element: DashBoardBusiness, isProtected: true },
@@ -86,7 +89,8 @@ const routes: AppRoute[] = [
       // { key: 24, path: "performance", Element: WorkInProgress, isProtected: true },
       // { key: 25, path: "data", Element: WorkInProgress, isProtected: true },
       { key: 26, path: "staff", Element: StaffManagement, isProtected: true },
-      { key: 27, path: "booking", Element: BookingsPage, isProtected: true },
+      { key: 27, path: "services", Element: ServiceManagement, isProtected: true },
+      { key: 28, path: "booking", Element: BookingsPage, isProtected: true },
 
       // { key: 26, path: "salonowner", Element: SalonOwnerHomePage, isProtected: true },
     ],

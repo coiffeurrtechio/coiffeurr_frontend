@@ -1,6 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { MapPin, Bell, User, Search, Star, ChevronRight, Home, Scissors, Gift, UserCircle, Loader2, Clock, ArrowLeft, X } from 'lucide-react';
 import { Loader } from '../components/ui_components/Loader';
+import { useApi } from '../API/SalonsAPIs/ALLSalonAPI';
+import type { Salon } from '../Interfaces/SaloInterface';
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Pagination, Autoplay } from "swiper/modules";
+import { Badge } from '../components/ui_components/badge';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface SalonCard {
   id: string;
@@ -18,6 +24,11 @@ const HomePage: React.FC = () => {
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const { apiRequest } = useApi();
+  const [salons, setsalons] = useState<any>([]);
+  const [fetchSalonAPI, setfetchSalonAPI] = useState<boolean>(true);
+  const navigate = useNavigate();
+
 
   const nearbySalons: SalonCard[] = [
     {
@@ -54,7 +65,7 @@ const HomePage: React.FC = () => {
             // Format a clean address (Suburb/City)
             const city = data.address.city || data.address.town || data.address.village || "";
             const suburb = data.address.suburb || data.address.neighbourhood || "";
-
+            localStorage.setItem("Address", city);
             setAddress(`${suburb}${suburb ? ', ' : ''}${city}`);
 
             // Simulate Blinkit's slight delay for the "premium" loader feel
@@ -70,7 +81,25 @@ const HomePage: React.FC = () => {
         }
       );
     }
+
+
+
+    FetchAllSalons();
   }, []);
+
+
+  const FetchAllSalons = async () => {
+    try {
+      const city = localStorage.getItem("Address");
+      const res = await apiRequest<any[]>(`/salons/search?city=${city}&limit=10`);
+      if (res.data) setsalons(res.data);
+    } catch (err) {
+      console.error("Unexpected error fetching salons:", err);
+    } finally {
+      setfetchSalonAPI(false);
+    }
+  };
+
 
   if (isLoading) {
     return (
@@ -78,54 +107,13 @@ const HomePage: React.FC = () => {
     );
   }
 
+
+
   return (
     <div className="min-h-screen bg-gray-50 max-w-md mx-auto font-sans pb-24">
 
 
-      {/* --- MORPHING SEARCH OVERLAY --- */}
-      <div
-        className={`fixed inset-0 z-50 bg-white transition-all duration-300 ease-in-out ${isSearchOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-          }`}
-      >
-        {/* Header that looks like the search bar moved to top */}
-        <div className="flex items-center gap-3 p-4 border-b bg-white">
-          <button onClick={() => setIsSearchOpen(false)} className="p-1">
-            <ArrowLeft className="w-6 h-6 text-gray-700" />
-          </button>
-          <div className="flex-1 relative">
-            <input
-              ref={searchInputRef}
-              type="text"
-              placeholder="Search for services..."
-              className="w-full bg-gray-100 rounded-xl px-4 py-3 outline-none text-sm"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            {searchQuery && (
-              <X
-                className="absolute right-3 top-3 w-4 h-4 text-gray-400"
-                onClick={() => setSearchQuery("")}
-              />
-            )}
-          </div>
-        </div>
 
-        {/* Search Results Area (White background below) */}
-        <div className="p-4 bg-white min-h-screen">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-gray-800">Recent Searches</h3>
-            <button className="text-xs text-blue-600">Clear</button>
-          </div>
-          <div className="space-y-4">
-            {['Haircut near me', 'Facial for men', 'Bridal Package'].map((item) => (
-              <div key={item} className="flex items-center gap-3 text-gray-500 py-1">
-                <Clock className="w-4 h-4 text-gray-300" />
-                <span className="text-sm">{item}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/* Blue Header Section */}
       <div className="bg-[#1E4D8C] p-6 text-white rounded-b-[2rem] shadow-lg">
@@ -139,14 +127,16 @@ const HomePage: React.FC = () => {
               <Bell className="w-6 h-6" />
               <span className="absolute -top-1 -right-0.5 bg-red-500 w-2.5 h-2.5 rounded-full border-2 border-[#1E4D8C]"></span>
             </div>
-            <User className="w-6 h-6 p-1 bg-white/20 rounded-full" />
+            <User className="w-6 h-6 p-1 bg-white/20 rounded-full" onClick={() => navigate("/profile")} />
           </div>
         </div>
 
         {/* Search Bar Card */}
-        <div 
-        onClick={() => setIsSearchOpen(true)}
-        className="bg-white rounded-2xl p-4 shadow-xl -mb-12 border border-gray-100">
+        {/* Search Bar Card */}
+        <div
+          onClick={() => navigate("/search")} // Redirect to search page
+          className="bg-white rounded-2xl p-4 shadow-xl -mb-12 border border-gray-100 cursor-pointer active:scale-95 transition-transform"
+        >
           <div className="flex items-center gap-2 mb-3">
             <Search className="w-5 h-5 text-[#1E4D8C]" />
             <span className="text-gray-900 font-bold">Find a Salon Near You</span>
@@ -189,30 +179,89 @@ const HomePage: React.FC = () => {
       {/* Nearby Salons Horizontal Scroll */}
       <div className="px-4 mb-8">
         <h2 className="text-gray-800 font-bold mb-4">Nearby Salons</h2>
-        <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
-          {nearbySalons.map((salon) => (
-            <div key={salon.id} className="min-w-[200px] bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="relative h-28">
-                <img src={salon.image} alt={salon.name} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                <div className="absolute bottom-2 left-2 text-white">
-                  <p className="font-bold text-sm">{salon.name}</p>
+        <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+          {salons.map((salon: any, index: number) => (
+            <Link to={`/salons/${salon.id}`}
+             key={salon.id || index} className="min-w-[240px] bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+
+              {/* Top Section: Image Swiper */}
+              <div className="relative h-32 w-full">
+                <Swiper
+                  modules={[Pagination, Autoplay]}
+                  pagination={{ clickable: true }}
+                  autoplay={{ delay: 4000 }}
+                  className="h-full w-full"
+                >
+                  {(salon?.branding?.coverImages?.length > 0
+                    ? salon.branding.coverImages
+                    : ["/placeholder.svg"]
+                  ).map((img: string, i: number) => (
+                    <SwiperSlide key={i}>
+                      <img src={img} alt={salon.salonName} className="w-full h-full object-cover" />
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+
+                <div className="absolute top-2 left-2 z-10">
+                  <Badge className="bg-[#1E4D8C]/90 text-white border-none px-2 py-0.5 font-black text-[9px] uppercase tracking-wider rounded-lg">
+                    {salon.salonType || "Unisex"}
+                  </Badge>
+                </div>
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent z-[5]" />
+                <div className="absolute bottom-2 left-3 z-[6] text-white">
+                  <p className="font-bold text-xs truncate w-[200px]">{salon.salonName}</p>
                 </div>
               </div>
+
+              {/* Bottom Section: Logo + Info */}
               <div className="p-3">
-                <div className="flex items-center gap-3 text-[10px] text-gray-600 font-medium">
-                  <span className="flex items-center gap-1"><Star className="w-3 h-3 text-orange-400 fill-orange-400" /> {salon.rating}</span>
-                  <span>{salon.distance}</span>
-                  <span>Next {salon.nextAvailable}</span>
+                <div className="flex items-center gap-3">
+                  {/* 1. Logo on the Left */}
+                  <div className="relative shrink-0">
+                    <div className="w-10 h-10 rounded-full border-2 border-white shadow-sm overflow-hidden bg-gray-50 flex items-center justify-center">
+                      {salon?.branding?.logoUrl ? (
+                        <img
+                          src={salon.branding.logoUrl}
+                          alt="logo"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Scissors size={18} className="text-gray-300" />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 2. Content on the Right */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <Star className="w-3 h-3 text-orange-400 fill-orange-400" />
+                        <span className="text-[11px] font-black text-gray-700">
+                          {salon.ratings?.average || "5.0"}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-black text-[#1E4D8C]">
+                        {salon.pricing?.priceRange || "₹₹"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1 mt-0.5 text-gray-400">
+                      <MapPin size={10} className="shrink-0" />
+                      <span className="text-[9px] font-bold truncate tracking-tight uppercase">
+                        {salon.address?.city || "Nearby"}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
 
       {/* Offers Section */}
-      <div className="px-4 mb-8">
+      {/* <div className="px-4 mb-8">
         <h2 className="text-gray-800 font-bold mb-4">Offers Near You</h2>
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -223,7 +272,7 @@ const HomePage: React.FC = () => {
           </div>
           <ChevronRight className="w-5 h-5 text-gray-300" />
         </div>
-      </div>
+      </div> */}
 
 
     </div>

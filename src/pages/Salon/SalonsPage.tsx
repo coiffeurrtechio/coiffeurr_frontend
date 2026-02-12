@@ -1,5 +1,5 @@
 import React, { useEffect, useState, type JSX } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom"; // Added useLocation
 import {
   MapPin, Clock, Phone, Star, Users, ArrowRight,
   Filter, Search, Scissors, Heart, Navigation
@@ -22,38 +22,58 @@ import "swiper/css";
 import "swiper/css/pagination";
 
 export default function SalonsPage(): JSX.Element {
+  const location = useLocation(); // Hook to get URL params
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedType, setSelectedType] = useState<string>("all");
-  const [salons, setSalons] = useState<Salon[]>([]);
+  const [salons, setSalons] = useState<any[]>([]);
   const [fetchSalonAPI, setfetchSalonAPI] = useState(true);
   const { apiRequest } = useApi();
+  const navigate = useNavigate();
+  // Extract 'query' from URL e.g. /salons?query=Mumbai
+  const queryParams = new URLSearchParams(location.search);
+  const urlSearchQuery = queryParams.get("query");
 
-  const FetchAllSalons = async () => {
+  const FetchSalonsData = async () => {
+    setfetchSalonAPI(true);
     try {
-      const res = await apiRequest<Salon[]>("/salon");
+      let endpoint = "/salons";
+
+      // If there is a URL param, use the search endpoint
+      if (urlSearchQuery) {
+        endpoint = `/search-salons?query=${encodeURIComponent(urlSearchQuery)}`;
+        setSearchTerm(urlSearchQuery); // Sync the search input with URL param
+      }
+
+      // const res = await apiRequest<Salon[]>();
+      const city = localStorage.getItem("Address");
+      const res = await apiRequest<any[]>(`/salons/search?city=${city}&limit=1`);
       if (res.data) setSalons(res.data);
     } catch (err) {
-      console.error("Unexpected error fetching salons:", err);
+      console.error("Error fetching salons:", err);
     } finally {
       setfetchSalonAPI(false);
     }
   };
 
+  // Re-run whenever the URL search query changes
   useEffect(() => {
-    FetchAllSalons();
+    FetchSalonsData();
   }, []);
 
   const salonTypes = ["all", "Unisex", "Women Only", "Men Only"];
 
-  const filteredSalons = salons.filter((salon) => {
-    const matchesSearch =
-      salon.salonName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      salon.street.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = selectedType === "all" || salon.salonType === selectedType;
-    return matchesSearch && matchesType;
-  });
+  // const filteredSalons = salons.filter((salon) => {
+  //   // Local filtering for live search bar interaction
+  //   const matchesSearch =
+  //     salon.salonName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     (salon.street && salon.street.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  //   const matchesType = selectedType === "all" || salon.salonType === selectedType;
+  //   return matchesSearch && matchesType;
+  // });
 
   const formatTime = (timeString: string): string => {
+    if (!timeString) return "N/A";
     const [hours, minutes] = timeString.split(":").map(Number);
     const date = new Date();
     date.setHours(hours);
@@ -72,20 +92,21 @@ export default function SalonsPage(): JSX.Element {
         <div className="container mx-auto px-4 py-6 md:py-8">
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center gap-3">
-
-              {/* 1. SEARCH INPUT (The Hero of the section) */}
-              <div className="relative flex-1 group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5 group-focus-within:text-[#1E4D8C] transition-colors" />
+              <div
+                className="relative flex-1 group cursor-pointer"
+                onClick={() => navigate(`/search?query=${encodeURIComponent(searchTerm)}`)}
+              >
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5 group-hover:text-[#1E4D8C] transition-colors" />
                 <input
                   type="text"
+                  readOnly // Prevents keyboard on this page, acts as a button
                   placeholder="Search for 'Haircut' or 'Spa'..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full h-12 pl-12 pr-4 rounded-2xl bg-white text-gray-900 shadow-xl border-none focus:ring-4 focus:ring-orange-400/30 transition-all outline-none text-sm md:text-base"
+                  className="w-full h-12 pl-12 pr-4 rounded-2xl bg-white text-gray-900 shadow-xl border-none cursor-pointer transition-all outline-none text-sm md:text-base"
                 />
               </div>
 
-              {/* 2. COMPACT FILTER BUTTON (Modern App Style) */}
+              {/* Filter Select UI */}
               <div className="relative">
                 <select
                   value={selectedType}
@@ -105,19 +126,6 @@ export default function SalonsPage(): JSX.Element {
                   </span>
                 </div>
               </div>
-
-            </div>
-
-            {/* 3. QUICK TAGS (Optional: Enhances the "App" feel) */}
-            <div className="flex gap-2 mt-4 overflow-x-auto no-scrollbar pb-1">
-              {["Haircut", "Facial", "Massage", "Manicure"].map((tag) => (
-                <button
-                  key={tag}
-                  className="px-4 py-1.5 bg-white/10 border border-white/20 rounded-full text-[10px] font-bold uppercase whitespace-nowrap hover:bg-white/20 transition-colors"
-                >
-                  {tag}
-                </button>
-              ))}
             </div>
           </div>
         </div>
@@ -127,7 +135,7 @@ export default function SalonsPage(): JSX.Element {
       <section className="py-8">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredSalons.map((salon) => (
+            {salons.map((salon) => (
               <Card
                 key={salon.id}
                 className="border border-gray-100 bg-white rounded-[2rem] overflow-hidden group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1"
@@ -140,7 +148,7 @@ export default function SalonsPage(): JSX.Element {
                     autoplay={{ delay: 4000 }}
                     className="h-full w-full"
                   >
-                    {(salon?.images?.length > 0 ? salon.images : ["/placeholder.svg"]).map((img, index) => (
+                    {(salon?.branding?.coverImages?.length > 0 ? salon?.branding?.coverImages : ["/placeholder.svg"]).map((img: any, index: number) => (
                       <SwiperSlide key={index}>
                         <img src={img} alt={salon.salonName} className="w-full h-full object-cover" />
                       </SwiperSlide>
@@ -159,18 +167,17 @@ export default function SalonsPage(): JSX.Element {
                 </div>
 
                 <CardContent className="p-6">
-                  {/* Title & Rating */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center overflow-hidden flex-shrink-0">
-                        <img src={salon.logoUrl || "/placeholder.svg"} alt="logo" className="w-full h-full object-cover" />
+                        <img src={salon.branding?.logoUrl || "/placeholder.svg"} alt="logo" className="w-full h-full object-cover" />
                       </div>
                       <div>
                         <h3 className="font-black text-gray-900 text-lg leading-tight">{salon.salonName}</h3>
                         <div className="flex items-center gap-1 mt-1">
                           <Star className="h-3 w-3 fill-orange-400 text-orange-400" />
-                          <span className="text-xs font-black text-gray-700">{salon.rating}</span>
-                          <span className="text-[10px] text-gray-400 font-bold ml-1">({salon.reviews} REVIEWS)</span>
+                          <span className="text-xs font-black text-gray-700">{salon.ratings?.average || "5.0"}</span>
+                          <span className="text-[10px] text-gray-400 font-bold ml-1">({salon.ratings?.reviewsCount || 0} REVIEWS)</span>
                         </div>
                       </div>
                     </div>
@@ -181,21 +188,20 @@ export default function SalonsPage(): JSX.Element {
                     <div className="flex items-start gap-3 text-xs">
                       <MapPin className="h-4 w-4 text-orange-500 shrink-0" />
                       <span className="text-gray-600 font-medium line-clamp-1">
-                        {salon.street}, {salon.city}
+                        {salon?.address?.street}, {salon.address?.city}
                       </span>
                     </div>
                     <div className="flex items-center gap-3 text-xs">
                       <Clock className="h-4 w-4 text-[#1E4D8C] shrink-0" />
                       <div className="flex items-center gap-2">
                         <span className="text-gray-600 font-medium">
-                          {formatTime(salon.openingTime)} - {formatTime(salon.closingTime)}
+                          {formatTime(salon.timing?.openingTime)} - {formatTime(salon.timing?.closingTime)}
                         </span>
                         <span className="text-[10px] font-black text-green-600 uppercase tracking-widest">• Open Now</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Actions */}
                   <div className="flex items-center justify-between">
                     <div className="flex -space-x-2">
                       {[1, 2, 3].map((i) => (
@@ -203,9 +209,6 @@ export default function SalonsPage(): JSX.Element {
                           <img src={`https://i.pravatar.cc/100?u=${salon.id}${i}`} alt="user" />
                         </div>
                       ))}
-                      <div className="w-7 h-7 rounded-full border-2 border-white bg-orange-100 flex items-center justify-center text-[10px] font-bold text-orange-600">
-                        +8
-                      </div>
                     </div>
 
                     <Link to={`/salons/${salon.id}`}>
@@ -221,20 +224,13 @@ export default function SalonsPage(): JSX.Element {
           </div>
 
           {/* Empty State */}
-          {filteredSalons.length === 0 && (
+          {!fetchSalonAPI && (
             <div className="text-center py-20 animate-in fade-in zoom-in duration-300">
               <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Search className="h-10 w-10 text-gray-300" />
               </div>
               <p className="text-xl font-black text-gray-900">No salons found</p>
               <p className="text-gray-500 text-sm mt-2">Try adjusting your filters or search term.</p>
-              <Button
-                variant="outline"
-                className="mt-6 border-[#1E4D8C] text-[#1E4D8C] font-bold"
-                onClick={() => { setSearchTerm(""); setSelectedType("all") }}
-              >
-                Clear all filters
-              </Button>
             </div>
           )}
         </div>

@@ -31,7 +31,7 @@ export function useApi() {
       // }
 
       // ✅ Call backend refresh API
-      const response = await fetch(`${Config.API_BASE_URL}/refreshtoken`, {
+      const response = await fetch(`${Config.API_BASE_URL}/refresh`, {
         headers: {
           "Content-Type": "application/json",
           // Authorization: accessToken ? `Bearer ${accessToken}` : "",
@@ -74,19 +74,19 @@ export function useApi() {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> => {
     try {
-      // const userData = localStorage.getItem("authState");
-      // if (!userData) return { data: null, error: "No user data", status: 401 };
+      const userData = localStorage.getItem("authState");
+      if (!userData) return { data: null, error: "No user data", status: 401 };
 
-      // const parsed = JSON.parse(userData);
-      // const accessToken = parsed?.user?.accessToken;
-      // console.log("parsed =", parsed);
-      // console.log("accessToken =", accessToken);
+      const parsed = JSON.parse(userData);
+      const accessToken = parsed?.user?.access_token;
+      console.log("parsed =", parsed);
+      console.log("accessToken =", accessToken);
 
 
       const response = await fetch(`${Config.API_Customers}${endpoint}`, {
         headers: {
           "Content-Type": "application/json",
-          // Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           ...(options.headers || {}),
         },
         credentials: "include",
@@ -170,7 +170,7 @@ export function useApi() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           ...(options.headers || {}),
         },
         body: JSON.stringify(body),
@@ -268,7 +268,7 @@ export function useApi() {
         const newToken = await generateAccessToken();
         if (newToken) {
           // Retry with refreshed token
-          const retryResponse = await fetch(`${Config.API_Customers}${endpoint}`, {
+          const retryResponse = await fetch(`${Config.API_BASE_URL}${endpoint}`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

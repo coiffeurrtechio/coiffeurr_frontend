@@ -50,7 +50,7 @@ export default function SignUpPage() {
         setformSubmit(true);
 
         try {
-            const response = await fetch(`${Config.API_BASE_URL}/register`, {
+            const response = await fetch(`${Config.API_AUTH_URL}/signup`, {
                 method: "POST",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
@@ -59,6 +59,7 @@ export default function SignUpPage() {
                     email: formData.email,
                     password: formData.password,
                     phone: formData.phone,
+                    agreeToPolicy: formData.agreeToPolicy
                 }),
             });
 

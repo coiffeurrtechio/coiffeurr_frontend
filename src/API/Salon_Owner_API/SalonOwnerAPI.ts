@@ -22,7 +22,7 @@ export function useSalonApi() {
     const refreshToken = parsed?.refreshToken
 
     try {
-      const response = await fetch(`${Config.API_BASE_URL}/refreshtoken`, {
+      const response = await fetch(`${Config.API_BASE_URL}/refresh`, {
         headers: {
           "Content-Type": "application/json",
           // Authorization: accessToken ? `Bearer ${accessToken}` : "",
@@ -158,7 +158,7 @@ export function useSalonApi() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           ...(options.headers || {}),
         },
         body: JSON.stringify(body),
@@ -236,7 +236,83 @@ export function useSalonApi() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          // Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
+
+          ...(options.headers || {}),
+        },
+        body: JSON.stringify(body),
+        credentials: "include",
+        ...options,
+      });
+
+      const status = response.status;
+      let json: any = null;
+
+      try {
+        json = await response.json();
+      } catch {
+        json = null;
+      }
+
+      // Handle unauthorized → try refresh
+      if (status === 401) {
+        const newToken = await generateAccessToken();
+        if (newToken) {
+          // Retry with refreshed token
+          const retryResponse = await fetch(`${Config.API_BASE_URL}${endpoint}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              // Authorization: `Bearer ${newToken}`,
+              ...(options.headers || {}),
+            },
+            body: JSON.stringify(body),
+            credentials: "include",
+          });
+
+          const retryJson = await retryResponse.json();
+          return {
+            data: retryJson as T,
+            error: null,
+            status: retryResponse.status,
+          };
+        } else {
+          navigate("/login");
+          return { data: null, error: "Unauthorized", status: 401 };
+        }
+      }
+
+      if (!response.ok) {
+        return {
+          data: null,
+          error: json?.message || `Error: ${response.statusText}`,
+          status,
+        };
+      }
+
+      return { data: json as T, error: null, status };
+    } catch (err: any) {
+      return { data: null, error: err.message || "Network error", status: 500 };
+    }
+  };
+  
+  const apiSalonPatch = async <T, B = unknown>(
+    endpoint: string,
+    body: B,
+    options: RequestInit = {}
+  ): Promise<ApiResponse<T>> => {
+    try {
+      const userData = localStorage.getItem("authState");
+
+      if (!userData) return { data: null, error: "No user data", status: 401 };
+
+      const parsed = JSON.parse(userData);
+      const accessToken = parsed?.user?.accessToken;
+      const response = await fetch(`${Config.API_Salon_owner}${endpoint}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
 
           ...(options.headers || {}),
         },
@@ -296,5 +372,5 @@ export function useSalonApi() {
     }
   };
 
-  return { generateAccessToken, apiSalonPost, apiSalonRequest, apiSalonPut };
+  return { generateAccessToken, apiSalonPost, apiSalonRequest, apiSalonPut , apiSalonPatch};
 }

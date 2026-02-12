@@ -10,7 +10,7 @@ interface AuthRouterProps {
 
 const AuthRouter: React.FC<AuthRouterProps> = ({ element, allowedRoles }) => {
   const isAuthenticated = useSelector((state: any) => state.auth.isAuthenticated);
-  const userRole = useSelector((state: any) => state.auth.user?.role || "guest");
+  const userRole = useSelector((state: any) => state.auth.user?.user?.role || "guest");
 
   console.log("userRole = ",userRole);
   console.log("allowedRoles = ",allowedRoles);

@@ -10,7 +10,7 @@ const MainLayout: React.FC = () => {
       <main className="">
       <Outlet />
       </main>
-      <Footer />
+      {/* <Footer /> */}
     </>
   );
 };
