@@ -2,7 +2,8 @@ import React, { useEffect, useState, type JSX } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom"; // Added useLocation
 import {
   MapPin, Clock, Phone, Star, Users, ArrowRight,
-  Filter, Search, Scissors, Heart, Navigation
+  Filter, Search, Scissors, Heart, Navigation,
+  ArrowLeft
 } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
@@ -91,7 +92,14 @@ export default function SalonsPage(): JSX.Element {
       <section className="sticky top-0 z-40 bg-[#1E4D8C] text-white shadow-lg rounded-b-[2rem] md:rounded-none">
         <div className="container mx-auto px-4 py-6 md:py-8">
           <div className="max-w-4xl mx-auto">
+
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => window.history.back()}
+                className="p-2 -ml-2 hover:bg-slate-50 rounded-full transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5 text-white" />
+              </button>
               <div
                 className="relative flex-1 group cursor-pointer"
                 onClick={() => navigate(`/search?query=${encodeURIComponent(searchTerm)}`)}

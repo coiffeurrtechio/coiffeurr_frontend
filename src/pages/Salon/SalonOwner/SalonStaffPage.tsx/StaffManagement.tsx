@@ -81,6 +81,8 @@ const StaffManagement: React.FC = () => {
     };
 
     const handleEditClick = (staff: any) => {
+        console.log("staff =",staff);
+        
         setEditingStaffId(staff.staff_id);
         setFormData({
             name: staff.name || "",
