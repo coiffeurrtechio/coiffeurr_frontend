@@ -91,54 +91,53 @@ const SalonService: React.FC = () => {
   };
 
   const BookAppointment = async (e: any) => {
-  e.preventDefault();
-  if (!selectedDate || !selectedslottime) return;
+    e.preventDefault();
+    if (!selectedDate || !selectedslottime) return;
 
-  try {
-    setbookingrequestsend(true);
+    try {
+      setbookingrequestsend(true);
 
-    // 1. Get User ID from localStorage
-    const authData = localStorage.getItem("authState");
-    const parsedAuth = authData ? JSON.parse(authData) : null;
-    const userid = parsedAuth?.user?.user?.id || parsedAuth?.user?.id;
+      // 1. Get User ID from localStorage
+      const authData = localStorage.getItem("authState");
+      const parsedAuth = authData ? JSON.parse(authData) : null;
+      const userid = parsedAuth?.user?.user?.id || parsedAuth?.user?.id;
 
-    if (!userid) {
-      console.error("User not authenticated");
-      return;
-    }
-
-    // 2. Construct the Payload based on Swagger requirements
-    const data = {
-      userId: userid,
-      salonId: salonId,
-      service_id: salonservicedata?.serviceCode || serviceId, 
-      slot: {
-        date: selectedDate, // "2026-02-12"
-        time: selectedslottime, // "14:00"
-      },
-      price: Number(salonservicedata?.price),
-    };
-
-    // 3. API Call with Header
-    // IMPORTANT: Check if your apiCustomerpiPost accepts a 3rd argument for options/headers
-    const res = await apiCustomerpiPost(`/bookings`, data, {
-      headers: {
-        "X-User-Id": userid,
-        "Content-Type": "application/json"
+      if (!userid) {
+        console.error("User not authenticated");
+        return;
       }
-    });
 
-    if (!res.error) {
-      setisEditModalOpen(false);
-      setbookingrequestsuccess(true);
-      setTimeout(() => setbookingrequestsuccess(false), 4000);
+      // 2. Construct the Payload based on Swagger requirements
+      const data = {
+        userId: userid,
+        salonId: salonId,
+        service_id: salonservicedata?.serviceCode || serviceId,
+        slot: {
+          date: selectedDate, // "2026-02-12"
+          time: selectedslottime, // "14:00"
+        },
+        price: Number(salonservicedata?.price),
+      };
+
+      // 3. API Call with Header
+      // IMPORTANT: Check if your apiCustomerpiPost accepts a 3rd argument for options/headers
+      const res = await apiCustomerpiPost(`/bookings`, data, {
+        headers: {
+          "X-User-Id": userid
+        }
+      });
+
+      if (!res.error) {
+        setisEditModalOpen(false);
+        setbookingrequestsuccess(true);
+        setTimeout(() => setbookingrequestsuccess(false), 4000);
+      }
+    } catch (error) {
+      console.error("Booking Error:", error);
+    } finally {
+      setbookingrequestsend(false);
     }
-  } catch (error) {
-    console.error("Booking Error:", error);
-  } finally {
-    setbookingrequestsend(false);
-  }
-};
+  };
 
   return (
     <main className="min-h-screen bg-white text-slate-900 font-sans selection:bg-slate-100">
