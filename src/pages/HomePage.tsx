@@ -154,7 +154,7 @@ const HomePage: React.FC = () => {
       </div> */}
 
       {/* Recommendations */}
-      <div className="px-4 mb-8">
+      <div className="px-4 mt-16  mb-8">
         <h2 className="text-gray-800 font-bold mb-4">Recommended for You</h2>
         <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4 snap-x">
           {salons.length > 0 ? (
