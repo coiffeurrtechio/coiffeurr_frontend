@@ -91,6 +91,7 @@ const routes: AppRoute[] = [
       { key: 26, path: "staff", Element: StaffManagement, isProtected: true },
       { key: 27, path: "services", Element: ServiceManagement, isProtected: true },
       { key: 28, path: "", Element: BookingsPage, isProtected: true },
+      { key: 29, path: "booking", Element: BookingsPage, isProtected: true },
 
       // { key: 26, path: "salonowner", Element: SalonOwnerHomePage, isProtected: true },
     ],
