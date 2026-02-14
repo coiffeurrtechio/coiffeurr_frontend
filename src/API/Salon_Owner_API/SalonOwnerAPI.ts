@@ -18,14 +18,14 @@ export function useSalonApi() {
     const userData = localStorage.getItem("authState");
     if (!userData) return null;
     const parsed = JSON.parse(userData);
-    const accessToken = parsed?.user?.accessToken
+    const accessToken = parsed?.user?.access_token
     const refreshToken = parsed?.refreshToken
 
     try {
       const response = await fetch(`${Config.API_BASE_URL}/refresh`, {
         headers: {
           "Content-Type": "application/json",
-          // Authorization: accessToken ? `Bearer ${accessToken}` : "",
+          Authorization: accessToken ? `Bearer ${accessToken}` : "",
           "X-Refresh-Token": refreshToken, // 👈 send refresh token in header
         },
         credentials: "include",
@@ -80,12 +80,12 @@ export function useSalonApi() {
       if (!userData) return { data: null, error: "No user data", status: 401 };
 
       const parsed = JSON.parse(userData);
-      const accessToken = parsed?.user?.accessToken;
+      const accessToken = parsed?.user?.access_token;
 
       const response = await fetch(`${Config.API_Salon_owner}${endpoint}`, {
         headers: {
           "Content-Type": "application/json",
-          // Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           ...(options.headers || {}),
         },
         credentials: "include",
@@ -152,7 +152,7 @@ export function useSalonApi() {
       if (!userData) return { data: null, error: "No user data", status: 401 };
 
       const parsed = JSON.parse(userData);
-      const accessToken = parsed?.user?.accessToken;
+      const accessToken = parsed?.user?.access_token;
 
       const response = await fetch(`${Config.API_Salon_owner}${endpoint}`, {
         method: "POST",
@@ -231,7 +231,7 @@ export function useSalonApi() {
       if (!userData) return { data: null, error: "No user data", status: 401 };
 
       const parsed = JSON.parse(userData);
-      const accessToken = parsed?.user?.accessToken;
+      const accessToken = parsed?.user?.access_token;
       const response = await fetch(`${Config.API_Salon_owner}${endpoint}`, {
         method: "PUT",
         headers: {
@@ -307,7 +307,7 @@ export function useSalonApi() {
       if (!userData) return { data: null, error: "No user data", status: 401 };
 
       const parsed = JSON.parse(userData);
-      const accessToken = parsed?.user?.accessToken;
+      const accessToken = parsed?.user?.access_token;
       const response = await fetch(`${Config.API_Salon_owner}${endpoint}`, {
         method: "PATCH",
         headers: {

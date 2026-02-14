@@ -17,53 +17,22 @@ const SalonRegistration: React.FC = () => {
   const [isLocating, setIsLocating] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
-  // const [formData, setFormData] = useState({
-  //   salonName: '',
-  //   ownerName: '',
-  //   email: '',
-  //   password: '',
-  //   primaryPhone: '',
-  //   address: { 
-  //     street: '', 
-  //     city: '', 
-  //     state: '', 
-  //     pincode: '', 
-  //     country: 'India' 
-  //   },
-  //   location: { 
-  //     latitude: 0, 
-  //     longitude: 0 
-  //   },
-  //   timing: {
-  //     openingTime: '10:00',
-  //     closingTime: '20:00',
-  //     lunchBreak: { 
-  //       start: '13:00', 
-  //       end: '14:00' 
-  //     },
-  //     weeklyOff: [] as string[]
-  //   }
-  // });
-
-
-
-  // --- SETTING YOUR DATA AS DEFAULT ---
   const [formData, setFormData] = useState({
-    salonName: 'Style Fit Salon',
-    ownerName: 'Ayush Sharma',
-    email: 'aryan@gmail.com',
-    password: 'Aryan@123',
-    primaryPhone: '8700505386',
+    salonName: '',
+    ownerName: '',
+    email: '',
+    password: '',
+    primaryPhone: '',
     address: { 
-      street: 'Nerul, sector 21', 
-      city: 'Navi Mumbai', 
-      state: 'Maharastra', 
-      pincode: '40001', 
+      street: '', 
+      city: '', 
+      state: '', 
+      pincode: '', 
       country: 'India' 
     },
     location: { 
-      latitude: 19.02904659055992, 
-      longitude: 73.0208033135839 
+      latitude: 0, 
+      longitude: 0 
     },
     timing: {
       openingTime: '10:00',
@@ -75,6 +44,37 @@ const SalonRegistration: React.FC = () => {
       weeklyOff: [] as string[]
     }
   });
+
+
+
+  // --- SETTING YOUR DATA AS DEFAULT ---
+  // const [formData, setFormData] = useState({
+  //   salonName: 'Style Fit Salon',
+  //   ownerName: 'Ayush Sharma',
+  //   email: 'aryan@gmail.com',
+  //   password: 'Aryan@123',
+  //   primaryPhone: '8700505386',
+  //   address: { 
+  //     street: 'Nerul, sector 21', 
+  //     city: 'Navi Mumbai', 
+  //     state: 'Maharastra', 
+  //     pincode: '40001', 
+  //     country: 'India' 
+  //   },
+  //   location: { 
+  //     latitude: 19.02904659055992, 
+  //     longitude: 73.0208033135839 
+  //   },
+  //   timing: {
+  //     openingTime: '10:00',
+  //     closingTime: '20:00',
+  //     lunchBreak: { 
+  //       start: '13:00', 
+  //       end: '14:00' 
+  //     },
+  //     weeklyOff: [] as string[]
+  //   }
+  // });
 
   
 
