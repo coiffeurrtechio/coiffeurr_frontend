@@ -131,7 +131,7 @@ const HomePage: React.FC = () => {
       </div>
 
       {/* Your Bookings */}
-      <div className="px-4 mt-16 mb-8">
+      {/* <div className="px-4 mt-16 mb-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-gray-800 font-bold">Your Bookings</h2>
           <span className="text-[10px] font-bold text-[#1E4D8C] uppercase">View All</span>
@@ -151,7 +151,7 @@ const HomePage: React.FC = () => {
             <Clock size={14} className="text-gray-400" /> Today, 6:30 PM
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Recommendations */}
       <div className="px-4 mb-8">
