@@ -36,8 +36,8 @@ const StaffManagement: React.FC = () => {
         email: "",
         phone: "",
         role: "Hair Stylist",
-        specialization: [] as string[], // Tag-based array
-        experience: 0,
+        expertise: [] as string[], // Tag-based array
+        experienceYears: "",
         active: true
     });
 
@@ -68,8 +68,8 @@ const StaffManagement: React.FC = () => {
                 email: formData.email,
                 phone: formData.phone,
                 role: formData.role,
-                specialization: formData.specialization,
-                experience: Number(formData.experience),
+                expertise: formData.expertise,
+                experienceYears: Number(formData.experienceYears),
                 active: formData.active
             };
 
@@ -89,8 +89,8 @@ const StaffManagement: React.FC = () => {
             email: staff.email || "",
             phone: staff.phone || "",
             role: staff.role || "Hair Stylist",
-            specialization: Array.isArray(staff.specialization) ? staff.specialization : (Array.isArray(staff.expertise) ? staff.expertise : []),
-            experience: staff.experience || staff.experienceYears || 0,
+            expertise: Array.isArray(staff.expertise) ? staff.expertise : (Array.isArray(staff.expertise) ? staff.expertise : []),
+            experienceYears: staff.experienceYears || staff.experienceYears || "",
             active: staff.active ?? true
         });
         setIsEditModalOpen(true);
@@ -109,8 +109,8 @@ const StaffManagement: React.FC = () => {
                 email: formData.email,
                 phone: formData.phone,
                 role: formData.role,
-                specialization: formData.specialization,
-                experience: Number(formData.experience),
+                expertise: formData.expertise,
+                experienceYears: Number(formData.experienceYears),
                 active: formData.active
             };
 
@@ -122,7 +122,7 @@ const StaffManagement: React.FC = () => {
     };
 
     const resetForm = () => {
-        setFormData({ name: "", email: "", phone: "", role: "Hair Stylist", specialization: [], experience: 0, active: true });
+        setFormData({ name: "", email: "", phone: "", role: "Hair Stylist", expertise: [], experienceYears: 0, active: true });
         setEditingStaffId(null);
     };
 
@@ -134,7 +134,7 @@ const StaffManagement: React.FC = () => {
 
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div className="flex items-center gap-2 md:gap-4 bg-white p-1 rounded-xl border border-gray-100 shadow-sm overflow-x-auto no-scrollbar">
-                    {['All Services', 'Attendance', 'Schedules'].map((tab) => (
+                    {['All Services'].map((tab) => (
                         <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 md:px-6 py-2 rounded-lg text-xs md:text-sm font-bold transition-all whitespace-nowrap ${activeTab === tab ? 'bg-[#1E4D8C] text-white' : 'text-gray-500 hover:bg-gray-50'}`}>{tab}</button>
                     ))}
                 </div>
@@ -174,7 +174,7 @@ const StaffManagement: React.FC = () => {
                                     </td>
                                     <td className="px-6 py-5">
                                         <div className="flex flex-wrap gap-1">
-                                            {(staff.specialization || staff.expertise || [])?.map((e: string, i: number) => (
+                                            {(staff.expertise || staff.expertise || [])?.map((e: string, i: number) => (
                                                 <span key={i} className="text-[9px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded font-bold uppercase">{e}</span>
                                             ))}
                                         </div>
@@ -212,13 +212,13 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, submi
     const [newSpec, setNewSpec] = useState("");
 
     const addSpec = () => {
-        if (!newSpec.trim() || formData.specialization.includes(newSpec.trim())) return;
-        setFormData({ ...formData, specialization: [...formData.specialization, newSpec.trim()] });
+        if (!newSpec.trim() || formData.expertise.includes(newSpec.trim())) return;
+        setFormData({ ...formData, expertise: [...formData.expertise, newSpec.trim()] });
         setNewSpec("");
     };
 
     const removeSpec = (index: number) => {
-        setFormData({ ...formData, specialization: formData.specialization.filter((_: any, i: number) => i !== index) });
+        setFormData({ ...formData, expertise: formData.expertise.filter((_: any, i: number) => i !== index) });
     };
 
     return (
@@ -267,7 +267,7 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, submi
                             <button type="button" onClick={addSpec} className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-all"><Plus size={20} /></button>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                            {formData.specialization.map((item: string, i: number) => (
+                            {formData.expertise.map((item: string, i: number) => (
                                 <span key={i} className="flex items-center gap-1.5 px-3 py-1 bg-[#1E4D8C] text-white rounded-full text-xs font-medium">
                                     {item} <X size={12} className="cursor-pointer hover:text-red-300" onClick={() => removeSpec(i)} />
                                 </span>
@@ -278,7 +278,7 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, submi
                     <div className="flex items-center justify-between bg-blue-50/50 p-4 rounded-xl border border-blue-100">
                         <div className="flex items-center gap-3">
                             <span className="text-xs font-bold text-blue-600 uppercase tracking-tighter">Experience:</span>
-                            <input type="number" className="w-16 p-1 rounded border border-blue-200 text-sm font-bold text-center" value={formData.experience} onChange={e => setFormData({ ...formData, experience: Number(e.target.value) })} />
+                            <input type="number" className="w-16 p-1 rounded border border-blue-200 text-sm font-bold text-center" value={formData.experienceYears} onChange={e => setFormData({ ...formData, experienceYears: Number(e.target.value) })} />
                         </div>
                         <button type="button" onClick={() => setFormData({ ...formData, active: !formData.active })} className={`w-12 h-6 rounded-full relative transition-colors ${formData.active ? 'bg-green-500' : 'bg-gray-300'}`}>
                             <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${formData.active ? 'left-7' : 'left-1'}`} />
