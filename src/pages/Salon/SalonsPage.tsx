@@ -3,7 +3,9 @@ import { Link, useLocation, useNavigate } from "react-router-dom"; // Added useL
 import {
   MapPin, Clock, Phone, Star, Users, ArrowRight,
   Filter, Search, Scissors, Heart, Navigation,
-  ArrowLeft
+  ArrowLeft,
+  X,
+  Check
 } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
@@ -30,6 +32,12 @@ export default function SalonsPage(): JSX.Element {
   const [fetchSalonAPI, setfetchSalonAPI] = useState(true);
   const { apiRequest } = useApi();
   const navigate = useNavigate();
+
+
+  const [limit, setLimit] = useState<number>(10);
+  const [city, setCity] = useState<string>(localStorage.getItem("Address") || "Mumbai");
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+
   // Extract 'query' from URL e.g. /salons?query=Mumbai
   const queryParams = new URLSearchParams(location.search);
   const urlSearchQuery = queryParams.get("query");
@@ -40,14 +48,14 @@ export default function SalonsPage(): JSX.Element {
       let endpoint = "/salons";
 
       // If there is a URL param, use the search endpoint
-      if (urlSearchQuery) {
-        endpoint = `/search-salons?query=${encodeURIComponent(urlSearchQuery)}`;
-        setSearchTerm(urlSearchQuery); // Sync the search input with URL param
+      if (searchTerm) {
+        endpoint = `/search-salons?query=${encodeURIComponent(searchTerm)}`;
+        // setSearchTerm(urlSearchQuery); // Sync the search input with URL param
       }
 
       // const res = await apiRequest<Salon[]>();
-      const city = localStorage.getItem("Address");
-      const res = await apiRequest<any[]>(`/salons/search?city=${city}&limit=1`);
+      // const city = localStorage.getItem("Address");
+      const res = await apiRequest<any[]>(`/salons/search?city=${city}&name=${searchTerm}&limit=${limit}`);
       if (res.data) setSalons(res.data);
     } catch (err) {
       console.error("Error fetching salons:", err);
@@ -95,7 +103,7 @@ export default function SalonsPage(): JSX.Element {
 
             <div className="flex items-center gap-3">
               <button
-                onClick={() => window.history.back()}
+                onClick={() => navigate("/")}
                 className="p-2 -ml-2 hover:bg-slate-50 rounded-full transition-colors"
               >
                 <ArrowLeft className="w-5 h-5 text-white" />
@@ -116,7 +124,7 @@ export default function SalonsPage(): JSX.Element {
 
               {/* Filter Select UI */}
               <div className="relative">
-                <select
+                {/* <select
                   value={selectedType}
                   onChange={(e) => setSelectedType(e.target.value)}
                   className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full"
@@ -126,9 +134,9 @@ export default function SalonsPage(): JSX.Element {
                       {type === "all" ? "All Types" : type}
                     </option>
                   ))}
-                </select>
+                </select> */}
                 <div className="h-12 w-12 md:w-auto md:px-5 flex items-center justify-center gap-2 bg-white rounded-2xl shadow-xl text-[#1E4D8C] transition-transform active:scale-95">
-                  <Filter size={20} className="md:w-4 md:h-4" />
+                  <Filter size={20} className="md:w-4 md:h-4" onClick={() => setIsFilterModalOpen(true)}/>
                   <span className="hidden md:block text-sm font-bold uppercase tracking-tight">
                     {selectedType === "all" ? "Filter" : selectedType}
                   </span>
@@ -138,6 +146,78 @@ export default function SalonsPage(): JSX.Element {
           </div>
         </div>
       </section>
+
+      {isFilterModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsFilterModalOpen(false)} />
+          
+          <div className="relative w-full max-w-lg bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 animate-in slide-in-from-bottom duration-300">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-xl font-black text-gray-900 tracking-tight">Search Filters</h2>
+              <button onClick={() => setIsFilterModalOpen(false)} className="p-2 bg-gray-100 rounded-full">
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Manual City Entry */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Location / City</label>
+                <div className="relative">
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <input 
+                        type="text" 
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        className="w-full h-14 pl-12 pr-4 bg-gray-50 border-none rounded-2xl font-bold text-sm focus:ring-4 focus:ring-blue-100 transition-all"
+                        placeholder="Enter city name..."
+                    />
+                </div>
+              </div>
+
+              {/* Manual Name Entry */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Salon Name</label>
+                <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <input 
+                        type="text" 
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full h-14 pl-12 pr-4 bg-gray-50 border-none rounded-2xl font-bold text-sm focus:ring-4 focus:ring-blue-100 transition-all"
+                        placeholder="Search specific salon..."
+                    />
+                </div>
+              </div>
+
+              {/* Result Limit Grid */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Results Limit</label>
+                <div className="grid grid-cols-3 gap-3">
+                    {[10, 20, 50].map((num) => (
+                        <button
+                            key={num}
+                            onClick={() => setLimit(num)}
+                            className={`h-12 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${limit === num ? 'bg-[#1E4D8C] text-white shadow-lg' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
+                        >
+                            {num} {limit === num && <Check size={14} />}
+                        </button>
+                    ))}
+                </div>
+              </div>
+
+              <Button 
+                onClick={() => {
+                  FetchSalonsData();
+                  setIsFilterModalOpen(false)}}
+                className="w-full h-14 bg-[#1E4D8C] text-white rounded-2xl font-bold text-base mt-4 shadow-xl shadow-blue-900/20"
+              >
+                Apply Filters
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* --- SALONS GRID --- */}
       <section className="py-8">

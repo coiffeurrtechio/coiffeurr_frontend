@@ -83,7 +83,7 @@ const HomePage: React.FC = () => {
   const FetchAllSalons = async (city: string) => {
     try {
       // If city is empty, the API should handle returning general results
-      const res = await apiRequest<any[]>(`/salons/search?city=${city}&limit=10`);
+      const res = await apiRequest<any[]>(`/salons/search?city=Bengaluru&limit=10`);
       if (res.data) setsalons(res.data);
     } catch (err) {
       console.error("Fetch error:", err);

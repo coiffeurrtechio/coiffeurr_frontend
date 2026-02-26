@@ -183,7 +183,7 @@ const StaffManagement: React.FC = () => {
                                     <td className="px-6 py-5 text-right">
                                         <div className="flex justify-end gap-2">
                                             <button onClick={() => handleEditClick(staff)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"><Edit2 size={16} /></button>
-                                            <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
+                                            {/* <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button> */}
                                         </div>
                                     </td>
                                 </tr>

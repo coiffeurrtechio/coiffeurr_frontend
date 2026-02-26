@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Store, User, MapPin, Clock, ArrowRight, ArrowLeft, 
   Smartphone, Hash, Mail, Loader2, Lock, Coffee,
-  CheckCircle2, XCircle, Navigation, Globe, LocateFixed
+  CheckCircle2, XCircle, Navigation, Globe, LocateFixed, AlertCircle
 } from 'lucide-react';
 import { Button } from '../../components/ui_components/button';
 import Config from '../../configs/config';
@@ -16,6 +16,7 @@ const SalonRegistration: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState({
     salonName: '',
@@ -35,81 +36,72 @@ const SalonRegistration: React.FC = () => {
       longitude: 0 
     },
     timing: {
-      openingTime: '10:00',
-      closingTime: '20:00',
+      openingTime: '',
+      closingTime: '',
       lunchBreak: { 
-        start: '13:00', 
-        end: '14:00' 
+        start: '', 
+        end: '' 
       },
       weeklyOff: [] as string[]
     }
   });
 
+  // --- VALIDATION LOGIC: MAKING EVERYTHING COMPULSORY ---
+  const validateStep = (currentStep: number) => {
+    const newErrors: Record<string, string> = {};
 
-
-  // --- SETTING YOUR DATA AS DEFAULT ---
-  // const [formData, setFormData] = useState({
-  //   salonName: 'Style Fit Salon',
-  //   ownerName: 'Ayush Sharma',
-  //   email: 'aryan@gmail.com',
-  //   password: 'Aryan@123',
-  //   primaryPhone: '8700505386',
-  //   address: { 
-  //     street: 'Nerul, sector 21', 
-  //     city: 'Navi Mumbai', 
-  //     state: 'Maharastra', 
-  //     pincode: '40001', 
-  //     country: 'India' 
-  //   },
-  //   location: { 
-  //     latitude: 19.02904659055992, 
-  //     longitude: 73.0208033135839 
-  //   },
-  //   timing: {
-  //     openingTime: '10:00',
-  //     closingTime: '20:00',
-  //     lunchBreak: { 
-  //       start: '13:00', 
-  //       end: '14:00' 
-  //     },
-  //     weeklyOff: [] as string[]
-  //   }
-  // });
-
-  
-
-  const handleGetCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      setNotification({ type: 'error', message: 'Geolocation not supported' });
-      return;
+    if (currentStep === 1) {
+      if (!formData.salonName.trim()) newErrors.salonName = "Salon name is required";
+      if (!formData.ownerName.trim()) newErrors.ownerName = "Owner name is required";
+      
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(formData.email)) newErrors.email = "Valid email is required";
+      
+      if (formData.password.length < 6) newErrors.password = "Min 6 characters required";
+      if (formData.primaryPhone.length !== 10) newErrors.primaryPhone = "10-digit phone required";
     }
-    setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setFormData(prev => ({
-          ...prev,
-          location: { latitude: position.coords.latitude, longitude: position.coords.longitude }
-        }));
-        setIsLocating(false);
-        setNotification({ type: 'success', message: 'Location detected!' });
-      },
-      () => {
-        setIsLocating(false);
-        setNotification({ type: 'error', message: 'Location access denied' });
+
+    if (currentStep === 2) {
+      if (!formData.address.street.trim()) newErrors['address.street'] = "Street is required";
+      if (!formData.address.city.trim()) newErrors['address.city'] = "City is required";
+      if (!formData.address.state.trim()) newErrors['address.state'] = "State is required";
+      if (!/^\d{6}$/.test(formData.address.pincode)) newErrors['address.pincode'] = "Valid 6-digit pincode required";
+      if (formData.location.latitude === 0 || formData.location.longitude === 0) {
+        newErrors.location = "GPS coordinates are compulsory";
       }
-    );
-  };
-
-  useEffect(() => {
-    if (notification) {
-      const timer = setTimeout(() => setNotification(null), 3000);
-      return () => clearTimeout(timer);
     }
-  }, [notification]);
+
+    if (currentStep === 3) {
+      if (formData.timing.openingTime >= formData.timing.closingTime) {
+        newErrors['timing.openingTime'] = "Opening must be before closing";
+      }
+      if (formData.timing.lunchBreak.start >= formData.timing.lunchBreak.end) {
+        newErrors['timing.lunchBreak.start'] = "Break start must be before end";
+      }
+      if (formData.timing.weeklyOff.length === 0) {
+        newErrors.weeklyOff = "Please select at least one weekly off day";
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
+
+    // 1. INPUT MASKING: Phone number must be digits only and max 10
+    if (name === 'primaryPhone') {
+      const sanitized = value.replace(/[^0-9]/g, '').slice(0, 10);
+      setFormData(prev => ({ ...prev, [name]: sanitized }));
+      if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+      return;
+    }
+
     const finalValue = type === 'number' ? parseFloat(value) : value;
+
+    // Clear field-specific error when user types
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
 
     if (name.includes('.')) {
       const keys = name.split('.');
@@ -127,11 +119,50 @@ const SalonRegistration: React.FC = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    setIsLoading(true);
-    setNotification(null);
+  const handleNext = () => {
+    if (validateStep(step)) {
+      setStep(s => s + 1);
+      setErrors({});
+    }
+  };
 
-    // Format all times to "HH:mm:ss"
+  const handleGetCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setNotification({ type: 'error', message: 'Geolocation not supported' });
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setFormData(prev => ({
+          ...prev,
+          location: { latitude: position.coords.latitude, longitude: position.coords.longitude }
+        }));
+        setIsLocating(false);
+        setNotification({ type: 'success', message: 'Location detected!' });
+        setErrors(prev => {
+          const { location, ...rest } = prev;
+          return rest;
+        });
+      },
+      () => {
+        setIsLocating(false);
+        setNotification({ type: 'error', message: 'Location access denied' });
+      }
+    );
+  };
+
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => setNotification(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+
+  const handleSubmit = async () => {
+    if (!validateStep(3)) return;
+
+    setIsLoading(true);
     const formatTime = (timeStr: string) => timeStr.length === 5 ? `${timeStr}:00` : timeStr;
 
     const finalPayload = {
@@ -155,7 +186,6 @@ const SalonRegistration: React.FC = () => {
       });
 
       if (!response.ok) throw new Error('Registration failed');
-
       setNotification({ type: 'success', message: 'Salon registered! Redirecting...' });
       setTimeout(() => navigate('/login'), 2000);
     } catch (error: any) {
@@ -166,52 +196,53 @@ const SalonRegistration: React.FC = () => {
   };
 
   const renderStep = () => {
-    switch(step) {
-      case 1: 
+    switch (step) {
+      case 1:
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
-            <InputField label="Salon Name" name="salonName" value={formData.salonName} onChange={handleChange} icon={Store} placeholder="Elite Hair Studio" />
-            <InputField label="Owner Name" name="ownerName" value={formData.ownerName} onChange={handleChange} icon={User} placeholder="John Doe" />
-            <InputField label="Email Address" name="email" type="email" value={formData.email} onChange={handleChange} icon={Mail} placeholder="owner@salon.com" />
+            <InputField label="Salon Name *" name="salonName" value={formData.salonName} onChange={handleChange} icon={Store} placeholder="Elite Hair Studio" error={errors.salonName} />
+            <InputField label="Owner Name *" name="ownerName" value={formData.ownerName} onChange={handleChange} icon={User} placeholder="John Doe" error={errors.ownerName} />
+            <InputField label="Email Address *" name="email" type="email" value={formData.email} onChange={handleChange} icon={Mail} placeholder="owner@salon.com" error={errors.email} />
             <div className="grid grid-cols-2 gap-3">
-               <InputField label="Password" name="password" type="password" value={formData.password} onChange={handleChange} icon={Lock} placeholder="••••••••" />
-               <InputField label="Primary Phone" name="primaryPhone" value={formData.primaryPhone} onChange={handleChange} icon={Smartphone} placeholder="+91..." />
+              <InputField label="Password *" name="password" type="password" value={formData.password} onChange={handleChange} icon={Lock} placeholder="••••••••" error={errors.password} />
+              <InputField label="Primary Phone *" name="primaryPhone" type="tel" value={formData.primaryPhone} onChange={handleChange} icon={Smartphone} placeholder="9876543210" error={errors.primaryPhone} />
             </div>
           </div>
         );
-      case 2: 
+      case 2:
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
-            <InputField label="Street Address" name="address.street" value={formData.address.street} onChange={handleChange} icon={MapPin} placeholder="123 Main St" />
+            <InputField label="Street Address *" name="address.street" value={formData.address.street} onChange={handleChange} icon={MapPin} placeholder="123 Main St" error={errors['address.street']} />
             <div className="grid grid-cols-2 gap-3">
-              <InputField label="City" name="address.city" value={formData.address.city} onChange={handleChange} icon={MapPin} placeholder="Mumbai" />
-              <InputField label="Zip Code" name="address.pincode" value={formData.address.pincode} onChange={handleChange} icon={Hash} placeholder="400001" />
+              <InputField label="City *" name="address.city" value={formData.address.city} onChange={handleChange} icon={MapPin} placeholder="Mumbai" error={errors['address.city']} />
+              <InputField label="Zip Code *" name="address.pincode" value={formData.address.pincode} onChange={handleChange} icon={Hash} placeholder="400001" error={errors['address.pincode']} />
             </div>
             <div className="grid grid-cols-2 gap-3">
-                <InputField label="State" name="address.state" value={formData.address.state} onChange={handleChange} icon={MapPin} placeholder="Maharashtra" />
-                <InputField label="Country" name="address.country" value={formData.address.country} onChange={handleChange} icon={Globe} placeholder="India" />
+              <InputField label="State *" name="address.state" value={formData.address.state} onChange={handleChange} icon={MapPin} placeholder="Maharashtra" error={errors['address.state']} />
+              <InputField label="Country *" name="address.country" value={formData.address.country} onChange={handleChange} icon={Globe} placeholder="India" />
             </div>
-            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
-                <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Geo Location</p>
-                    <button type="button" onClick={handleGetCurrentLocation} className="text-[10px] font-bold text-[#1E4D8C] flex items-center gap-1 hover:underline">
-                        {isLocating ? <Loader2 size={10} className="animate-spin" /> : <LocateFixed size={10} />} Auto-Detect
-                    </button>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                    <InputField label="Latitude" name="location.latitude" type="number" value={formData.location.latitude} onChange={handleChange} icon={Navigation} />
-                    <InputField label="Longitude" name="location.longitude" type="number" value={formData.location.longitude} onChange={handleChange} icon={Navigation} />
-                </div>
+            <div className={`p-4 rounded-2xl border transition-colors ${errors.location ? 'bg-red-50 border-red-300' : 'bg-slate-50 border-slate-100'} space-y-3`}>
+              <div className="flex items-center justify-between">
+                <p className={`text-[10px] font-black uppercase tracking-widest ${errors.location ? 'text-red-600' : 'text-slate-500'}`}>Geo Location *</p>
+                <button type="button" onClick={handleGetCurrentLocation} className="text-[10px] font-bold text-[#1E4D8C] flex items-center gap-1 hover:underline">
+                  {isLocating ? <Loader2 size={10} className="animate-spin" /> : <LocateFixed size={10} />} Auto-Detect
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <InputField label="Latitude" name="location.latitude" type="number" value={formData.location.latitude} onChange={handleChange} icon={Navigation} />
+                <InputField label="Longitude" name="location.longitude" type="number" value={formData.location.longitude} onChange={handleChange} icon={Navigation} />
+              </div>
+              {errors.location && <p className="text-[10px] text-red-500 font-bold text-center">{errors.location}</p>}
             </div>
           </div>
         );
-      case 3: 
+      case 3:
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
             <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-3">
-              <p className="text-[10px] font-black text-[#1E4D8C] uppercase text-center tracking-widest">Business Hours</p>
+              <p className="text-[10px] font-black text-[#1E4D8C] uppercase text-center tracking-widest">Business Hours *</p>
               <div className="grid grid-cols-2 gap-3">
-                <InputField label="Opens" name="timing.openingTime" type="time" value={formData.timing.openingTime} onChange={handleChange} icon={Clock} />
+                <InputField label="Opens" name="timing.openingTime" type="time" value={formData.timing.openingTime} onChange={handleChange} icon={Clock} error={errors['timing.openingTime']} />
                 <InputField label="Closes" name="timing.closingTime" type="time" value={formData.timing.closingTime} onChange={handleChange} icon={Clock} />
               </div>
             </div>
@@ -219,22 +250,32 @@ const SalonRegistration: React.FC = () => {
             <div className="p-4 bg-orange-50/50 rounded-2xl border border-orange-100 space-y-3">
               <div className="flex items-center justify-center gap-2">
                 <Coffee size={14} className="text-orange-600" />
-                <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest">Lunch Break</p>
+                <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest">Lunch Break *</p>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <InputField label="From" name="timing.lunchBreak.start" type="time" value={formData.timing.lunchBreak.start} onChange={handleChange} icon={Clock} />
+                <InputField label="From" name="timing.lunchBreak.start" type="time" value={formData.timing.lunchBreak.start} onChange={handleChange} icon={Clock} error={errors['timing.lunchBreak.start']} />
                 <InputField label="To" name="timing.lunchBreak.end" type="time" value={formData.timing.lunchBreak.end} onChange={handleChange} icon={Clock} />
               </div>
             </div>
 
-            <div className="p-3 bg-gray-50 rounded-2xl border border-gray-100">
-              <p className="text-[10px] font-black text-gray-400 uppercase mb-2">Weekly Off</p>
+            <div className={`p-3 rounded-2xl border transition-all ${errors.weeklyOff ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-100'}`}>
+              <p className={`text-[10px] font-black uppercase mb-2 ${errors.weeklyOff ? 'text-red-600' : 'text-gray-400'}`}>Weekly Off *</p>
               <div className="flex flex-wrap gap-2">
                 {DAYS.map(day => (
-                  <button key={day} type="button" onClick={() => setFormData(p => ({...p, timing: {...p.timing, weeklyOff: p.timing.weeklyOff.includes(day) ? p.timing.weeklyOff.filter(d => d !== day) : [...p.timing.weeklyOff, day]}}))} 
-                    className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-all ${formData.timing.weeklyOff.includes(day) ? "bg-[#1E4D8C] text-white border-[#1E4D8C]" : "bg-white text-gray-400 border-gray-200"}`}>{day}</button>
+                  <button 
+                    key={day} 
+                    type="button" 
+                    onClick={() => {
+                        setFormData(p => ({ ...p, timing: { ...p.timing, weeklyOff: p.timing.weeklyOff.includes(day) ? p.timing.weeklyOff.filter(d => d !== day) : [...p.timing.weeklyOff, day] } }));
+                        if(errors.weeklyOff) setErrors(prev => ({...prev, weeklyOff: ''}));
+                    }}
+                    className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-all ${formData.timing.weeklyOff.includes(day) ? "bg-[#1E4D8C] text-white border-[#1E4D8C]" : "bg-white text-gray-400 border-gray-200"}`}
+                  >
+                    {day}
+                  </button>
                 ))}
               </div>
+              {errors.weeklyOff && <p className="text-[9px] text-red-500 font-bold mt-2">{errors.weeklyOff}</p>}
             </div>
           </div>
         );
@@ -243,11 +284,10 @@ const SalonRegistration: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F7FE] flex items-center justify-center p-4 relative">
+    <div className="min-h-screen bg-[#F4F7FE] flex items-center justify-center p-4 relative font-sans">
       {notification && (
-        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300 ${
-          notification.type === 'success' ? 'bg-white border-green-500 text-green-600' : 'bg-white border-red-500 text-red-600'
-        } border-l-4`}>
+        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300 ${notification.type === 'success' ? 'bg-white border-green-500 text-green-600' : 'bg-white border-red-500 text-red-600'
+          } border-l-4`}>
           {notification.type === 'success' ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
           <span className="text-sm font-bold">{notification.message}</span>
         </div>
@@ -265,8 +305,8 @@ const SalonRegistration: React.FC = () => {
           {renderStep()}
           <footer className="mt-10 flex gap-3">
             {step > 1 && <Button disabled={isLoading} onClick={() => setStep(s => s - 1)} className="flex-1 h-12 rounded-2xl bg-gray-50 text-gray-400 font-bold hover:bg-gray-100"><ArrowLeft size={16} /></Button>}
-            <Button disabled={isLoading} onClick={() => step < 3 ? setStep(s => s + 1) : handleSubmit()} className="flex-[2] h-12 rounded-2xl bg-[#1E4D8C] text-white font-bold flex items-center justify-center gap-2 hover:bg-[#153a6b]">
-              {isLoading ? <Loader2 className="animate-spin" size={18} /> : (step === 3 ? 'Complete Setup' : 'Next Step')} 
+            <Button disabled={isLoading} onClick={() => step < 3 ? handleNext() : handleSubmit()} className="flex-[2] h-12 rounded-2xl bg-[#1E4D8C] text-white font-bold flex items-center justify-center gap-2 hover:bg-[#153a6b]">
+              {isLoading ? <Loader2 className="animate-spin" size={18} /> : (step === 3 ? 'Complete Setup' : 'Next Step')}
               {!isLoading && <ArrowRight size={16} />}
             </Button>
           </footer>
@@ -276,20 +316,27 @@ const SalonRegistration: React.FC = () => {
   );
 };
 
-const InputField = React.memo(({ label, name, value, onChange, icon: Icon, type = "text", placeholder }: any) => (
+const InputField = React.memo(({ label, name, value, onChange, icon: Icon, type = "text", placeholder, error }: any) => (
   <div className="space-y-1 w-full">
-    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
+    <div className="flex justify-between items-center px-1">
+      <label className={`text-[10px] font-black uppercase tracking-widest ${error ? 'text-red-500' : 'text-gray-400'}`}>{label}</label>
+      {error && <AlertCircle size={12} className="text-red-500" />}
+    </div>
     <div className="relative group">
-      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#1E4D8C] transition-colors"><Icon size={16} /></div>
-      <input 
-        name={name} 
-        type={type} 
-        value={value} 
-        onChange={onChange} 
+      <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${error ? 'text-red-400' : 'text-gray-400 group-focus-within:text-[#1E4D8C]'}`}><Icon size={16} /></div>
+      <input
+        name={name}
+        type={type}
+        value={value}
+        onChange={onChange}
         placeholder={placeholder}
-        className="w-full h-11 pl-11 pr-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all" 
+        className={`w-full h-11 pl-11 pr-4 rounded-2xl text-sm font-bold outline-none transition-all border ${error
+            ? 'bg-red-50 border-red-200 focus:ring-4 focus:ring-red-100'
+            : 'bg-gray-50 border-transparent focus:ring-4 focus:ring-blue-100'
+          }`}
       />
     </div>
+    {error && <p className="text-[10px] text-red-500 font-bold ml-1">{error}</p>}
   </div>
 ));
 

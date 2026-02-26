@@ -23,6 +23,7 @@ export function useApi() {
 
     try {
       const response = await fetch(`${Config.API_BASE_URL}/refresh`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": accessToken ? `Bearer ${accessToken}` : "",
@@ -85,6 +86,7 @@ export function useApi() {
 
 
       const response = await fetch(`${Config.API_Customers}${endpoint}`, {
+         method: "GET",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,

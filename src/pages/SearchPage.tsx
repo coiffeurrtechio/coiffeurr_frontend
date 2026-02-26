@@ -3,9 +3,13 @@ import { ArrowLeft, X, Clock, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 function SearchPage() {
-  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const queryParams = new URLSearchParams(location.search);
+  
+  const urlSearchQuery = queryParams.get("query");
+  const [searchQuery, setSearchQuery] = useState(urlSearchQuery || "");
+
 
   // Auto-focus input on mount (like YouTube)
   useEffect(() => {
@@ -25,7 +29,7 @@ function SearchPage() {
         <button onClick={() => navigate(-1)} className="p-1 active:bg-gray-100 rounded-full">
           <ArrowLeft className="w-6 h-6 text-gray-700" />
         </button>
-        
+
         <div className="flex-1 relative">
           <form onSubmit={(e) => { e.preventDefault(); handleSearchSubmit(searchQuery); }}>
             <input
@@ -54,9 +58,9 @@ function SearchPage() {
         </div>
 
         <div className="space-y-6">
-          {['Mumbai', 'Haircut near me', 'Facial for men'].map((item) => (
-            <div 
-              key={item} 
+          {[].map((item) => (
+            <div
+              key={item}
               onClick={() => handleSearchSubmit(item)}
               className="flex items-center justify-between group cursor-pointer"
             >
