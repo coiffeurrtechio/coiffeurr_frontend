@@ -83,7 +83,7 @@ const HomePage: React.FC = () => {
   const FetchAllSalons = async (city: string) => {
     try {
       // If city is empty, the API should handle returning general results
-      const res = await apiRequest<any[]>(`/salons/search?city=Bengaluru&limit=10`);
+      const res = await apiRequest<any[]>(`/salons/search?city=${city}&limit=10`);
       if (res.data) setsalons(res.data);
     } catch (err) {
       console.error("Fetch error:", err);
@@ -174,7 +174,7 @@ const HomePage: React.FC = () => {
                 <div className="p-3">
                   <div className="flex justify-between items-start mb-1">
                     <h3 className="font-bold text-sm text-gray-800 truncate pr-2">{salon.salonName}</h3>
-                    <span className="text-[10px] font-bold text-[#1E4D8C]">{salon.pricing?.priceRange || "₹₹"}</span>
+                    <span className="text-[10px] font-bold text-[#1E4D8C]">{salon.pricing?.priceRange}</span>
                   </div>
                   <p className="text-[10px] text-gray-400 flex items-center gap-1 font-medium">
                     <MapPin size={10} /> {salon.address?.city || "Nearby"}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Store, User, MapPin, Clock, ArrowRight, ArrowLeft, 
+import {
+  Store, User, MapPin, Clock, ArrowRight, ArrowLeft,
   Smartphone, Hash, Mail, Loader2, Lock, Coffee,
   CheckCircle2, XCircle, Navigation, Globe, LocateFixed, AlertCircle
 } from 'lucide-react';
@@ -24,26 +24,30 @@ const SalonRegistration: React.FC = () => {
     email: '',
     password: '',
     primaryPhone: '',
-    address: { 
-      street: '', 
-      city: '', 
-      state: '', 
-      pincode: '', 
-      country: 'India' 
+    address: {
+      street: '',
+      city: '',
+      state: '',
+      pincode: '',
+      country: 'India'
     },
-    location: { 
-      latitude: 0, 
-      longitude: 0 
+    location: {
+      latitude: 0,
+      longitude: 0
     },
     timing: {
       openingTime: '',
       closingTime: '',
-      lunchBreak: { 
-        start: '', 
-        end: '' 
+      lunchBreak: {
+        start: '',
+        end: ''
       },
       weeklyOff: [] as string[]
-    }
+    },
+    branding: {
+      logoUrl: '',
+      coverImages: [] as string[]
+    },
   });
 
   // --- VALIDATION LOGIC: MAKING EVERYTHING COMPULSORY ---
@@ -53,10 +57,10 @@ const SalonRegistration: React.FC = () => {
     if (currentStep === 1) {
       if (!formData.salonName.trim()) newErrors.salonName = "Salon name is required";
       if (!formData.ownerName.trim()) newErrors.ownerName = "Owner name is required";
-      
+
       const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
       if (!emailRegex.test(formData.email)) newErrors.email = "Valid email is required";
-      
+
       if (formData.password.length < 6) newErrors.password = "Min 6 characters required";
       if (formData.primaryPhone.length !== 10) newErrors.primaryPhone = "10-digit phone required";
     }
@@ -85,6 +89,35 @@ const SalonRegistration: React.FC = () => {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const handleAddCoverImage = () => {
+    setFormData(prev => ({
+      ...prev,
+      branding: {
+        ...prev.branding,
+        coverImages: [...prev.branding.coverImages, '']
+      }
+    }));
+  };
+
+  const handleCoverImageChange = (index: number, value: string) => {
+    const updatedImages = [...formData.branding.coverImages];
+    updatedImages[index] = value;
+    setFormData(prev => ({
+      ...prev,
+      branding: { ...prev.branding, coverImages: updatedImages }
+    }));
+  };
+
+  const removeCoverImage = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      branding: {
+        ...prev.branding,
+        coverImages: prev.branding.coverImages.filter((_, i) => i !== index)
+      }
+    }));
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -207,6 +240,58 @@ const SalonRegistration: React.FC = () => {
               <InputField label="Password *" name="password" type="password" value={formData.password} onChange={handleChange} icon={Lock} placeholder="••••••••" error={errors.password} />
               <InputField label="Primary Phone *" name="primaryPhone" type="tel" value={formData.primaryPhone} onChange={handleChange} icon={Smartphone} placeholder="9876543210" error={errors.primaryPhone} />
             </div>
+
+
+            <div className="p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200 space-y-3">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Branding (Optional)</p>
+
+              <InputField
+                label="Logo URL"
+                name="branding.logoUrl"
+                value={formData.branding.logoUrl}
+                onChange={handleChange}
+                icon={Globe}
+                placeholder="https://image.com/logo.png"
+              />
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-black uppercase text-gray-400">Cover Images</label>
+                  <button
+                    type="button"
+                    onClick={handleAddCoverImage}
+                    className="text-[10px] font-bold text-[#1E4D8C] hover:underline"
+                  >
+                    + Add Image
+                  </button>
+                </div>
+
+                {formData.branding.coverImages.map((url, index) => (
+                  <div key={index} className="flex gap-2">
+                    <div className="flex-1">
+                      <InputField
+                        label=""
+                        name={`cover-${index}`}
+                        value={url}
+                        onChange={(e: any) => handleCoverImageChange(index, e.target.value)}
+                        icon={Globe}
+                        placeholder="Image URL"
+                      />
+                    </div>
+                    <button
+                      onClick={() => removeCoverImage(index)}
+                      className="h-11 px-3 mt-1 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                    >
+                      <XCircle size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+
+
+
           </div>
         );
       case 2:
@@ -262,12 +347,12 @@ const SalonRegistration: React.FC = () => {
               <p className={`text-[10px] font-black uppercase mb-2 ${errors.weeklyOff ? 'text-red-600' : 'text-gray-400'}`}>Weekly Off *</p>
               <div className="flex flex-wrap gap-2">
                 {DAYS.map(day => (
-                  <button 
-                    key={day} 
-                    type="button" 
+                  <button
+                    key={day}
+                    type="button"
                     onClick={() => {
-                        setFormData(p => ({ ...p, timing: { ...p.timing, weeklyOff: p.timing.weeklyOff.includes(day) ? p.timing.weeklyOff.filter(d => d !== day) : [...p.timing.weeklyOff, day] } }));
-                        if(errors.weeklyOff) setErrors(prev => ({...prev, weeklyOff: ''}));
+                      setFormData(p => ({ ...p, timing: { ...p.timing, weeklyOff: p.timing.weeklyOff.includes(day) ? p.timing.weeklyOff.filter(d => d !== day) : [...p.timing.weeklyOff, day] } }));
+                      if (errors.weeklyOff) setErrors(prev => ({ ...prev, weeklyOff: '' }));
                     }}
                     className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-all ${formData.timing.weeklyOff.includes(day) ? "bg-[#1E4D8C] text-white border-[#1E4D8C]" : "bg-white text-gray-400 border-gray-200"}`}
                   >
@@ -331,8 +416,8 @@ const InputField = React.memo(({ label, name, value, onChange, icon: Icon, type 
         onChange={onChange}
         placeholder={placeholder}
         className={`w-full h-11 pl-11 pr-4 rounded-2xl text-sm font-bold outline-none transition-all border ${error
-            ? 'bg-red-50 border-red-200 focus:ring-4 focus:ring-red-100'
-            : 'bg-gray-50 border-transparent focus:ring-4 focus:ring-blue-100'
+          ? 'bg-red-50 border-red-200 focus:ring-4 focus:ring-red-100'
+          : 'bg-gray-50 border-transparent focus:ring-4 focus:ring-blue-100'
           }`}
       />
     </div>

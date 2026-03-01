@@ -14,13 +14,14 @@ import DashBoardBusiness from "../pages/Salon/SalonOwner/DashBoardPages.tsx/Dash
 import WorkInProgress from "../components/WorkInProgress";
 import BookingPage from "../pages/BookingPage";
 import Home from "../pages/LoginPage";
-import SalonOwnerHomePage from "../pages/Salon/SalonOwner/SalonOwnerHomePage/SalonOwnerHomePage";
+// import SalonOwnerHomePage from "../pages/Salon/SalonOwner/SalonOwnerHomePage/SalonOwnerHomePage";
 import StaffManagement from "../pages/Salon/SalonOwner/SalonStaffPage.tsx/StaffManagement";
 import BookingsPage from "../pages/Salon/SalonOwner/BookingsPage/BookingsPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import SalonRegistration from "../pages/Salon/SalonRegistration";
 import SearchPage from "../pages/SearchPage";
 import ServiceManagement from "../pages/Salon/SalonOwner/SalonServicePage/ServiceManagement";
+import DashboardProfile from "../pages/Salon/SalonOwner/SalonOwnerHomePage/DashboardProfile";
 
 export interface AppRoute {
   key: number;
@@ -50,7 +51,7 @@ const routes: AppRoute[] = [
       { key: 15, path: "/salons/:salonId", Element: SingleSalonPage, isProtected: true },
       // { key: 16, path: "/salonRegistration", Element: SalonRegistrationForm, isProtected: true },
       { key: 17, path: "/salon/:salonId/service/:serviceId", Element: SalonService, isProtected: true },
-      { key: 18, path: "/salonowner", Element: SalonOwnerHomePage, isProtected: true },
+      // { key: 18, path: "/salonowner", Element: SalonOwnerHomePage, isProtected: true },
       { key: 19, path: "/search", Element: SearchPage, isProtected: true },
 
     ],
@@ -92,7 +93,7 @@ const routes: AppRoute[] = [
       // { key: 25, path: "data", Element: WorkInProgress, isProtected: true },
       { key: 26, path: "staff", Element: StaffManagement, isProtected: true },
       { key: 27, path: "services", Element: ServiceManagement, isProtected: true },
-      { key: 28, path: "", Element: BookingsPage, isProtected: true },
+      { key: 28, path: "", Element: DashboardProfile, isProtected: true },
       { key: 29, path: "booking", Element: BookingsPage, isProtected: true },
 
       // { key: 26, path: "salonowner", Element: SalonOwnerHomePage, isProtected: true },

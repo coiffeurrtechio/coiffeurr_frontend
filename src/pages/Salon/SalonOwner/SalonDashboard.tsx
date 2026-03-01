@@ -12,7 +12,7 @@ function SalonDashboard({ open, setOpen }: SidebarProps) {
   const location = useLocation();
 
   const menuItems = [
-    // { id: "profile", label: "Profile", icon: Settings, path: "/dashboard/SalonProfile" },
+    { id: "profile", label: "Profile", icon: Settings, path: "/dashboard/" },
     { id: "staff", label: "Staff", icon: Users, path: "/dashboard/staff" },
     { id: "services", label: "Services", icon: LayoutDashboard, path: "/dashboard/services" },
     { id: "booking", label: "Bookings", icon: Notebook, path: "/dashboard/booking" },

@@ -24,38 +24,34 @@ import type { Salon } from "../../Interfaces/SaloInterface";
 import "swiper/css";
 import "swiper/css/pagination";
 
+
+
 export default function SalonsPage(): JSX.Element {
-  const location = useLocation(); // Hook to get URL params
-  const [searchTerm, setSearchTerm] = useState<string>("");
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // 1. Initialize searchTerm from URL immediately
+  const queryParams = new URLSearchParams(location.search);
+  const initialQuery = queryParams.get("query") || "";
+
+  const [searchTerm, setSearchTerm] = useState<string>(initialQuery);
   const [selectedType, setSelectedType] = useState<string>("all");
   const [salons, setSalons] = useState<any[]>([]);
   const [fetchSalonAPI, setfetchSalonAPI] = useState(true);
   const { apiRequest } = useApi();
-  const navigate = useNavigate();
-
 
   const [limit, setLimit] = useState<number>(10);
   const [city, setCity] = useState<string>(localStorage.getItem("Address") || "Mumbai");
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
-  // Extract 'query' from URL e.g. /salons?query=Mumbai
-  const queryParams = new URLSearchParams(location.search);
-  const urlSearchQuery = queryParams.get("query");
-
-  const FetchSalonsData = async () => {
+  // 2. Main Data Fetching Logic
+  const FetchSalonsData = async (currentSearch: string) => {
     setfetchSalonAPI(true);
     try {
-      let endpoint = "/salons";
-
-      // If there is a URL param, use the search endpoint
-      if (searchTerm) {
-        endpoint = `/search-salons?query=${encodeURIComponent(searchTerm)}`;
-        // setSearchTerm(urlSearchQuery); // Sync the search input with URL param
-      }
-
-      // const res = await apiRequest<Salon[]>();
-      // const city = localStorage.getItem("Address");
-      const res = await apiRequest<any[]>(`/salons/search?city=${city}&name=${searchTerm}&limit=${limit}`);
+      // We pass currentSearch directly to avoid stale state issues during the sync
+      const res = await apiRequest<any[]>(
+        `/salons/search?city=${city}&name=${currentSearch}&limit=${limit}`
+      );
       if (res.data) setSalons(res.data);
     } catch (err) {
       console.error("Error fetching salons:", err);
@@ -64,22 +60,21 @@ export default function SalonsPage(): JSX.Element {
     }
   };
 
-  // Re-run whenever the URL search query changes
+  // 3. EFFECT: Sync State with URL Query Params
   useEffect(() => {
-    FetchSalonsData();
-  }, []);
+    const params = new URLSearchParams(location.search);
+    const queryFromUrl = params.get("query") || "";
+    
+    setSearchTerm(queryFromUrl);
+    FetchSalonsData(queryFromUrl); // Fetch based on the new URL param
+  }, [location.search]); // Triggers every time the URL changes
 
-  const salonTypes = ["all", "Unisex", "Women Only", "Men Only"];
 
-  // const filteredSalons = salons.filter((salon) => {
-  //   // Local filtering for live search bar interaction
-  //   const matchesSearch =
-  //     salon.salonName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //     (salon.street && salon.street.toLowerCase().includes(searchTerm.toLowerCase()));
-
-  //   const matchesType = selectedType === "all" || salon.salonType === selectedType;
-  //   return matchesSearch && matchesType;
-  // });
+  // 4. Helper for the Search Bar click (since it's read-only)
+  const handleSearchBarClick = () => {
+    // Navigates to the dedicated search input page
+    navigate(`/search?query=${encodeURIComponent(searchTerm)}`);
+  };
 
   const formatTime = (timeString: string): string => {
     if (!timeString) return "N/A";
@@ -91,57 +86,39 @@ export default function SalonsPage(): JSX.Element {
       hour: "numeric", minute: "numeric", hour12: true,
     }).format(date);
   };
-
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <Loader isVisible={fetchSalonAPI} />
 
-      {/* --- THEMED SEARCH HEADER --- */}
-      <section className="sticky top-0 z-40 bg-[#1E4D8C] text-white shadow-lg rounded-b-[2rem] md:rounded-none">
-        <div className="container mx-auto px-4 py-6 md:py-8">
-          <div className="max-w-4xl mx-auto">
+      <section className="sticky top-0 z-40 bg-[#1E4D8C] text-white shadow-lg rounded-b-[2rem]">
+        <div className="container mx-auto px-4 py-6">
+          <div className="max-w-4xl mx-auto flex items-center gap-3">
+            <button
+              onClick={() => navigate("/")}
+              className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-white" />
+            </button>
+            
+            <div
+              className="relative flex-1 group cursor-pointer"
+              onClick={handleSearchBarClick}
+            >
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <input
+                type="text"
+                readOnly
+                placeholder="Search for 'Haircut' or 'Spa'..."
+                value={searchTerm}
+                className="w-full h-12 pl-12 pr-4 rounded-2xl bg-white text-gray-900 shadow-xl border-none cursor-pointer text-sm outline-none"
+              />
+            </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate("/")}
-                className="p-2 -ml-2 hover:bg-slate-50 rounded-full transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-white" />
-              </button>
-              <div
-                className="relative flex-1 group cursor-pointer"
-                onClick={() => navigate(`/search?query=${encodeURIComponent(searchTerm)}`)}
-              >
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5 group-hover:text-[#1E4D8C] transition-colors" />
-                <input
-                  type="text"
-                  readOnly // Prevents keyboard on this page, acts as a button
-                  placeholder="Search for 'Haircut' or 'Spa'..."
-                  value={searchTerm}
-                  className="w-full h-12 pl-12 pr-4 rounded-2xl bg-white text-gray-900 shadow-xl border-none cursor-pointer transition-all outline-none text-sm md:text-base"
-                />
-              </div>
-
-              {/* Filter Select UI */}
-              <div className="relative">
-                {/* <select
-                  value={selectedType}
-                  onChange={(e) => setSelectedType(e.target.value)}
-                  className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full"
-                >
-                  {salonTypes.map((type) => (
-                    <option key={type} value={type} className="text-gray-900">
-                      {type === "all" ? "All Types" : type}
-                    </option>
-                  ))}
-                </select> */}
-                <div className="h-12 w-12 md:w-auto md:px-5 flex items-center justify-center gap-2 bg-white rounded-2xl shadow-xl text-[#1E4D8C] transition-transform active:scale-95">
-                  <Filter size={20} className="md:w-4 md:h-4" onClick={() => setIsFilterModalOpen(true)}/>
-                  <span className="hidden md:block text-sm font-bold uppercase tracking-tight">
-                    {selectedType === "all" ? "Filter" : selectedType}
-                  </span>
-                </div>
-              </div>
+            <div 
+              className="h-12 w-12 flex items-center justify-center bg-white rounded-2xl shadow-xl text-[#1E4D8C] cursor-pointer"
+              onClick={() => setIsFilterModalOpen(true)}
+            >
+              <Filter size={20} />
             </div>
           </div>
         </div>
