@@ -314,6 +314,88 @@ export function useApi() {
   };
 
 
+
+  const apiCustomerPut = async <T, B = unknown>(
+    endpoint: string,
+    body: B,
+    options: RequestInit = {}
+  ): Promise<ApiResponse<T>> => {
+    try {
+      const userData = localStorage.getItem("authState");
+      if (!userData) return { data: null, error: "No user data", status: 401 };
+
+      const parsed = JSON.parse(userData);
+      const accessToken = parsed?.user?.access_token;
+      console.log("parsed =", parsed);
+      console.log("accessToken =", accessToken);
+
+
+      const mergedHeaders = {
+      "Content-Type": "application/json",
+      ...options.headers, // Includes your X-User-Id
+      "Authorization": `Bearer ${accessToken}`, // Explicitly added last
+    };
+
+    const response = await fetch(`${Config.API_Customers}${endpoint}`, {
+      ...options, // 2. Spread options FIRST
+      method: "PUT", // 3. Set Method and Headers SECOND to ensure they aren't overwritten
+      headers: mergedHeaders,
+      body: JSON.stringify(body),
+      credentials: "include",
+    });
+
+      const status = response.status;
+      let json: any = null;
+
+      try {
+        json = await response.json();
+      } catch {
+        json = null;
+      }
+
+      // Handle unauthorized → try refresh
+      if (status === 401) {
+        const newToken = await generateAccessToken();
+        if (newToken) {
+          // Retry with refreshed token
+          const retryResponse = await fetch(`${Config.API_BASE_URL}${endpoint}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${newToken}`,
+              ...(options.headers || {}),
+            },
+            body: JSON.stringify(body),
+            credentials: "include",
+          });
+
+          const retryJson = await retryResponse.json();
+          return {
+            data: retryJson as T,
+            error: null,
+            status: retryResponse.status,
+          };
+        } else {
+          navigate("/login");
+          return { data: null, error: "Unauthorized", status: 401 };
+        }
+      }
+
+      if (!response.ok) {
+        return {
+          data: null,
+          error: json?.message || `Error: ${response.statusText}`,
+          status,
+        };
+      }
+
+      return { data: json as T, error: null, status };
+    } catch (err: any) {
+      return { data: null, error: err.message || "Network error", status: 500 };
+    }
+  };
+
+
   //   const apiCustomerpiPost = async <T>(
   //   endpoint: string,
   //   options: RequestInit = {}
@@ -396,5 +478,5 @@ export function useApi() {
   // };
 
 
-  return { apiRequest, generateAccessToken, apiPost, apiCustomerpiPost };
+  return { apiRequest, generateAccessToken, apiPost, apiCustomerpiPost, apiCustomerPut };
 }
