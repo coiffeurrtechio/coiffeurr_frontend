@@ -90,48 +90,51 @@ const SalonService: React.FC = () => {
     return minute === 0 ? `${h} ${ampm}` : `${h}:${minute.toString().padStart(2, "0")} ${ampm}`;
   };
 
-  const BookAppointment = async (e: any) => {
-    e.preventDefault();
-    if (!selectedDate || !selectedslottime) return;
+  const BookAppointment = async (e?: React.MouseEvent<HTMLButtonElement>) => {
+    e?.preventDefault();
+    if (!selectedDate || !selectedslottime) {
+      console.warn("Select a date and slot before confirming.");
+      return;
+    }
 
     try {
       setbookingrequestsend(true);
 
-      // 1. Get User ID from localStorage
       const authData = localStorage.getItem("authState");
       const parsedAuth = authData ? JSON.parse(authData) : null;
       const userid = parsedAuth?.user?.user?.id || parsedAuth?.user?.id;
 
       if (!userid) {
         console.error("User not authenticated");
+        setbookingrequestsend(false);
         return;
       }
 
-      // 2. Construct the Payload based on Swagger requirements
       const data = {
         userId: userid,
         salonId: salonId,
         service_id: salonservicedata?.serviceCode || serviceId,
         slot: {
-          date: selectedDate, // "2026-02-12"
-          time: selectedslottime, // "14:00"
+          date: selectedDate,
+          time: selectedslottime,
         },
-        price: Number(salonservicedata?.price),
+        price: Number(salonservicedata?.price || 0),
       };
 
-      // 3. API Call with Header
-      // IMPORTANT: Check if your apiCustomerpiPost accepts a 3rd argument for options/headers
       const res = await apiCustomerpiPost(`/bookings`, data, {
         headers: {
-          "X-User-Id": userid
-        }
+          "X-User-Id": userid,
+        },
       });
 
-      if (!res.error) {
-        setisEditModalOpen(false);
-        setbookingrequestsuccess(true);
-        setTimeout(() => setbookingrequestsuccess(false), 4000);
+      if (res?.error) {
+        console.error("Booking API returned error", res.error || res);
+        return;
       }
+
+      setisEditModalOpen(false);
+      setbookingrequestsuccess(true);
+      setTimeout(() => setbookingrequestsuccess(false), 4000);
     } catch (error) {
       console.error("Booking Error:", error);
     } finally {
@@ -328,11 +331,12 @@ const SalonService: React.FC = () => {
               </div>
 
               <Button
+                type="button"
                 disabled={!selectedslottime}
                 onClick={BookAppointment}
                 className="w-full h-16 bg-slate-900 text-white rounded-none disabled:opacity-20 text-xs font-bold uppercase tracking-[0.2em]"
               >
-                Confirm & Pay ₹{salonservicedata?.price}
+                Confirm 
               </Button>
             </CardContent>
           </Card>

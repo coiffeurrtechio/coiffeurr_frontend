@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Button } from "../../../components/ui_components/button";
 import { useDispatch } from "react-redux";
+import { logoutUser } from "../../../API/APIs";
 
 interface SidebarProps {
   open: boolean;
@@ -32,8 +33,7 @@ function SalonDashboard({ open, setOpen }: SidebarProps) {
     localStorage.removeItem("authState");
     localStorage.removeItem("token");
     dispatch(logoutUser());
-    // If using a global state (Context/Redux), dispatch clear action here
-    navigate("/login", { replace: true });
+    navigate("/login");
   };
 
   return (

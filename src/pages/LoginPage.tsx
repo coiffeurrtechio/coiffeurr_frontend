@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { 
-  Users, Building2, Scissors, ArrowLeft, 
-  Mail, Lock, Eye, EyeOff 
+import {
+  Users, Building2, Scissors, ArrowLeft,
+  Mail, Lock, Eye, EyeOff
 } from "lucide-react";
 import { Button } from "../components/ui_components/button";
-import { 
-  Card, CardContent, CardHeader, 
-  CardTitle, CardDescription 
+import {
+  Card, CardContent, CardHeader,
+  CardTitle, CardDescription
 } from "../components/ui_components/card";
 import { useToast } from "../components/Toast";
 import { useDispatch } from "react-redux";
@@ -25,7 +25,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ role, onBack }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+
   const { showToast } = useToast();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -92,7 +92,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ role, onBack }) => {
 
       const result = await response.json();
       dispatch(login({ user: result }));
-      
+
       showToast({
         type: "success",
         title: "Login Successful",
@@ -100,12 +100,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ role, onBack }) => {
         duration: 5000,
       });
 
-      console.log("result?.user?.role = ",result?.user?.role);
-      
-      if(result?.user?.role === "OWNER"){
+      console.log("result?.user?.role = ", result?.user?.role);
+
+      if (result?.user?.role === "OWNER") {
         navigate("/dashboard")
       }
-      else{
+      else {
         navigate("/");
       }
 
@@ -122,10 +122,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ role, onBack }) => {
   };
 
   return (
-    <div className="w-full max-w-md px-4 animate-in fade-in slide-in-from-right-8 duration-500">
-      {/* <button
+    
+
+<div className="flex items-center justify-center min-h-screen p-4 sm:p-8 md:p-12">
+  <div className="w-full max-w-[400px] sm:max-w-md lg:max-w-[440px] animate-in fade-in slide-in-from-right-8 duration-500">
+    
+    {/* Optional: Navigation Button - Visible on all but positioned better for thumb-reach on mobile */}
+    {/* <button
         onClick={onBack}
-        className="flex items-center gap-2 text-gray-500 hover:text-[#1E4D8C] transition-colors text-sm font-bold mb-6 group"
+        className="flex items-center gap-2 text-gray-500 hover:text-[#1E4D8C] transition-colors text-xs sm:text-sm font-bold mb-4 sm:mb-6 group ml-1"
       >
         <div className="p-1.5 bg-white rounded-lg shadow-sm group-hover:bg-blue-50">
           <ArrowLeft size={16} />
@@ -133,80 +138,90 @@ const LoginPage: React.FC<LoginPageProps> = ({ role, onBack }) => {
         Change Role
       </button> */}
 
-      <Card className="border-0 mt-4 bg-white/80 backdrop-blur-xl shadow-[0_20px_50px_rgba(30,77,140,0.1)] rounded-[2.5rem] overflow-hidden">
-        <CardHeader className="text-center pb-2 pt-10">
-          <div className="mx-auto w-16 h-16 bg-[#1E4D8C] rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-blue-900/20 rotate-3">
-            <Scissors className="w-8 h-8 text-white -rotate-3" />
-          </div>
-          <CardTitle className="text-3xl font-black text-gray-900 tracking-tight text-capitalize">
-            Login 
-          </CardTitle>
-          <CardDescription className="text-gray-500 font-medium mt-2">
-            Enter your credentials to access your account
-          </CardDescription>
-        </CardHeader>
+    <Card className="border-0 bg-white/80 backdrop-blur-xl shadow-[0_20px_50px_rgba(30,77,140,0.1)] rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden">
+      <CardHeader className="text-center pb-2 pt-8 sm:pt-10">
+        {/* Icon - Slightly smaller on mobile to save vertical space */}
+        <div className="mx-auto w-14 h-14 sm:w-16 sm:h-16 bg-[#1E4D8C] rounded-2xl flex items-center justify-center mb-4 sm:mb-6 shadow-lg shadow-blue-900/20 rotate-3">
+          <Scissors className="w-6 h-6 sm:w-8 sm:h-8 text-white -rotate-3" />
+        </div>
+        
+        <CardTitle className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight capitalize">
+          Login 
+        </CardTitle>
+        <CardDescription className="text-gray-500 font-medium mt-2 px-4 sm:px-0 text-sm sm:text-base">
+          Enter your credentials to access your account
+        </CardDescription>
+      </CardHeader>
 
-        <CardContent className="space-y-6 px-8 pb-10">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Email or Username</label>
-              <div className="relative group">
-                <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${errors.email ? "text-destructive" : "text-gray-400 group-focus-within:text-[#1E4D8C]"}`} />
-                <input
-                  type="text"
-                  placeholder="name@example.com"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                  disabled={isLoading}
-                  className={`w-full h-12 pl-12 pr-4 bg-gray-50 border-2 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all ${errors.email ? "border-destructive/50" : "border-transparent"}`}
-                />
-              </div>
-              {errors.email && <p className="text-[10px] text-destructive font-bold ml-1">{errors.email}</p>}
+      <CardContent className="space-y-6 px-6 sm:px-8 pb-8 sm:pb-10">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+          
+          {/* Email Field */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+              Email or Username
+            </label>
+            <div className="relative group">
+              <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${errors.email ? "text-destructive" : "text-gray-400 group-focus-within:text-[#1E4D8C]"}`} />
+              <input
+                type="text"
+                placeholder="name@example.com"
+                value={formData.email}
+                onChange={(e) => handleInputChange("email", e.target.value)}
+                disabled={isLoading}
+                className={`w-full h-12 pl-11 sm:pl-12 pr-4 bg-gray-50/50 border-2 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all ${errors.email ? "border-destructive/50" : "border-transparent focus:border-[#1E4D8C]/20"}`}
+              />
             </div>
-
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-center px-1">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Password</label>
-                <Link to="#" className="text-[10px] font-black text-[#1E4D8C] hover:underline tracking-widest">Forgot?</Link>
-              </div>
-              <div className="relative group">
-                <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${errors.password ? "text-destructive" : "text-gray-400 group-focus-within:text-[#1E4D8C]"}`} />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={(e) => handleInputChange("password", e.target.value)}
-                  disabled={isLoading}
-                  className={`w-full h-12 pl-12 pr-12 bg-gray-50 border-2 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all ${errors.password ? "border-destructive/50" : "border-transparent"}`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-              {errors.password && <p className="text-[10px] text-destructive font-bold ml-1">{errors.password}</p>}
-            </div>
-
-            <Button 
-              type="submit" 
-              className="w-full h-12 bg-[#1E4D8C] hover:bg-[#153a6b] text-white font-black text-sm rounded-2xl shadow-lg shadow-blue-900/20 active:scale-[0.98] transition-all" 
-              disabled={isLoading}
-            >
-              {isLoading ? "Connecting..." : "Sign In"}
-            </Button>
-          </form>
-
-          <div className="text-center">
-            <p className="text-xs font-bold text-gray-400">
-              Don't have an account? <Link to="/signup" className="text-[#1E4D8C] hover:underline ml-1">Create account</Link>
-            </p>
+            {errors.email && <p className="text-[10px] text-destructive font-bold ml-1">{errors.email}</p>}
           </div>
-        </CardContent>
-      </Card>
-    </div>
+
+          {/* Password Field */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center px-1">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Password</label>
+              <Link to="#" className="text-[10px] font-black text-[#1E4D8C] hover:underline tracking-widest">Forgot?</Link>
+            </div>
+            <div className="relative group">
+              <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${errors.password ? "text-destructive" : "text-gray-400 group-focus-within:text-[#1E4D8C]"}`} />
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={(e) => handleInputChange("password", e.target.value)}
+                disabled={isLoading}
+                className={`w-full h-12 pl-11 sm:pl-12 pr-11 sm:pr-12 bg-gray-50/50 border-2 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all ${errors.password ? "border-destructive/50" : "border-transparent focus:border-[#1E4D8C]/20"}`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            {errors.password && <p className="text-[10px] text-destructive font-bold ml-1">{errors.password}</p>}
+          </div>
+
+          {/* Submit Button */}
+          <Button 
+            type="submit" 
+            className="w-full h-12 bg-[#1E4D8C] hover:bg-[#153a6b] text-white font-black text-sm rounded-2xl shadow-lg shadow-blue-900/20 active:scale-[0.98] transition-all mt-2" 
+            disabled={isLoading}
+          >
+            {isLoading ? "Connecting..." : "Sign In"}
+          </Button>
+        </form>
+
+        <div className="text-center">
+          <p className="text-xs font-bold text-gray-400">
+            Don't have an account? 
+            <Link to="/signup" className="text-[#1E4D8C] hover:underline ml-1">Create account</Link>
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+</div>
   );
 };
 
