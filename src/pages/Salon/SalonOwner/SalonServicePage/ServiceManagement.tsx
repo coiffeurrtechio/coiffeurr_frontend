@@ -15,11 +15,15 @@ import {
 import { useApi } from '../../../../API/SalonsAPIs/ALLSalonAPI';
 import { Loader } from '../../../../components/ui_components/Loader';
 import { useSalonApi } from '../../../../API/Salon_Owner_API/SalonOwnerAPI';
+import { logoutUser } from '../../../../API/APIs';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
 const ServiceManagement: React.FC = () => {
     const { apiRequest } = useApi();
     const { apiSalonPost, apiSalonPut } = useSalonApi();
-
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
     const [serviceList, setServiceList] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -28,6 +32,37 @@ const ServiceManagement: React.FC = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
+    // Inside ServiceManagement component
+    const [uploading, setUploading] = useState(false);
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploading(true);
+        try {
+            const authData = localStorage.getItem("authState");
+            const parsedAuth = authData ? JSON.parse(authData) : null;
+            const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
+
+            const uploadData = new FormData();
+            uploadData.append("files", file);
+            uploadData.append("salon_id", salonId);
+
+            // API call to your existing upload endpoint
+            const res = await apiSalonPost<any>(`/upload/salon-images`, uploadData);
+
+            if (res?.data?.data?.urls[0]) {
+                // Assuming res.data.url is an array like in the staff component
+                const finalUrl = res?.data?.data?.urls[0];
+                setFormData(prev => ({ ...prev, imageUrl: finalUrl }));
+            }
+        } catch (error) {
+            console.error("Image upload failed:", error);
+        } finally {
+            setUploading(false);
+        }
+    };
 
     const [formData, setFormData] = useState({
         serviceName: "",
@@ -47,6 +82,14 @@ const ServiceManagement: React.FC = () => {
             const authData = localStorage.getItem("authState");
             const parsedAuth = authData ? JSON.parse(authData) : null;
             const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
+            if (!salonId) {
+                dispatch(logoutUser());
+                // Then redirect
+                navigate("/login");
+                console.log("salonid not found");
+                return;
+
+            }
             const res = await apiRequest<any>(`/salons/${salonId}/services`);
             if (res.data) setServiceList(res.data);
         } catch (error) {
@@ -63,10 +106,15 @@ const ServiceManagement: React.FC = () => {
             const authData = localStorage.getItem("authState");
             const parsedAuth = authData ? JSON.parse(authData) : null;
             const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
-            
+            if (!salonId) {
+                handleLogout();
+                console.log("salonid not found");
+                return;
+
+            }
             // Send complete object including includedItems array
             await apiSalonPost(`/salons/${salonId}/services`, formData);
-            
+
             setIsModalOpen(false);
             resetForm();
             fetchServices();
@@ -94,7 +142,12 @@ const ServiceManagement: React.FC = () => {
             const authData = localStorage.getItem("authState");
             const parsedAuth = authData ? JSON.parse(authData) : null;
             const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
+            if (!salonId) {
+                handleLogout();
+                console.log("salonid not found");
+                return;
 
+            }
             // Send payload with includedItems as requested
             const payload = {
                 serviceName: formData.serviceName,
@@ -209,22 +262,24 @@ const ServiceManagement: React.FC = () => {
                 </div>
             </div>
 
-            {/* --- FORM MODAL --- */}
+            {/* --- Inside ServiceManagement Return --- */}
             {(isModalOpen || isEditModalOpen) && (
-                <ServiceFormModal 
+                <ServiceFormModal
                     title={isEditModalOpen ? "Edit Service" : "Add Service"}
                     onClose={() => { setIsModalOpen(false); setIsEditModalOpen(false); resetForm(); }}
                     onSubmit={isEditModalOpen ? handleUpdateService : handleCreateService}
                     formData={formData}
                     setFormData={setFormData}
                     submitting={submitting}
+                    uploading={uploading} // New prop
+                    handleFileUpload={handleFileUpload} // New prop
                 />
             )}
         </div>
     );
 };
 
-const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, submitting }: any) => {
+const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, submitting, uploading, handleFileUpload }: any) => {
     const [newItem, setNewItem] = useState("");
 
     const addInclude = () => {
@@ -246,7 +301,7 @@ const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, sub
                     <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600"><X size={20} /></button>
                 </div>
                 <form onSubmit={onSubmit} className="p-6 space-y-4 max-h-[85vh] overflow-y-auto">
-                    
+
                     {/* Image URL Section */}
                     <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
                         <div className="w-16 h-16 rounded-lg bg-white border flex items-center justify-center overflow-hidden shrink-0">
@@ -255,6 +310,49 @@ const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, sub
                         <div className="flex-1">
                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Image URL</label>
                             <input className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:border-blue-400" placeholder="Paste URL..." value={formData.imageUrl} onChange={e => setFormData({ ...formData, imageUrl: e.target.value })} />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Service Image</label>
+                        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                            <div className="relative w-20 h-20 rounded-xl bg-white border flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                                {formData.imageUrl ? (
+                                    <img src={formData.imageUrl} className="w-full h-full object-cover" />
+                                ) : (
+                                    <ImageIcon size={24} className="text-gray-300" />
+                                )}
+                                {uploading && (
+                                    <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+                                        <div className="w-5 h-5 border-2 border-[#1E4D8C] border-t-transparent rounded-full animate-spin" />
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="flex-1 space-y-2">
+                                <p className="text-[10px] text-gray-500 font-medium">PNG, JPG up to 5MB</p>
+                                <label className="inline-block">
+                                    <span className="cursor-pointer px-4 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-100 transition-all">
+                                        {formData.imageUrl ? "Change Photo" : "Upload Photo"}
+                                    </span>
+                                    <input 
+                                        type="file" 
+                                        className="hidden" 
+                                        accept="image/*" 
+                                        onChange={handleFileUpload}
+                                        disabled={uploading}
+                                    />
+                                </label>
+                                {formData.imageUrl && (
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setFormData({ ...formData, imageUrl: "" })}
+                                        className="ml-3 text-[10px] font-bold text-red-500 uppercase hover:underline"
+                                    >
+                                        Remove
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
 

@@ -77,8 +77,19 @@ export default function SignUpPage() {
     return (
        
 
-<div className="min-h-screen relative bg-[#F4F7FE] flex items-center justify-center p-4 sm:p-6 md:p-8 overflow-x-hidden">
-    
+
+<div className="relative min-h-screen w-full flex items-center justify-center p-4 sm:p-8 md:p-12 overflow-hidden bg-gray-50">
+      
+      {/* 1. THE BACKGROUND IMAGE LAYER */}
+      <div 
+        className="absolute inset-0 z-0 opacity-40" // Adjust opacity to make icons more/less visible
+        style={{
+          backgroundImage: `url('/Background.jpeg')`, // Change to your actual file path
+          backgroundSize: '320px', // This controls the scale of the icon pattern
+          backgroundRepeat: 'repeat',
+          filter: 'grayscale(100%) brightness(1.1)', // Optional: makes it look cleaner/more professional
+        }}
+      />    
     {/* --- BACKGROUND DECORATION --- */}
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Adjusted blob sizes for mobile responsiveness */}

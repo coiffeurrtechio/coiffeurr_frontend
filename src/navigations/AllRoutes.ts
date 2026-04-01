@@ -22,6 +22,8 @@ import SalonRegistration from "../pages/Salon/SalonRegistration";
 import SearchPage from "../pages/SearchPage";
 import ServiceManagement from "../pages/Salon/SalonOwner/SalonServicePage/ServiceManagement";
 import DashboardProfile from "../pages/Salon/SalonOwner/SalonOwnerHomePage/DashboardProfile";
+import UserWishlist from "../pages/UserWishlist";
+import StaffDetailPage from "../pages/Salon/StaffDetailPage";
 
 export interface AppRoute {
   key: number;
@@ -53,6 +55,8 @@ const routes: AppRoute[] = [
       { key: 17, path: "/salon/:salonId/service/:serviceId", Element: SalonService, isProtected: true },
       // { key: 18, path: "/salonowner", Element: SalonOwnerHomePage, isProtected: true },
       { key: 19, path: "/search", Element: SearchPage, isProtected: true },
+      { key: 20, path: "/wishlist", Element: UserWishlist, isProtected: true },
+      { key: 21, path: "/salon/:salonId/staff/:staffId", Element: StaffDetailPage, isProtected: true },
 
     ],
   },

@@ -124,104 +124,108 @@ const LoginPage: React.FC<LoginPageProps> = ({ role, onBack }) => {
   return (
     
 
-<div className="flex items-center justify-center min-h-screen p-4 sm:p-8 md:p-12">
-  <div className="w-full max-w-[400px] sm:max-w-md lg:max-w-[440px] animate-in fade-in slide-in-from-right-8 duration-500">
-    
-    {/* Optional: Navigation Button - Visible on all but positioned better for thumb-reach on mobile */}
-    {/* <button
-        onClick={onBack}
-        className="flex items-center gap-2 text-gray-500 hover:text-[#1E4D8C] transition-colors text-xs sm:text-sm font-bold mb-4 sm:mb-6 group ml-1"
-      >
-        <div className="p-1.5 bg-white rounded-lg shadow-sm group-hover:bg-blue-50">
-          <ArrowLeft size={16} />
-        </div>
-        Change Role
-      </button> */}
+<div className="relative min-h-screen w-full flex items-center justify-center p-4 sm:p-8 md:p-12 overflow-hidden bg-gray-50">
+      
+      {/* 1. THE BACKGROUND IMAGE LAYER */}
+      <div 
+        className="absolute inset-0 z-0 opacity-40" // Adjust opacity to make icons more/less visible
+        style={{
+          backgroundImage: `url('/Background.jpeg')`, // Change to your actual file path
+          backgroundSize: '320px', // This controls the scale of the icon pattern
+          backgroundRepeat: 'repeat',
+          filter: 'grayscale(100%) brightness(1.1)', // Optional: makes it look cleaner/more professional
+        }}
+      />
 
-    <Card className="border-0 bg-white/80 backdrop-blur-xl shadow-[0_20px_50px_rgba(30,77,140,0.1)] rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden">
-      <CardHeader className="text-center pb-2 pt-8 sm:pt-10">
-        {/* Icon - Slightly smaller on mobile to save vertical space */}
-        <div className="mx-auto w-14 h-14 sm:w-16 sm:h-16 bg-[#1E4D8C] rounded-2xl flex items-center justify-center mb-4 sm:mb-6 shadow-lg shadow-blue-900/20 rotate-3">
-          <Scissors className="w-6 h-6 sm:w-8 sm:h-8 text-white -rotate-3" />
-        </div>
+      {/* 2. GRADIENT OVERLAY (Fades the edges for focus) */}
+      <div className="absolute inset-0 z-1 bg-gradient-to-br from-white/20 via-transparent to-white/20" />
+
+      {/* 3. THE LOGIN CARD CONTAINER */}
+      <div className="relative z-10 w-full max-w-[400px] sm:max-w-md lg:max-w-[440px] animate-in fade-in slide-in-from-bottom-8 duration-700">
         
-        <CardTitle className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight capitalize">
-          Login 
-        </CardTitle>
-        <CardDescription className="text-gray-500 font-medium mt-2 px-4 sm:px-0 text-sm sm:text-base">
-          Enter your credentials to access your account
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent className="space-y-6 px-6 sm:px-8 pb-8 sm:pb-10">
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-          
-          {/* Email Field */}
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
-              Email or Username
-            </label>
-            <div className="relative group">
-              <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${errors.email ? "text-destructive" : "text-gray-400 group-focus-within:text-[#1E4D8C]"}`} />
-              <input
-                type="text"
-                placeholder="name@example.com"
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-                disabled={isLoading}
-                className={`w-full h-12 pl-11 sm:pl-12 pr-4 bg-gray-50/50 border-2 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all ${errors.email ? "border-destructive/50" : "border-transparent focus:border-[#1E4D8C]/20"}`}
-              />
+        <Card className="border-0 bg-white/70 backdrop-blur-2xl shadow-[0_32px_64px_-15px_rgba(30,77,140,0.15)] rounded-[2.5rem] overflow-hidden border-t border-white/40">
+          <CardHeader className="text-center pb-2 pt-8 sm:pt-10">
+            {/* Brand Icon */}
+            <div className="mx-auto w-14 h-14 sm:w-16 sm:h-16 bg-[#1E4D8C] rounded-2xl flex items-center justify-center mb-4 sm:mb-6 shadow-lg shadow-blue-900/20 rotate-3 transition-transform hover:rotate-0 duration-300">
+              <Scissors className="w-6 h-6 sm:w-8 sm:h-8 text-white -rotate-3" />
             </div>
-            {errors.email && <p className="text-[10px] text-destructive font-bold ml-1">{errors.email}</p>}
-          </div>
+            
+            <CardTitle className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight capitalize">
+              Login 
+            </CardTitle>
+            <CardDescription className="text-gray-500 font-medium mt-2 px-4 sm:px-0 text-sm sm:text-base">
+              Enter your credentials to access your account
+            </CardDescription>
+          </CardHeader>
 
-          {/* Password Field */}
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center px-1">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Password</label>
-              <Link to="#" className="text-[10px] font-black text-[#1E4D8C] hover:underline tracking-widest">Forgot?</Link>
-            </div>
-            <div className="relative group">
-              <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${errors.password ? "text-destructive" : "text-gray-400 group-focus-within:text-[#1E4D8C]"}`} />
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={(e) => handleInputChange("password", e.target.value)}
+          <CardContent className="space-y-6 px-6 sm:px-8 pb-8 sm:pb-10">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+              
+              {/* Email Field */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                  Email or Username
+                </label>
+                <div className="relative group">
+                  <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${errors.email ? "text-destructive" : "text-gray-400 group-focus-within:text-[#1E4D8C]"}`} />
+                  <input
+                    type="text"
+                    placeholder="name@example.com"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    disabled={isLoading}
+                    className={`w-full h-12 pl-11 sm:pl-12 pr-4 bg-white/50 border-2 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all ${errors.email ? "border-destructive/50" : "border-transparent focus:border-[#1E4D8C]/20"}`}
+                  />
+                </div>
+                {errors.email && <p className="text-[10px] text-destructive font-bold ml-1">{errors.email}</p>}
+              </div>
+
+              {/* Password Field */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center px-1">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Password</label>
+                  <Link to="#" className="text-[10px] font-black text-[#1E4D8C] hover:underline tracking-widest">Forgot?</Link>
+                </div>
+                <div className="relative group">
+                  <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${errors.password ? "text-destructive" : "text-gray-400 group-focus-within:text-[#1E4D8C]"}`} />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={(e) => handleInputChange("password", e.target.value)}
+                    disabled={isLoading}
+                    className={`w-full h-12 pl-11 sm:pl-12 pr-11 sm:pr-12 bg-white/50 border-2 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all ${errors.password ? "border-destructive/50" : "border-transparent focus:border-[#1E4D8C]/20"}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                {errors.password && <p className="text-[10px] text-destructive font-bold ml-1">{errors.password}</p>}
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full h-12 bg-[#1E4D8C] hover:bg-[#153a6b] text-white font-black text-sm rounded-2xl shadow-lg shadow-blue-900/20 active:scale-[0.98] transition-all mt-2" 
                 disabled={isLoading}
-                className={`w-full h-12 pl-11 sm:pl-12 pr-11 sm:pr-12 bg-gray-50/50 border-2 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all ${errors.password ? "border-destructive/50" : "border-transparent focus:border-[#1E4D8C]/20"}`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
               >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+                {isLoading ? "Connecting..." : "Sign In"}
+              </Button>
+            </form>
+
+            <div className="text-center pt-2">
+              <p className="text-xs font-bold text-gray-400">
+                Don't have an account? 
+                <Link to="/signup" className="text-[#1E4D8C] hover:underline ml-1">Create account</Link>
+              </p>
             </div>
-            {errors.password && <p className="text-[10px] text-destructive font-bold ml-1">{errors.password}</p>}
-          </div>
-
-          {/* Submit Button */}
-          <Button 
-            type="submit" 
-            className="w-full h-12 bg-[#1E4D8C] hover:bg-[#153a6b] text-white font-black text-sm rounded-2xl shadow-lg shadow-blue-900/20 active:scale-[0.98] transition-all mt-2" 
-            disabled={isLoading}
-          >
-            {isLoading ? "Connecting..." : "Sign In"}
-          </Button>
-        </form>
-
-        <div className="text-center">
-          <p className="text-xs font-bold text-gray-400">
-            Don't have an account? 
-            <Link to="/signup" className="text-[#1E4D8C] hover:underline ml-1">Create account</Link>
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  </div>
-</div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 };
 

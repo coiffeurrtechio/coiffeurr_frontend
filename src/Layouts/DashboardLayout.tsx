@@ -24,10 +24,10 @@ const DashboardLayout: React.FC = () => {
               <Menu className="w-6 h-6 text-gray-600" />
             </button>
             <h1 className="font-bold text-gray-800 hidden md:block text-xl tracking-tight">Dashboard</h1>
-            <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded border border-green-100">
+            {/* <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded border border-green-100">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
               <span className="text-[10px] font-bold text-green-700 uppercase tracking-widest">Live</span>
-            </div>
+            </div> */}
           </div>
 
           <div className="flex items-center gap-4">

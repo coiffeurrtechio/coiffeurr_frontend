@@ -10,24 +10,24 @@ export interface ApiResponse<T> {
   status: number;
 }
 
-export function useApi() {
+export function usersalonApi() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const generateAccessToken = async (): Promise<string | null> => {
     const userData = localStorage.getItem("authState");
-    // if (!userData) return null;
-    // const parsed = JSON.parse(userData);
-    // const accessToken = parsed?.user?.access_token
-    // const refreshToken = parsed?.refreshToken
+    if (!userData) return null;
+    const parsed = JSON.parse(userData);
+    const accessToken = parsed?.user?.access_token
+    const refreshToken = parsed?.refreshToken
 
     try {
       const response = await fetch(`${Config.API_BASE_URL}/refresh`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // "Authorization": accessToken ? `Bearer ${accessToken}` : "",
-          // "X-Refresh-Token": refreshToken, // 👈 send refresh token in header
+          "Authorization": accessToken ? `Bearer ${accessToken}` : "",
+          "X-Refresh-Token": refreshToken, // 👈 send refresh token in header
         },
         credentials: "include",
       });
@@ -48,18 +48,18 @@ export function useApi() {
       );
 
 
-      // const json = await response.json();
+      const json = await response.json();
 
-      // localStorage.setItem(
-      //   "authState",
-      //   JSON.stringify({
-      //     ...parsed,
-      //     user: {
-      //       json
-      //     },
-      //   })
-      // );
-      // localStorage.setItem("accessToken", JSON.stringify(json.accessToken));
+      localStorage.setItem(
+        "authState",
+        JSON.stringify({
+          ...parsed,
+          user: {
+            json
+          },
+        })
+      );
+      localStorage.setItem("accessToken", JSON.stringify(json.accessToken));
 
 
       return result;
@@ -71,25 +71,25 @@ export function useApi() {
 
 
 
-  const apiRequest = async <T>(
+  const userapiRequest = async <T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> => {
     try {
-      // const userData = localStorage.getItem("authState");
-      // if (!userData) return { data: null, error: "No user data", status: 401 };
+      const userData = localStorage.getItem("authState");
+      if (!userData) return { data: null, error: "No user data", status: 401 };
 
-      // const parsed = JSON.parse(userData);
-      // const accessToken = parsed?.user?.access_token;
-      // console.log("parsed =", parsed);
-      // console.log("accessToken =", accessToken);
+      const parsed = JSON.parse(userData);
+      const accessToken = parsed?.user?.access_token;
+      console.log("parsed =", parsed);
+      console.log("accessToken =", accessToken);
 
 
       const response = await fetch(`${Config.API_Customers}${endpoint}`, {
          method: "GET",
         headers: {
           "Content-Type": "application/json",
-          // Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           ...(options.headers || {}),
         },
         credentials: "include",
@@ -111,10 +111,10 @@ export function useApi() {
         const newToken = await generateAccessToken();
         if (newToken) {
           // Save new token to localStorage
-          // localStorage.setItem(
-          //   "authState",
-          //   JSON.stringify({ ...parsed, accessToken: newToken })
-          // );
+          localStorage.setItem(
+            "authState",
+            JSON.stringify({ ...parsed, accessToken: newToken })
+          );
 
           // Retry original request with new token
           const retryResponse = await fetch(`${Config.API_Customers}${endpoint}`, {
@@ -157,7 +157,7 @@ export function useApi() {
 
 
 
-  const apiPost = async <T, B = unknown>(
+  const userapiPost = async <T, B = unknown>(
     endpoint: string,
     body: B,
     options: RequestInit = {}
@@ -169,7 +169,7 @@ export function useApi() {
       const parsed = JSON.parse(userData);
       const accessToken = parsed?.user?.access_token;
 
-      const response = await fetch(`${Config.API_BASE_URL}${endpoint}`, {
+      const response = await fetch(`${Config.API_Customers}${endpoint}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -220,8 +220,8 @@ export function useApi() {
 
       if (!response.ok) {
         return {
-          data: null,
-          error: json?.message || `Error: ${response.statusText}`,
+          data: json,
+          error: json?.data || `Error: ${response.statusText}`,
           status,
         };
       }
@@ -284,86 +284,6 @@ export function useApi() {
               ...(options.headers || {}),
             },
             body: JSON.stringify(body),
-            credentials: "include",
-          });
-
-          const retryJson = await retryResponse.json();
-          return {
-            data: retryJson as T,
-            error: null,
-            status: retryResponse.status,
-          };
-        } else {
-          navigate("/login");
-          return { data: null, error: "Unauthorized", status: 401 };
-        }
-      }
-
-      if (!response.ok) {
-        return {
-          data: null,
-          error: json?.message || `Error: ${response.statusText}`,
-          status,
-        };
-      }
-
-      return { data: json as T, error: null, status };
-    } catch (err: any) {
-      return { data: null, error: err.message || "Network error", status: 500 };
-    }
-  };
-
-
-    const apiCustomerpiPostReq = async <T, B = unknown>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<ApiResponse<T>> => {
-    try {
-      console.log("coming tyo post rea");
-      
-      const userData = localStorage.getItem("authState");
-      if (!userData) return { data: null, error: "No user data", status: 401 };
-
-      const parsed = JSON.parse(userData);
-      const accessToken = parsed?.user?.access_token;
-      console.log("parsed =", parsed);
-      console.log("accessToken =", accessToken);
-
-
-      const mergedHeaders = {
-      "Content-Type": "application/json",
-      ...options.headers, // Includes your X-User-Id
-      "Authorization": `Bearer ${accessToken}`, // Explicitly added last
-    };
-
-    const response = await fetch(`${Config.API_Customers}${endpoint}`, {
-      ...options, // 2. Spread options FIRST
-      method: "POST", // 3. Set Method and Headers SECOND to ensure they aren't overwritten
-      headers: mergedHeaders,
-      credentials: "include",
-    });
-
-      const status = response.status;
-      let json: any = null;
-
-      try {
-        json = await response.json();
-      } catch {
-        json = null;
-      }
-
-      // Handle unauthorized → try refresh
-      if (status === 401) {
-        const newToken = await generateAccessToken();
-        if (newToken) {
-          // Retry with refreshed token
-          const retryResponse = await fetch(`${Config.API_BASE_URL}${endpoint}`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${newToken}`,
-              ...(options.headers || {}),
-            },
             credentials: "include",
           });
 
@@ -558,5 +478,5 @@ export function useApi() {
   // };
 
 
-  return { apiRequest, generateAccessToken, apiPost, apiCustomerpiPost, apiCustomerPut, apiCustomerpiPostReq };
+  return { userapiRequest, generateAccessToken, userapiPost, apiCustomerpiPost, apiCustomerPut };
 }

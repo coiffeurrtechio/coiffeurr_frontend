@@ -44,10 +44,10 @@ const SalonRegistration: React.FC = () => {
       },
       weeklyOff: [] as string[]
     },
-    branding: {
-      logoUrl: '',
-      coverImages: [] as string[]
-    },
+    // branding: {
+    //   logoUrl: '',
+    //   coverImages: [] as string[]
+    // },
   });
 
   // --- VALIDATION LOGIC: MAKING EVERYTHING COMPULSORY ---
@@ -91,34 +91,34 @@ const SalonRegistration: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleAddCoverImage = () => {
-    setFormData(prev => ({
-      ...prev,
-      branding: {
-        ...prev.branding,
-        coverImages: [...prev.branding.coverImages, '']
-      }
-    }));
-  };
+  // const handleAddCoverImage = () => {
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     branding: {
+  //       ...prev.branding,
+  //       coverImages: [...prev.branding.coverImages, '']
+  //     }
+  //   }));
+  // };
 
-  const handleCoverImageChange = (index: number, value: string) => {
-    const updatedImages = [...formData.branding.coverImages];
-    updatedImages[index] = value;
-    setFormData(prev => ({
-      ...prev,
-      branding: { ...prev.branding, coverImages: updatedImages }
-    }));
-  };
+  // const handleCoverImageChange = (index: number, value: string) => {
+  //   const updatedImages = [...formData.branding.coverImages];
+  //   updatedImages[index] = value;
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     branding: { ...prev.branding, coverImages: updatedImages }
+  //   }));
+  // };
 
-  const removeCoverImage = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      branding: {
-        ...prev.branding,
-        coverImages: prev.branding.coverImages.filter((_, i) => i !== index)
-      }
-    }));
-  };
+  // const removeCoverImage = (index: number) => {
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     branding: {
+  //       ...prev.branding,
+  //       coverImages: prev.branding.coverImages.filter((_, i) => i !== index)
+  //     }
+  //   }));
+  // };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
@@ -241,7 +241,7 @@ const SalonRegistration: React.FC = () => {
               <InputField label="Primary Phone *" name="primaryPhone" type="tel" value={formData.primaryPhone} onChange={handleChange} icon={Smartphone} placeholder="9876543210" error={errors.primaryPhone} />
             </div>
 
-
+{/* 
             <div className="p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200 space-y-3">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Branding (Optional)</p>
 
@@ -287,7 +287,7 @@ const SalonRegistration: React.FC = () => {
                   </div>
                 ))}
               </div>
-            </div>
+            </div> */}
 
 
 

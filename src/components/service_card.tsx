@@ -35,7 +35,7 @@ export function ServiceCard({ title, description, price, duration, icon }: Servi
               <Button
                 size="sm"
                 variant="outline"
-                className="hover:bg-accent hover:text-accent-foreground bg-transparent w-full md:w-auto"
+                className="hover:bg-accent hover:text-accent-foreground bg-slate-900 w-full md:w-auto"
               >
                 Book Now
               </Button>

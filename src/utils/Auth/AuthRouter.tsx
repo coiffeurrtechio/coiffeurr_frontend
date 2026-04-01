@@ -17,14 +17,14 @@ const AuthRouter: React.FC<AuthRouterProps> = ({ element, allowedRoles }) => {
   console.log("allowedRoles && !allowedRoles.includes(userRole) = ",allowedRoles && !allowedRoles.includes(userRole));
   
   // 🔒 If not logged in
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
+  // if (!isAuthenticated) {
+  //   return <Navigate to="/login" replace />;
+  // }
 
-  // 🚫 If role not allowed
-  if (allowedRoles && !allowedRoles.includes(userRole)) {
-    return <Navigate to="/" replace />;
-  }
+  // // 🚫 If role not allowed
+  // if (allowedRoles && !allowedRoles.includes(userRole)) {
+  //   return <Navigate to="/" replace />;
+  // }
 
   // ✅ Authorized
   return <>{element}</>;

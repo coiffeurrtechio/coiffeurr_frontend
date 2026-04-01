@@ -15,11 +15,15 @@ import {
 import { useApi } from '../../../../API/SalonsAPIs/ALLSalonAPI';
 import { Loader } from '../../../../components/ui_components/Loader';
 import { useSalonApi } from '../../../../API/Salon_Owner_API/SalonOwnerAPI';
+import { logoutUser } from '../../../../API/APIs';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
 const StaffManagement: React.FC = () => {
     const { apiRequest } = useApi();
     const { apiSalonPost, apiSalonPut } = useSalonApi();
-
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
     const [staffList, setStaffList] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -30,18 +34,69 @@ const StaffManagement: React.FC = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingStaffId, setEditingStaffId] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
-    
+
     const [formData, setFormData] = useState({
         name: "",
         email: "",
         phone: "",
         role: "Hair Stylist",
-        expertise: [] as string[], // Tag-based array
+        gender: "Male",
+        languages: [] as string[],
+        expertise: [] as string[],
+        instagramHandle: "",
         experienceYears: "",
-        active: true
+        active: true,
+        certifications: [] as string[],
+        specializations: [] as string[],
+        images: [] as string[],
+        rating: {} as any
     });
 
+    const [uploading, setUploading] = useState(false);
     useEffect(() => { fetchStaff(); }, []);
+
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        setUploading(true);
+        try {
+            const uploadedUrls: string[] = [];
+
+            for (const file of Array.from(files)) {
+                const user = localStorage.getItem("authState");
+                const parsedUser = user ? JSON.parse(user) : null;
+                // Fallback to match your fetchProfile logic
+                const salonId = parsedUser?.user?.user?.salonId || parsedUser?.user?.salonId;
+
+                const uploadData = new FormData();
+                uploadData.append("files", file);
+                uploadData.append("salon_id", salonId);
+
+                // If your API needs upload_preset (like Cloudinary):
+                // uploadData.append("upload_preset", "your_preset");
+
+                // Replace with your actual image upload endpoint
+                const res = await apiSalonPost<any>(`/upload/salon-images`, uploadData);
+                console.log("res =",res?.data);
+                
+                if (res?.data?.data?.urls[0]) {
+                    uploadedUrls.push(res?.data?.data?.urls[0]);
+                }
+            }
+
+            setFormData(prev => ({
+                ...prev,
+                images: [...prev.images, ...uploadedUrls]
+            }));
+        } catch (error) {
+            console.error("Image upload failed:", error);
+        } finally {
+            setUploading(false);
+        }
+    };
+
 
     const fetchStaff = async () => {
         setLoading(true);
@@ -49,6 +104,14 @@ const StaffManagement: React.FC = () => {
             const authData = localStorage.getItem("authState");
             const parsedAuth = authData ? JSON.parse(authData) : null;
             const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
+            if (!salonId) {
+                dispatch(logoutUser());
+                // Then redirect
+                navigate("/login");
+                console.log("salonid not found");
+                return;
+
+            }
             const res = await apiRequest<any>(`/salons/${salonId}/staff`);
             if (res.data) setStaffList(res.data);
         } catch (error) { console.error(error); } finally { setLoading(false); }
@@ -62,36 +125,61 @@ const StaffManagement: React.FC = () => {
             const parsedAuth = authData ? JSON.parse(authData) : null;
             const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
 
-            // Final Payload Mapping
+            if (!salonId) {
+                navigate("/login");
+                return;
+            }
+
             const payload = {
                 name: formData.name,
                 email: formData.email,
                 phone: formData.phone,
                 role: formData.role,
+                gender: formData.gender,
+                languages: formData.languages,
                 expertise: formData.expertise,
+                instagramHandle: formData.instagramHandle,
                 experienceYears: Number(formData.experienceYears),
-                active: formData.active
+                active: formData.active,
+                rating: { average: 5.0, reviewsCount: 0 },
+                // FIX: Pass the actual uploaded images here
+                images: formData.images,
+                services: [],
+                reviews: [],
+                metadata: {
+                    certifications: formData.certifications,
+                    specializations: formData.specializations
+                }
             };
 
             await apiSalonPost(`/salons/${salonId}/staff`, payload);
             setIsModalOpen(false);
             resetForm();
             fetchStaff();
-        } catch (error) { console.error(error); } finally { setSubmitting(false); }
+        } catch (error) {
+            console.error("Creation failed:", error);
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const handleEditClick = (staff: any) => {
-        console.log("staff =",staff);
-        
         setEditingStaffId(staff.staff_id);
         setFormData({
             name: staff.name || "",
             email: staff.email || "",
             phone: staff.phone || "",
             role: staff.role || "Hair Stylist",
-            expertise: Array.isArray(staff.expertise) ? staff.expertise : (Array.isArray(staff.expertise) ? staff.expertise : []),
-            experienceYears: staff.experienceYears || staff.experienceYears || "",
-            active: staff.active ?? true
+            gender: staff.gender || "Male",
+            languages: Array.isArray(staff.languages) ? staff.languages : [],
+            expertise: Array.isArray(staff.expertise) ? staff.expertise : [],
+            instagramHandle: staff.instagramHandle || "",
+            experienceYears: staff.experienceYears?.toString() || "",
+            active: staff.active ?? true,
+            // Map metadata back to flat form fields
+            certifications: Array.isArray(staff.metadata?.certifications) ? staff.metadata.certifications : [],
+            specializations: Array.isArray(staff.metadata?.specializations) ? staff.metadata.specializations : [],
+            images: Array.isArray(staff.images) ? staff.images : [],
         });
         setIsEditModalOpen(true);
     };
@@ -104,25 +192,44 @@ const StaffManagement: React.FC = () => {
             const parsedAuth = authData ? JSON.parse(authData) : null;
             const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
 
+            if (!salonId) return;
+
             const payload = {
                 name: formData.name,
                 email: formData.email,
                 phone: formData.phone,
                 role: formData.role,
+                gender: formData.gender,
+                languages: formData.languages,
                 expertise: formData.expertise,
+                instagramHandle: formData.instagramHandle,
                 experienceYears: Number(formData.experienceYears),
-                active: formData.active
+                active: formData.active,
+                images: formData.images, // Include the current images (newly uploaded + existing)
+                metadata: {
+                    certifications: formData.certifications,
+                    specializations: formData.specializations
+                }
             };
 
-            await apiSalonPut(`/salons/${salonId}/update-staff/${editingStaffId}`, payload);
+            await apiSalonPut(`/salons/${salonId}/staff/${editingStaffId}`, payload);
             setIsEditModalOpen(false);
             resetForm();
             fetchStaff();
-        } catch (error) { console.error(error); } finally { setSubmitting(false); }
+        } catch (error) {
+            console.error("Update failed:", error);
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const resetForm = () => {
-        setFormData({ name: "", email: "", phone: "", role: "Hair Stylist", expertise: [], experienceYears: 0, active: true });
+        setFormData({
+            name: "", email: "", phone: "", role: "Hair Stylist",
+            gender: "Male", languages: [], expertise: [],
+            instagramHandle: "", experienceYears: "", active: true,
+            certifications: [], specializations: [], images: []
+        });
         setEditingStaffId(null);
     };
 
@@ -194,13 +301,15 @@ const StaffManagement: React.FC = () => {
             </div>
 
             {(isModalOpen || isEditModalOpen) && (
-                <StaffFormModal 
+                <StaffFormModal
                     title={isEditModalOpen ? "Update Staff" : "Add Staff"}
                     onClose={() => { setIsModalOpen(false); setIsEditModalOpen(false); resetForm(); }}
                     onSubmit={isEditModalOpen ? handleUpdateStaff : handleCreateStaff}
                     formData={formData}
                     setFormData={setFormData}
                     submitting={submitting}
+                    uploading={uploading}
+                    handleFileUpload={handleFileUpload}
                 />
             )}
         </div>
@@ -208,7 +317,7 @@ const StaffManagement: React.FC = () => {
 };
 
 /* --- TAG INPUT MODAL --- */
-const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, submitting }: any) => {
+const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, submitting,uploading, handleFileUpload }: any) => {
     const [newSpec, setNewSpec] = useState("");
 
     const addSpec = () => {
@@ -275,6 +384,87 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, submi
                         </div>
                     </div>
 
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                            Staff Photos {uploading && "(Uploading...)"}
+                        </label>
+
+                        <div className="grid grid-cols-4 gap-2">
+                            {/* Upload Button */}
+                            <label className="aspect-square border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-all">
+                                <Plus size={20} className="text-gray-400" />
+                                <span className="text-[8px] font-bold text-gray-400 uppercase mt-1">Add</span>
+                                <input
+                                    type="file"
+                                    multiple
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={handleFileUpload}
+                                    disabled={uploading}
+                                />
+                            </label>
+
+                            {/* Image Previews */}
+                            {formData.images.map((url: string, index: number) => (
+                                <div key={index} className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 group">
+                                    <img src={url} alt="Staff" className="w-full h-full object-cover" />
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData({
+                                            ...formData,
+                                            images: formData.images.filter((_, i) => i !== index)
+                                        })}
+                                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        <X size={10} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+
+                    {/* Row: Gender & Instagram */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Gender</label>
+                            <select
+                                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none"
+                                value={formData.gender}
+                                onChange={e => setFormData({ ...formData, gender: e.target.value })}
+                            >
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Instagram</label>
+                            <input
+                                placeholder="@handle"
+                                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none"
+                                value={formData.instagramHandle}
+                                onChange={e => setFormData({ ...formData, instagramHandle: e.target.value })}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Languages Builder (Reusing your tag logic) */}
+                    <TagInput
+                        label="Languages Spoken"
+                        placeholder="English, Hindi..."
+                        tags={formData?.languages}
+                        setTags={(tags: string[]) => setFormData({ ...formData, languages: tags })}
+                    />
+
+                    {/* Certifications (Metadata) */}
+                    <TagInput
+                        label="Certifications"
+                        placeholder="e.g. L'Oreal Certified"
+                        tags={formData?.certifications}
+                        setTags={(tags: string[]) => setFormData({ ...formData, certifications: tags })}
+                    />
+
                     <div className="flex items-center justify-between bg-blue-50/50 p-4 rounded-xl border border-blue-100">
                         <div className="flex items-center gap-3">
                             <span className="text-xs font-bold text-blue-600 uppercase tracking-tighter">Experience:</span>
@@ -300,4 +490,34 @@ const StatusBadge = ({ isActive }: { isActive: boolean }) => (
     </span>
 );
 
+const TagInput = ({ label, placeholder, tags, setTags }: any) => {
+    const [val, setVal] = useState("");
+    const add = () => {
+        if (!val.trim() || tags.includes(val.trim())) return;
+        setTags([...tags, val.trim()]);
+        setVal("");
+    };
+    return (
+        <div className="space-y-2">
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{label}</label>
+            <div className="flex gap-2">
+                <input
+                    className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none"
+                    placeholder={placeholder}
+                    value={val}
+                    onChange={e => setVal(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), add())}
+                />
+                <button type="button" onClick={add} className="p-2 bg-blue-50 text-blue-600 rounded-xl">+</button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+                {tags?.map((t: string, i: number) => (
+                    <span key={i} className="flex items-center gap-1 px-2 py-1 bg-slate-800 text-white text-[10px] rounded-lg">
+                        {t} <X size={10} className="cursor-pointer" onClick={() => setTags(tags.filter((_: any, idx: number) => idx !== i))} />
+                    </span>
+                ))}
+            </div>
+        </div>
+    );
+};
 export default StaffManagement;

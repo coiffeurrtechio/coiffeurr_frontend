@@ -92,6 +92,15 @@ const SalonService: React.FC = () => {
 
   const BookAppointment = async (e?: React.MouseEvent<HTMLButtonElement>) => {
     e?.preventDefault();
+    const user = localStorage.getItem("authState");
+    const parsedUser = user ? JSON.parse(user) : null;
+    const isloggedin = parsedUser?.isAuthenticated;
+    console.log("isLoggedIn =", isloggedin);
+    if(!isloggedin){
+      navigate("/login")
+      return;
+    }
+
     if (!selectedDate || !selectedslottime) {
       console.warn("Select a date and slot before confirming.");
       return;
@@ -104,11 +113,11 @@ const SalonService: React.FC = () => {
       const parsedAuth = authData ? JSON.parse(authData) : null;
       const userid = parsedAuth?.user?.user?.id || parsedAuth?.user?.id;
 
-      if (!userid) {
-        console.error("User not authenticated");
-        setbookingrequestsend(false);
-        return;
-      }
+      // if (!userid) {
+      //   console.error("User not authenticated");
+      //   setbookingrequestsend(false);
+      //   return;
+      // }
 
       const data = {
         userId: userid,
@@ -153,8 +162,8 @@ const SalonService: React.FC = () => {
           </button>
           <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">Service Curated</span>
           <div className="flex gap-2">
-            <Heart onClick={() => setIsFavorite(!isFavorite)} className={`w-5 h-5 cursor-pointer ${isFavorite ? "fill-red-500 text-red-500" : "text-slate-300"}`} />
-            <Share2 className="w-5 h-5 text-slate-300 cursor-pointer" />
+            {/* <Heart onClick={() => setIsFavorite(!isFavorite)} className={`w-5 h-5 cursor-pointer ${isFavorite ? "fill-red-500 text-red-500" : "text-slate-300"}`} /> */}
+            {/* <Share2 className="w-5 h-5 text-slate-300 cursor-pointer" /> */}
           </div>
         </div>
       </nav>
@@ -336,7 +345,7 @@ const SalonService: React.FC = () => {
                 onClick={BookAppointment}
                 className="w-full h-16 bg-slate-900 text-white rounded-none disabled:opacity-20 text-xs font-bold uppercase tracking-[0.2em]"
               >
-                Confirm 
+                Confirm
               </Button>
             </CardContent>
           </Card>

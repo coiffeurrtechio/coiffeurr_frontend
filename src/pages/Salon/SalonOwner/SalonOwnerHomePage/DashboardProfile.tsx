@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import {
   Mail, Phone, MapPin, Calendar, Clock,
   Edit3, UserCircle, Star, ShieldCheck, X, Check,
-  Trash2, Plus, Globe, Camera, Image as ImageIcon, 
+  Trash2, Plus, Globe, Camera, Image as ImageIcon,
   CalendarDays, AlignLeft
 } from 'lucide-react';
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -13,6 +13,7 @@ import { Loader } from '../../../../components/ui_components/Loader';
 // Styles
 import "swiper/css";
 import "swiper/css/pagination";
+import { useSalonApi } from '../../../../API/Salon_Owner_API/SalonOwnerAPI';
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -21,6 +22,7 @@ const DashboardProfile: React.FC = () => {
   const [salonData, setSalonData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
 
   const fetchProfile = useCallback(async () => {
     setLoading(true);
@@ -41,11 +43,11 @@ const DashboardProfile: React.FC = () => {
 
   const handleUpdateSalon = async (updatedValues: any) => {
     try {
-      const res = await apiCustomerPut<any>(`/salonsupdate/${salonData.id}`, updatedValues);
+      const res = await apiCustomerPut<any>(`/salons/update/${salonData.id}`, updatedValues);
       if (res.data) {
         setSalonData(res.data);
         setIsEditModalOpen(false);
-        fetchProfile(); 
+        fetchProfile();
       }
     } catch (err) {
       console.error("Update failed:", err);
@@ -62,7 +64,7 @@ const DashboardProfile: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-20 px-4 md:px-8 font-sans">
       <div className="max-w-7xl mx-auto space-y-6 pt-6">
-        
+
         {/* HERO SECTION */}
         <div className="relative h-48 md:h-80 rounded-[2.5rem] overflow-hidden shadow-2xl group border-4 border-white">
           <Swiper modules={[Pagination, Autoplay]} pagination={{ clickable: true }} autoplay={{ delay: 5000 }} className="h-full w-full">
@@ -108,7 +110,7 @@ const DashboardProfile: React.FC = () => {
             </div>
 
             <div className="bg-[#1E4D8C] rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden">
-              <div className="absolute -right-4 -bottom-4 opacity-10 rotate-12"><Star size={120} fill="white"/></div>
+              <div className="absolute -right-4 -bottom-4 opacity-10 rotate-12"><Star size={120} fill="white" /></div>
               <p className="text-[10px] font-black uppercase opacity-60 mb-4">Performance</p>
               <p className="text-4xl font-black">{salonData.ratings?.average || 0}</p>
               <p className="text-xs font-bold opacity-60 mt-1 uppercase tracking-widest">Based on {salonData.ratings?.reviewsCount || 0} Reviews</p>
@@ -126,14 +128,14 @@ const DashboardProfile: React.FC = () => {
                 <TimeBox label="Lunch In" value={salonData.timing?.lunchBreak?.start} />
                 <TimeBox label="Lunch Out" value={salonData.timing?.lunchBreak?.end} />
               </div>
-              
+
               <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100/50 flex flex-wrap gap-2 items-center">
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">Weekly Off:</p>
-                 {salonData.timing?.weeklyOff?.length > 0 ? (
-                    salonData.timing.weeklyOff.map((day: string) => (
-                        <span key={day} className="px-3 py-1 bg-[#1E4D8C] text-white rounded-lg text-[10px] font-black uppercase">{day}</span>
-                    ))
-                 ) : <span className="text-xs font-bold text-slate-400">Open 7 days a week</span>}
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">Weekly Off:</p>
+                {salonData.timing?.weeklyOff?.length > 0 ? (
+                  salonData.timing.weeklyOff.map((day: string) => (
+                    <span key={day} className="px-3 py-1 bg-[#1E4D8C] text-white rounded-lg text-[10px] font-black uppercase">{day}</span>
+                  ))
+                ) : <span className="text-xs font-bold text-slate-400">Open 7 days a week</span>}
               </div>
             </div>
 
@@ -184,6 +186,16 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
 
   const [newExpertise, setNewExpertise] = useState("");
   const [newImageUrl, setNewImageUrl] = useState("");
+  const { apiSalonPost } = useSalonApi();
+
+
+  // Add these new states
+  const [tempLogo, setTempLogo] = useState<{ file: File; preview: string } | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  // For the Gallery, we'll track which index or if it's a "new" upload
+  const [tempGalleryFile, setTempGalleryFile] = useState<{ file: File; preview: string } | null>(null);
+
 
   const handleNestedChange = (path: string, value: any) => {
     const keys = path.split('.');
@@ -214,12 +226,125 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
     }
   };
 
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      // Start reading the file as a Data URL
+      reader.readAsDataURL(file);
+
+      // On success: the result contains the full base64 string (including data:image/png;base64,...)
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          resolve(reader.result);
+        } else {
+          reject(new Error("Failed to convert file to string"));
+        }
+      };
+
+      // On error: reject the promise
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleFile = async (file: File, path: string) => {
+    if (!file) return;
+
+    // 1. Strict Size Validation (2MB)
+    const MAX_SIZE = 2 * 1024 * 1024; // 2MB in bytes
+
+    if (file.size > MAX_SIZE) {
+      alert("File is too large! Please upload an image smaller than 2MB.");
+      // We return here so no state is updated and no conversion happens
+      return;
+    }
+
+    // 2. Optional: Type Validation (Security Best Practice)
+    if (!file.type.startsWith('image/')) {
+      alert("Please upload a valid image file.");
+      return;
+    }
+
+    try {
+      // Only proceeds if validations above passed
+      const base64 = await fileToBase64(file);
+
+      // Update the state with the new image
+      handleNestedChange(path, base64);
+
+      console.log("File processed and state updated successfully.");
+    } catch (err) {
+      console.error("File processing failed:", err);
+    }
+  };
+
+  const EditFileInput = ({ label, onChange }: any) => (
+    <div className="space-y-1.5">
+      <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
+        {label}
+      </label>
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => {
+          if (e.target.files && e.target.files[0]) {
+            onChange(e.target.files[0]);
+          }
+        }}
+        className="w-full text-xs font-bold text-slate-500
+        file:mr-4 file:py-2 file:px-4
+        file:rounded-2xl file:border-0
+        file:text-[10px] file:font-black file:uppercase
+        file:bg-[#1E4D8C] file:text-white
+        hover:file:bg-[#163a6b] transition-all cursor-pointer"
+      />
+    </div>
+  );
+
+
+  const handleCloudUpload = async (file: File, type: 'logo' | 'gallery') => {
+    setIsUploading(true);
+    try {
+      const user = localStorage.getItem("authState");
+      const parsedUser = user ? JSON.parse(user) : null;
+      // Fallback to match your fetchProfile logic
+      const salonId = parsedUser?.user?.user?.salonId || parsedUser?.user?.salonId;
+
+      const uploadData = new FormData();
+      uploadData.append("files", file);
+      uploadData.append("salon_id", salonId);
+
+      const res = await apiSalonPost<any>("/upload/salon-images", uploadData);
+
+      // Accessing the URL from: res.data.data.urls[0] based on your JSON structure
+      const uploadedUrl = res.data?.data?.urls?.[0];
+
+      if (uploadedUrl) {
+        if (type === "logo") {
+          handleNestedChange("branding.logoUrl", uploadedUrl);
+          setTempLogo(null);
+        } else {
+          const currentImages = formData.branding.coverImages || [];
+          handleNestedChange("branding.coverImages", [...currentImages, uploadedUrl]);
+          setTempGalleryFile(null);
+        }
+      }
+    } catch (err) {
+      console.error("Upload failed:", err);
+      alert("Failed to upload image. Please check file size or connection.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={onClose} />
       <div className="relative w-full max-w-5xl bg-white rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
         <div className="p-8 md:p-12 max-h-[90vh] overflow-y-auto custom-scrollbar">
-          
+
           <div className="flex justify-between items-center mb-10">
             <div>
               <h2 className="text-2xl font-black text-slate-900">Edit Salon Profile</h2>
@@ -229,51 +354,126 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            
+
             {/* COLUMN 1 */}
             <div className="space-y-8">
               <section className="space-y-6">
                 <h4 className="text-[10px] font-black uppercase text-[#1E4D8C] tracking-widest border-b pb-2">Business Story & Branding</h4>
-                
+
                 {/* Description Textarea */}
                 <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-400 uppercase ml-1 flex justify-between">
-                        <span>Description</span>
-                        <span className={formData.description.length > 200 ? 'text-orange-500' : ''}>{formData.description.length}/300</span>
-                    </label>
-                    <textarea 
-                        value={formData.description}
-                        onChange={(e) => setFormData({...formData, description: e.target.value.slice(0, 300)})}
-                        rows={4}
-                        className="w-full p-5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 focus:ring-4 focus:ring-blue-100 transition-all outline-none resize-none"
-                        placeholder="Tell clients about your salon..."
-                    />
+                  <label className="text-[10px] font-black text-slate-400 uppercase ml-1 flex justify-between">
+                    <span>Description</span>
+                    <span className={formData.description.length > 200 ? 'text-orange-500' : ''}>{formData.description.length}/300</span>
+                  </label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value.slice(0, 300) })}
+                    rows={4}
+                    className="w-full p-5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 focus:ring-4 focus:ring-blue-100 transition-all outline-none resize-none"
+                    placeholder="Tell clients about your salon..."
+                  />
                 </div>
 
-                <div className="flex items-center gap-6 p-4 bg-slate-50 rounded-[2rem] border border-slate-100">
+                {/* <div className="flex items-center gap-6 p-4 bg-slate-50 rounded-[2rem] border border-slate-100">
                   <div className="w-24 h-24 rounded-2xl bg-white shadow-inner overflow-hidden flex-shrink-0 border-2 border-white">
                     <img src={formData.branding.logoUrl || '/api/placeholder/100/100'} alt="Logo Preview" className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1">
                     <EditInput label="Logo URL" value={formData.branding.logoUrl} onChange={(val: any) => handleNestedChange('branding.logoUrl', val)} />
+                    <EditFileInput label="Upload File" onChange={handleFile, } />
                   </div>
-                </div>
+                </div> */}
 
-                <div className="space-y-4">
-                  <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Cover Gallery</label>
-                  <div className="flex gap-2">
-                    <input value={newImageUrl} onChange={(e) => setNewImageUrl(e.target.value)} placeholder="Paste image URL..." className="flex-1 h-12 px-5 bg-slate-50 border-none rounded-2xl text-sm font-bold outline-none" />
-                    <button onClick={() => { if(newImageUrl.trim()) { handleNestedChange('branding.coverImages', [...formData.branding.coverImages, newImageUrl.trim()]); setNewImageUrl(""); }}} className="w-12 h-12 bg-[#1E4D8C] text-white rounded-2xl flex items-center justify-center"><Plus/></button>
+                <section className="space-y-6">
+                  <h4 className="text-[10px] font-black uppercase text-[#1E4D8C] tracking-widest border-b pb-2">Logo Management</h4>
+                  <div className="flex items-center gap-6 p-4 bg-slate-50 rounded-[2rem] border border-slate-100">
+                    <div className="w-24 h-24 rounded-2xl bg-white shadow-inner overflow-hidden flex-shrink-0 border-2 border-white">
+                      <img
+                        src={tempLogo ? tempLogo.preview : (formData.branding.logoUrl || '/api/placeholder/100/100')}
+                        alt="Logo Preview"
+                        className={`w-full h-full object-cover ${tempLogo ? 'opacity-50' : ''}`}
+                      />
+                    </div>
+
+                    <div className="flex-1 space-y-3">
+                      {!tempLogo ? (
+                        <EditFileInput
+                          label="Select New Logo"
+                          onChange={async (file: File) => {
+                            if (file.size > 2 * 1024 * 1024) return alert("Max 2MB");
+                            const preview = await fileToBase64(file);
+                            setTempLogo({ file, preview });
+                          }}
+                        />
+                      ) : (
+                        <div className="flex gap-2">
+                          <button
+                            disabled={isUploading}
+                            onClick={() => handleCloudUpload(tempLogo.file, 'logo')}
+                            className="flex-1 h-10 bg-green-600 text-white rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2"
+                          >
+                            {isUploading ? 'Uploading...' : <><Check size={14} /> Confirm</>}
+                          </button>
+                          <button onClick={() => setTempLogo(null)} className="px-4 h-10 bg-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase">
+                            Cancel
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
+                </section>
+
+                <section className="space-y-4">
+                  <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Cover Gallery</label>
+
+                  {/* NEW UPLOAD SLOT */}
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200 mb-4">
+                    {!tempGalleryFile ? (
+                      <EditFileInput
+                        label="Add New Gallery Image"
+                        onChange={async (file: File) => {
+                          if (file.size > 2 * 1024 * 1024) return alert("Max 2MB");
+                          const preview = await fileToBase64(file);
+                          setTempGalleryFile({ file, preview });
+                        }}
+                      />
+                    ) : (
+                      <div className="flex items-center gap-4">
+                        <img src={tempGalleryFile.preview} className="w-16 h-16 rounded-xl object-cover" />
+                        <div className="flex-1 flex gap-2">
+                          <button
+                            disabled={isUploading}
+                            onClick={() => handleCloudUpload(tempGalleryFile.file, 'gallery')}
+                            className="flex-1 h-10 bg-[#1E4D8C] text-white rounded-xl text-[10px] font-black uppercase"
+                          >
+                            {isUploading ? 'Uploading...' : 'Upload to Gallery'}
+                          </button>
+                          <button onClick={() => setTempGalleryFile(null)} className="px-4 h-10 bg-slate-200 rounded-xl text-[10px] font-black uppercase">
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* EXISTING IMAGES LIST */}
                   <div className="grid grid-cols-4 gap-3">
                     {formData.branding.coverImages?.map((img: string, idx: number) => (
-                      <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group border border-slate-100">
+                      <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group border border-slate-100 shadow-sm">
                         <img src={img} className="w-full h-full object-cover" alt="Gallery" />
-                        <button onClick={() => handleNestedChange('branding.coverImages', formData.branding.coverImages.filter((_:any, i:number) => i !== idx))} className="absolute inset-0 bg-red-500/80 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><Trash2 size={16} /></button>
+                        <button
+                          onClick={() => handleNestedChange('branding.coverImages', formData.branding.coverImages.filter((_: any, i: number) => i !== idx))}
+                          className="absolute inset-0 bg-red-500/80 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     ))}
                   </div>
-                </div>
+                </section>
+
+                
               </section>
 
               <section className="space-y-4">
@@ -299,41 +499,41 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
                   <EditInput label="Break Start" type="time" value={formData.timing.lunchBreak?.start} onChange={(val: any) => handleNestedChange('timing.lunchBreak.start', val)} />
                   <EditInput label="Break End" type="time" value={formData.timing.lunchBreak?.end} onChange={(val: any) => handleNestedChange('timing.lunchBreak.end', val)} />
                 </div>
-                
+
                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100/50">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Select Weekly Off Days</p>
-                    <div className="flex flex-wrap gap-2">
-                        {DAYS.map(day => (
-                            <button
-                                key={day}
-                                type="button"
-                                onClick={() => toggleWeeklyOff(day)}
-                                className={`px-3 py-2 rounded-xl text-[10px] font-black border transition-all uppercase ${formData.timing.weeklyOff.includes(day) ? "bg-[#1E4D8C] text-white border-[#1E4D8C] shadow-lg shadow-blue-900/10" : "bg-white text-slate-400 border-slate-100 hover:border-slate-300"}`}
-                            >
-                                {day}
-                            </button>
-                        ))}
-                    </div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Select Weekly Off Days</p>
+                  <div className="flex flex-wrap gap-2">
+                    {DAYS.map(day => (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => toggleWeeklyOff(day)}
+                        className={`px-3 py-2 rounded-xl text-[10px] font-black border transition-all uppercase ${formData.timing.weeklyOff.includes(day) ? "bg-[#1E4D8C] text-white border-[#1E4D8C] shadow-lg shadow-blue-900/10" : "bg-white text-slate-400 border-slate-100 hover:border-slate-300"}`}
+                      >
+                        {day}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </section>
 
               <section className="space-y-4">
                 <h4 className="text-[10px] font-black uppercase text-[#1E4D8C] tracking-widest border-b pb-2">Details & Expertise</h4>
                 <div className="grid grid-cols-2 gap-4">
-                   <EditInput label="Salon Type" value={formData.salonType} onChange={(val: any) => setFormData({ ...formData, salonType: val })} />
-                   <EditInput label="Price Range" value={formData.pricing?.priceRange} onChange={(val: any) => handleNestedChange('pricing.priceRange', val)} />
+                  <EditInput label="Salon Type" value={formData.salonType} onChange={(val: any) => setFormData({ ...formData, salonType: val })} />
+                  <EditInput label="Price Range" value={formData.pricing?.priceRange} onChange={(val: any) => handleNestedChange('pricing.priceRange', val)} />
                 </div>
-                
+
                 <div className="space-y-3">
                   <div className="flex gap-2">
                     <input value={newExpertise} onChange={(e) => setNewExpertise(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addTag()} placeholder="Add specialized service..." className="flex-1 h-12 px-5 bg-slate-50 border-none rounded-2xl text-sm font-bold outline-none" />
-                    <button onClick={addTag} className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center"><Plus size={20}/></button>
+                    <button onClick={addTag} className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center"><Plus size={20} /></button>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {formData.expertise?.map((item: string, idx: number) => (
                       <span key={idx} className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-xl text-[10px] font-black border border-slate-200 uppercase tracking-tighter">
                         {item}
-                        <X size={12} className="cursor-pointer hover:text-red-500" onClick={() => setFormData({...formData, expertise: formData.expertise.filter((_:any,i:number)=>i!==idx)})} />
+                        <X size={12} className="cursor-pointer hover:text-red-500" onClick={() => setFormData({ ...formData, expertise: formData.expertise.filter((_: any, i: number) => i !== idx) })} />
                       </span>
                     ))}
                   </div>
@@ -383,6 +583,20 @@ const EditInput = ({ label, value, onChange, type = "text" }: any) => (
       value={value || ""}
       onChange={(e) => onChange(e.target.value)}
       className="w-full h-12 px-5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 focus:ring-4 focus:ring-blue-100 transition-all outline-none"
+    />
+  </div>
+);
+
+const EditFileInput = ({ label, onChange }: any) => (
+  <div className="space-y-1.5">
+    <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
+      {label}
+    </label>
+
+    <input
+      type="file"
+      onChange={(e) => onChange(e.target.files[0])}
+      className="w-full h-12 px-3 py-2 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 focus:ring-4 focus:ring-blue-100 transition-all outline-none file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-blue-100 file:text-blue-700"
     />
   </div>
 );

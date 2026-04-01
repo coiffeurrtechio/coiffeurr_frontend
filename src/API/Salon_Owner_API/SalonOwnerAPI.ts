@@ -142,81 +142,55 @@ export function useSalonApi() {
   };
 
 
-  const apiSalonPost = async <T, B = unknown>(
-    endpoint: string,
-    body: B,
-    options: RequestInit = {}
-  ): Promise<ApiResponse<T>> => {
+ const apiSalonPost = async <T, B = unknown>(
+  endpoint: string,
+  body: B,
+  options: RequestInit = {}
+): Promise<ApiResponse<T>> => {
+  try {
+    const userData = localStorage.getItem("authState");
+
+    if (!userData) return { data: null, error: "No user data", status: 401 };
+
+    const parsed = JSON.parse(userData);
+    const accessToken = parsed?.user?.access_token;
+
+    const isFormData = body instanceof FormData;
+
+    const response = await fetch(`${Config.API_Salon_owner}${endpoint}`, {
+      method: "POST",
+      headers: {
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
+        Authorization: `Bearer ${accessToken}`,
+        ...(options.headers || {}),
+      },
+      body: isFormData ? (body as any) : JSON.stringify(body),
+      credentials: "include",
+      ...options,
+    });
+
+    const status = response.status;
+    let json: any = null;
+
     try {
-      const userData = localStorage.getItem("authState");
-
-      if (!userData) return { data: null, error: "No user data", status: 401 };
-
-      const parsed = JSON.parse(userData);
-      const accessToken = parsed?.user?.access_token;
-
-      const response = await fetch(`${Config.API_Salon_owner}${endpoint}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-          ...(options.headers || {}),
-        },
-        body: JSON.stringify(body),
-        credentials: "include",
-        ...options,
-      });
-
-      const status = response.status;
-      let json: any = null;
-
-      try {
-        json = await response.json();
-      } catch {
-        json = null;
-      }
-
-      // Handle unauthorized → try refresh
-      if (status === 401) {
-        const newToken = await generateAccessToken();
-        if (newToken) {
-          // Retry with refreshed token
-          const retryResponse = await fetch(`${Config.API_BASE_URL}${endpoint}`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              // Authorization: `Bearer ${newToken}`,
-              ...(options.headers || {}),
-            },
-            body: JSON.stringify(body),
-            credentials: "include",
-          });
-
-          const retryJson = await retryResponse.json();
-          return {
-            data: retryJson as T,
-            error: null,
-            status: retryResponse.status,
-          };
-        } else {
-          navigate("/login");
-          return { data: null, error: "Unauthorized", status: 401 };
-        }
-      }
-
-      if (!response.ok) {
-        return {
-          data: null,
-          error: json?.message || `Error: ${response.statusText}`,
-          status,
-        };
-      }
-
-      return { data: json as T, error: null, status };
-    } catch (err: any) {
-      return { data: null, error: err.message || "Network error", status: 500 };
+      json = await response.json();
+    } catch {
+      json = null;
     }
-  };
+
+    if (!response.ok) {
+      return {
+        data: null,
+        error: json?.message || `Error: ${response.statusText}`,
+        status,
+      };
+    }
+
+    return { data: json as T, error: null, status };
+  } catch (err: any) {
+    return { data: null, error: err.message || "Network error", status: 500 };
+  }
+};
 
 
 
@@ -233,6 +207,8 @@ export function useSalonApi() {
 
       const parsed = JSON.parse(userData);
       const accessToken = parsed?.user?.access_token;
+      console.log("accessToken = ", accessToken);
+      
       const response = await fetch(`${Config.API_Salon_owner}${endpoint}`, {
         method: "PUT",
         headers: {
@@ -297,81 +273,86 @@ export function useSalonApi() {
     }
   };
   
-  const apiSalonPatch = async <T, B = unknown>(
-    endpoint: string,
-    body: B,
-    options: RequestInit = {}
-  ): Promise<ApiResponse<T>> => {
+ const apiSalonPatch = async <T, B = unknown>(
+  endpoint: string,
+  body: B,
+  options: RequestInit = {}
+): Promise<ApiResponse<T>> => {
+  try {
+    const userData = localStorage.getItem("authState");
+
+    if (!userData) return { data: null, error: "No user data", status: 401 };
+
+    const parsed = JSON.parse(userData);
+    const accessToken = parsed?.user?.access_token;
+
+    console.log("accessToken = ", accessToken);
+
+    // 🔥 extract headers separately
+    const { headers: customHeaders, ...restOptions } = options || {};
+
+    const response = await fetch(`${Config.API_Salon_owner}${endpoint}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...(customHeaders || {}),
+        Authorization: `Bearer ${accessToken}`, // keep LAST
+      },
+      body: JSON.stringify(body),
+      credentials: "include",
+      ...restOptions, // 🔥 no headers override now
+    });
+
+    const status = response.status;
+    let json: any = null;
+
     try {
-      const userData = localStorage.getItem("authState");
-
-      if (!userData) return { data: null, error: "No user data", status: 401 };
-
-      const parsed = JSON.parse(userData);
-      const accessToken = parsed?.user?.access_token;
-      const response = await fetch(`${Config.API_Salon_owner}${endpoint}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-
-          ...(options.headers || {}),
-        },
-        body: JSON.stringify(body),
-        credentials: "include",
-        ...options,
-      });
-
-      const status = response.status;
-      let json: any = null;
-
-      try {
-        json = await response.json();
-      } catch {
-        json = null;
-      }
-
-      // Handle unauthorized → try refresh
-      if (status === 401) {
-        const newToken = await generateAccessToken();
-        if (newToken) {
-          // Retry with refreshed token
-          const retryResponse = await fetch(`${Config.API_BASE_URL}${endpoint}`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              // Authorization: `Bearer ${newToken}`,
-              ...(options.headers || {}),
-            },
-            body: JSON.stringify(body),
-            credentials: "include",
-          });
-
-          const retryJson = await retryResponse.json();
-          return {
-            data: retryJson as T,
-            error: null,
-            status: retryResponse.status,
-          };
-        } else {
-          navigate("/login");
-          return { data: null, error: "Unauthorized", status: 401 };
-        }
-      }
-
-      if (!response.ok) {
-        return {
-          data: null,
-          error: json?.message || `Error: ${response.statusText}`,
-          status,
-        };
-      }
-
-      return { data: json as T, error: null, status };
-    } catch (err: any) {
-      return { data: null, error: err.message || "Network error", status: 500 };
+      json = await response.json();
+    } catch {
+      json = null;
     }
-  };
+
+    // retry logic...
+    if (status === 401) {
+      const newToken = await generateAccessToken();
+      if (newToken) {
+        const retryResponse = await fetch(`${Config.API_BASE_URL}${endpoint}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(customHeaders || {}),
+            Authorization: `Bearer ${newToken}`, // 🔥 also needed here
+          },
+          body: JSON.stringify(body),
+          credentials: "include",
+        });
+
+        const retryJson = await retryResponse.json();
+        return {
+          data: retryJson as T,
+          error: null,
+          status: retryResponse.status,
+        };
+      } else {
+        navigate("/login");
+        return { data: null, error: "Unauthorized", status: 401 };
+      }
+    }
+
+    if (!response.ok) {
+      return {
+        data: null,
+        error: json?.message || `Error: ${response.statusText}`,
+        status,
+      };
+    }
+
+    return { data: json as T, error: null, status };
+
+  } catch (err: any) {
+    return { data: null, error: err.message || "Network error", status: 500 };
+  }
+};
 
   return { generateAccessToken, apiSalonPost, apiSalonRequest, apiSalonPut , apiSalonPatch};
 }
