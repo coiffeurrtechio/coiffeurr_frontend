@@ -24,8 +24,11 @@ import ServiceManagement from "../pages/Salon/SalonOwner/SalonServicePage/Servic
 import DashboardProfile from "../pages/Salon/SalonOwner/SalonOwnerHomePage/DashboardProfile";
 import UserWishlist from "../pages/UserWishlist";
 import StaffDetailPage from "../pages/Salon/StaffDetailPage";
+import AnalyticsPage from "../pages/Salon/SalonOwner/DashBoardPages.tsx/AnalyticsPage";
+import AttendancePage from "../pages/Salon/SalonOwner/DashBoardPages.tsx/AttendancePage";
 import ForgotPassword from "../pages/ForgotPassword";
 import UniversalVerification from "../pages/UniversalVerification";
+
 
 export interface AppRoute {
   key: number;
@@ -108,6 +111,8 @@ const routes: AppRoute[] = [
       { key: 27, path: "services", Element: ServiceManagement, isProtected: true },
       { key: 28, path: "", Element: DashboardProfile, isProtected: true },
       { key: 29, path: "booking", Element: BookingsPage, isProtected: true },
+      { key: 30, path: "analytics", Element: AnalyticsPage, isProtected: true },
+      { key: 31, path: "attendance", Element: AttendancePage, isProtected: true },
 
       // { key: 26, path: "salonowner", Element: SalonOwnerHomePage, isProtected: true },
     ],
