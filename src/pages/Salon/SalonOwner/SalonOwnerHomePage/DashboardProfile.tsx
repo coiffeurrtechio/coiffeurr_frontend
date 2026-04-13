@@ -3,7 +3,7 @@ import {
   Mail, Phone, MapPin, Calendar, Clock,
   Edit3, UserCircle, Star, ShieldCheck, X, Check,
   Trash2, Plus, Globe, Camera, Image as ImageIcon,
-  CalendarDays, AlignLeft
+  CalendarDays, AlignLeft, Navigation, MapPinned, LocateFixed, Loader2
 } from 'lucide-react';
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
@@ -14,6 +14,7 @@ import { Loader } from '../../../../components/ui_components/Loader';
 import "swiper/css";
 import "swiper/css/pagination";
 import { useSalonApi } from '../../../../API/Salon_Owner_API/SalonOwnerAPI';
+import { DashboardLoader } from '../../../../components/ui_components/DashboardLoader';
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -58,7 +59,7 @@ const DashboardProfile: React.FC = () => {
     fetchProfile();
   }, []);
 
-  if (loading) return <Loader isVisible={true} />;
+  if (loading) return <DashboardLoader isVisible={true} />;
   if (!salonData) return <div className="p-10 text-center font-bold text-gray-400">Profile Not Found</div>;
 
   return (
@@ -88,7 +89,7 @@ const DashboardProfile: React.FC = () => {
                 <h1 className="text-3xl font-black text-slate-900 tracking-tight">{salonData.salonName}</h1>
                 {salonData.isVerified && <ShieldCheck className="text-blue-500 fill-blue-50" size={24} />}
               </div>
-              <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">{salonData.salonType} • {salonData.pricing?.priceRange || 'Luxury'}</p>
+              <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">{salonData.salonType} • {salonData.pricing?.priceRange}</p>
             </div>
           </div>
           <button onClick={() => setIsEditModalOpen(true)} className="mb-2 flex items-center gap-2 bg-[#1E4D8C] text-white px-8 py-4 rounded-2xl font-bold shadow-xl hover:bg-[#163a6b] transition-all active:scale-95">
@@ -142,11 +143,23 @@ const DashboardProfile: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white rounded-[2rem] border border-slate-100 p-8 shadow-sm">
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 font-sans">Location</h3>
-                <p className="text-sm font-bold text-slate-700 leading-relaxed font-sans">
+                <p className="text-sm font-bold text-slate-700 leading-relaxed font-sans mb-4">
                   {salonData.address?.street},<br />
                   {salonData.address?.city}, {salonData.address?.state}<br />
                   {salonData.address?.pincode}
                 </p>
+                
+                {/* DISPLAY COORDINATES */}
+                <div className="pt-4 border-t border-slate-50 grid grid-cols-2 gap-4">
+                    <div>
+                        <p className="text-[9px] font-black text-slate-400 uppercase">Latitude</p>
+                        <p className="text-xs font-bold text-[#1E4D8C] font-mono">{salonData.location?.latitude || '0.0000'}</p>
+                    </div>
+                    <div>
+                        <p className="text-[9px] font-black text-slate-400 uppercase">Longitude</p>
+                        <p className="text-xs font-bold text-[#1E4D8C] font-mono">{salonData.location?.longitude || '0.0000'}</p>
+                    </div>
+                </div>
               </div>
               <div className="bg-white rounded-[2rem] border border-slate-100 p-8 shadow-sm">
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 font-sans">Expertise</h3>
@@ -180,12 +193,13 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
     expertise: initialData?.expertise || [],
     pricing: initialData?.pricing || { priceRange: "" },
     address: initialData?.address || { street: "", city: "", state: "", pincode: "", country: "India" },
+    location: initialData?.location || { latitude: 0, longitude: 0 },
     timing: initialData?.timing || { openingTime: "", closingTime: "", lunchBreak: { start: "", end: "" }, weeklyOff: [] },
     branding: initialData?.branding || { logoUrl: "", coverImages: [] }
   }));
 
   const [newExpertise, setNewExpertise] = useState("");
-  const [newImageUrl, setNewImageUrl] = useState("");
+  const [isLocating, setIsLocating] = useState(false);
   const { apiSalonPost } = useSalonApi();
 
 
@@ -224,6 +238,26 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
       setFormData({ ...formData, expertise: [...formData.expertise, newExpertise.trim()] });
       setNewExpertise("");
     }
+  };
+
+  const handleGetCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        handleNestedChange('location.latitude', position.coords.latitude);
+        handleNestedChange('location.longitude', position.coords.longitude);
+        setIsLocating(false);
+      },
+      (error) => {
+        setIsLocating(false);
+        alert("Unable to retrieve location. Please enter manually.");
+      }
+    );
   };
 
 
@@ -278,30 +312,6 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
       console.error("File processing failed:", err);
     }
   };
-
-  const EditFileInput = ({ label, onChange }: any) => (
-    <div className="space-y-1.5">
-      <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
-        {label}
-      </label>
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => {
-          if (e.target.files && e.target.files[0]) {
-            onChange(e.target.files[0]);
-          }
-        }}
-        className="w-full text-xs font-bold text-slate-500
-        file:mr-4 file:py-2 file:px-4
-        file:rounded-2xl file:border-0
-        file:text-[10px] file:font-black file:uppercase
-        file:bg-[#1E4D8C] file:text-white
-        hover:file:bg-[#163a6b] transition-all cursor-pointer"
-      />
-    </div>
-  );
-
 
   const handleCloudUpload = async (file: File, type: 'logo' | 'gallery') => {
     setIsUploading(true);
@@ -360,7 +370,6 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
               <section className="space-y-6">
                 <h4 className="text-[10px] font-black uppercase text-[#1E4D8C] tracking-widest border-b pb-2">Business Story & Branding</h4>
 
-                {/* Description Textarea */}
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-black text-slate-400 uppercase ml-1 flex justify-between">
                     <span>Description</span>
@@ -374,16 +383,6 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
                     placeholder="Tell clients about your salon..."
                   />
                 </div>
-
-                {/* <div className="flex items-center gap-6 p-4 bg-slate-50 rounded-[2rem] border border-slate-100">
-                  <div className="w-24 h-24 rounded-2xl bg-white shadow-inner overflow-hidden flex-shrink-0 border-2 border-white">
-                    <img src={formData.branding.logoUrl || '/api/placeholder/100/100'} alt="Logo Preview" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="flex-1">
-                    <EditInput label="Logo URL" value={formData.branding.logoUrl} onChange={(val: any) => handleNestedChange('branding.logoUrl', val)} />
-                    <EditFileInput label="Upload File" onChange={handleFile, } />
-                  </div>
-                </div> */}
 
                 <section className="space-y-6">
                   <h4 className="text-[10px] font-black uppercase text-[#1E4D8C] tracking-widest border-b pb-2">Logo Management</h4>
@@ -427,7 +426,6 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
                 <section className="space-y-4">
                   <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Cover Gallery</label>
 
-                  {/* NEW UPLOAD SLOT */}
                   <div className="p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200 mb-4">
                     {!tempGalleryFile ? (
                       <EditFileInput
@@ -457,7 +455,6 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
                     )}
                   </div>
 
-                  {/* EXISTING IMAGES LIST */}
                   <div className="grid grid-cols-4 gap-3">
                     {formData.branding.coverImages?.map((img: string, idx: number) => (
                       <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group border border-slate-100 shadow-sm">
@@ -472,17 +469,33 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
                     ))}
                   </div>
                 </section>
-
-                
               </section>
 
+              {/* LOCATION SECTION ENHANCED */}
               <section className="space-y-4">
-                <h4 className="text-[10px] font-black uppercase text-[#1E4D8C] tracking-widest border-b pb-2">Location</h4>
+                <div className="flex items-center justify-between border-b pb-2">
+                   <h4 className="text-[10px] font-black uppercase text-[#1E4D8C] tracking-widest">Location & Coordinates</h4>
+                   <button 
+                    type="button" 
+                    onClick={handleGetCurrentLocation}
+                    disabled={isLocating}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-[#1E4D8C] rounded-lg text-[9px] font-black uppercase hover:bg-blue-100 transition-all border border-blue-100 shadow-sm"
+                   >
+                     {isLocating ? <Loader2 size={12} className="animate-spin" /> : <LocateFixed size={12} />}
+                     {isLocating ? 'Detecting...' : 'Auto-Detect GPS'}
+                   </button>
+                </div>
+                
                 <EditInput label="Street Address" value={formData.address.street} onChange={(val: any) => handleNestedChange('address.street', val)} />
                 <div className="grid grid-cols-3 gap-3">
                   <EditInput label="City" value={formData.address.city} onChange={(val: any) => handleNestedChange('address.city', val)} />
                   <EditInput label="State" value={formData.address.state} onChange={(val: any) => handleNestedChange('address.state', val)} />
                   <EditInput label="Zip" value={formData.address.pincode} onChange={(val: any) => handleNestedChange('address.pincode', val)} />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50/80 rounded-2xl border border-slate-100 mt-2">
+                    <EditInput label="Latitude" type="number" value={formData.location.latitude} onChange={(val: any) => handleNestedChange('location.latitude', parseFloat(val))} />
+                    <EditInput label="Longitude" type="number" value={formData.location.longitude} onChange={(val: any) => handleNestedChange('location.longitude', parseFloat(val))} />
                 </div>
               </section>
             </div>
@@ -521,17 +534,28 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
                 <h4 className="text-[10px] font-black uppercase text-[#1E4D8C] tracking-widest border-b pb-2">Details & Expertise</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <EditInput label="Salon Type" value={formData.salonType} onChange={(val: any) => setFormData({ ...formData, salonType: val })} />
-                  <EditInput label="Price Range" value={formData.pricing?.priceRange} onChange={(val: any) => handleNestedChange('pricing.priceRange', val)} />
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex gap-2">
-                    <input value={newExpertise} onChange={(e) => setNewExpertise(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addTag()} placeholder="Add specialized service..." className="flex-1 h-12 px-5 bg-slate-50 border-none rounded-2xl text-sm font-bold outline-none" />
-                    <button onClick={addTag} className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center"><Plus size={20} /></button>
+                  <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Specialized Expertise</label>
+                  <div className="flex gap-2 p-1.5 bg-slate-50 rounded-2xl border border-slate-100">
+                    <input 
+                        value={newExpertise} 
+                        onChange={(e) => setNewExpertise(e.target.value)} 
+                        onKeyDown={(e) => e.key === 'Enter' && addTag()} 
+                        placeholder="Add a specialized service..." 
+                        className="flex-1 h-11 px-4 bg-transparent border-none text-sm font-bold outline-none" 
+                    />
+                    <button 
+                        onClick={addTag} 
+                        className="bg-slate-900 text-white px-5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-slate-800 transition-all active:scale-95"
+                    >
+                        <Plus size={16} /> Add Skill
+                    </button>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {formData.expertise?.map((item: string, idx: number) => (
-                      <span key={idx} className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-xl text-[10px] font-black border border-slate-200 uppercase tracking-tighter">
+                      <span key={idx} className="flex items-center gap-2 px-3 py-1.5 bg-white text-[#1E4D8C] rounded-xl text-[10px] font-black border border-blue-100 shadow-sm uppercase tracking-tighter">
                         {item}
                         <X size={12} className="cursor-pointer hover:text-red-500" onClick={() => setFormData({ ...formData, expertise: formData.expertise.filter((_: any, i: number) => i !== idx) })} />
                       </span>
@@ -543,12 +567,12 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
           </div>
 
           <div className="mt-12 pt-8 border-t border-slate-50 flex flex-col md:flex-row gap-4">
-            <button onClick={onClose} className="flex-1 h-14 rounded-2xl bg-slate-50 text-slate-400 font-bold hover:bg-slate-100 transition-all font-sans">Discard</button>
+            <button onClick={onClose} className="flex-1 h-14 rounded-2xl bg-slate-50 text-slate-400 font-bold hover:bg-slate-100 transition-all font-sans uppercase text-xs tracking-widest">Discard Changes</button>
             <button
               onClick={() => onUpdate(formData)}
-              className="flex-[2] h-14 rounded-2xl bg-[#1E4D8C] text-white font-bold shadow-xl shadow-blue-900/20 hover:bg-[#163a6b] flex items-center justify-center gap-2 font-sans"
+              className="flex-[2] h-14 rounded-2xl bg-[#1E4D8C] text-white font-bold shadow-xl shadow-blue-900/20 hover:bg-[#163a6b] flex items-center justify-center gap-2 font-sans uppercase text-xs tracking-widest"
             >
-              <Check size={18} /> Update Profile
+              <Check size={18} /> Update Salon Profile
             </button>
           </div>
         </div>
@@ -581,6 +605,7 @@ const EditInput = ({ label, value, onChange, type = "text" }: any) => (
     <input
       type={type}
       value={value || ""}
+      step="any"
       onChange={(e) => onChange(e.target.value)}
       className="w-full h-12 px-5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 focus:ring-4 focus:ring-blue-100 transition-all outline-none"
     />
@@ -595,7 +620,7 @@ const EditFileInput = ({ label, onChange }: any) => (
 
     <input
       type="file"
-      onChange={(e) => onChange(e.target.files[0])}
+      onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)}
       className="w-full h-12 px-3 py-2 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 focus:ring-4 focus:ring-blue-100 transition-all outline-none file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-blue-100 file:text-blue-700"
     />
   </div>

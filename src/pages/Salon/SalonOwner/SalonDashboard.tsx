@@ -10,6 +10,7 @@ import {
 import { Button } from "../../../components/ui_components/button";
 import { useDispatch } from "react-redux";
 import { logoutUser } from "../../../API/APIs";
+import Sponser_Footer from "../../../components/Sponser_Footer";
 
 interface SidebarProps {
   open: boolean;
@@ -60,14 +61,14 @@ function SalonDashboard({ open, setOpen }: SidebarProps) {
           {/* LOGO SECTION */}
           <div
             className="p-6 border-b border-white/10 flex cursor-pointer items-center gap-4 flex-shrink-0 group"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/dashboard")}
           >
-            <div className="w-10 h-10 bg-white rounded-xl p-1.5 transition-transform group-hover:scale-105">
-              <img src="/dummy_logo.png" alt="salon" className="w-full h-full object-contain" />
+            <div className="w-16 h-16 bg-white rounded-xl p-1.5 transition-transform group-hover:scale-105">
+              <img src="/Coiffeurr_Logo.png" alt="salon" className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col">
               <h1 className="font-black text-xl tracking-tight">Coiffeurr</h1>
-              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Admin Panel</span>
+              {/* <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Admin Panel</span> */}
             </div>
           </div>
 
@@ -106,7 +107,10 @@ function SalonDashboard({ open, setOpen }: SidebarProps) {
                 </Button>
               );
             })}
+
           </nav>
+                      {/* <Sponser_Footer/> */}
+
 
           {/* FOOTER / LOGOUT SECTION */}
           <div className="p-4 border-t border-white/10">
@@ -121,6 +125,7 @@ function SalonDashboard({ open, setOpen }: SidebarProps) {
           </div>
         </div>
       </aside>
+
     </>
   );
 }

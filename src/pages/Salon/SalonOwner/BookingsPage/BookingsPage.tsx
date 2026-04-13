@@ -1,90 +1,138 @@
-import React, { useEffect, useState } from 'react';
-
+import React, { useEffect, useState, useCallback } from 'react';
 import {
-  Search,
-  Filter,
-  Calendar,
-  Clock,
-  CheckCircle,
-  XCircle,
-  X,
-  CreditCard,
-  CheckCircle2,
-  SlidersHorizontal, Trash2
+  Search, Calendar, Clock, CheckCircle, XCircle, X,
+  CreditCard, CheckCircle2, User, MessageSquare, Filter, ChevronDown, RefreshCcw
 } from 'lucide-react';
-import { useApi } from '../../../../API/SalonsAPIs/ALLSalonAPI';
 import { Loader } from '../../../../components/ui_components/Loader';
 import { useSalonApi } from '../../../../API/Salon_Owner_API/SalonOwnerAPI';
 import { logoutUser } from '../../../../API/APIs';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { DashboardLoader } from '../../../../components/ui_components/DashboardLoader';
 
 // --- Types ---
-interface BookingSlot {
-  date: string;
-  time: string;
-  duration: number;
-}
-
 interface BookingResponse {
-  userId: string;
-  salonId: string;
-  staffId: string;
-  service_id: string;
-  slot: BookingSlot;
+  id: string;
   price: number;
   status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
-  validTill: string;
-  metadata: any;
-  id: string;
+  note: string | null;
+  slot: { date: string; time: string };
+  userData: { username: string; role: string };
+  serviceData: { serviceName: string; imageUrl: string; durationMinutes: number };
+}
+
+interface FilterOptions {
+  services: { id: string, name: string, price: number }[];
+  staff: { id: string, name: string }[];
+  statuses: string[];
+  date_range: { min_date: string, max_date: string };
+  price_range: { min_price: number, max_price: number };
 }
 
 const BookingsPage: React.FC = () => {
-  const { apiRequest } = useApi();
   const { apiSalonPatch, apiSalonRequest } = useSalonApi();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  // Data States
   const [bookings, setBookings] = useState<BookingResponse[]>([]);
+  const [filterMeta, setFilterMeta] = useState<FilterOptions | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // UI States
   const [selectedBooking, setSelectedBooking] = useState<BookingResponse | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Notification State for Success/Error feedback
+  const [statusNote, setStatusNote] = useState<string>("");
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
-  const [filters, setFilters] = useState({
+  // --- FILTER STATES ---
+  const initialFilters = {
     search: '',
     status: 'ALL',
-    service: 'ALL',
     date: '',
-    maxPrice: 5000 // Default max
-  });
-
-
-  // Extract unique services from bookings for the filter dropdown
-  const uniqueServices = Array.from(new Set(bookings.map(b => b.serviceData?.serviceName))).filter(Boolean);
-
-  // --- FILTER LOGIC ---
-  const filteredBookings = bookings.filter((booking) => {
-    const matchesSearch = booking.userData?.username?.toLowerCase().includes(filters.search.toLowerCase()) ||
-      booking.id.toLowerCase().includes(filters.search.toLowerCase());
-    const matchesStatus = filters.status === 'ALL' || booking.status === filters.status;
-    const matchesService = filters.service === 'ALL' || booking.serviceData?.serviceName === filters.service;
-    const matchesDate = !filters.date || booking.slot.date === filters.date;
-    const matchesPrice = booking.price <= filters.maxPrice;
-
-    return matchesSearch && matchesStatus && matchesService && matchesDate && matchesPrice;
-  });
-
-  const resetFilters = () => {
-    setFilters({ search: '', status: 'ALL', service: 'ALL', date: '', maxPrice: 5000 });
+    from_date: '',
+    to_date: '',
+    date_preset: '',
+    min_price: '',
+    max_price: '',
+    global_search: ''
   };
 
+  const [draftFilters, setDraftFilters] = useState(initialFilters);
+  const [appliedFilters, setAppliedFilters] = useState(initialFilters);
+
+  // --- AUTH HELPERS ---
+  const getAuthData = () => {
+    const authData = localStorage.getItem("authState");
+    return authData ? JSON.parse(authData) : null;
+  };
+
+  const getSalonId = () => {
+    const parsedAuth = getAuthData();
+    return parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
+  };
+
+  const getUserId = () => {
+    const parsedAuth = getAuthData();
+    // Adjust based on your auth state structure
+    return parsedAuth?.user?.user?.id || parsedAuth?.user?.id || parsedAuth?.user?._id;
+  };
+
+  // 1. Fetch Filter Meta Data
+  const fetchFilterOptions = async () => {
+    const salonId = getSalonId();
+    const userId = getUserId();
+    if (!salonId) return;
+    try {
+      const res = await apiSalonRequest<FilterOptions>(
+        `/bookings/salon/${salonId}/filters`,
+        { headers: { "X-User-Id": userId } }
+      );
+      if (res.data) setFilterMeta(res.data);
+    } catch (err) { console.error("Filter fetch error", err); }
+  };
+
+  // 2. Fetch Bookings (Server-side Filtering)
+  const fetchBookings = useCallback(async (filtersToUse = appliedFilters) => {
+    const salonId = getSalonId();
+    const userId = getUserId();
+
+    if (!salonId) {
+      dispatch(logoutUser());
+      navigate("/login");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (filtersToUse.status !== 'ALL') params.append('status', filtersToUse.status);
+      if (filtersToUse.search) params.append('search', filtersToUse.search);
+      if (filtersToUse.date) params.append('date', filtersToUse.date);
+      if (filtersToUse.from_date) params.append('from_date', filtersToUse.from_date);
+      if (filtersToUse.to_date) params.append('to_date', filtersToUse.to_date);
+      if (filtersToUse.date_preset) params.append('date_preset', filtersToUse.date_preset);
+      if (filtersToUse.min_price) params.append('min_price', filtersToUse.min_price);
+      if (filtersToUse.max_price) params.append('max_price', filtersToUse.max_price);
+      if (filtersToUse.global_search) params.append('global_search', filtersToUse.global_search);
+
+      const res = await apiSalonRequest<BookingResponse[]>(
+        `/bookings/salon/${salonId}?${params.toString()}`,
+        { headers: { "X-User-Id": userId } }
+      );
+      if (res.data) setBookings(res.data);
+    } catch (error) {
+      console.error("Fetch bookings error:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [apiSalonRequest, dispatch, navigate, appliedFilters]);
+
   useEffect(() => {
+    fetchFilterOptions();
     fetchBookings();
   }, []);
 
-  // Auto-hide notification
   useEffect(() => {
     if (notification) {
       const timer = setTimeout(() => setNotification(null), 3000);
@@ -92,57 +140,37 @@ const BookingsPage: React.FC = () => {
     }
   }, [notification]);
 
-  const fetchBookings = async () => {
-    setLoading(true);
-    try {
-      const authData = localStorage.getItem("authState");
-      const parsedAuth = authData ? JSON.parse(authData) : null;
-      const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
-      if (!salonId) {
-        dispatch(logoutUser());
-        // Then redirect
-        navigate("/login");
-        console.log("salonid not found");
-        return;
+  // --- BUTTON HANDLERS ---
+  const handleApplyFilters = () => {
+    setAppliedFilters(draftFilters);
+    fetchBookings(draftFilters);
+  };
 
-      }
-
-      const res = await apiSalonRequest<BookingResponse[]>(`/bookings/salon/${salonId}`);
-      if (res.data) {
-        setBookings(res.data);
-      }
-    } catch (error) {
-      console.error("Fetch bookings error:", error);
-    } finally {
-      setLoading(false);
-    }
+  const handleResetFilters = () => {
+    setDraftFilters(initialFilters);
+    setAppliedFilters(initialFilters);
+    fetchBookings(initialFilters);
   };
 
   const updateBookingStatus = async (bookingId: string, newStatus: string) => {
+    const userId = getUserId();
     setLoading(true);
     try {
-      const authData = localStorage.getItem("authState");
-      const parsedAuth = authData ? JSON.parse(authData) : null;
-      // Get the logged-in User ID (Salon Owner) for the header
-      const salonOwnerId = parsedAuth?.user?.user?.id;
-
+      const encodedNote = encodeURIComponent(statusNote.trim() || `Updated to ${newStatus}`);
+      // Assuming apiSalonPatch signature: (url, body, options)
       const res = await apiSalonPatch(
-        `/bookings/${bookingId}/status?status=${newStatus}&note=Customer`,
-        {}, // Body is empty as per your requirement
-        {
-          headers: {
-            "X-User-Id": salonOwnerId, // Salon Owner ID in header
-          }
-        }
+        `/bookings/${bookingId}/status?status=${newStatus}&note=${encodedNote}`, 
+        {}, 
+        { headers: { "X-User-Id": userId } }
       );
-
+      
       if (res.error) throw new Error(res.error);
-
-      setNotification({ type: 'success', message: `Booking ${newStatus.toLowerCase()} successfully!` });
+      setNotification({ type: 'success', message: `Booking marked as ${newStatus}` });
       setIsModalOpen(false);
+      setStatusNote("");
       fetchBookings();
     } catch (error: any) {
-      setNotification({ type: 'error', message: error.message || "Failed to update status" });
+      setNotification({ type: 'error', message: error.message || "Update failed" });
     } finally {
       setLoading(false);
     }
@@ -150,170 +178,170 @@ const BookingsPage: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'CONFIRMED': return 'bg-green-50 text-green-600 border-green-100';
+      case 'CONFIRMED': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
       case 'COMPLETED': return 'bg-blue-50 text-blue-600 border-blue-100';
       case 'CANCELLED': return 'bg-red-50 text-red-600 border-red-100';
-      case 'PENDING': return 'bg-orange-50 text-orange-600 border-orange-100';
+      case 'PENDING': return 'bg-amber-50 text-amber-600 border-amber-100';
       default: return 'bg-gray-50 text-gray-500 border-gray-100';
     }
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-6 animate-in fade-in duration-500 relative">
-      <Loader isVisible={loading} />
+    <div className="p-4 md:p-6 space-y-6 animate-in fade-in duration-500">
+      <DashboardLoader isVisible={loading} />
 
-      {/* --- Notification Toast --- */}
       {notification && (
-        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[60] px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4 duration-300 ${notification.type === 'success' ? 'bg-white border-green-500 text-green-600' : 'bg-white border-red-500 text-red-600'
-          } border-l-4`}>
-          {notification.type === 'success' ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
-          <span className="text-sm font-bold">{notification.message}</span>
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 bg-white border-l-4 border-[#1E4D8C] animate-in slide-in-from-top-4">
+          <CheckCircle2 className="text-[#1E4D8C]" size={20} />
+          <span className="text-sm font-bold text-gray-800">{notification.message}</span>
         </div>
       )}
 
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800 tracking-tight">Booking Management</h1>
+      <div className="flex justify-between items-center px-2">
+        <div>
+          <h1 className="text-2xl font-black text-gray-800 tracking-tight">Appointment Deck</h1>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Manage your salon schedule</p>
+        </div>
+        <button onClick={handleResetFilters} className="p-2 text-gray-400 hover:text-red-500 transition-colors flex items-center gap-2 text-[10px] font-black uppercase">
+          <RefreshCcw size={14} /> Reset
+        </button>
       </div>
 
-      {/* --- ADVANCED FILTERS BAR --- */}
-      <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-
-          {/* Search */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Search Customer/Ref</label>
+      {/* --- SERVER SIDE FILTERS PANEL --- */}
+      <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Search Everywhere</label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                value={filters.search}
-                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                placeholder="Search..."
-                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-100"
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input 
+                type="text" 
+                value={draftFilters.global_search} 
+                onChange={(e) => setDraftFilters({ ...draftFilters, global_search: e.target.value })} 
+                placeholder="Service, ID, note..." 
+                className="w-full pl-11 h-12 bg-gray-50 border-none rounded-2xl text-sm focus:ring-4 focus:ring-blue-50 transition-all" 
               />
             </div>
           </div>
 
-          {/* Status Filter */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Status</label>
-            <select
-              value={filters.status}
-              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-              className="w-full px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm outline-none cursor-pointer"
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Status</label>
+            <select 
+              value={draftFilters.status} 
+              onChange={(e) => setDraftFilters({ ...draftFilters, status: e.target.value })} 
+              className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none cursor-pointer focus:ring-4 focus:ring-blue-50 appearance-none"
             >
-              <option value="ALL">All Statuses</option>
-              <option value="PENDING">Pending</option>
-              <option value="CONFIRMED">Confirmed</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="CANCELLED">Cancelled</option>
+              <option value="ALL">All Status</option>
+              {filterMeta?.statuses.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
 
-          {/* Service Filter */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Service</label>
-            <select
-              value={filters.service}
-              onChange={(e) => setFilters({ ...filters, service: e.target.value })}
-              className="w-full px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm outline-none cursor-pointer"
-            >
-              <option value="ALL">All Services</option>
-              {uniqueServices.map(name => <option key={name} value={name}>{name}</option>)}
-            </select>
-          </div>
-
-          {/* Date Filter */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Appointment Date</label>
-            <input
-              type="date"
-              value={filters.date}
-              onChange={(e) => setFilters({ ...filters, date: e.target.value })}
-              className="w-full px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm outline-none"
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Date Range (From)</label>
+            <input 
+              type="date" 
+              min={filterMeta?.date_range.min_date}
+              max={filterMeta?.date_range.max_date}
+              value={draftFilters.from_date} 
+              onChange={(e) => setDraftFilters({ ...draftFilters, from_date: e.target.value, date: '', date_preset: '' })} 
+              className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-4 focus:ring-blue-50" 
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Date Range (To)</label>
+            <input 
+              type="date" 
+              min={filterMeta?.date_range.min_date}
+              max={filterMeta?.date_range.max_date}
+              value={draftFilters.to_date} 
+              onChange={(e) => setDraftFilters({ ...draftFilters, to_date: e.target.value, date: '', date_preset: '' })} 
+              className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-4 focus:ring-blue-50" 
+            />
+          </div>
+
+          <div className="flex items-end">
+            <button 
+              onClick={handleApplyFilters}
+              className="h-12 w-full bg-[#1E4D8C] hover:bg-[#153a6b] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2"
+            >
+              <Filter size={14} /> Apply Filters
+            </button>
           </div>
         </div>
 
-        <div className="pt-4 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center gap-6">
-          {/* Price Range */}
-          <div className="w-full md:w-1/2 space-y-2">
-            <div className="flex justify-between">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Max Price: ₹{filters.maxPrice}</label>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="10000"
-              step="100"
-              value={filters.maxPrice}
-              onChange={(e) => setFilters({ ...filters, maxPrice: Number(e.target.value) })}
-              className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-[#1E4D8C]"
-            />
-          </div>
-
-          <button
-            onClick={resetFilters}
-            className="flex items-center gap-2 text-xs font-bold text-red-500 hover:bg-red-50 px-4 py-2 rounded-xl transition-colors"
-          >
-            <Trash2 size={14} /> Reset Filters
-          </button>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-gray-50">
+           <div className="space-y-2">
+             <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Quick Date Preset</label>
+             <select 
+               value={draftFilters.date_preset} 
+               onChange={(e) => setDraftFilters({ ...draftFilters, date_preset: e.target.value, from_date: '', to_date: '', date: '' })} 
+               className="w-full h-12 px-4 bg-blue-50/50 text-[#1E4D8C] border-none rounded-2xl text-sm font-bold outline-none"
+             >
+               <option value="">No Preset</option>
+               <option value="today">Today</option>
+               <option value="yesterday">Yesterday</option>
+               <option value="this_week">This Week</option>
+               <option value="last_month">Last Month</option>
+             </select>
+           </div>
+           <div className="space-y-2">
+             <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Min Price (₹)</label>
+             <input type="number" value={draftFilters.min_price} onChange={(e) => setDraftFilters({ ...draftFilters, min_price: e.target.value })} className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm" />
+           </div>
+           <div className="space-y-2">
+             <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Max Price (₹)</label>
+             <input type="number" value={draftFilters.max_price} onChange={(e) => setDraftFilters({ ...draftFilters, max_price: e.target.value })} className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm" />
+           </div>
         </div>
       </div>
 
-      {/* DATA TABLE */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      {/* TABLE */}
+      <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50/50">
-              <tr className="text-[11px] uppercase text-gray-400 font-bold tracking-widest">
-                <th className="px-6 py-4">Date & Time</th>
-                <th className="px-6 py-4">Customer</th>
-                <th className="px-6 py-4">Service Details</th>
-                <th className="px-6 py-4 text-center">Status</th>
+              <tr className="text-[10px] uppercase text-gray-400 font-black tracking-[0.2em]">
+                <th className="px-8 py-5">Schedule</th>
+                <th className="px-8 py-5">Customer</th>
+                <th className="px-8 py-5">Service Rendered</th>
+                <th className="px-8 py-5 text-center">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {filteredBookings.length > 0 ?
-
-                (filteredBookings.map((row) => (
-                  <tr
-                    key={row.id}
-                    onClick={() => {
-                      console.log("row =", row);
-
-                      setSelectedBooking(row);
-                      setIsModalOpen(true);
-                    }}
-                    className="cursor-pointer hover:bg-gray-50/50 transition-colors"
-                  >
-                    <td className="px-6 py-5">
-                      <p className="text-sm font-bold text-gray-800">{row.slot.date}</p>
-                      <p className="text-[10px] text-gray-400 font-medium flex items-center gap-1 mt-0.5">
-                        <Clock size={10} /> {row.slot.time} ({row.slot.duration}m)
+              {bookings.length > 0 ? (
+                bookings.map((row) => (
+                  <tr key={row.id} onClick={() => { setSelectedBooking(row); setStatusNote(""); setIsModalOpen(true); }} className="group cursor-pointer hover:bg-blue-50/30 transition-all">
+                    <td className="px-8 py-6">
+                      <p className="text-sm font-black text-gray-800">{row.slot.date}</p>
+                      <p className="text-[11px] text-gray-400 font-bold flex items-center gap-1.5 mt-1">
+                        <Clock size={12} className="text-[#1E4D8C]" /> {row.slot.time}
                       </p>
                     </td>
-                    <td className="px-6 py-5">
-                      <p className="text-xs font-mono text-gray-500 truncate w-32">{row?.userData?.username}</p>
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[#1E4D8C] font-black text-[10px] uppercase">
+                          {row.userData?.username?.charAt(0)}
+                        </div>
+                        <p className="text-sm font-bold text-gray-700">{row.userData?.username}</p>
+                      </div>
                     </td>
-                    <td className="px-6 py-5">
-                      <p className="text-sm font-bold text-gray-700">{row.serviceData?.serviceName}</p>
-                      <p className="text-[10px] text-[#1E4D8C] font-bold">₹{row.price}</p>
+                    <td className="px-8 py-6">
+                      <p className="text-sm font-bold text-gray-800">{row.serviceData?.serviceName}</p>
+                      <p className="text-[11px] text-[#1E4D8C] font-black mt-1 uppercase tracking-tighter">₹{row.price}</p>
                     </td>
-                    <td className="px-6 py-5 text-center">
-                      <span className={`px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase border ${getStatusColor(row.status)}`}>
+                    <td className="px-8 py-6 text-center">
+                      <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase border ${getStatusColor(row.status)}`}>
                         {row.status}
                       </span>
                     </td>
                   </tr>
-                )))
-                :
-                (<tr>
-                  <td colSpan={4} className="px-6 py-20 text-center text-gray-400">
-                    <p className="text-sm">No bookings found matching your filters.</p>
-                  </td>
-                </tr>)
-              }
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={4} className="px-8 py-32 text-center text-gray-400 italic">No bookings found matching filters.</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -321,110 +349,68 @@ const BookingsPage: React.FC = () => {
 
       {/* DETAIL MODAL */}
       {isModalOpen && selectedBooking && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in duration-200">
-
-            {/* Header with Service Image Background */}
-            <div className="relative h-32 bg-gray-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300">
+            <div className="relative h-40 bg-[#1E4D8C]">
               {selectedBooking.serviceData?.imageUrl && (
-                <img
-                  src={selectedBooking.serviceData.imageUrl}
-                  alt="service"
-                  className="w-full h-full object-cover opacity-60"
-                />
+                <img src={selectedBooking.serviceData.imageUrl} alt="service" className="w-full h-full object-cover opacity-40" />
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-white via-white/20 to-transparent" />
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur-md hover:bg-white rounded-full transition-colors text-gray-600 shadow-sm"
-              >
-                <X size={20} />
-              </button>
+              <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent" />
+              <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 p-2 bg-white/20 hover:bg-white/40 rounded-full text-white backdrop-blur-md transition-all"><X size={20} /></button>
             </div>
 
-            <div className="px-6 pb-8 -mt-12 relative z-10">
-              {/* Title Section */}
-              <div className="mb-6">
-                <h3 className="text-2xl font-black text-gray-800 tracking-tight">
-                  {selectedBooking.serviceData?.serviceName}
-                </h3>
-                <p className="text-[10px] font-mono text-gray-400 uppercase tracking-[0.2em]">
-                  REF: {selectedBooking.id}
-                </p>
+            <div className="px-8 pb-10 -mt-10 relative z-10 space-y-6">
+              <div>
+                <span className="bg-[#1E4D8C] text-white text-[9px] px-3 py-1 rounded-full uppercase tracking-widest mb-3 inline-block font-black">Booking Detail</span>
+                <h3 className="text-3xl font-black text-gray-800 tracking-tight">{selectedBooking.serviceData?.serviceName}</h3>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-1 flex items-center gap-2">ID: {selectedBooking.id}</p>
               </div>
 
-              {/* Quick Info Grid */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase mb-2 flex items-center gap-1.5">
-                    <Calendar size={12} className="text-[#1E4D8C]" /> Appointment
-                  </p>
-                  <p className="text-sm font-bold text-gray-800">{selectedBooking.slot.date}</p>
-                  <p className="text-xs text-gray-500 font-medium">{selectedBooking.slot.time}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 p-5 rounded-3xl border border-gray-100 shadow-sm">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2"><Calendar size={14} className="text-[#1E4D8C]" /> Schedule</p>
+                  <p className="text-sm font-black text-gray-800">{selectedBooking.slot.date}</p>
+                  <p className="text-xs text-gray-500 font-bold mt-1">{selectedBooking.slot.time}</p>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase mb-2 flex items-center gap-1.5">
-                    <CreditCard size={12} className="text-[#1E4D8C]" /> Payment
-                  </p>
-                  <p className="text-sm font-black text-[#1E4D8C]">₹{selectedBooking.price}</p>
-                  <p className={`text-[9px] font-bold uppercase ${getStatusColor(selectedBooking.status).split(' ')[1]}`}>
-                    {selectedBooking.status}
-                  </p>
+                <div className="bg-gray-50 p-5 rounded-3xl border border-gray-100 shadow-sm">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2"><User size={14} className="text-[#1E4D8C]" /> Customer</p>
+                  <p className="text-sm font-black text-gray-800">{selectedBooking.userData?.username}</p>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">₹{selectedBooking.price}</p>
                 </div>
               </div>
 
-              {/* Details List */}
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase">Customer</span>
-                  <span className="text-xs font-bold text-gray-700">{selectedBooking.userData?.username}</span>
+              {(selectedBooking.status === 'PENDING' || selectedBooking.status === 'CONFIRMED') && (
+                <div className="space-y-2 animate-in slide-in-from-bottom-2">
+                  <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                    <MessageSquare size={12} className="text-[#1E4D8C]" /> Internal Remark / Note
+                  </label>
+                  <textarea
+                    value={statusNote}
+                    onChange={(e) => setStatusNote(e.target.value)}
+                    placeholder="Customer confirmed via phone..."
+                    className="w-full p-4 bg-gray-50 border-none rounded-2xl text-sm font-bold text-slate-900 focus:ring-4 focus:ring-blue-50 transition-all outline-none resize-none h-24"
+                  />
                 </div>
+              )}
 
-                <div className="flex justify-between items-center p-3 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase">Duration</span>
-                  <span className="text-xs font-bold text-gray-700">{selectedBooking.serviceData?.durationMinutes} mins</span>
+              {selectedBooking.note && (
+                <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                  <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1">Last Remark</p>
+                  <p className="text-xs text-amber-800 font-bold italic">"{selectedBooking.note}"</p>
                 </div>
+              )}
 
-                {selectedBooking.note && (
-                  <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100">
-                    <span className="text-[10px] font-bold text-blue-400 uppercase block mb-1">Customer Note</span>
-                    <p className="text-xs text-blue-700 italic">"{selectedBooking.note}"</p>
-                  </div>
-                )}
-
-                <div className="p-3">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Description</span>
-                  <p className="text-xs text-gray-500 leading-relaxed line-clamp-3">
-                    {selectedBooking.serviceData?.description}
-                  </p>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="mt-8">
+              <div className="pt-4">
                 {selectedBooking.status === 'PENDING' && (
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => updateBookingStatus(selectedBooking.id, 'CANCELLED')}
-                      className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-red-50 text-red-600 rounded-2xl text-xs font-bold transition-all hover:bg-red-100"
-                    >
-                      <XCircle size={16} /> Reject
-                    </button>
-                    <button
-                      onClick={() => updateBookingStatus(selectedBooking.id, 'CONFIRMED')}
-                      className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-[#1E4D8C] text-white rounded-2xl text-xs font-bold transition-all hover:bg-[#153a6b] shadow-lg shadow-blue-900/20"
-                    >
-                      <CheckCircle size={16} /> Confirm
-                    </button>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button onClick={() => updateBookingStatus(selectedBooking.id, 'CANCELLED')} className="h-14 bg-red-50 text-red-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition-all active:scale-95">Reject</button>
+                    <button onClick={() => updateBookingStatus(selectedBooking.id, 'CONFIRMED')} className="h-14 bg-[#1E4D8C] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-900/20 active:scale-95 transition-all flex items-center justify-center gap-2">Confirm Booking</button>
                   </div>
                 )}
 
                 {selectedBooking.status === 'CONFIRMED' && (
-                  <button
-                    onClick={() => updateBookingStatus(selectedBooking.id, 'COMPLETED')}
-                    className="w-full flex items-center justify-center gap-2 py-4 bg-green-600 text-white rounded-2xl text-xs font-bold transition-all hover:bg-green-700 shadow-lg shadow-green-900/20"
-                  >
-                    <CheckCircle size={16} /> Mark as Completed
+                  <button onClick={() => updateBookingStatus(selectedBooking.id, 'COMPLETED')} className="w-full h-16 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-emerald-900/20 active:scale-95 transition-all flex items-center justify-center gap-3">
+                    <CheckCircle size={18} /> Mark as Completed
                   </button>
                 )}
               </div>

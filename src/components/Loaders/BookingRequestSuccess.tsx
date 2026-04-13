@@ -27,7 +27,7 @@ export function BookingRequestSuccess({
 
         {/* Success Message */}
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-foreground mb-2">Booking Confirmed!</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Booking Request Send Successfully!</h2>
           <p className="text-sm text-muted-foreground">
             Your appointment request has been successfully sent to {salonName}
           </p>
