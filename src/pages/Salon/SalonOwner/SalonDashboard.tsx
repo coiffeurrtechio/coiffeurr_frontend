@@ -5,7 +5,9 @@ import {
   Users,
   Notebook,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  BarChart3,
+  UserCheck
 } from "lucide-react";
 import { Button } from "../../../components/ui_components/button";
 import { useDispatch } from "react-redux";
@@ -26,13 +28,15 @@ function SalonDashboard({ open, setOpen }: SidebarProps) {
     { id: "staff", label: "Staff", icon: Users, path: "/dashboard/staff" },
     { id: "services", label: "Services", icon: LayoutDashboard, path: "/dashboard/services" },
     { id: "booking", label: "Bookings", icon: Notebook, path: "/dashboard/booking" },
+    { id: "analytics", label: "Analytics", icon: BarChart3, path: "/dashboard/analytics" },
+    { id: "attendance", label: "Attendance", icon: UserCheck, path: "/dashboard/attendance" },
   ];
 
   const handleLogout = () => {
     // Senior Note: Always clear auth state and storage on logout
     localStorage.removeItem("authState");
     localStorage.removeItem("token");
-    dispatch(logoutUser());
+    dispatch(logoutUser() as any);
     navigate("/login");
   };
 
