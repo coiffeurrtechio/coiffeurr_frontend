@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Outlet } from "react-router-dom"; // Import Outlet
 import { Menu } from "lucide-react";
 import SalonDashboard from "../pages/Salon/SalonOwner/SalonDashboard";
+import Sponser_Footer from "../components/Sponser_Footer";
 
 const DashboardLayout: React.FC = () => {
   const [open, setOpen] = useState(false);
@@ -16,7 +17,7 @@ const DashboardLayout: React.FC = () => {
 
       {/* 3. RIGHT SIDE CONTENT WRAPPER */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-        
+
         {/* TOP HEADER */}
         <header className="h-16 flex items-center justify-between px-4 md:px-8 border-b bg-white flex-shrink-0 z-30">
           <div className="flex items-center gap-4">
@@ -31,7 +32,7 @@ const DashboardLayout: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-4">
-             {/* ... (Search, Zap, Bell, Profile elements) */}
+            {/* ... (Search, Zap, Bell, Profile elements) */}
           </div>
         </header>
 
@@ -39,7 +40,14 @@ const DashboardLayout: React.FC = () => {
         <main className="flex-1 overflow-y-auto p-4 md:p-8">
           <div className="max-w-7xl mx-auto">
             {/* 🔑 This is where your nested routes (Business, Sales, etc.) will render */}
-            <Outlet /> 
+            <div className="min-h-screen flex flex-col">
+              <main className="flex-grow">
+                {/* Your page content goes here */}
+            <Outlet />
+              </main>
+
+              <Sponser_Footer />
+            </div>
           </div>
         </main>
       </div>
@@ -51,6 +59,7 @@ const DashboardLayout: React.FC = () => {
           onClick={() => setOpen(false)}
         />
       )}
+
     </div>
   );
 };

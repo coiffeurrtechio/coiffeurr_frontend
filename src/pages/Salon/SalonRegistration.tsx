@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Store, User, MapPin, Clock, ArrowRight, ArrowLeft,
   Smartphone, Hash, Mail, Loader2, Lock, Coffee,
-  CheckCircle2, XCircle, Navigation, Globe, LocateFixed, AlertCircle
+  CheckCircle2, XCircle, Navigation, Globe, LocateFixed, 
+  AlertCircle, ShieldCheck, Eye, EyeOff, Camera
 } from 'lucide-react';
 import { Button } from '../../components/ui_components/button';
 import Config from '../../configs/config';
@@ -12,9 +13,13 @@ const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
 
 const SalonRegistration: React.FC = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [step, setStep] = useState(1); 
   const [isLoading, setIsLoading] = useState(false);
-  const [isLocating, setIsLocating] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isLocating, setIsLocating] = useState(false); // State for GPS loading
+  const [showPassword, setShowPassword] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -24,180 +29,130 @@ const SalonRegistration: React.FC = () => {
     email: '',
     password: '',
     primaryPhone: '',
-    address: {
-      street: '',
-      city: '',
-      state: '',
-      pincode: '',
-      country: 'India'
-    },
-    location: {
-      latitude: 0,
-      longitude: 0
-    },
+    otp: '', 
+    image_url: '', 
+    address: { street: '', city: '', state: '', pincode: '', country: 'India' },
+    location: { latitude: 0, longitude: 0 }, // GPS State
     timing: {
       openingTime: '',
       closingTime: '',
-      lunchBreak: {
-        start: '',
-        end: ''
-      },
+      lunchBreak: { start: '', end: '' },
       weeklyOff: [] as string[]
     },
-    // branding: {
-    //   logoUrl: '',
-    //   coverImages: [] as string[]
-    // },
   });
 
-  // --- VALIDATION LOGIC: MAKING EVERYTHING COMPULSORY ---
-  const validateStep = (currentStep: number) => {
-    const newErrors: Record<string, string> = {};
+  // --- API HANDLERS ---
 
-    if (currentStep === 1) {
-      if (!formData.salonName.trim()) newErrors.salonName = "Salon name is required";
-      if (!formData.ownerName.trim()) newErrors.ownerName = "Owner name is required";
-
-      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-      if (!emailRegex.test(formData.email)) newErrors.email = "Valid email is required";
-
-      if (formData.password.length < 6) newErrors.password = "Min 6 characters required";
-      if (formData.primaryPhone.length !== 10) newErrors.primaryPhone = "10-digit phone required";
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 4000);
+      return () => clearTimeout(timer);
     }
+  }, [notification]);
 
-    if (currentStep === 2) {
-      if (!formData.address.street.trim()) newErrors['address.street'] = "Street is required";
-      if (!formData.address.city.trim()) newErrors['address.city'] = "City is required";
-      if (!formData.address.state.trim()) newErrors['address.state'] = "State is required";
-      if (!/^\d{6}$/.test(formData.address.pincode)) newErrors['address.pincode'] = "Valid 6-digit pincode required";
-      if (formData.location.latitude === 0 || formData.location.longitude === 0) {
-        newErrors.location = "GPS coordinates are compulsory";
-      }
-    }
-
-    if (currentStep === 3) {
-      if (formData.timing.openingTime >= formData.timing.closingTime) {
-        newErrors['timing.openingTime'] = "Opening must be before closing";
-      }
-      if (formData.timing.lunchBreak.start >= formData.timing.lunchBreak.end) {
-        newErrors['timing.lunchBreak.start'] = "Break start must be before end";
-      }
-      if (formData.timing.weeklyOff.length === 0) {
-        newErrors.weeklyOff = "Please select at least one weekly off day";
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // const handleAddCoverImage = () => {
-  //   setFormData(prev => ({
-  //     ...prev,
-  //     branding: {
-  //       ...prev.branding,
-  //       coverImages: [...prev.branding.coverImages, '']
-  //     }
-  //   }));
-  // };
-
-  // const handleCoverImageChange = (index: number, value: string) => {
-  //   const updatedImages = [...formData.branding.coverImages];
-  //   updatedImages[index] = value;
-  //   setFormData(prev => ({
-  //     ...prev,
-  //     branding: { ...prev.branding, coverImages: updatedImages }
-  //   }));
-  // };
-
-  // const removeCoverImage = (index: number) => {
-  //   setFormData(prev => ({
-  //     ...prev,
-  //     branding: {
-  //       ...prev.branding,
-  //       coverImages: prev.branding.coverImages.filter((_, i) => i !== index)
-  //     }
-  //   }));
-  // };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type } = e.target;
-
-    // 1. INPUT MASKING: Phone number must be digits only and max 10
-    if (name === 'primaryPhone') {
-      const sanitized = value.replace(/[^0-9]/g, '').slice(0, 10);
-      setFormData(prev => ({ ...prev, [name]: sanitized }));
-      if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
-      return;
-    }
-
-    const finalValue = type === 'number' ? parseFloat(value) : value;
-
-    // Clear field-specific error when user types
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
-
-    if (name.includes('.')) {
-      const keys = name.split('.');
-      setFormData(prev => {
-        const newState = JSON.parse(JSON.stringify(prev));
-        let current = newState;
-        for (let i = 0; i < keys.length - 1; i++) {
-          current = current[keys[i]];
-        }
-        current[keys[keys.length - 1]] = finalValue;
-        return newState;
-      });
-    } else {
-      setFormData(prev => ({ ...prev, [name]: finalValue }));
-    }
-  };
-
-  const handleNext = () => {
-    if (validateStep(step)) {
-      setStep(s => s + 1);
-      setErrors({});
-    }
-  };
-
+  // NEW: GPS Detection Handler
   const handleGetCurrentLocation = () => {
     if (!navigator.geolocation) {
-      setNotification({ type: 'error', message: 'Geolocation not supported' });
+      setNotification({ type: 'error', message: 'Geolocation is not supported by your browser' });
       return;
     }
+
     setIsLocating(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setFormData(prev => ({
           ...prev,
-          location: { latitude: position.coords.latitude, longitude: position.coords.longitude }
+          location: {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          }
         }));
         setIsLocating(false);
-        setNotification({ type: 'success', message: 'Location detected!' });
-        setErrors(prev => {
-          const { location, ...rest } = prev;
-          return rest;
-        });
+        setNotification({ type: 'success', message: 'Location locked successfully!' });
       },
-      () => {
+      (error) => {
         setIsLocating(false);
-        setNotification({ type: 'error', message: 'Location access denied' });
+        setNotification({ type: 'error', message: 'Unable to retrieve location. Please enter manually.' });
       }
     );
   };
 
-  useEffect(() => {
-    if (notification) {
-      const timer = setTimeout(() => setNotification(null), 3000);
-      return () => clearTimeout(timer);
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const uploadData = new FormData();
+      uploadData.append("files", file);
+      uploadData.append("salon_id", formData.primaryPhone); 
+
+      const response = await fetch(`${Config.API_AUTH_URL}/upload/salon-images`, {
+        method: "POST",
+        body: uploadData,
+      });
+      const res = await response.json();
+      const url = res?.data?.urls?.[0] || res?.data?.data?.urls?.[0];
+
+      if (url) {
+        setFormData(prev => ({ ...prev, image_url: url }));
+        setNotification({ type: 'success', message: 'Logo uploaded!' });
+      }
+    } catch (error) {
+      setNotification({ type: 'error', message: 'Logo upload failed' });
+    } finally {
+      setIsUploading(false);
     }
-  }, [notification]);
+  };
+
+  const handleSendOTP = async (method: 'phone' | 'email') => {
+    setIsLoading(true);
+    try {
+      const payload = {
+        email: method === 'email' ? formData.email : null,
+        phone: method === 'phone' ? formData.primaryPhone : null,
+        username: formData.ownerName || "SalonOwner"
+      };
+      const response = await fetch(`${Config.API_AUTH_URL}/signup/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const resData = await response.json();
+      if (!response.ok) throw new Error(resData?.detail || "Failed to send OTP");
+      setNotification({ type: 'success', message: `OTP sent to ${method}` });
+      setStep(step + 1);
+    } catch (err: any) {
+      setNotification({ type: 'error', message: err.message });
+    } finally { setIsLoading(false); }
+  };
+
+  const handleVerifyOTP = async (method: 'phone' | 'email') => {
+    setIsLoading(true);
+    try {
+      const payload = {
+        email: method === 'email' ? formData.email : null,
+        phone: method === 'phone' ? formData.primaryPhone : null,
+        otp: formData.otp
+      };
+      const response = await fetch(`${Config.API_AUTH_URL}/signup/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) throw new Error("Invalid OTP");
+      setNotification({ type: 'success', message: 'Verified!' });
+      setFormData(prev => ({ ...prev, otp: '' })); 
+      setStep(step + 1);
+    } catch (err: any) {
+      setNotification({ type: 'error', message: err.message });
+    } finally { setIsLoading(false); }
+  };
 
   const handleSubmit = async () => {
-    if (!validateStep(3)) return;
-
     setIsLoading(true);
-    const formatTime = (timeStr: string) => timeStr.length === 5 ? `${timeStr}:00` : timeStr;
-
+    const formatTime = (t: string) => t && t.length === 5 ? `${t}:00` : t;
     const finalPayload = {
       ...formData,
       timing: {
@@ -217,9 +172,8 @@ const SalonRegistration: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(finalPayload),
       });
-
       if (!response.ok) throw new Error('Registration failed');
-      setNotification({ type: 'success', message: 'Salon registered! Redirecting...' });
+      setNotification({ type: 'success', message: 'Registered successfully!' });
       setTimeout(() => navigate('/login'), 2000);
     } catch (error: any) {
       setNotification({ type: 'error', message: error.message });
@@ -228,140 +182,142 @@ const SalonRegistration: React.FC = () => {
     }
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type } = e.target;
+    if (name === 'primaryPhone') {
+      const sanitized = value.replace(/[^0-9]/g, '').slice(0, 10);
+      setFormData(prev => ({ ...prev, [name]: sanitized }));
+      return;
+    }
+    if (name.includes('.')) {
+      const keys = name.split('.');
+      setFormData(prev => {
+        const newState = JSON.parse(JSON.stringify(prev));
+        let current = newState;
+        for (let i = 0; i < keys.length - 1; i++) current = current[keys[i]];
+        current[keys[keys.length - 1]] = type === 'number' ? parseFloat(value) : value;
+        return newState;
+      });
+    } else {
+      setFormData(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
+    }
+  };
+
   const renderStep = () => {
     switch (step) {
       case 1:
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
-            <InputField label="Salon Name *" name="salonName" value={formData.salonName} onChange={handleChange} icon={Store} placeholder="Elite Hair Studio" error={errors.salonName} />
-            <InputField label="Owner Name *" name="ownerName" value={formData.ownerName} onChange={handleChange} icon={User} placeholder="John Doe" error={errors.ownerName} />
-            <InputField label="Email Address *" name="email" type="email" value={formData.email} onChange={handleChange} icon={Mail} placeholder="owner@salon.com" error={errors.email} />
-            <div className="grid grid-cols-2 gap-3">
-              <InputField label="Password *" name="password" type="password" value={formData.password} onChange={handleChange} icon={Lock} placeholder="••••••••" error={errors.password} />
-              <InputField label="Primary Phone *" name="primaryPhone" type="tel" value={formData.primaryPhone} onChange={handleChange} icon={Smartphone} placeholder="9876543210" error={errors.primaryPhone} />
-            </div>
-
-{/* 
-            <div className="p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200 space-y-3">
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Branding (Optional)</p>
-
-              <InputField
-                label="Logo URL"
-                name="branding.logoUrl"
-                value={formData.branding.logoUrl}
-                onChange={handleChange}
-                icon={Globe}
-                placeholder="https://image.com/logo.png"
-              />
-
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-black uppercase text-gray-400">Cover Images</label>
-                  <button
-                    type="button"
-                    onClick={handleAddCoverImage}
-                    className="text-[10px] font-bold text-[#1E4D8C] hover:underline"
-                  >
-                    + Add Image
-                  </button>
-                </div>
-
-                {formData.branding.coverImages.map((url, index) => (
-                  <div key={index} className="flex gap-2">
-                    <div className="flex-1">
-                      <InputField
-                        label=""
-                        name={`cover-${index}`}
-                        value={url}
-                        onChange={(e: any) => handleCoverImageChange(index, e.target.value)}
-                        icon={Globe}
-                        placeholder="Image URL"
-                      />
-                    </div>
-                    <button
-                      onClick={() => removeCoverImage(index)}
-                      className="h-11 px-3 mt-1 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
-                    >
-                      <XCircle size={16} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div> */}
-
-
-
-
+            <InputField label="Enter WhatsApp Number *" name="primaryPhone" type="tel" value={formData.primaryPhone} onChange={handleChange} icon={Smartphone} placeholder="9876543210" />
+            <Button onClick={() => handleSendOTP('phone')} disabled={isLoading || formData.primaryPhone.length !== 10} className="w-full h-12 rounded-2xl bg-[#1E4D8C] text-white font-bold">
+              {isLoading ? <Loader2 className="animate-spin" /> : 'Send Phone OTP'}
+            </Button>
           </div>
         );
       case 2:
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
-            <InputField label="Street Address *" name="address.street" value={formData.address.street} onChange={handleChange} icon={MapPin} placeholder="123 Main St" error={errors['address.street']} />
-            <div className="grid grid-cols-2 gap-3">
-              <InputField label="City *" name="address.city" value={formData.address.city} onChange={handleChange} icon={MapPin} placeholder="Mumbai" error={errors['address.city']} />
-              <InputField label="Zip Code *" name="address.pincode" value={formData.address.pincode} onChange={handleChange} icon={Hash} placeholder="400001" error={errors['address.pincode']} />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <InputField label="State *" name="address.state" value={formData.address.state} onChange={handleChange} icon={MapPin} placeholder="Maharashtra" error={errors['address.state']} />
-              <InputField label="Country *" name="address.country" value={formData.address.country} onChange={handleChange} icon={Globe} placeholder="India" />
-            </div>
-            <div className={`p-4 rounded-2xl border transition-colors ${errors.location ? 'bg-red-50 border-red-300' : 'bg-slate-50 border-slate-100'} space-y-3`}>
-              <div className="flex items-center justify-between">
-                <p className={`text-[10px] font-black uppercase tracking-widest ${errors.location ? 'text-red-600' : 'text-slate-500'}`}>Geo Location *</p>
-                <button type="button" onClick={handleGetCurrentLocation} className="text-[10px] font-bold text-[#1E4D8C] flex items-center gap-1 hover:underline">
-                  {isLocating ? <Loader2 size={10} className="animate-spin" /> : <LocateFixed size={10} />} Auto-Detect
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <InputField label="Latitude" name="location.latitude" type="number" value={formData.location.latitude} onChange={handleChange} icon={Navigation} />
-                <InputField label="Longitude" name="location.longitude" type="number" value={formData.location.longitude} onChange={handleChange} icon={Navigation} />
-              </div>
-              {errors.location && <p className="text-[10px] text-red-500 font-bold text-center">{errors.location}</p>}
-            </div>
+            <InputField label="Phone OTP *" name="otp" value={formData.otp} onChange={handleChange} icon={Hash} placeholder="00000" />
+            <Button onClick={() => handleVerifyOTP('phone')} disabled={isLoading || !formData.otp} className="w-full h-12 rounded-2xl bg-emerald-600 text-white font-bold">
+              {isLoading ? <Loader2 className="animate-spin" /> : 'Verify Phone'}
+            </Button>
+            <button onClick={() => setStep(1)} className="text-xs font-bold text-gray-400 w-full text-center">Change Phone Number</button>
           </div>
         );
       case 3:
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
-            <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-3">
-              <p className="text-[10px] font-black text-[#1E4D8C] uppercase text-center tracking-widest">Business Hours *</p>
+            <InputField label="Email Address *" name="email" type="email" value={formData.email} onChange={handleChange} icon={Mail} placeholder="owner@salon.com" />
+            <Button onClick={() => handleSendOTP('email')} disabled={isLoading || !formData.email} className="w-full h-12 rounded-2xl bg-[#1E4D8C] text-white font-bold">
+              {isLoading ? <Loader2 className="animate-spin" /> : 'Send Email OTP'}
+            </Button>
+          </div>
+        );
+      case 4:
+        return (
+          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+            <InputField label="Email OTP *" name="otp" value={formData.otp} onChange={handleChange} icon={Hash} placeholder="00000" />
+            <Button onClick={() => handleVerifyOTP('email')} disabled={isLoading || !formData.otp} className="w-full h-12 rounded-2xl bg-emerald-600 text-white font-bold">
+              {isLoading ? <Loader2 className="animate-spin" /> : 'Verify Email'}
+            </Button>
+          </div>
+        );
+      case 5:
+        return (
+          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+            <div className="flex flex-col items-center justify-center mb-4">
+              <div className="relative group">
+                <div className="w-20 h-20 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gray-50 relative flex items-center justify-center">
+                  {isUploading ? <Loader2 className="animate-spin text-[#1E4D8C]" /> : 
+                   formData.image_url ? <img src={formData.image_url} className="w-full h-full object-cover" /> : <Store className="text-gray-300" size={30} />}
+                </div>
+                <button type="button" onClick={() => fileInputRef.current?.click()} className="absolute bottom-0 right-0 p-1.5 bg-[#1E4D8C] text-white rounded-full border-2 border-white shadow-lg"><Camera size={12} /></button>
+                <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
+              </div>
+              <p className="mt-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Studio Logo</p>
+            </div>
+            <InputField label="Salon Name *" name="salonName" value={formData.salonName} onChange={handleChange} icon={Store} placeholder="Elite Hair Studio" />
+            <InputField label="Owner Name *" name="ownerName" value={formData.ownerName} onChange={handleChange} icon={User} placeholder="John Doe" />
+            <div className="relative">
+              <InputField label="Password *" name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleChange} icon={Lock} placeholder="••••••••" />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-[34px] text-gray-400 hover:text-[#1E4D8C]">
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            <Button onClick={() => setStep(6)} className="w-full h-12 rounded-2xl bg-[#1E4D8C] text-white font-bold">Next: Location & Hours</Button>
+          </div>
+        );
+      case 6:
+        return (
+          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
+            <InputField label="Street *" name="address.street" value={formData.address.street} onChange={handleChange} icon={MapPin} />
+            <div className="grid grid-cols-2 gap-3">
+              <InputField label="City *" name="address.city" value={formData.address.city} onChange={handleChange} icon={MapPin} />
+              <InputField label="Zip *" name="address.pincode" value={formData.address.pincode} onChange={handleChange} icon={Hash} />
+            </div>
+
+            {/* NEW: GPS Section */}
+            <div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-100 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                  <Navigation size={12}/> GPS Coordinates
+                </p>
+                <button 
+                  type="button" 
+                  onClick={handleGetCurrentLocation}
+                  disabled={isLocating}
+                  className="text-[10px] font-bold text-[#1E4D8C] hover:underline flex items-center gap-1"
+                >
+                  {isLocating ? <Loader2 size={10} className="animate-spin" /> : <LocateFixed size={10} />}
+                  Auto-Detect
+                </button>
+              </div>
               <div className="grid grid-cols-2 gap-3">
-                <InputField label="Opens" name="timing.openingTime" type="time" value={formData.timing.openingTime} onChange={handleChange} icon={Clock} error={errors['timing.openingTime']} />
+                <InputField label="Latitude" name="location.latitude" type="number" value={formData.location.latitude} onChange={handleChange} icon={Navigation} placeholder="0.0000" />
+                <InputField label="Longitude" name="location.longitude" type="number" value={formData.location.longitude} onChange={handleChange} icon={Navigation} placeholder="0.0000" />
+              </div>
+            </div>
+            
+            <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-3">
+              <p className="text-[10px] font-black text-[#1E4D8C] uppercase tracking-widest flex items-center gap-2"><Clock size={12}/> Shift Timing</p>
+              <div className="grid grid-cols-2 gap-3">
+                <InputField label="Opens" name="timing.openingTime" type="time" value={formData.timing.openingTime} onChange={handleChange} icon={Clock} />
                 <InputField label="Closes" name="timing.closingTime" type="time" value={formData.timing.closingTime} onChange={handleChange} icon={Clock} />
               </div>
             </div>
 
             <div className="p-4 bg-orange-50/50 rounded-2xl border border-orange-100 space-y-3">
-              <div className="flex items-center justify-center gap-2">
-                <Coffee size={14} className="text-orange-600" />
-                <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest">Lunch Break *</p>
-              </div>
+              <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest flex items-center gap-2"><Coffee size={12}/> Lunch Break</p>
               <div className="grid grid-cols-2 gap-3">
-                <InputField label="From" name="timing.lunchBreak.start" type="time" value={formData.timing.lunchBreak.start} onChange={handleChange} icon={Clock} error={errors['timing.lunchBreak.start']} />
-                <InputField label="To" name="timing.lunchBreak.end" type="time" value={formData.timing.lunchBreak.end} onChange={handleChange} icon={Clock} />
+                <InputField label="Starts" name="timing.lunchBreak.start" type="time" value={formData.timing.lunchBreak.start} onChange={handleChange} icon={Clock} />
+                <InputField label="Ends" name="timing.lunchBreak.end" type="time" value={formData.timing.lunchBreak.end} onChange={handleChange} icon={Clock} />
               </div>
             </div>
 
-            <div className={`p-3 rounded-2xl border transition-all ${errors.weeklyOff ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-100'}`}>
-              <p className={`text-[10px] font-black uppercase mb-2 ${errors.weeklyOff ? 'text-red-600' : 'text-gray-400'}`}>Weekly Off *</p>
-              <div className="flex flex-wrap gap-2">
-                {DAYS.map(day => (
-                  <button
-                    key={day}
-                    type="button"
-                    onClick={() => {
-                      setFormData(p => ({ ...p, timing: { ...p.timing, weeklyOff: p.timing.weeklyOff.includes(day) ? p.timing.weeklyOff.filter(d => d !== day) : [...p.timing.weeklyOff, day] } }));
-                      if (errors.weeklyOff) setErrors(prev => ({ ...prev, weeklyOff: '' }));
-                    }}
-                    className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-all ${formData.timing.weeklyOff.includes(day) ? "bg-[#1E4D8C] text-white border-[#1E4D8C]" : "bg-white text-gray-400 border-gray-200"}`}
-                  >
-                    {day}
-                  </button>
-                ))}
-              </div>
-              {errors.weeklyOff && <p className="text-[9px] text-red-500 font-bold mt-2">{errors.weeklyOff}</p>}
-            </div>
+            <Button onClick={handleSubmit} disabled={isLoading} className="w-full h-14 bg-[#1E4D8C] text-white font-black rounded-2xl shadow-xl">
+              {isLoading ? <Loader2 className="animate-spin" /> : 'Finalize Registration'}
+            </Button>
+            <button onClick={() => setStep(5)} className="text-xs font-bold text-gray-400 w-full text-center">Back to Details</button>
           </div>
         );
       default: return null;
@@ -371,8 +327,7 @@ const SalonRegistration: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#F4F7FE] flex items-center justify-center p-4 relative font-sans">
       {notification && (
-        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300 ${notification.type === 'success' ? 'bg-white border-green-500 text-green-600' : 'bg-white border-red-500 text-red-600'
-          } border-l-4`}>
+        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 bg-white border-l-4 ${notification.type === 'success' ? 'border-green-500 text-green-600' : 'border-red-500 text-red-600'}`}>
           {notification.type === 'success' ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
           <span className="text-sm font-bold">{notification.message}</span>
         </div>
@@ -380,21 +335,14 @@ const SalonRegistration: React.FC = () => {
 
       <div className="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden">
         <div className="pt-8 px-8 flex justify-between gap-2">
-          {[1, 2, 3].map(num => <div key={num} className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${step >= num ? 'bg-[#1E4D8C]' : 'bg-gray-100'}`} />)}
+          {[1, 2, 3, 4, 5, 6].map(num => <div key={num} className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${step >= num ? 'bg-[#1E4D8C]' : 'bg-gray-100'}`} />)}
         </div>
         <div className="p-8 md:p-10">
           <header className="mb-8">
             <h1 className="text-2xl font-black text-gray-900 tracking-tight">Studio Registration</h1>
-            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Step {step} of 3</p>
+            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Section {step} of 6</p>
           </header>
           {renderStep()}
-          <footer className="mt-10 flex gap-3">
-            {step > 1 && <Button disabled={isLoading} onClick={() => setStep(s => s - 1)} className="flex-1 h-12 rounded-2xl bg-gray-50 text-gray-400 font-bold hover:bg-gray-100"><ArrowLeft size={16} /></Button>}
-            <Button disabled={isLoading} onClick={() => step < 3 ? handleNext() : handleSubmit()} className="flex-[2] h-12 rounded-2xl bg-[#1E4D8C] text-white font-bold flex items-center justify-center gap-2 hover:bg-[#153a6b]">
-              {isLoading ? <Loader2 className="animate-spin" size={18} /> : (step === 3 ? 'Complete Setup' : 'Next Step')}
-              {!isLoading && <ArrowRight size={16} />}
-            </Button>
-          </footer>
         </div>
       </div>
     </div>
@@ -409,19 +357,16 @@ const InputField = React.memo(({ label, name, value, onChange, icon: Icon, type 
     </div>
     <div className="relative group">
       <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${error ? 'text-red-400' : 'text-gray-400 group-focus-within:text-[#1E4D8C]'}`}><Icon size={16} /></div>
-      <input
-        name={name}
-        type={type}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className={`w-full h-11 pl-11 pr-4 rounded-2xl text-sm font-bold outline-none transition-all border ${error
-          ? 'bg-red-50 border-red-200 focus:ring-4 focus:ring-red-100'
-          : 'bg-gray-50 border-transparent focus:ring-4 focus:ring-blue-100'
-          }`}
+      <input 
+        name={name} 
+        type={type} 
+        value={value} 
+        onChange={onChange} 
+        placeholder={placeholder} 
+        step="any" // Required for float numbers in input type number
+        className={`w-full h-11 pl-11 pr-4 rounded-2xl text-sm font-bold outline-none transition-all border ${error ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-transparent focus:ring-4 focus:ring-blue-100'}`} 
       />
     </div>
-    {error && <p className="text-[10px] text-red-500 font-bold ml-1">{error}</p>}
   </div>
 ));
 

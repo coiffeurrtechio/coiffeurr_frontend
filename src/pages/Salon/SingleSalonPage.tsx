@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, MapPin, Clock, Phone, Star, Heart, Share2,
-  Mail, CheckCircle, X, Scissors, Loader2
+  Mail, CheckCircle, X, Scissors, Loader2,
+  Check
 } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay, EffectFade } from "swiper/modules";
@@ -48,6 +49,7 @@ export default function SalonDetailPage() {
   const [selectedStaff, setSelectedStaff] = useState<any>(null);
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const user = localStorage.getItem("authState");
 
@@ -175,7 +177,21 @@ export default function SalonDetailPage() {
     const userID = parsedUser?.user?.user?.id || parsedUser?.user?.id;
 
     try {
-      await apiCustomerpiPostReq(`/wishlist/${userID}/${salonId}`);
+      const res = await apiCustomerpiPostReq(`/wishlist/${userID}/${salonId}`);
+
+
+      if (res?.error) {
+        throw new Error(res.error);
+      }
+
+      // Show the notification
+      setNotification({
+        message: "Added to wishlist" ,
+        type: 'success'
+      });
+
+      // Auto-hide after 3 seconds
+      setTimeout(() => setNotification(null), 3000);
     } catch (error) {
       setIsFavorite(prev => !prev);
     }
@@ -194,6 +210,14 @@ export default function SalonDetailPage() {
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-slate-100">
       <Loader isVisible={loading || isReviewSubmitting} />
+
+      {/* --- Floating Notification --- */}
+      {notification && (
+        <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-[110] px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300 bg-white border-l-4 ${notification.type === 'success' ? 'border-green-500 text-green-600' : 'border-red-500 text-red-600'}`}>
+          {notification.type === 'success' ? <Check size={20} /> : <X size={20} />}
+          <span className="text-sm font-bold uppercase tracking-wider">{notification.message}</span>
+        </div>
+      )}
 
       {/* --- Floating Header --- */}
       <nav className="fixed top-0 inset-x-0 z-50 bg-white/70 backdrop-blur-md border-b border-slate-100">
@@ -351,8 +375,8 @@ export default function SalonDetailPage() {
                         <div key={i} className="animate-in fade-in slide-in-from-bottom-2">
                           <div className="flex justify-between items-start mb-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold">{rev.userData?.username?.charAt(0).toUpperCase() || "U"}</div>
-                              <div><h4 className="text-sm font-bold">{rev.userData?.username || "Customer"}</h4><p className="text-[10px] text-slate-400">{new Date(rev.createdAt || Date.now()).toLocaleDateString()}</p></div>
+                              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold">{rev?.userName?.charAt(0).toUpperCase() || "U"}</div>
+                              <div><h4 className="text-sm font-bold">{rev?.userName || "Customer"}</h4><p className="text-[10px] text-slate-400">{new Date(rev.createdAt || Date.now()).toLocaleDateString()}</p></div>
                             </div>
                             <div className="flex gap-0.5">{[1, 2, 3, 4, 5].map(s => <Star key={s} size={10} className={s <= rev.rating ? "fill-slate-900 text-slate-900" : "text-slate-200"} />)}</div>
                           </div>

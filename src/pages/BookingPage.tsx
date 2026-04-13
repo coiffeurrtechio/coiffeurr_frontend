@@ -1,14 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, Calendar, Clock, MapPin, ChevronRight, Star } from "lucide-react";
+import { 
+    ArrowLeft, Calendar, Clock, MapPin, ChevronRight, 
+    Star, X, Receipt, User as UserIcon, Scissors, Info 
+} from "lucide-react";
 import { useApi } from "../API/SalonsAPIs/ALLSalonAPI";
-import type { BookingResponse } from "../Interfaces/BookingInterface";
 import { Badge } from "../components/ui_components/badge";
 import { Loader } from "../components/ui_components/Loader";
+import { usersalonApi } from "../API/SalonsAPIs/UserSalonAPI";
 
 function BookingPage() {
-    const { apiRequest } = useApi();
-    const [bookingdata, setBookingData] = useState<BookingResponse[]>([]);
+    const { userapiRequest } = usersalonApi();
+    const [bookingdata, setBookingData] = useState<any[]>([]);
     const [loading, setloading] = useState(false);
+    
+    // Modal State
+    const [selectedBooking, setSelectedBooking] = useState<any>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         fetchAppointmentBookings();
@@ -19,10 +26,9 @@ function BookingPage() {
             setloading(true);
             const authData = localStorage.getItem("authState");
             const parsedAuth = authData ? JSON.parse(authData) : null;
-
-            // Adjusted based on your path: user?.user?.user?.id
             const userid = parsedAuth?.user?.user?.id || parsedAuth?.user?.id;
-            const res = await apiRequest<BookingResponse[]>(`/bookings/user/${userid}`);
+            
+            const res = await userapiRequest<any[]>(`/bookings/user/${userid}`);
             if (res?.data) setBookingData(res.data);
         } catch (error) {
             console.error("Error fetching user bookings:", error);
@@ -31,161 +37,192 @@ function BookingPage() {
         }
     };
 
-    const formatAppointment = (isoString: string) => {
-        const d = new Date(isoString);
-        return {
-            date: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-            fullDate: d.toLocaleDateString("en-US", { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }),
-            time: d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })
-        };
+    const formatTo12Hour = (timeString: string) => {
+        if (!timeString) return "";
+        const [hour, minute] = timeString.split(":").map(Number);
+        const ampm = hour >= 12 ? "PM" : "AM";
+        const h = hour % 12 || 12;
+        return minute === 0 ? `${h} ${ampm}` : `${h}:${minute.toString().padStart(2, "0")} ${ampm}`;
     };
 
-    const formatTo12Hour = (timeString: string) => {
-        // 1. Split the "HH:mm" string into numbers
-        // Example: "14:30" becomes [14, 30]
-        const [hour, minute] = timeString.split(":").map(Number);
-
-        // 2. Determine if it is AM or PM
-        const ampm = hour >= 12 ? "PM" : "AM";
-
-        // 3. Convert hour to 12-hour format
-        // (hour % 12) converts 13 to 1, 14 to 2, etc. 
-        // || 12 ensures that 0 (midnight) or 12 (noon) stay as 12.
-        const h = hour % 12 || 12;
-
-        // 4. Handle the minutes padding
-        // If minutes are 0, return "h AM/PM" (e.g., "10 AM")
-        // Otherwise, return "h:mm AM/PM" (e.g., "10:30 AM")
-        return minute === 0
-            ? `${h} ${ampm}`
-            : `${h}:${minute.toString().padStart(2, "0")} ${ampm}`;
+    const getStatusStyles = (status: string) => {
+        switch (status?.toUpperCase()) {
+            case 'COMPLETED': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+            case 'PENDING': return 'bg-amber-50 text-amber-600 border-amber-100';
+            case 'CANCELLED': return 'bg-red-50 text-red-600 border-red-100';
+            default: return 'bg-blue-50 text-[#1E4D8C] border-blue-100';
+        }
     };
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] text-slate-900">
+        <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-10">
             <Loader isVisible={loading} />
 
-            {/* --- Minimalist User Header --- */}
             <header className="bg-white border-b border-slate-100 sticky top-0 z-30">
                 <div className="max-w-2xl mx-auto px-6 h-16 flex items-center justify-between">
-                    <button
-                        onClick={() => window.history.back()}
-                        className="p-2 -ml-2 hover:bg-slate-50 rounded-full transition-colors"
-                    >
+                    <button onClick={() => window.history.back()} className="p-2 -ml-2 hover:bg-slate-50 rounded-full transition-colors">
                         <ArrowLeft className="w-5 h-5 text-slate-600" />
                     </button>
-                    <h1 className="text-sm font-bold uppercase tracking-[0.15em] text-slate-800">My Appointments</h1>
-                    <div className="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center">
-                        <Star className="w-4 h-4 text-[#1E4D8C]" />
-                    </div>
+                    <h1 className="text-xs font-black uppercase tracking-[0.2em] text-slate-800">Appointment History</h1>
+                    <div className="w-5" />
                 </div>
             </header>
 
             <main className="max-w-2xl mx-auto px-4 py-8">
-
-                {/* --- Quick Status Cards --- */}
+                {/* Status Summary */}
                 <div className="flex gap-4 mb-10 overflow-x-auto pb-2 no-scrollbar">
-                    <div className="min-w-[140px] bg-[#1E4D8C] p-4 rounded-2xl shadow-sm text-white">
-                        <p className="text-[10px] opacity-80 uppercase font-bold tracking-wider">Total Visits</p>
-                        <p className="text-2xl font-semibold mt-1">{bookingdata.length}</p>
+                    <div className="min-w-[140px] bg-[#1E4D8C] p-5 rounded-[2rem] shadow-lg shadow-blue-900/20 text-white">
+                        <p className="text-[10px] opacity-70 uppercase font-black tracking-widest">Lifetime</p>
+                        <p className="text-3xl font-black mt-1">{bookingdata.length}</p>
                     </div>
-                    <div className="min-w-[140px] bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Pending</p>
-                        <p className="text-2xl font-semibold mt-1 text-slate-700">
-                            {bookingdata.filter(b => b.status === 'pending').length}
+                    <div className="min-w-[140px] bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100">
+                        <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Active</p>
+                        <p className="text-3xl font-black mt-1 text-slate-800">
+                            {bookingdata.filter(b => b.status === 'PENDING').length}
                         </p>
                     </div>
                 </div>
 
-                <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 ml-2">Timeline</h2>
-
-                {/* --- Elegant Booking List --- */}
                 <div className="space-y-4">
                     {bookingdata.length > 0 ? (
-                        bookingdata.map((booking: any, index) => {
-                            // Accessing nested slot data from the new response format
-                            const appointmentDate = booking.slot?.date;
-                            const appointmentTime = booking.slot?.time;
-
-                            // Logic for formatting (using your existing formatAppointment helper)
-                            // Note: We pass appointmentDate directly if formatAppointment handles "YYYY-MM-DD"
-                            const { date, fullDate } = formatAppointment(appointmentDate);
-
-                            // Convert 24h to 12h if your helper doesn't already do it
-                            const displayTime = formatTo12Hour(appointmentTime);
-
-                            const status = booking.status || 'PENDING';
-                            const isConfirmed = status.toLowerCase() === 'confirmed';
-                            const isPending = status.toLowerCase() === 'pending';
-
-                            return (
-                                <div
-                                    key={booking.id || index}
-                                    className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer relative overflow-hidden"
-                                >
-                                    {/* Status Accent Bar - Dynamic colors based on status */}
-                                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${isConfirmed ? 'bg-green-400' : isPending ? 'bg-amber-400' : 'bg-[#1E4D8C]'
-                                        }`} />
-
-                                    <div className="flex justify-between items-start">
-                                        <div className="space-y-3 flex-1">
-                                            <div className="flex items-center gap-2">
-                                                <Badge className={`text-[9px] font-bold px-2 py-0.5 rounded-md border-none ${isConfirmed
-                                                    ? 'bg-green-50 text-green-600'
-                                                    : isPending
-                                                        ? 'bg-amber-50 text-amber-600'
-                                                        : 'bg-blue-50 text-[#1E4D8C]'
-                                                    }`}>
-                                                    {status.toUpperCase()}
-                                                </Badge>
-                                                <span className="text-xs text-slate-300">#BK-{booking.id?.slice(-4) || (index + 1)}</span>
-                                            </div>
-
-                                            <div>
-                                                <h3 className="text-lg font-bold text-slate-800">{booking.serviceName}</h3>
-                                                <div className="flex items-center gap-1 text-slate-400 mt-1">
-                                                    <MapPin className="w-3 h-3" />
-                                                    <span className="text-xs font-medium">Main Street Salon Suite</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="pt-2 flex items-center gap-6">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="p-1.5 bg-slate-50 rounded-lg">
-                                                        <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                                                    </div>
-                                                    <span className="text-xs font-semibold text-slate-600">{date}</span>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="p-1.5 bg-slate-50 rounded-lg">
-                                                        <Clock className="w-3.5 h-3.5 text-slate-500" />
-                                                    </div>
-                                                    <span className="text-xs font-semibold text-slate-600">{displayTime}</span>
-                                                </div>
-                                            </div>
+                        bookingdata.map((booking, index) => (
+                            <div
+                                key={booking.id || index}
+                                onClick={() => { setSelectedBooking(booking); setIsModalOpen(true); }}
+                                className="bg-white rounded-3xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-all active:scale-[0.98] group cursor-pointer overflow-hidden"
+                            >
+                                <div className="flex gap-4">
+                                    <div className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 shrink-0">
+                                        <img 
+                                            src={booking.serviceData?.imageUrl || 'https://via.placeholder.com/150'} 
+                                            className="w-full h-full object-cover" 
+                                            alt="service" 
+                                        />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex justify-between items-start mb-1">
+                                            <h3 className="font-black text-slate-800 truncate pr-2">{booking.serviceData?.serviceName}</h3>
+                                            <span className="font-black text-[#1E4D8C] whitespace-nowrap">₹{booking.price}</span>
                                         </div>
-
-                                        <div className="flex flex-col items-end justify-between h-full min-h-[100px]">
-                                            <span className="text-lg font-bold text-slate-900">₹{booking.price}</span>
-                                            <button className="text-[#1E4D8C] p-2 hover:bg-blue-50 rounded-xl transition-colors">
-                                                <ChevronRight className="w-5 h-5" />
-                                            </button>
+                                        <div className="flex items-center gap-3 text-[11px] font-bold text-slate-400 uppercase tracking-tighter">
+                                            <span className="flex items-center gap-1"><Calendar size={12}/> {booking.slot?.date}</span>
+                                            <span className="flex items-center gap-1"><Clock size={12}/> {formatTo12Hour(booking.slot?.time)}</span>
+                                        </div>
+                                        <div className="mt-3 flex items-center justify-between">
+                                            <Badge className={`text-[9px] font-black px-3 py-1 rounded-full uppercase border ${getStatusStyles(booking.status)}`}>
+                                                {booking.status}
+                                            </Badge>
+                                            <ChevronRight size={16} className="text-slate-300 group-hover:text-[#1E4D8C] group-hover:translate-x-1 transition-all" />
                                         </div>
                                     </div>
                                 </div>
-                            );
-                        })
-                    ) : (
-                        <div className="bg-white rounded-[2rem] p-12 text-center border border-slate-100">
-                            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Calendar className="w-6 h-6 text-slate-300" />
                             </div>
-                            <p className="text-slate-500 font-medium">You have no upcoming bookings.</p>
-                            <button className="mt-4 text-sm font-bold text-[#1E4D8C]">Book an Appointment</button>
-                        </div>
+                        ))
+                    ) : (
+                        <div className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">No Records Found</div>
                     )}
                 </div>
             </main>
+
+            {/* --- BOOKING DETAIL MODAL --- */}
+            {isModalOpen && selectedBooking && (
+                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+                    {/* Backdrop */}
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in" onClick={() => setIsModalOpen(false)} />
+                    
+                    {/* Content */}
+                    <div className="relative w-full max-w-lg bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-300">
+                        {/* Modal Header/Image */}
+                        <div className="relative h-48 bg-slate-200">
+                            <img 
+                                src={selectedBooking.serviceData?.imageUrl} 
+                                className="w-full h-full object-cover" 
+                                alt="Service Banner" 
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                            <button 
+                                onClick={() => setIsModalOpen(false)}
+                                className="absolute top-6 right-6 p-2 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/40 transition-all"
+                            >
+                                <X size={20} />
+                            </button>
+                            <div className="absolute bottom-6 left-8">
+                                <Badge className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl ${getStatusStyles(selectedBooking.status)}`}>
+                                    {selectedBooking.status}
+                                </Badge>
+                            </div>
+                        </div>
+
+                        <div className="p-8 space-y-8">
+                            {/* Service Details */}
+                            <div>
+                                <h2 className="text-2xl font-black text-slate-900 tracking-tight">{selectedBooking.serviceData?.serviceName}</h2>
+                                <p className="text-sm text-slate-500 font-medium mt-2 leading-relaxed line-clamp-2">
+                                    {selectedBooking.serviceData?.description}
+                                </p>
+                            </div>
+
+                            {/* Info Grid */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                        <Calendar size={14} className="text-[#1E4D8C]" /> Date & Time
+                                    </p>
+                                    <p className="text-sm font-black text-slate-800">{selectedBooking.slot?.date}</p>
+                                    <p className="text-xs font-bold text-slate-500 mt-0.5">{formatTo12Hour(selectedBooking.slot?.time)}</p>
+                                </div>
+                                <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                        {/* <Receipt size={14} className="text-[#1E4D8C]" />  */}
+                                        Bill Amount
+                                    </p>
+                                    <p className="text-xl font-black text-[#1E4D8C]">₹{selectedBooking.price}</p>
+                                    <p className="text-[8px] font-bold text-slate-400 uppercase">Inc. all taxes</p>
+                                </div>
+                            </div>
+
+                            {/* Reference & Notes */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#1E4D8C] shadow-sm">
+                                            <UserIcon size={16} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase leading-none mb-1">Customer</p>
+                                            <p className="text-sm font-bold text-slate-700">{selectedBooking.userData?.username}</p>
+                                        </div>
+                                    </div>
+                                    <p className="text-[10px] font-mono text-slate-300">ID: {selectedBooking.id.slice(-6)}</p>
+                                </div>
+
+                                {selectedBooking.note && (
+                                    <div className="p-4 bg-amber-50/50 border border-amber-100 rounded-2xl">
+                                        <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1 flex items-center gap-2">
+                                            <Info size={12} /> Appointment Note
+                                        </p>
+                                        <p className="text-xs font-bold text-amber-800 italic leading-relaxed">
+                                            "{selectedBooking.note}"
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Booking Valid Till Info */}
+                            <p className="text-center text-[10px] font-bold text-slate-300 uppercase tracking-[0.1em]">
+                                Valid Through: {new Date(selectedBooking.validTill).toLocaleString()}
+                            </p>
+
+                            <button 
+                                onClick={() => setIsModalOpen(false)}
+                                className="w-full py-4 bg-[#1E4D8C] text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-blue-900/20 active:scale-95 transition-all"
+                            >
+                                Close Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

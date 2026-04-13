@@ -16,7 +16,7 @@ export function usersalonApi() {
 
   const generateAccessToken = async (): Promise<string | null> => {
     const userData = localStorage.getItem("authState");
-    if (!userData) return null;
+    // if (!userData) return null;
     const parsed = JSON.parse(userData);
     const accessToken = parsed?.user?.access_token
     const refreshToken = parsed?.refreshToken
@@ -168,17 +168,18 @@ export function usersalonApi() {
 
       const parsed = JSON.parse(userData);
       const accessToken = parsed?.user?.access_token;
+    const isFormData = body instanceof FormData;
 
       const response = await fetch(`${Config.API_Customers}${endpoint}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-          ...(options.headers || {}),
-        },
-        body: JSON.stringify(body),
-        credentials: "include",
-        ...options,
+         method: "POST",
+      headers: {
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
+        Authorization: `Bearer ${accessToken}`,
+        ...(options.headers || {}),
+      },
+      body: isFormData ? (body as any) : JSON.stringify(body),
+      credentials: "include",
+      ...options,
       });
 
       const status = response.status;
