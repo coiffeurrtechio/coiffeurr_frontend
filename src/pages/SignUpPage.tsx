@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   User, ArrowRight, Smartphone, Loader2, Lock,
   CheckCircle2, AlertCircle, ShieldCheck, Camera,
-  CalendarDays, VenusAndMars, Eye, EyeOff
+  CalendarDays, VenusAndMars, Eye, EyeOff, Info
 } from 'lucide-react';
 import { Button } from '../components/ui_components/button';
 import Config from '../configs/config';
@@ -14,15 +14,15 @@ import { useToast } from '../components/Toast';
 const CustomerRegistration: React.FC = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dispatch = useDispatch();
+  const { showToast } = useToast();
 
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // Added for password visibility
+  const [showPassword, setShowPassword] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const dispatch = useDispatch();
-  const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
     username: '',
@@ -36,7 +36,18 @@ const CustomerRegistration: React.FC = () => {
     agreeToPolicy: true
   });
 
-  // Calculate max date (5 years ago from today)
+  // Real-time password validation
+  const passwordIssues = useMemo(() => {
+    const issues = [];
+    if (formData.password.length > 0) {
+      if (formData.password.length < 8) issues.push("At least 8 characters");
+      if (!/[A-Z]/.test(formData.password)) issues.push("One uppercase letter");
+      if (!/[0-9]/.test(formData.password)) issues.push("One number");
+      if (!/[!@#$%^&*]/.test(formData.password)) issues.push("One special character");
+    }
+    return issues;
+  }, [formData.password]);
+
   const maxDate = useMemo(() => {
     const today = new Date();
     today.setFullYear(today.getFullYear() - 5);
@@ -101,7 +112,8 @@ const CustomerRegistration: React.FC = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.otp) newErrors.otp = "OTP is required";
     if (!formData.username) newErrors.username = "Name is required";
-    if (formData.password.length < 8) newErrors.password = "Min 8 characters";
+    if (passwordIssues.length > 0) newErrors.password = "Password is too weak";
+    if (!formData.password) newErrors.password = "Password is required";
     if (!formData.dob) newErrors.dob = "DOB is required";
 
     if (Object.keys(newErrors).length > 0) {
@@ -228,7 +240,6 @@ const CustomerRegistration: React.FC = () => {
                 <p className="mt-2 text-[9px] font-black text-gray-400 uppercase tracking-widest">Add Photo</p>
               </div>
 
-              {/* OTP SECTION - Improved UI */}
               <div className="bg-blue-50/50 p-4 rounded-3xl border border-blue-100 mb-2">
                 <InputField 
                     label="Verification Code *" 
@@ -240,7 +251,6 @@ const CustomerRegistration: React.FC = () => {
                     error={errors.otp} 
                     maxLength={6}
                 />
-                <p className="text-[9px] text-blue-400 font-bold mt-2 ml-1">Check your WhatsApp for the code</p>
               </div>
 
               <InputField label="Full Name *" name="username" value={formData.username} onChange={handleChange} icon={User} placeholder="Enter your name" error={errors.username} />
@@ -264,7 +274,7 @@ const CustomerRegistration: React.FC = () => {
                     <input 
                         name="dob" 
                         type="date" 
-                        max={maxDate} // Prevent future dates and enforce 5 years old
+                        max={maxDate} 
                         className={`w-full h-11 pl-11 pr-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none ${errors.dob ? 'ring-2 ring-red-100' : ''}`} 
                         value={formData.dob} 
                         onChange={handleChange} 
@@ -273,20 +283,44 @@ const CustomerRegistration: React.FC = () => {
                 </div>
               </div>
 
-              {/* PASSWORD SECTION - with visibility toggle */}
-              <InputField 
-                label="Secure Password *" 
-                name="password" 
-                type={showPassword ? "text" : "password"} 
-                value={formData.password} 
-                onChange={handleChange} 
-                icon={Lock} 
-                placeholder="••••••••" 
-                error={errors.password} 
-                isPassword
-                toggleVisible={() => setShowPassword(!showPassword)}
-                isVisible={showPassword}
-              />
+              {/* PASSWORD SECTION with issues display */}
+              <div className="space-y-2">
+                <InputField 
+                    label="Secure Password *" 
+                    name="password" 
+                    type={showPassword ? "text" : "password"} 
+                    value={formData.password} 
+                    onChange={handleChange} 
+                    icon={Lock} 
+                    placeholder="••••••••" 
+                    error={errors.password} 
+                    isPassword
+                    toggleVisible={() => setShowPassword(!showPassword)}
+                    isVisible={showPassword}
+                />
+                
+                {/* Real-time Password Requirements Display */}
+                {formData.password.length > 0 && passwordIssues.length > 0 && (
+                  <div className="bg-red-50 p-3 rounded-2xl border border-red-100 animate-in slide-in-from-top-1">
+                    <div className="flex items-start gap-2">
+                      <Info size={12} className="text-red-500 mt-0.5 shrink-0" />
+                      <div className="flex flex-wrap gap-x-3 gap-y-1">
+                        {passwordIssues.map((issue, idx) => (
+                          <span key={idx} className="text-[9px] font-bold text-red-500 uppercase tracking-tight">• {issue}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Success message when password is valid */}
+                {formData.password.length >= 8 && passwordIssues.length === 0 && (
+                  <div className="flex items-center gap-2 ml-1 animate-in fade-in">
+                    <CheckCircle2 size={12} className="text-emerald-500" />
+                    <span className="text-[9px] font-bold text-emerald-500 uppercase">Strong Password</span>
+                  </div>
+                )}
+              </div>
 
               <Button disabled={isLoading || isUploading} onClick={handleSubmit} className="w-full h-14 bg-[#1E4D8C] text-white font-black rounded-2xl shadow-xl mt-4 flex items-center justify-center gap-2">
                 {isLoading ? <Loader2 className="animate-spin" /> : 'Complete Signup'}
@@ -301,8 +335,8 @@ const CustomerRegistration: React.FC = () => {
   );
 };
 
-// Reusable Sub-component - Updated for Password Toggle
-const InputField = React.memo(({ label, name, value, onChange, icon: Icon, type = "text", placeholder, error, isPassword, toggleVisible, isVisible, max }: any) => (
+// Reusable Sub-component
+const InputField = React.memo(({ label, name, value, onChange, icon: Icon, type = "text", placeholder, error, isPassword, toggleVisible, isVisible, max, maxLength }: any) => (
   <div className="space-y-1 w-full text-left">
     <div className="flex justify-between items-center px-1">
       <label className={`text-[10px] font-black uppercase tracking-widest ${error ? 'text-red-500' : 'text-gray-400'}`}>{label}</label>
@@ -317,6 +351,7 @@ const InputField = React.memo(({ label, name, value, onChange, icon: Icon, type 
         onChange={onChange} 
         placeholder={placeholder} 
         max={max}
+        maxLength={maxLength}
         className={`w-full h-11 pl-11 ${isPassword ? 'pr-12' : 'pr-4'} rounded-2xl text-sm font-bold outline-none transition-all border ${error ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-transparent focus:ring-4 focus:ring-blue-100'}`} 
       />
       {isPassword && (

@@ -19,7 +19,7 @@ export function usersalonApi() {
     // if (!userData) return null;
     const parsed = JSON.parse(userData);
     const accessToken = parsed?.user?.access_token
-    const refreshToken = parsed?.refreshToken
+    // const refreshToken = parsed?.refreshToken
 
     try {
       const response = await fetch(`${Config.API_BASE_URL}/refresh`, {
@@ -27,7 +27,7 @@ export function usersalonApi() {
         headers: {
           "Content-Type": "application/json",
           "Authorization": accessToken ? `Bearer ${accessToken}` : "",
-          "X-Refresh-Token": refreshToken, // 👈 send refresh token in header
+          // "X-Refresh-Token": refreshToken, // 👈 send refresh token in header
         },
         credentials: "include",
       });

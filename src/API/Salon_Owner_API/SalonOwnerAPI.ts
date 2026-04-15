@@ -24,11 +24,11 @@ export function useSalonApi() {
     try {
       const response = await fetch(`${Config.API_BASE_URL}/refresh`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: accessToken ? `Bearer ${accessToken}` : "",
-          "X-Refresh-Token": refreshToken, // 👈 send refresh token in header
-        },
+        // headers: {
+        //   "Content-Type": "application/json",
+        //   Authorization: accessToken ? `Bearer ${accessToken}` : "",
+        //   // "X-Refresh-Token": refreshToken, // 👈 send refresh token in header
+        // },
         credentials: "include",
       });
 

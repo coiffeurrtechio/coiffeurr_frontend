@@ -2,7 +2,9 @@ import React, { useEffect, useState, useCallback, type JSX } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   MapPin, Clock, Star, ArrowRight, Filter, Search, Heart,
-  ArrowLeft, X, Check
+  ArrowLeft, X, Check,
+  Navigation,
+  AlignLeft
 } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
@@ -201,121 +203,108 @@ export default function SalonsPage(): JSX.Element {
         </div>
       )}
 
-      {/* --- RESULTS GRID --- */}
+      {/* --- PRECISE RESULTS GRID --- */}
       <section className="py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         {salons.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {salons.map((salon) => (
               <div
                 key={salon.id}
                 onClick={() => navigate(`/salons/${salon.id}`)}
-                className="group relative bg-white rounded-[3rem] overflow-hidden transition-all duration-500 hover:shadow-[0_32px_64px_-15px_rgba(30,77,140,0.12)] cursor-pointer flex flex-col border border-slate-100/50"
+                className="group relative bg-white rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.1)] cursor-pointer border border-slate-100 flex flex-col"
               >
-                {/* --- TOP VISUAL HERO --- */}
-                <div className="relative h-80 w-full overflow-hidden bg-slate-100">
-                  {/* Main Salon Image (Logo used as hero with a sophisticated zoom effect) */}
+                {/* --- 1. VISUAL IDENTIFIER (TOP) --- */}
+                <div className="relative h-64 w-full overflow-hidden bg-slate-50">
                   <img
                     src={salon.logoUrl || "/placeholder.svg"}
                     alt={salon.salonName}
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 group-hover:rotate-1"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
+                  {/* Gradient Overlay for Text Legibility */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
 
-                  {/* Premium Gradient: Bottom-up for text contrast, top-down for UI buttons */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent" />
-
-                  {/* Top Navigation Row */}
-                  <div className="absolute top-6 inset-x-6 flex justify-between items-center z-10">
-                    <div className="flex items-center gap-2 bg-white/10 backdrop-blur-xl border border-white/20 px-4 py-1.5 rounded-full">
-                      <MapPin size={10} className="text-white" />
-                      <span className="text-white text-[9px] font-black uppercase tracking-widest">
-                        {salon.address?.city}
-                      </span>
+                  {/* Top Right: Status Badge */}
+                  {/* <div className="absolute top-5 right-5">
+                    <div className="bg-white/10 backdrop-blur-md border border-white/20 px-3 py-1 rounded-full flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                      <span className="text-white text-[9px] font-black uppercase tracking-tighter">Live</span>
                     </div>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); /* Add wishlist logic */ }}
-                      className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white transition-all hover:bg-white hover:text-red-500 active:scale-90"
-                    >
-                      <Heart size={20} className="transition-transform group-hover:scale-110" />
-                    </button>
-                  </div>
+                  </div> */}
 
-                  {/* Bottom Brand Identity */}
-                  <div className="absolute bottom-8 left-8 right-8 z-10">
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 rounded-[1.5rem] bg-white p-1 shadow-2xl rotate-[-2deg] group-hover:rotate-0 transition-transform duration-500">
-                        <img
-                          src={salon.logoUrl || "/placeholder.svg"}
-                          alt="logo"
-                          className="w-full h-full object-cover rounded-[1.2rem]"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-white font-black text-2xl tracking-tight leading-tight group-hover:text-blue-200 transition-colors">
-                          {salon.salonName}
-                        </h3>
-                        <div className="flex items-center gap-2 mt-2">
-                          <div className="flex items-center gap-1 bg-orange-400/90 backdrop-blur-md px-2 py-0.5 rounded-lg">
-                            <Star className="w-3 h-3 fill-white text-white" />
-                            <span className="text-[10px] font-black text-white">
-                              {salon.rating?.average || "5.0"}
-                            </span>
-                          </div>
-                          <span className="text-[11px] font-bold text-white/70 uppercase tracking-tighter">
-                            {salon.rating?.reviewsCount || 0} Verified Reviews
-                          </span>
-                        </div>
-                      </div>
+                  {/* Bottom Left: Quick Identity */}
+                  <div className="absolute bottom-6 left-6 right-6">
+                    <h3 className="text-white font-black text-2xl tracking-tighter uppercase leading-none truncate">
+                      {salon.salonName}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-2">
+                      {salon.rating?.average && <div className="flex items-center gap-1 bg-[#1E4D8C] px-2 py-0.5 rounded-md">
+                        <Star className="w-3 h-3 fill-white text-white" />
+                        <span className="text-[10px] font-black text-white">{salon.rating?.average?.toFixed(1)}</span>
+                      </div>}
+                      {salon.rating?.reviewsCount && <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest">{salon.rating?.reviewsCount || 0} reviews</span>}
                     </div>
                   </div>
                 </div>
 
-                {/* --- CONTENT & UTILITY AREA --- */}
-                <div className="p-8 space-y-8">
-                  <div className="flex items-center justify-between border-b border-slate-50 pb-6">
-                    <div className="space-y-1.5">
-                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em]">Primary Location</span>
+                {/* --- 2. DATA SPECIFICATION (CONTENT) --- */}
+                <div className="p-6 flex-1 flex flex-col justify-between">
+
+                  {/* Technical Detail Rows */}
+                  <div className="space-y-1">
+                    {/* Location Row */}
+                    <div className="flex items-center justify-between py-2 border-b border-slate-50">
                       <div className="flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#1E4D8C] animate-pulse" />
-                        <p className="text-xs font-bold text-slate-800 italic">
-                          {salon.address?.street.split(',')[0]}
-                        </p>
+                        <MapPin size={12} className="text-slate-400" />
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Region</span>
                       </div>
+                      <span className="text-xs font-bold text-slate-800">{salon.address?.city}</span>
                     </div>
 
-                    <div className="text-right">
-                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em]">Booking Status</span>
-                      <p className="text-xs font-black text-emerald-600 flex items-center justify-end gap-1">
-                        Available <Check size={12} strokeWidth={3} />
-                      </p>
+                    {/* Street Detail (Precise truncated) */}
+                    <div className="flex items-center justify-between py-2 border-b border-slate-50">
+                      <div className="flex items-center gap-2">
+                        <AlignLeft size={12} className="text-slate-400" />
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Address</span>
+                      </div>
+                      <span className="text-xs font-bold text-slate-600 truncate max-w-[160px] italic">{salon.address?.street}</span>
+                    </div>
+
+                    {/* Postal Spec */}
+                    <div className="flex items-center justify-between py-2">
+                      <div className="flex items-center gap-2">
+                        <Navigation size={12} className="text-slate-400" />
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Post Code</span>
+                      </div>
+                      <code className="text-[11px] font-black text-[#1E4D8C] bg-blue-50 px-2 py-0.5 rounded-md tracking-widest">
+                        {salon.address?.pincode}
+                      </code>
                     </div>
                   </div>
 
-                  {/* Interactive Button Group */}
-                  <div className="flex items-center gap-4">
+                  {/* --- 3. CTA BLOCK (BOTTOM) --- */}
+                  <div className="mt-8 flex items-center gap-3">
                     <Button
-                      className="flex-1 bg-slate-900 hover:bg-[#1E4D8C] text-white rounded-[2rem] font-black text-[11px] uppercase tracking-[0.2em] h-16 shadow-[0_15px_30px_-10px_rgba(0,0,0,0.2)] transition-all hover:translate-y-[-2px] active:scale-[0.97]"
+                      className="flex-[3] bg-slate-900 hover:bg-[#1E4D8C] text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] h-14 shadow-xl transition-all active:scale-[0.98]"
                     >
-                      Book Experience
+                      Enter Studio
                     </Button>
-                    <div className="w-16 h-16 rounded-[2rem] bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-[#1E4D8C] group-hover:text-white transition-all duration-500 group-hover:shadow-lg">
-                      <ArrowRight size={22} className="group-hover:translate-x-1 transition-transform" />
+                    <div className="flex-1 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-300 group-hover:text-[#1E4D8C] group-hover:bg-blue-50 transition-all">
+                      <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
+
                 </div>
               </div>
             ))}
           </div>
         ) : (
           /* --- EMPTY STATE --- */
-          <div className="flex flex-col items-center justify-center py-40 text-center animate-in fade-in zoom-in-95">
-            <div className="relative mb-8">
-              <div className="w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center animate-pulse" />
-              <Search className="absolute inset-0 m-auto w-12 h-12 text-[#1E4D8C]/20" />
+          <div className="flex flex-col items-center justify-center py-40">
+            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
+              <Search className="text-slate-200" size={32} />
             </div>
-            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Nothing found in {tempFilters.city}</h2>
-            <p className="text-slate-400 max-w-xs mt-4 text-sm font-medium leading-relaxed">
-              Try broadening your search or adjusting the filters to discover more specialists.
-            </p>
+            <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Null Results</h2>
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-2">Check your filters</p>
           </div>
         )}
       </section>

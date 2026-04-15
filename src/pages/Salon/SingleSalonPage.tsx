@@ -3,7 +3,8 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, MapPin, Clock, Phone, Star, Heart, Share2,
   Mail, CheckCircle, X, Scissors, Loader2,
-  Check
+  Check,
+  Navigation
 } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay, EffectFade } from "swiper/modules";
@@ -186,7 +187,7 @@ export default function SalonDetailPage() {
 
       // Show the notification
       setNotification({
-        message: "Added to wishlist" ,
+        message: "Added to wishlist",
         type: 'success'
       });
 
@@ -391,21 +392,83 @@ export default function SalonDetailPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="lg:col-span-4 space-y-12">
-            <div>
-              <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-6 border-b border-slate-100 pb-4">Concierge</h3>
-              <div className="space-y-6">
-                <div className="flex gap-4"><MapPin className="w-4 h-4 shrink-0" /><p className="text-sm text-slate-600 font-light">{salon?.address?.street}, {salon?.address?.city}, {salon?.address?.state}</p></div>
-                <div className="flex items-center gap-4"><Phone className="w-4 h-4" /><p className="text-sm text-slate-600 font-light">{salon?.primaryPhone}</p></div>
-                <div className="flex items-center gap-4"><Clock className="w-4 h-4" /><div className="flex items-center gap-3"><p className="text-sm text-slate-600 font-light">{formatTime(salon?.timing?.openingTime)} - {formatTime(salon?.timing?.closingTime)}</p>{isOpen ? <span className="text-[9px] font-bold text-green-600 border border-green-200 px-2 py-0.5">OPEN</span> : <span className="text-[9px] font-bold text-red-600 border border-red-200 px-2 py-0.5">CLOSED</span>}</div></div>
+          <div className="lg:col-span-4">
+            <div className="sticky top-24 space-y-10">
+              <div className="bg-slate-50 rounded-[2.5rem] p-10 border border-slate-100">
+                <h3 className="text-[11px] font-black text-[#1E4D8C] uppercase tracking-[0.3em] mb-10 border-b border-blue-100 pb-6">
+                  Concierge
+                </h3>
+                <div className="space-y-8">
+                  {/* Location & Directions */}
+                  <div className="flex gap-5">
+                    <MapPin className="w-5 h-5 shrink-0 text-[#1E4D8C]" />
+                    <div className="flex-1">
+                      <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Location</p>
+                      <p className="text-sm text-slate-800 font-medium leading-relaxed mb-3">
+                        {salon?.address?.street},<br />
+                        {salon?.address?.city}, {salon?.address?.state} - {salon?.address?.pincode}
+                      </p>
+                      {/* Added Directions Link */}
+                      <a
+                        href={salon?.location_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-[10px] font-black text-[#1E4D8C] uppercase tracking-wider hover:underline"
+                      >
+                        <Navigation size={12} /> Get Directions
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Hours */}
+                  <div className="flex gap-5">
+                    <Clock className="w-5 h-5 shrink-0 text-[#1E4D8C]" />
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Hours</p>
+                      <div className="flex items-center gap-3">
+                        <p className="text-sm text-slate-800 font-medium">
+                          {formatTime(salon?.timing?.openingTime)} — {formatTime(salon?.timing?.closingTime)}
+                        </p>
+                        {isOpen ?
+                          <Badge className="bg-green-500/10 text-green-600 border-none text-[9px] font-black">OPEN</Badge> :
+                          <Badge className="bg-red-500/10 text-red-600 border-none text-[9px] font-black">CLOSED</Badge>
+                        }
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Phone */}
+                  <div className="flex gap-5">
+                    <Phone className="w-5 h-5 shrink-0 text-[#1E4D8C]" />
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Direct Line</p>
+                      <p className="text-sm text-slate-800 font-medium">{salon?.primaryPhone}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Ownership Section */}
+                <div className="mt-12 pt-10 border-t border-slate-200">
+                  <h4 className="text-[9px] font-black uppercase text-slate-400 mb-4 tracking-widest">Managed By</h4>
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-[#1E4D8C] flex items-center justify-center text-white font-black text-xs">
+                      {salon?.ownerName?.charAt(0)}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-slate-800">{salon?.ownerName}</span>
+                      <span className="text-[10px] text-slate-400 font-medium lowercase">{salon?.email}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
+
+              {/* Primary CTA */}
+              <a href={`tel:${salon?.primaryPhone}`} className="block">
+                <Button className="w-full h-16 rounded-2xl bg-[#1E4D8C] text-white text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-blue-900/30 hover:scale-[1.02] transition-all">
+                  Contact Front Desk
+                </Button>
+              </a>
             </div>
-            <div className="p-8 border border-slate-100 space-y-4">
-              <h4 className="text-[10px] font-bold uppercase text-slate-400">Ownership</h4>
-              <div className="flex items-center gap-3"><CheckCircle className="w-4 h-4 text-[#1E4D8C]" /><span className="text-xs font-medium">Managed by {salon?.ownerName}</span></div>
-              <div className="flex items-center gap-3"><Mail className="w-4 h-4 text-[#1E4D8C]" /><span className="text-xs font-medium">{salon?.email}</span></div>
-            </div>
-            <a href={`tel:${salon?.primaryPhone}`} className="block"><Button variant="outline" className="w-full h-14 rounded-none border-slate-900 text-black text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-black hover:text-white">Contact Concierge</Button></a>
           </div>
         </section>
       </main>

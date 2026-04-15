@@ -3,7 +3,7 @@ import {
   Camera, ArrowLeft, Mail, Phone, Calendar,
   LayoutDashboard, LogOut, ChevronRight,
   Heart, Edit3, X, MapPin, Loader2, CheckCircle2, AlertCircle,
-  Plus
+  Plus, Home, MapPinned, LocateFixed
 } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -18,24 +18,27 @@ export default function Profile() {
   const { userapiRequest, userapiPost } = usersalonApi();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // --- States ---
   const [loading, setLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const authData = JSON.parse(localStorage.getItem("authState") || "{}");
   const [user, setUser] = useState<any>(authData?.user?.user);
-  const [usercontactdetails, setusercontactdetails] = useState<any>({ email: "", phone: "", address: "", image_url: "" });
+  const [usercontactdetails, setusercontactdetails] = useState<any>({
+    email: "",
+    phone: "",
+    address: { house_no: "", street: "", locality: "", city: "", state: "", pincode: "", country: "", landmark: "" },
+    image_url: ""
+  });
 
-  // Combined Form State
   const [editForm, setEditForm] = useState({
-    address: "",
+    address: { house_no: "", street: "", locality: "", city: "", state: "", pincode: "", country: "India", landmark: "" },
     profileImage: "",
     user_id: authData?.user?.user?.id || ""
   });
 
-  // --- Helpers ---
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
@@ -54,14 +57,12 @@ export default function Profile() {
     try {
       const id = authData?.user?.user?.id || authData?.user?.id;
       if (!id) return handleLogout();
-
       const res = await userapiRequest<any>(`/users/${id}/pii`);
       if (res.data) {
         setusercontactdetails(res.data);
-        // Pre-fill the form with fetched data
         setEditForm({
-          address: res.data.address || "",
-          profileImage: res.data.image_url || user?.profileImage || "",
+          address: res.data.address || { house_no: "", street: "", locality: "", city: "", state: "", pincode: "", country: "India", landmark: "" },
+          profileImage: res.data.image_url || "",
           user_id: id
         });
       }
@@ -74,53 +75,88 @@ export default function Profile() {
 
   useEffect(() => { fetchData(); }, []);
 
-  // Update form state whenever usercontactdetails changes to ensure modal is always synced
-  useEffect(() => {
-    setEditForm(prev => ({
-      ...prev,
-      address: usercontactdetails.address || "",
-      profileImage: usercontactdetails.image_url || ""
-    }));
-  }, [usercontactdetails]);
-
   const handleLogout = () => {
     dispatch(logoutUser());
     navigate("/login");
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) return showToast("Image too large (max 5MB)", "error");
+  const handleAddressChange = (field: string, value: string) => {
+    setEditForm(prev => ({ ...prev, address: { ...prev.address, [field]: value } }));
+  };
 
-    setIsUploading(true);
-    try {
-      const uploadData = new FormData();
-      uploadData.append("files", file);
-      uploadData.append("salon_id", authData?.user?.user?.id);
+  const handleAutoDetectLocation = () => {
+    if (!navigator.geolocation) return showToast("Geolocation not supported", "error");
+    setIsLocating(true);
 
-      const res = await userapiPost<any>(`/upload/salon-images`, uploadData);
-      const newUrl = res?.data?.data?.urls[0];
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      const { latitude, longitude } = position.coords;
+      try {
+        // Using OpenStreetMap/Nominatim for free reverse geocoding
+        // const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+        const body = {
+          "lat": latitude,
+          "lon": longitude,
+          "language": "en"
+        }
+        const response = await fetch(`${Config.API_Customers}/geolocation/geolocation/location-details`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            // Include "Authorization": `Bearer ${token}` here if required
+          },
+          body: JSON.stringify(body)
+        });
+        const data = await response.json();
+        const addr = data.address;
 
-      if (newUrl) {
-        setEditForm(prev => ({ ...prev, profileImage: newUrl }));
-        showToast("Image uploaded successfully");
+        setEditForm(prev => ({
+          ...prev,
+          address: {
+            ...prev.address,
+            city: addr.city || addr.town || addr.village || "",
+            state: addr.state || "",
+            pincode: addr.pincode || "",
+            locality: addr.suburb || addr.neighbourhood || "",
+            street: addr.street || "",
+            country: addr.country || "India"
+          }
+        }));
+        showToast("Location detected!");
+      } catch (err) {
+        showToast("Failed to fetch address details", "error");
+      } finally {
+        setIsLocating(false);
       }
-    } catch (error) {
-      showToast("Image upload failed", "error");
-    } finally {
-      setIsUploading(false);
-    }
+    }, () => {
+      setIsLocating(false);
+      showToast("Location access denied", "error");
+    });
   };
 
   const handleUpdateProfile = async () => {
     setLoading(true);
     try {
-      const payload = {
-        user_id: editForm.user_id,
-        address: editForm.address,
-        image_url: editForm.profileImage
-      };
+      // --- PARTIAL UPDATE LOGIC ---
+      const payload: any = { user_id: editForm.user_id };
+      let hasChanges = false;
+
+      // Only add image_url if it changed
+      if (editForm.profileImage !== usercontactdetails.image_url) {
+        payload.image_url = editForm.profileImage;
+        hasChanges = true;
+      }
+
+      // Only add address if any field within it changed
+      if (JSON.stringify(editForm.address) !== JSON.stringify(usercontactdetails.address)) {
+        payload.address = editForm.address;
+        hasChanges = true;
+      }
+
+      if (!hasChanges) {
+        setIsEditModalOpen(false);
+        setLoading(false);
+        return;
+      }
 
       const response = await fetch(`${Config.API_AUTH_URL}/update-profile`, {
         method: "PATCH",
@@ -132,31 +168,25 @@ export default function Profile() {
       });
 
       if (response.ok) {
-        setUser((prev: any) => ({ ...prev, profileImage: editForm.profileImage }));
-        setusercontactdetails((prev: any) => ({
-          ...prev,
-          address: editForm.address,
-          image_url: editForm.profileImage
-        }));
-
-        syncLocalStorage({
-          address: editForm.address,
-          profileImage: editForm.profileImage
-        });
-
+        setusercontactdetails((prev: any) => ({ ...prev, ...payload }));
+        syncLocalStorage(payload);
         setIsEditModalOpen(false);
         showToast("Profile updated successfully");
       } else {
         throw new Error();
       }
     } catch (error) {
-      showToast("Failed to save profile changes", "error");
+      showToast("Failed to save changes", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading && !usercontactdetails.email) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin h-8 w-8 text-[#1E4D8C]" /></div>;
+  const getFormattedAddress = () => {
+    const addr = usercontactdetails.address;
+    if (!addr || !addr.city) return null;
+    return [addr.house_no, addr.street, addr.city].filter(Boolean).join(", ");
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-10 overflow-x-hidden">
@@ -192,18 +222,17 @@ export default function Profile() {
         </div>
 
         <div className="mt-6 bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-4">
-         
           {usercontactdetails?.phone ? (
             <ContactItem icon={<Phone size={18} />} label="Phone" value={usercontactdetails.phone} />
           ) : (
             <AddContactPlaceholder
               icon={<Phone size={18} />}
               label="Phone"
-              onClick={() => navigate('/verify', { state: { mode: 'phone' } })}
+              onClick={() => navigate('/verify', { state: { phone: 'phone' } })}
             />
           )}
 
-         
+
           {/* Email Section */}
           {usercontactdetails.email ? (
             <ContactItem icon={<Mail size={18} />} label="Email" value={usercontactdetails.email} />
@@ -211,24 +240,16 @@ export default function Profile() {
             <AddContactPlaceholder
               icon={<Mail size={18} />}
               label="Email"
-              onClick={() => navigate('/verify', { state: { mode: 'email' } })}
+              onClick={() => navigate('/verify', { state: { email: 'email' } })}
             />
           )}
 
-         
-          {/* Address Section */}
 
-           {usercontactdetails.address ? (
-            <ContactItem icon={<MapPin size={18} />} label="Email" value={usercontactdetails.address} />
+          {usercontactdetails.address?.city ? (
+            <ContactItem icon={<MapPin size={18} />} label="Location" value={getFormattedAddress()} />
           ) : (
-            <AddContactPlaceholder
-              icon={<MapPin size={18} />}
-              label=" Address"
-              onClick={() => setIsEditModalOpen(true)}
-              // onClick={() => navigate('/verify', { state: { mode: 'email' } })}
-            />
+            <AddContactPlaceholder icon={<MapPin size={18} />} label="Address" onClick={() => setIsEditModalOpen(true)} />
           )}
-          {/* <ContactItem icon={<MapPin size={18} />} label="Address" value={usercontactdetails.address || "Add address"} /> */}
         </div>
 
         <div className="mt-8 bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">
@@ -240,61 +261,54 @@ export default function Profile() {
       </div>
 
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in" onClick={() => setIsEditModalOpen(false)} />
-          <div className="relative w-full max-w-lg bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 animate-in slide-in-from-bottom duration-300 shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsEditModalOpen(false)} />
+          <div className="relative w-full max-w-lg bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 animate-in slide-in-from-bottom shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar">
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-xl font-black text-gray-900 tracking-tight">Edit Profile</h2>
-              <button onClick={() => setIsEditModalOpen(false)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
-                <X size={20} />
-              </button>
+              <h2 className="text-xl font-black text-gray-900 tracking-tight uppercase">Update Profile</h2>
+              <button onClick={() => setIsEditModalOpen(false)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"><X size={20} /></button>
             </div>
 
-            <div className="space-y-8">
-              <div className="flex flex-col items-center justify-center py-6 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-                <div className="relative">
-                  <div className="w-20 h-20 rounded-full border-4 border-white overflow-hidden shadow-md bg-gray-200 relative">
-                    {isUploading && (
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
-                        <Loader2 className="w-5 h-5 text-white animate-spin" />
-                      </div>
-                    )}
-                    {editForm.profileImage ? (
-                      <img src={editForm.profileImage} alt="Preview" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold">{user.name?.charAt(0)}</div>
-                    )}
-                  </div>
-                  <button onClick={() => fileInputRef.current?.click()} className="absolute -bottom-1 -right-1 p-2 bg-[#1E4D8C] text-white rounded-full border-2 border-white shadow-lg active:scale-90 transition-transform">
-                    <Camera size={12} />
-                  </button>
-                  <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+            <div className="space-y-6">
+              <div className="flex flex-col items-center justify-center py-6 bg-slate-50 rounded-3xl border border-dashed border-slate-200 relative">
+                <div className="w-20 h-20 rounded-full border-4 border-white overflow-hidden shadow-md bg-gray-200 relative">
+                  {isUploading && <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10"><Loader2 className="w-5 h-5 text-white animate-spin" /></div>}
+                  {editForm.profileImage ? <img src={editForm.profileImage} alt="Preview" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold">{user.name?.charAt(0)}</div>}
                 </div>
-                <p className="mt-3 text-[10px] font-black text-[#1E4D8C] uppercase tracking-widest cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                  {isUploading ? "Uploading..." : "Change Profile Photo"}
-                </p>
+                <button onClick={() => fileInputRef.current?.click()} className="absolute bottom-4 right-[40%] p-2 bg-[#1E4D8C] text-white rounded-full border-2 border-white shadow-lg active:scale-90 transition-transform"><Camera size={12} /></button>
+                <input type="file" ref={fileInputRef} onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setIsUploading(true);
+                  const uploadData = new FormData();
+                  uploadData.append("files", file);
+                  uploadData.append("salon_id", authData?.user?.user?.id);
+                  const res = await userapiPost<any>(`/upload/salon-images`, uploadData);
+                  if (res?.data?.data?.urls[0]) setEditForm(prev => ({ ...prev, profileImage: res.data.data.urls[0] }));
+                  setIsUploading(false);
+                }} accept="image/*" className="hidden" />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Current Address</label>
-                <div className="relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1E4D8C]"><MapPin size={18} /></div>
-                  <input
-                    type="text"
-                    value={editForm.address}
-                    onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
-                    placeholder="Enter city or full address..."
-                    className="w-full h-14 pl-12 pr-4 bg-gray-50 rounded-2xl font-bold text-sm outline-none border-none focus:ring-4 focus:ring-blue-100 transition-all"
-                  />
-                </div>
+              <div className="flex items-center justify-between px-1">
+                <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Address Details</h3>
+                <button onClick={handleAutoDetectLocation} disabled={isLocating} className="text-[10px] font-black uppercase text-[#1E4D8C] flex items-center gap-1 hover:underline">
+                  {isLocating ? <Loader2 size={12} className="animate-spin" /> : <LocateFixed size={12} />}
+                  Auto Detect
+                </button>
               </div>
 
-              <Button
-                onClick={handleUpdateProfile}
-                disabled={loading || isUploading}
-                className="w-full h-14 bg-[#1E4D8C] text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-blue-900/20 active:scale-95 transition-all"
-              >
-                {loading ? <Loader2 className="animate-spin" /> : "Save All Changes"}
+              <div className="grid grid-cols-2 gap-4">
+                <EditInput label="House/Flat No" value={editForm.address.house_no} onChange={(v: any) => handleAddressChange('house_no', v)} icon={<Home size={14} />} />
+                <EditInput label="Landmark" value={editForm.address.landmark} onChange={(v: any) => handleAddressChange('landmark', v)} icon={<MapPin size={14} />} />
+                <div className="col-span-2"><EditInput label="Street Name" value={editForm.address.street} onChange={(v: any) => handleAddressChange('street', v)} icon={<MapPinned size={14} />} /></div>
+                <EditInput label="Locality" value={editForm.address.locality} onChange={(v: any) => handleAddressChange('locality', v)} />
+                <EditInput label="City" value={editForm.address.city} onChange={(v: any) => handleAddressChange('city', v)} />
+                <EditInput label="State" value={editForm.address.state} onChange={(v: any) => handleAddressChange('state', v)} />
+                <EditInput label="Pincode" value={editForm.address.pincode} onChange={(v: any) => handleAddressChange('pincode', v)} />
+              </div>
+
+              <Button onClick={handleUpdateProfile} disabled={loading || isUploading} className="w-full h-14 bg-[#1E4D8C] text-white rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all">
+                {loading ? <Loader2 className="animate-spin" /> : "Save Changes"}
               </Button>
             </div>
           </div>
@@ -306,10 +320,20 @@ export default function Profile() {
 
 const ContactItem = ({ icon, label, value }: any) => (
   <div className="flex items-center gap-4">
-    <div className="p-2 bg-gray-50 rounded-xl text-gray-400">{icon}</div>
+    <div className="p-2 bg-gray-50 rounded-xl text-[#1E4D8C]">{icon}</div>
     <div className="flex flex-col">
       <span className="text-[10px] font-black text-gray-400 uppercase tracking-tight">{label}</span>
-      <span className="text-sm font-bold text-gray-700 truncate">{value}</span>
+      <span className="text-sm font-bold text-gray-700">{value}</span>
+    </div>
+  </div>
+);
+
+const EditInput = ({ label, value, onChange, icon }: any) => (
+  <div className="space-y-1">
+    <label className="text-[9px] font-black uppercase text-gray-400 ml-1">{label}</label>
+    <div className="relative">
+      {icon && <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#1E4D8C] opacity-60">{icon}</div>}
+      <input type="text" value={value || ""} onChange={(e) => onChange(e.target.value)} className={`w-full h-10 ${icon ? 'pl-9' : 'px-3'} bg-gray-50 rounded-xl font-bold text-xs outline-none focus:ring-2 focus:ring-blue-100 transition-all`} />
     </div>
   </div>
 );
@@ -317,7 +341,7 @@ const ContactItem = ({ icon, label, value }: any) => (
 const MenuItem = ({ icon, label, onClick, isRed }: any) => (
   <button onClick={onClick} className="w-full flex items-center justify-between p-5 hover:bg-gray-50 transition-all group">
     <div className="flex items-center gap-4">
-      <div className={`p-2.5 rounded-xl bg-gray-50 group-hover:bg-white transition-colors`}>{icon}</div>
+      <div className="p-2 bg-gray-50 rounded-xl">{icon}</div>
       <span className={`text-sm font-bold ${isRed ? 'text-red-500' : 'text-gray-700'}`}>{label}</span>
     </div>
     <ChevronRight size={18} className="text-gray-300 group-hover:translate-x-1 transition-transform" />
@@ -325,20 +349,11 @@ const MenuItem = ({ icon, label, onClick, isRed }: any) => (
 );
 
 const AddContactPlaceholder = ({ icon, label, onClick }: any) => (
-  <button 
-    onClick={onClick}
-    className="w-full flex items-center gap-4 p-3 rounded-2xl border-2 border-dashed border-gray-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all group text-left"
-  >
-    <div className="p-2 bg-gray-50 rounded-xl text-gray-400 group-hover:bg-white group-hover:text-[#1E4D8C] transition-colors">
-      {icon}
-    </div>
+  <button onClick={onClick} className="w-full flex items-center gap-4 p-3 rounded-2xl border-2 border-dashed border-gray-100 hover:border-blue-200 transition-all text-left">
+    <div className="p-2 bg-gray-50 rounded-xl text-gray-400">{icon}</div>
     <div className="flex flex-col flex-1">
-      <span className="text-[10px] font-black text-gray-400 uppercase tracking-tight">
-        {label}
-      </span>
-      <span className="text-sm font-bold text-blue-600/60 group-hover:text-[#1E4D8C] flex items-center gap-1">
-        Add {label} <Plus size={14} />
-      </span>
+      <span className="text-[10px] font-black text-gray-400 uppercase tracking-tight">{label}</span>
+      <span className="text-sm font-bold text-blue-600 flex items-center gap-1">Add {label} <Plus size={14} /></span>
     </div>
   </button>
 );
