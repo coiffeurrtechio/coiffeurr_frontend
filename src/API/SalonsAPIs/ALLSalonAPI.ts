@@ -15,7 +15,7 @@ export function useApi() {
   const navigate = useNavigate();
 
   const generateAccessToken = async (): Promise<string | null> => {
-    const userData = localStorage.getItem("authState");
+    // const userData = localStorage.getItem("authState");
     // if (!userData) return null;
     // const parsed = JSON.parse(userData);
     // const accessToken = parsed?.user?.access_token
@@ -24,11 +24,11 @@ export function useApi() {
     try {
       const response = await fetch(`${Config.API_BASE_URL}/refresh`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // "Authorization": accessToken ? `Bearer ${accessToken}` : "",
-          // "X-Refresh-Token": refreshToken, // 👈 send refresh token in header
-        },
+        // headers: {
+        //   "Accept": "application/json",
+        //   // Remove "Content-Type" if you aren't sending a body
+        // },
+        // body: JSON.stringify({}), // Send an empty object to satisfy some fetch implementations
         credentials: "include",
       });
 
@@ -86,7 +86,7 @@ export function useApi() {
 
 
       const response = await fetch(`${Config.API_Customers}${endpoint}`, {
-         method: "GET",
+        method: "GET",
         headers: {
           "Content-Type": "application/json",
           // Authorization: `Bearer ${accessToken}`,
@@ -233,12 +233,99 @@ export function useApi() {
   };
 
 
+  // const apiCustomerpiPost = async <T, B = unknown>(
+  //   endpoint: string,
+  //   body: B,
+  //   options: RequestInit = {}
+  // ): Promise<ApiResponse<T>> => {
+  //   try {
+  //     const userData = localStorage.getItem("authState");
+  //     if (!userData) return { data: null, error: "No user data", status: 401 };
+
+  //     const parsed = JSON.parse(userData);
+  //     const accessToken = parsed?.user?.access_token;
+
+  //     // --- SAFARI FIX 1: SANITIZE HEADERS ---
+  //     // Safari often fails if headers contain 'undefined' or 'null' as strings
+  //     const mergedHeaders: Record<string, string> = {
+  //       "Content-Type": "application/json",
+  //       "Accept": "application/json", // Explicitly ask for JSON
+  //     };
+
+  //     if (accessToken) {
+  //       mergedHeaders["Authorization"] = `Bearer ${accessToken}`;
+  //     }
+
+  //     // Merge any additional headers passed in options
+  //     if (options.headers) {
+  //       Object.assign(mergedHeaders, options.headers);
+  //     }
+
+  //     // --- SAFARI FIX 2: CREDENTIALS POLICY ---
+  //     // If you use Bearer tokens, Safari's Intelligent Tracking Prevention (ITP) 
+  //     // often blocks requests with credentials: "include" on cross-origin calls.
+  //     const response = await fetch(`${Config.API_Customers}${endpoint}`, {
+  //       ...options,
+  //       method: "POST",
+  //       headers: mergedHeaders,
+  //       body: JSON.stringify(body),
+  //       // Change to 'omit' if you don't need cookies, or 'same-origin'
+  //       credentials: "omit",
+  //     });
+
+  //     const status = response.status;
+  //     let json: any = null;
+
+  //     // --- SAFARI FIX 3: EMPTY RESPONSE HANDLING ---
+  //     const text = await response.text();
+  //     json = text ? JSON.parse(text) : null;
+
+  //     if (status === 401) {
+  //       const newToken = await generateAccessToken();
+  //       if (newToken) {
+  //         // Use the SAME Config URL here to prevent cross-origin switching errors in Safari
+  //         const retryResponse = await fetch(`${Config.API_Customers}${endpoint}`, {
+  //           method: "POST",
+  //           headers: {
+  //             ...mergedHeaders,
+  //             "Authorization": `Bearer ${newToken}`,
+  //           },
+  //           body: JSON.stringify(body),
+  //           credentials: "omit",
+  //         });
+
+  //         const retryText = await retryResponse.text();
+  //         const retryJson = retryText ? JSON.parse(retryText) : null;
+  //         return { data: retryJson as T, error: null, status: retryResponse.status };
+  //       } else {
+  //         navigate("/login");
+  //         return { data: null, error: "Unauthorized", status: 401 };
+  //       }
+  //     }
+
+  //     if (!response.ok) {
+  //       return {
+  //         data: null,
+  //         error: json?.message || `Error: ${response.statusText}`,
+  //         status,
+  //       };
+  //     }
+
+  //     return { data: json as T, error: null, status };
+  //   } catch (err: any) {
+  //     return { data: null, error: err.message || "Network error", status: 500 };
+  //   }
+  // };
+
+
   const apiCustomerpiPost = async <T, B = unknown>(
     endpoint: string,
-    body: B,
-    options: RequestInit = {}
+    data: B,
+    options: RequestInit = {},
   ): Promise<ApiResponse<T>> => {
     try {
+      console.log("coming tyo post rea");
+
       const userData = localStorage.getItem("authState");
       if (!userData) return { data: null, error: "No user data", status: 401 };
 
@@ -249,18 +336,18 @@ export function useApi() {
 
 
       const mergedHeaders = {
-      "Content-Type": "application/json",
-      ...options.headers, // Includes your X-User-Id
-      "Authorization": `Bearer ${accessToken}`, // Explicitly added last
-    };
+        "Content-Type": "application/json",
+        ...options.headers, // Includes your X-User-Id
+        "Authorization": `Bearer ${accessToken}`, // Explicitly added last
+      };
 
-    const response = await fetch(`${Config.API_Customers}${endpoint}`, {
-      ...options, // 2. Spread options FIRST
-      method: "POST", // 3. Set Method and Headers SECOND to ensure they aren't overwritten
-      headers: mergedHeaders,
-      body: JSON.stringify(body),
-      credentials: "include",
-    });
+      const response = await fetch(`${Config.API_Customers}${endpoint}`, {
+        ...options, // 2. Spread options FIRST
+        method: "POST", // 3. Set Method and Headers SECOND to ensure they aren't overwritten
+        body: JSON.stringify(data),
+        headers: mergedHeaders,
+        credentials: "include",
+      });
 
       const status = response.status;
       let json: any = null;
@@ -283,7 +370,6 @@ export function useApi() {
               "Authorization": `Bearer ${newToken}`,
               ...(options.headers || {}),
             },
-            body: JSON.stringify(body),
             credentials: "include",
           });
 
@@ -313,14 +399,13 @@ export function useApi() {
     }
   };
 
-
-    const apiCustomerpiPostReq = async <T, B = unknown>(
+  const apiCustomerpiPostReq = async <T, B = unknown>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> => {
     try {
       console.log("coming tyo post rea");
-      
+
       const userData = localStorage.getItem("authState");
       if (!userData) return { data: null, error: "No user data", status: 401 };
 
@@ -331,17 +416,17 @@ export function useApi() {
 
 
       const mergedHeaders = {
-      "Content-Type": "application/json",
-      ...options.headers, // Includes your X-User-Id
-      "Authorization": `Bearer ${accessToken}`, // Explicitly added last
-    };
+        "Content-Type": "application/json",
+        ...options.headers, // Includes your X-User-Id
+        "Authorization": `Bearer ${accessToken}`, // Explicitly added last
+      };
 
-    const response = await fetch(`${Config.API_Customers}${endpoint}`, {
-      ...options, // 2. Spread options FIRST
-      method: "POST", // 3. Set Method and Headers SECOND to ensure they aren't overwritten
-      headers: mergedHeaders,
-      credentials: "include",
-    });
+      const response = await fetch(`${Config.API_Customers}${endpoint}`, {
+        ...options, // 2. Spread options FIRST
+        method: "POST", // 3. Set Method and Headers SECOND to ensure they aren't overwritten
+        headers: mergedHeaders,
+        credentials: "include",
+      });
 
       const status = response.status;
       let json: any = null;
@@ -411,18 +496,18 @@ export function useApi() {
 
 
       const mergedHeaders = {
-      "Content-Type": "application/json",
-      ...options.headers, // Includes your X-User-Id
-      "Authorization": `Bearer ${accessToken}`, // Explicitly added last
-    };
+        "Content-Type": "application/json",
+        ...options.headers, // Includes your X-User-Id
+        "Authorization": `Bearer ${accessToken}`, // Explicitly added last
+      };
 
-    const response = await fetch(`${Config.API_Customers}${endpoint}`, {
-      ...options, // 2. Spread options FIRST
-      method: "PUT", // 3. Set Method and Headers SECOND to ensure they aren't overwritten
-      headers: mergedHeaders,
-      body: JSON.stringify(body),
-      credentials: "include",
-    });
+      const response = await fetch(`${Config.API_Customers}${endpoint}`, {
+        ...options, // 2. Spread options FIRST
+        method: "PUT", // 3. Set Method and Headers SECOND to ensure they aren't overwritten
+        headers: mergedHeaders,
+        body: JSON.stringify(body),
+        credentials: "include",
+      });
 
       const status = response.status;
       let json: any = null;

@@ -25,7 +25,7 @@ const ServiceManagement: React.FC = () => {
     const { apiSalonPost, apiSalonPut } = useSalonApi();
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    
+
     const [serviceList, setServiceList] = useState<any[]>([]);
     const [allStaff, setAllStaff] = useState<any[]>([]); // Staff List State
     const [loading, setLoading] = useState(true);
@@ -48,7 +48,7 @@ const ServiceManagement: React.FC = () => {
         staff_ids: [] as string[] // Selected Staff IDs
     });
 
-    useEffect(() => { 
+    useEffect(() => {
         const init = async () => {
             setLoading(true);
             await Promise.all([fetchServices(), fetchStaff()]);
@@ -97,7 +97,7 @@ const ServiceManagement: React.FC = () => {
             if (res?.data?.data?.urls[0]) {
                 setFormData(prev => ({ ...prev, imageUrl: res.data.data.urls[0] }));
             }
-        } catch (error) { console.error("Upload failed", error); } 
+        } catch (error) { console.error("Upload failed", error); }
         finally { setUploading(false); }
     };
 
@@ -145,10 +145,10 @@ const ServiceManagement: React.FC = () => {
     };
 
     const resetForm = () => {
-        setFormData({ 
-            serviceName: "", description: "", price: "", 
-            durationMinutes: "", includedItems: [], 
-            imageUrl: "", active: true, staff_ids: [] 
+        setFormData({
+            serviceName: "", description: "", price: "",
+            durationMinutes: "", includedItems: [],
+            imageUrl: "", active: true, staff_ids: []
         });
         setEditingServiceId(null);
     };
@@ -267,7 +267,7 @@ const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, all
 
     const toggleStaff = (id: string) => {
         const isSelected = formData.staff_ids.includes(id);
-        const newIds = isSelected 
+        const newIds = isSelected
             ? formData.staff_ids.filter((sId: string) => sId !== id)
             : [...formData.staff_ids, id];
         setFormData({ ...formData, staff_ids: newIds });
@@ -318,18 +318,17 @@ const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, all
                     {/* Assigned Staff Grid */}
                     <div className="space-y-2">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                            <Users size={12}/> Assign Professional Staff
+                            <Users size={12} /> Assign Professional Staff
                         </label>
                         <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-1 custom-scrollbar">
                             {allStaff.length > 0 ? allStaff.map((staff) => {
                                 const isSelected = formData.staff_ids.includes(staff.staff_id);
                                 return (
-                                    <div 
+                                    <div
                                         key={staff.staff_id}
                                         onClick={() => toggleStaff(staff.staff_id)}
-                                        className={`flex items-center gap-2 p-2 rounded-xl border cursor-pointer transition-all ${
-                                            isSelected ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-100' : 'bg-white border-gray-100 hover:bg-gray-50'
-                                        }`}
+                                        className={`flex items-center gap-2 p-2 rounded-xl border cursor-pointer transition-all ${isSelected ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-100' : 'bg-white border-gray-100 hover:bg-gray-50'
+                                            }`}
                                     >
                                         <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden shrink-0 border border-white">
                                             <img src={staff.images?.[0] || '/placeholder.png'} className="w-full h-full object-cover" alt="" />
@@ -347,20 +346,30 @@ const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, all
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Price (₹)</label>
-                            <input 
-                                type="number" 
-                                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-blue-600" 
-                                value={formData.price} 
-                                onChange={e => setFormData({ ...formData, price: e.target.value === '' ? 0 : Number(e.target.value) })} 
+                            <input
+                                type="number"
+                                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-blue-600"
+                                value={formData.price}
+                                min="0"
+                                // onChange={e => setFormData({ ...formData, price: e.target.value })} 
+                                onChange={e => {
+                                    const val = e.target.value === '' ? 0 : Number(e.target.value);
+                                    setFormData({ ...formData, price: Math.max(0, val) });
+                                }}
                             />
                         </div>
                         <div className="space-y-1">
                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Duration (Min)</label>
-                            <input 
-                                type="number" 
-                                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm" 
-                                value={formData.durationMinutes} 
-                                onChange={e => setFormData({ ...formData, durationMinutes: e.target.value === '' ? 0 : Number(e.target.value) })} 
+                            <input
+                                type="number"
+                                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm"
+                                value={formData.durationMinutes}
+                                min="0"
+                                onChange={e => {
+                                    const val = e.target.value === '' ? 0 : Number(e.target.value);
+                                    setFormData({ ...formData, durationMinutes: Math.max(0, val) });
+                                }}
+                            // onChange={e => setFormData({ ...formData, durationMinutes: (e.target.value) })}
                             />
                         </div>
                     </div>
@@ -374,7 +383,7 @@ const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, all
                         <div className="flex flex-wrap gap-2">
                             {formData.includedItems.map((item: string, i: number) => (
                                 <span key={i} className="flex items-center gap-1.5 px-3 py-1 bg-[#1E4D8C] text-white rounded-full text-[10px] font-bold">
-                                    {item} <X size={10} className="cursor-pointer hover:text-red-300" onClick={() => setFormData({...formData, includedItems: formData.includedItems.filter((_:any, idx:number)=> idx !== i)})} />
+                                    {item} <X size={10} className="cursor-pointer hover:text-red-300" onClick={() => setFormData({ ...formData, includedItems: formData.includedItems.filter((_: any, idx: number) => idx !== i) })} />
                                 </span>
                             ))}
                         </div>

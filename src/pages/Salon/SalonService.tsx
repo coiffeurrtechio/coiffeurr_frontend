@@ -20,7 +20,7 @@ import type { salonSlots } from "../../Interfaces/SaloInterface";
 const SalonService: React.FC = () => {
   const navigate = useNavigate();
   const { salonId, serviceId } = useParams();
-  const { apiRequest, apiCustomerpiPost } = useApi();
+  const { apiRequest, apiCustomerpiPost, apiCustomerpiPostReq } = useApi();
   const { userapiPost } = usersalonApi();
 
   const location = useLocation();
@@ -182,12 +182,7 @@ const SalonService: React.FC = () => {
 
       console.log("Booking Data:", data); // Debug log for iOS troubleshooting
 
-      const res = await apiCustomerpiPost(`/bookings`, data, {
-        headers: {
-          // "X-User-Id": userIdString,
-          "Content-Type": "application/json",
-        },
-      });
+      const res = await apiCustomerpiPost(`/bookings/`, data);
 
       console.log("Booking Response:", res); // Debug log
 

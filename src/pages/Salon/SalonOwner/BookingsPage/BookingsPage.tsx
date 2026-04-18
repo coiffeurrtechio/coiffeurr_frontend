@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   Search, Calendar, Clock, CheckCircle, XCircle, X,
-  CreditCard, CheckCircle2, User, MessageSquare, Filter, ChevronDown, RefreshCcw
+  CreditCard, CheckCircle2, User, MessageSquare, Filter, ChevronDown, RefreshCcw,
+  Users
 } from 'lucide-react';
 import { Loader } from '../../../../components/ui_components/Loader';
 import { useSalonApi } from '../../../../API/Salon_Owner_API/SalonOwnerAPI';
@@ -38,7 +39,7 @@ const BookingsPage: React.FC = () => {
   const [bookings, setBookings] = useState<BookingResponse[]>([]);
   const [filterMeta, setFilterMeta] = useState<FilterOptions | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   // UI States
   const [selectedBooking, setSelectedBooking] = useState<BookingResponse | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,7 +49,8 @@ const BookingsPage: React.FC = () => {
   // --- FILTER STATES ---
   const initialFilters = {
     search: '',
-    status: 'ALL',
+    status: 'PENDING',
+    staff_id: 'ALL', // Added for staff filter
     date: '',
     from_date: '',
     to_date: '',
@@ -74,7 +76,6 @@ const BookingsPage: React.FC = () => {
 
   const getUserId = () => {
     const parsedAuth = getAuthData();
-    // Adjust based on your auth state structure
     return parsedAuth?.user?.user?.id || parsedAuth?.user?.id || parsedAuth?.user?._id;
   };
 
@@ -88,11 +89,12 @@ const BookingsPage: React.FC = () => {
         `/bookings/salon/${salonId}/filters`,
         { headers: { "X-User-Id": userId } }
       );
-      if (res.data) setFilterMeta(res.data);
+      if (res.data) {
+        setFilterMeta(res.data);
+      }
     } catch (err) { console.error("Filter fetch error", err); }
   };
 
-  // 2. Fetch Bookings (Server-side Filtering)
   const fetchBookings = useCallback(async (filtersToUse = appliedFilters) => {
     const salonId = getSalonId();
     const userId = getUserId();
@@ -106,7 +108,15 @@ const BookingsPage: React.FC = () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (filtersToUse.status !== 'ALL') params.append('status', filtersToUse.status);
+
+      // PRECISION: Only append if value is not 'ALL' or empty
+      if (filtersToUse.status && filtersToUse.status !== 'ALL') {
+        params.append('status', filtersToUse.status);
+      }
+      if (filtersToUse.staff_id && filtersToUse.staff_id !== 'ALL') {
+        params.append('staff_id', filtersToUse.staff_id);
+      }
+
       if (filtersToUse.search) params.append('search', filtersToUse.search);
       if (filtersToUse.date) params.append('date', filtersToUse.date);
       if (filtersToUse.from_date) params.append('from_date', filtersToUse.from_date);
@@ -157,13 +167,12 @@ const BookingsPage: React.FC = () => {
     setLoading(true);
     try {
       const encodedNote = encodeURIComponent(statusNote.trim() || `Updated to ${newStatus}`);
-      // Assuming apiSalonPatch signature: (url, body, options)
       const res = await apiSalonPatch(
-        `/bookings/${bookingId}/status?status=${newStatus}&note=${encodedNote}`, 
-        {}, 
+        `/bookings/${bookingId}/status?status=${newStatus}&note=${encodedNote}`,
+        {},
         { headers: { "X-User-Id": userId } }
       );
-      
+
       if (res.error) throw new Error(res.error);
       setNotification({ type: 'success', message: `Booking marked as ${newStatus}` });
       setIsModalOpen(false);
@@ -191,7 +200,7 @@ const BookingsPage: React.FC = () => {
       <DashboardLoader isVisible={loading} />
 
       {notification && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 bg-white border-l-4 border-[#1E4D8C] animate-in slide-in-from-top-4">
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 bg-white border-l-4 border-[#1E4D8C] animate-in slide-in-from-top-4">
           <CheckCircle2 className="text-[#1E4D8C]" size={20} />
           <span className="text-sm font-bold text-gray-800">{notification.message}</span>
         </div>
@@ -209,59 +218,104 @@ const BookingsPage: React.FC = () => {
 
       {/* --- SERVER SIDE FILTERS PANEL --- */}
       <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+
+        {/* TOP SEARCH BAR (Prominent Position) */}
+        <div className="space-y-2">
+          <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Search Everywhere</label>
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
+              value={draftFilters.global_search}
+              onChange={(e) => setDraftFilters({ ...draftFilters, global_search: e.target.value })}
+              placeholder="Search by Specialist name, Customer name, Booking ID or Service..."
+              className="w-full pl-12 h-14 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-50 transition-all outline-none"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 pt-2">
+          {/* Staff Filter */}
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Search Everywhere</label>
+            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Specialist</label>
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input 
-                type="text" 
-                value={draftFilters.global_search} 
-                onChange={(e) => setDraftFilters({ ...draftFilters, global_search: e.target.value })} 
-                placeholder="Service, ID, note..." 
-                className="w-full pl-11 h-12 bg-gray-50 border-none rounded-2xl text-sm focus:ring-4 focus:ring-blue-50 transition-all" 
-              />
+              <select
+                // Ensure this matches the key in initialFilters
+                value={draftFilters.staff_id || 'ALL'}
+                onChange={(e) => setDraftFilters({ ...draftFilters, staff_id: e.target.value })}
+                className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none cursor-pointer focus:ring-4 focus:ring-blue-50 appearance-none"
+              >
+                <option value="ALL">All Staff</option>
+                {/* Optional chaining ?. ensure we don't crash if filterMeta is null */}
+                {filterMeta?.staff?.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Status</label>
-            <select 
-              value={draftFilters.status} 
-              onChange={(e) => setDraftFilters({ ...draftFilters, status: e.target.value })} 
-              className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none cursor-pointer focus:ring-4 focus:ring-blue-50 appearance-none"
-            >
-              <option value="ALL">All Status</option>
-              {filterMeta?.statuses.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Process Status</label>
+            <div className="relative">
+              <select
+                value={draftFilters.status || 'ALL'}
+                onChange={(e) => setDraftFilters({ ...draftFilters, status: e.target.value })}
+                className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none cursor-pointer focus:ring-4 focus:ring-blue-50 appearance-none transition-all"
+              >
+                <option value="ALL">All Statuses</option>
+                {filterMeta?.statuses?.map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+            </div>
+          </div>
+
+          {/* Staff Filter (New) */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Specialist</label>
+            <div className="relative">
+              <select
+                value={draftFilters.staff_id}
+                onChange={(e) => setDraftFilters({ ...draftFilters, staff_id: e.target.value })}
+                className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none cursor-pointer focus:ring-4 focus:ring-blue-50 appearance-none"
+              >
+                <option value="ALL">All Staff</option>
+                {filterMeta?.staff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+            </div>
           </div>
 
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Date Range (From)</label>
-            <input 
-              type="date" 
+            <input
+              type="date"
               min={filterMeta?.date_range.min_date}
               max={filterMeta?.date_range.max_date}
-              value={draftFilters.from_date} 
-              onChange={(e) => setDraftFilters({ ...draftFilters, from_date: e.target.value, date: '', date_preset: '' })} 
-              className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-4 focus:ring-blue-50" 
+              value={draftFilters.from_date}
+              onChange={(e) => setDraftFilters({ ...draftFilters, from_date: e.target.value, date: '', date_preset: '' })}
+              className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-4 focus:ring-blue-50"
             />
           </div>
 
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Date Range (To)</label>
-            <input 
-              type="date" 
+            <input
+              type="date"
               min={filterMeta?.date_range.min_date}
               max={filterMeta?.date_range.max_date}
-              value={draftFilters.to_date} 
-              onChange={(e) => setDraftFilters({ ...draftFilters, to_date: e.target.value, date: '', date_preset: '' })} 
-              className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-4 focus:ring-blue-50" 
+              value={draftFilters.to_date}
+              onChange={(e) => setDraftFilters({ ...draftFilters, to_date: e.target.value, date: '', date_preset: '' })}
+              className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-4 focus:ring-blue-50"
             />
           </div>
 
           <div className="flex items-end">
-            <button 
+            <button
               onClick={handleApplyFilters}
               className="h-12 w-full bg-[#1E4D8C] hover:bg-[#153a6b] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2"
             >
@@ -270,29 +324,39 @@ const BookingsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-gray-50">
-           <div className="space-y-2">
-             <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Quick Date Preset</label>
-             <select 
-               value={draftFilters.date_preset} 
-               onChange={(e) => setDraftFilters({ ...draftFilters, date_preset: e.target.value, from_date: '', to_date: '', date: '' })} 
-               className="w-full h-12 px-4 bg-blue-50/50 text-[#1E4D8C] border-none rounded-2xl text-sm font-bold outline-none"
-             >
-               <option value="">No Preset</option>
-               <option value="today">Today</option>
-               <option value="yesterday">Yesterday</option>
-               <option value="this_week">This Week</option>
-               <option value="last_month">Last Month</option>
-             </select>
-           </div>
-           <div className="space-y-2">
-             <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Min Price (₹)</label>
-             <input type="number" value={draftFilters.min_price} onChange={(e) => setDraftFilters({ ...draftFilters, min_price: e.target.value })} className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm" />
-           </div>
-           <div className="space-y-2">
-             <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Max Price (₹)</label>
-             <input type="number" value={draftFilters.max_price} onChange={(e) => setDraftFilters({ ...draftFilters, max_price: e.target.value })} className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm" />
-           </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-gray-50">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Quick Date Preset</label>
+            <select
+              value={draftFilters.date_preset}
+              onChange={(e) => setDraftFilters({ ...draftFilters, date_preset: e.target.value, from_date: '', to_date: '', date: '' })}
+              className="w-full h-12 px-4 bg-blue-50/50 text-[#1E4D8C] border-none rounded-2xl text-sm font-bold outline-none cursor-pointer"
+            >
+              <option value="">No Preset</option>
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="this_week">This Week</option>
+              <option value="last_month">Last Month</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Min Price (₹)</label>
+            <input type="number"
+              min={filterMeta?.price_range?.min_price}
+              max={filterMeta?.price_range?.max_price}
+              value={draftFilters.min_price}
+              onChange={(e) => setDraftFilters({ ...draftFilters, min_price: e.target.value })}
+              className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Max Price (₹)</label>
+            <input type="number"
+              min={filterMeta?.price_range?.min_price}
+              max={filterMeta?.price_range?.max_price}
+              value={draftFilters.max_price}
+              onChange={(e) => setDraftFilters({ ...draftFilters, max_price: e.target.value })}
+              className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none" />
+          </div>
         </div>
       </div>
 
@@ -339,7 +403,7 @@ const BookingsPage: React.FC = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={4} className="px-8 py-32 text-center text-gray-400 italic">No bookings found matching filters.</td>
+                  <td colSpan={4} className="px-8 py-32 text-center text-gray-400 italic font-bold">No bookings found matching filters.</td>
                 </tr>
               )}
             </tbody>

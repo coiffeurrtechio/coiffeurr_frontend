@@ -15,20 +15,20 @@ export function usersalonApi() {
   const navigate = useNavigate();
 
   const generateAccessToken = async (): Promise<string | null> => {
-    const userData = localStorage.getItem("authState");
-    // if (!userData) return null;
-    const parsed = JSON.parse(userData);
-    const accessToken = parsed?.user?.access_token
+    // const userData = localStorage.getItem("authState");
+    // // if (!userData) return null;
+    // const parsed = JSON.parse(userData);
+    // const accessToken = parsed?.user?.access_token
     // const refreshToken = parsed?.refreshToken
 
     try {
       const response = await fetch(`${Config.API_BASE_URL}/refresh`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": accessToken ? `Bearer ${accessToken}` : "",
-          // "X-Refresh-Token": refreshToken, // 👈 send refresh token in header
+          "Accept": "application/json",
+          // Remove "Content-Type" if you aren't sending a body
         },
+        // body: JSON.stringify({}), // Send an empty object to satisfy some fetch implementations
         credentials: "include",
       });
 
@@ -86,7 +86,7 @@ export function usersalonApi() {
 
 
       const response = await fetch(`${Config.API_Customers}${endpoint}`, {
-         method: "GET",
+        method: "GET",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
@@ -168,18 +168,18 @@ export function usersalonApi() {
 
       const parsed = JSON.parse(userData);
       const accessToken = parsed?.user?.access_token;
-    const isFormData = body instanceof FormData;
+      const isFormData = body instanceof FormData;
 
       const response = await fetch(`${Config.API_Customers}${endpoint}`, {
-         method: "POST",
-      headers: {
-        ...(isFormData ? {} : { "Content-Type": "application/json" }),
-        Authorization: `Bearer ${accessToken}`,
-        ...(options.headers || {}),
-      },
-      body: isFormData ? (body as any) : JSON.stringify(body),
-      credentials: "include",
-      ...options,
+        method: "POST",
+        headers: {
+          ...(isFormData ? {} : { "Content-Type": "application/json" }),
+          Authorization: `Bearer ${accessToken}`,
+          ...(options.headers || {}),
+        },
+        body: isFormData ? (body as any) : JSON.stringify(body),
+        credentials: "include",
+        ...options,
       });
 
       const status = response.status;
@@ -250,18 +250,18 @@ export function usersalonApi() {
 
 
       const mergedHeaders = {
-      "Content-Type": "application/json",
-      ...options.headers, // Includes your X-User-Id
-      "Authorization": `Bearer ${accessToken}`, // Explicitly added last
-    };
+        "Content-Type": "application/json",
+        ...options.headers, // Includes your X-User-Id
+        "Authorization": `Bearer ${accessToken}`, // Explicitly added last
+      };
 
-    const response = await fetch(`${Config.API_Customers}${endpoint}`, {
-      ...options, // 2. Spread options FIRST
-      method: "POST", // 3. Set Method and Headers SECOND to ensure they aren't overwritten
-      headers: mergedHeaders,
-      body: JSON.stringify(body),
-      credentials: "include",
-    });
+      const response = await fetch(`${Config.API_Customers}${endpoint}`, {
+        ...options, // 2. Spread options FIRST
+        method: "POST", // 3. Set Method and Headers SECOND to ensure they aren't overwritten
+        headers: mergedHeaders,
+        body: JSON.stringify(body),
+        credentials: "include",
+      });
 
       const status = response.status;
       let json: any = null;
@@ -332,18 +332,18 @@ export function usersalonApi() {
 
 
       const mergedHeaders = {
-      "Content-Type": "application/json",
-      ...options.headers, // Includes your X-User-Id
-      "Authorization": `Bearer ${accessToken}`, // Explicitly added last
-    };
+        "Content-Type": "application/json",
+        ...options.headers, // Includes your X-User-Id
+        "Authorization": `Bearer ${accessToken}`, // Explicitly added last
+      };
 
-    const response = await fetch(`${Config.API_Customers}${endpoint}`, {
-      ...options, // 2. Spread options FIRST
-      method: "PUT", // 3. Set Method and Headers SECOND to ensure they aren't overwritten
-      headers: mergedHeaders,
-      body: JSON.stringify(body),
-      credentials: "include",
-    });
+      const response = await fetch(`${Config.API_Customers}${endpoint}`, {
+        ...options, // 2. Spread options FIRST
+        method: "PUT", // 3. Set Method and Headers SECOND to ensure they aren't overwritten
+        headers: mergedHeaders,
+        body: JSON.stringify(body),
+        credentials: "include",
+      });
 
       const status = response.status;
       let json: any = null;
