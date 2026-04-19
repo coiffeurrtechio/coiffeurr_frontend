@@ -412,13 +412,11 @@ const BookingsPage: React.FC = () => {
             <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">{t('booking.specialist')}</label>
             <div className="relative">
               <select
-                // Ensure this matches the key in initialFilters
                 value={draftFilters.staff_id || 'ALL'}
                 onChange={(e) => setDraftFilters({ ...draftFilters, staff_id: e.target.value })}
                 className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none cursor-pointer focus:ring-4 focus:ring-blue-50 appearance-none"
               >
                 <option value="ALL">{t('booking.allStaff')}</option>
-                {/* Optional chaining ?. ensure we don't crash if filterMeta is null */}
                 {filterMeta?.staff?.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
@@ -441,22 +439,6 @@ const BookingsPage: React.FC = () => {
                 {filterMeta?.statuses?.map(s => (
                   <option key={s} value={s}>{s}</option>
                 ))}
-              </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
-            </div>
-          </div>
-
-          {/* Staff Filter (New) */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">{t('booking.specialist')}</label>
-            <div className="relative">
-              <select
-                value={draftFilters.staff_id}
-                onChange={(e) => setDraftFilters({ ...draftFilters, staff_id: e.target.value })}
-                className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none cursor-pointer focus:ring-4 focus:ring-blue-50 appearance-none"
-              >
-                <option value="ALL">{t('booking.allStaff')}</option>
-                {filterMeta?.staff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
               <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
             </div>
@@ -486,6 +468,21 @@ const BookingsPage: React.FC = () => {
               onKeyPress={handleKeyPress}
               className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-4 focus:ring-blue-50"
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">{t('booking.specialist')}</label>
+            <div className="relative">
+              <select
+                value={draftFilters.staff_id}
+                onChange={(e) => setDraftFilters({ ...draftFilters, staff_id: e.target.value })}
+                className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none cursor-pointer focus:ring-4 focus:ring-blue-50 appearance-none"
+              >
+                <option value="ALL">{t('booking.allStaff')}</option>
+                {filterMeta?.staff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+            </div>
           </div>
         </div>
 
@@ -528,7 +525,7 @@ const BookingsPage: React.FC = () => {
       </div>
 
       {/* TABLE */}
-      <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden min-h-[400px]">
         {loading ? (
           <div className="flex items-center justify-center py-32">
             <div className="flex flex-col items-center gap-4">
@@ -639,8 +636,8 @@ const BookingsPage: React.FC = () => {
 
       {/* PAGINATION CONTROLS */}
       {!loading && (
-        <div className="flex items-center justify-between px-8 py-4 border-t border-gray-100">
-          <p className="text-xs font-bold text-gray-400">
+        <div className="flex items-center justify-between px-8 py-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <p className="text-xs font-bold text-gray-600">
             {t('booking.pageOf', { current: currentPage, total: totalPages })}
           </p>
           <div className="flex items-center gap-2">

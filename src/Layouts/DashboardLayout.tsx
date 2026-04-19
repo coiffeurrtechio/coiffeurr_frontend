@@ -1,17 +1,65 @@
-import React, { useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom"; // Import Outlet
-import { Menu, ChevronLeft, ChevronRight, LogOut } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
+import { Menu, ChevronLeft, ChevronRight, LogOut, Power, AlertCircle } from "lucide-react";
 import SalonDashboard from "../pages/Salon/SalonOwner/SalonDashboard";
 import NotificationCenter from "../components/NotificationCenter";
 import { useDispatch } from "react-redux";
 import { logoutUser } from "../API/APIs";
+import { useApi } from "../API/SalonsAPIs/ALLSalonAPI";
+import Config from "../configs/config";
 
 const DashboardLayout: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showVisibilityConfirm, setShowVisibilityConfirm] = useState(false);
+  const [salonData, setSalonData] = useState<any>(null);
+  const [isTogglingVisibility, setIsTogglingVisibility] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { apiCustomerPut } = useApi();
+
+  useEffect(() => {
+    const fetchSalonData = async () => {
+      try {
+        const authData = localStorage.getItem("authState");
+        const parsedAuth = authData ? JSON.parse(authData) : null;
+        const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
+        if (!salonId) return;
+        
+        const response = await fetch(`${Config.API_Salon_owner}/salons/${salonId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setSalonData(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch salon data:', error);
+      }
+    };
+    fetchSalonData();
+  }, []);
+
+  const handleVisibilityToggle = () => {
+    setShowVisibilityConfirm(true);
+  };
+
+  const confirmVisibilityToggle = async () => {
+    if (!salonData || isTogglingVisibility) return;
+    setIsTogglingVisibility(true);
+    try {
+      const salonId = salonData._id || salonData.id;
+      const newBlockedStatus = !salonData.isBlocked;
+      const res = await apiCustomerPut(`/salons/update/${salonId}`, { isBlocked: newBlockedStatus });
+      if (res.data) {
+        setSalonData(res.data);
+      }
+    } catch (error) {
+      console.error('Failed to toggle visibility:', error);
+    } finally {
+      setIsTogglingVisibility(false);
+      setShowVisibilityConfirm(false);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("authState");
@@ -48,21 +96,36 @@ const DashboardLayout: React.FC = () => {
                 <ChevronLeft className="w-6 h-6 text-gray-600" />
               )}
             </button>
-            <h1 className="font-bold text-gray-800 hidden md:block text-xl tracking-tight">Dashboard</h1>
-            {/* <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded border border-green-100">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-[10px] font-bold text-green-700 uppercase tracking-widest">Live</span>
-            </div> */}
           </div>
 
-          <div className="flex items-center gap-4">
-            <NotificationCenter />
+          <div className="flex items-center gap-6">
+            {salonData && (
+              <button
+                onClick={handleVisibilityToggle}
+                disabled={isTogglingVisibility}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold transition-all ${
+                  salonData.isBlocked 
+                    ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                    : 'bg-green-100 text-green-600 hover:bg-green-200'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                title={salonData.isBlocked ? 'Turn Salon Online' : 'Turn Salon Offline'}
+              >
+                <Power size={16} />
+                <span className="hidden md:inline">{salonData.isBlocked ? 'Salon Offline' : 'Salon Online'}</span>
+              </button>
+            )}
+            
+            <div className="ml-4">
+              <NotificationCenter />
+            </div>
+            
             <button
               onClick={() => setShowLogoutConfirm(true)}
-              className="p-2 hover:bg-red-50 rounded-md transition-colors group"
+              className="flex items-center gap-2 px-3 py-2 hover:bg-red-50 rounded-md transition-colors group"
               title="Logout"
             >
               <LogOut className="w-5 h-5 text-red-600 group-hover:text-red-700 transition-colors" />
+              <span className="hidden md:inline text-sm font-medium text-red-600">Logout</span>
             </button>
           </div>
         </header>
@@ -115,6 +178,38 @@ const DashboardLayout: React.FC = () => {
                 className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors"
               >
                 Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* VISIBILITY CONFIRMATION MODAL */}
+      {showVisibilityConfirm && (
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in duration-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-orange-100 rounded-full">
+                <AlertCircle size={24} className="text-orange-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-800">Confirm Status Change</h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to {salonData?.isBlocked ? 'turn salon online' : 'turn salon offline'}? This will {salonData?.isBlocked ? 'make your salon visible to customers' : 'hide your salon from customers'}.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowVisibilityConfirm(false)}
+                className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmVisibilityToggle}
+                disabled={isTogglingVisibility}
+                className="flex-1 px-4 py-3 bg-[#1E4D8C] text-white rounded-xl font-semibold hover:bg-[#163a6b] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isTogglingVisibility ? 'Processing...' : 'Confirm'}
               </button>
             </div>
           </div>

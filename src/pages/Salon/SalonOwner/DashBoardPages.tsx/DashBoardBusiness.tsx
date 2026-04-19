@@ -25,9 +25,9 @@ interface StatCardProps {
 
 // 2. Extracted StatCard for cleaner code
 const StatCard: React.FC<StatCardProps> = ({ label, value, icon, trend, isPositive }) => (
-  <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+  <div className="glass-card p-6 rounded-xl elevation-1 hover:elevation-2 hover-lift transition-all">
     <div className="flex justify-between items-center mb-4">
-      <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+      <div className="p-2 bg-blue-50 text-blue-600 rounded-lg elevation-1">
         {icon}
       </div>
       <div className={`flex items-center text-xs font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
@@ -57,14 +57,14 @@ const DashBoardBusiness: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-md3-fade-in">
       {/* HEADER SECTION */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center animate-md3-slide-up">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">{t('business.title')}</h1>
           <p className="text-sm text-gray-500">{t('business.subtitle')}</p>
         </div>
-        <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+        <button className="p-2 hover:bg-gray-100 rounded-full transition-colors elevation-1 hover:elevation-2">
           <MoreVertical className="text-gray-400" />
         </button>
       </div>
@@ -85,7 +85,7 @@ const DashBoardBusiness: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* REVENUE CHART PLACEHOLDER */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+        <div className="lg:col-span-2 glass-card p-6 rounded-2xl elevation-1 hover:elevation-2 hover-lift animate-delay-100 animate-md3-fade-in">
           <div className="flex justify-between items-center mb-6">
             <h3 className="font-bold text-gray-800">{t('business.revenueForecast')}</h3>
             <select className="text-xs border-gray-200 rounded-md bg-gray-50 p-1 outline-none cursor-pointer">
@@ -102,7 +102,7 @@ const DashBoardBusiness: React.FC = () => {
         </div>
 
         {/* TOP SERVICES TABLE */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+        <div className="glass-card p-6 rounded-2xl elevation-1 hover:elevation-2 hover-lift animate-delay-200 animate-md3-fade-in">
           <h3 className="font-bold text-gray-800 mb-6">{t('business.topServices')}</h3>
           <div className="space-y-6">
             {topServices.map((service, i) => (
@@ -120,14 +120,14 @@ const DashBoardBusiness: React.FC = () => {
               </div>
             ))}
           </div>
-          <button className="w-full mt-8 py-3 text-xs font-bold text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors">
+          <button className="w-full mt-8 py-3 text-xs font-bold text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors elevation-1 hover:elevation-2">
             {t('business.viewServiceReports')}
           </button>
         </div>
       </div>
 
       {/* STAFF PERFORMANCE TABLE */}
-      <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <section className="glass-card rounded-2xl overflow-hidden elevation-1 hover:elevation-2 hover-lift animate-delay-300 animate-md3-fade-in">
         <div className="p-6 border-b border-gray-50">
           <h3 className="font-bold text-gray-800">{t('business.staffPerformance')}</h3>
         </div>
@@ -144,7 +144,7 @@ const DashBoardBusiness: React.FC = () => {
             <tbody className="divide-y divide-gray-50">
               <tr className="hover:bg-gray-50/50 transition-colors">
                 <td className="px-6 py-4 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">R</div>
+                  <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold elevation-1">R</div>
                   <span className="text-sm font-bold text-gray-700">Rahul Sharma</span>
                 </td>
                 <td className="px-6 py-4 text-sm font-bold text-orange-500">
@@ -157,7 +157,7 @@ const DashBoardBusiness: React.FC = () => {
               </tr>
               <tr className="hover:bg-gray-50/50 transition-colors">
                 <td className="px-6 py-4 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold">A</div>
+                  <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold elevation-1">A</div>
                   <span className="text-sm font-bold text-gray-700">Aman Varma</span>
                 </td>
                 <td className="px-6 py-4 text-sm font-bold text-orange-500">

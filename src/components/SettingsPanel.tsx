@@ -82,8 +82,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
     <>
       {/* Settings Modal */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-in slide-in-from-bottom duration-300">
+        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50">
+          <div className="glass-modal rounded-2xl max-w-md w-full mx-4 overflow-hidden animate-md3-scale-in elevation-5">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
               <div className="flex items-center gap-3">
@@ -158,8 +158,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
 
       {/* Confirmation Dialog */}
       {showConfirmDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden animate-in slide-in-from-bottom duration-300">
+        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-[60]">
+          <div className="glass-modal rounded-2xl max-w-sm w-full mx-4 overflow-hidden animate-md3-bounce-in elevation-5">
             <div className="p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 bg-orange-100 rounded-full">

@@ -118,18 +118,6 @@ const DashboardProfile: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-3 mb-2">
-            <button
-              onClick={() => setIsBlockModalOpen(true)}
-              className={`flex items-center gap-2 px-6 py-4 rounded-2xl font-bold shadow-xl transition-all active:scale-95 ${
-                salonData.isBlocked 
-                  ? 'bg-red-500 text-white hover:bg-red-600' 
-                  : 'bg-green-500 text-white hover:bg-green-600'
-              }`}
-              title={salonData.isBlocked ? "Turn Visibility On" : "Turn Visibility Off"}
-            >
-              <Power size={18} />
-              {salonData.isBlocked ? 'Visibility Off' : 'Visibility On'}
-            </button>
             <button onClick={() => setIsEditModalOpen(true)} className="flex items-center gap-2 bg-[#1E4D8C] text-white px-8 py-4 rounded-2xl font-bold shadow-xl hover:bg-[#163a6b] transition-all active:scale-95">
               <Edit3 size={18} /> Edit Profile
             </button>
