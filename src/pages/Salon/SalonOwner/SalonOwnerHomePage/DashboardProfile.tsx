@@ -4,12 +4,13 @@ import {
   Edit3, UserCircle, Star, ShieldCheck, X, Check,
   Trash2, Plus, Globe, Camera, Image as ImageIcon,
   CalendarDays, AlignLeft, Navigation, MapPinned, LocateFixed, Loader2,
-  Power, AlertTriangle
+  Power, AlertTriangle, Scissors, Sparkles, Zap
 } from 'lucide-react';
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import { useApi } from '../../../../API/SalonsAPIs/ALLSalonAPI';
 import { Loader } from '../../../../components/ui_components/Loader';
+import { motion, AnimatePresence } from 'motion/react';
 
 // Styles
 import "swiper/css";
@@ -18,6 +19,136 @@ import { useSalonApi } from '../../../../API/Salon_Owner_API/SalonOwnerAPI';
 import { DashboardLoader } from '../../../../components/ui_components/DashboardLoader';
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+// Advanced Animated Scissors Component with Motion
+const AnimatedScissors: React.FC = () => (
+  <motion.div
+    initial={{ rotate: 0 }}
+    animate={{ rotate: [0, -20, 0, 20, 0] }}
+    transition={{
+      duration: 2,
+      repeat: Infinity,
+      ease: "easeInOut"
+    }}
+    whileHover={{ scale: 1.1, rotate: 30 }}
+  >
+    <motion.div
+      animate={{ x: [0, 5, 0] }}
+      transition={{
+        duration: 1,
+        repeat: Infinity,
+        ease: "easeInOut"
+      }}
+    >
+      <Scissors size={48} className="text-[#1E4D8C] drop-shadow-lg" />
+    </motion.div>
+  </motion.div>
+);
+
+// Advanced Floating Particles Component with Motion
+const FloatingParticles: React.FC = () => (
+  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+    {[...Array(8)].map((_, i) => (
+      <motion.div
+        key={`particle-${i}`}
+        className="absolute"
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{
+          opacity: [0.2, 0.8, 0.2],
+          scale: [0.8, 1.2, 0.8],
+          y: [0, -30, 0],
+          rotate: [0, 180, 360],
+        }}
+        transition={{
+          duration: 3 + i * 0.5,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: i * 0.3,
+        }}
+        style={{
+          left: `${5 + i * 12}%`,
+          top: `${10 + (i % 4) * 20}%`,
+        }}
+      >
+        <Sparkles size={16} className="text-[#1E4D8C]/30" />
+      </motion.div>
+    ))}
+  </div>
+);
+
+// Advanced Animated Zap Component with Motion
+const AnimatedZap: React.FC = () => (
+  <motion.div
+    animate={{
+      scale: [1, 1.3, 1],
+      opacity: [1, 0.6, 1],
+      rotate: [0, 10, -10, 0],
+    }}
+    transition={{
+      duration: 1.5,
+      repeat: Infinity,
+      ease: "easeInOut",
+    }}
+  >
+    <Zap size={24} className="text-yellow-500" />
+  </motion.div>
+);
+
+// Classic Barber Pole Animation Component
+const BarberPole: React.FC = () => (
+  <motion.div
+    className="relative w-8 h-32 rounded-full overflow-hidden bg-white shadow-lg border-4 border-gray-300"
+    initial={{ opacity: 0, scale: 0 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ duration: 0.5 }}
+  >
+    <motion.div
+      className="absolute inset-0"
+      animate={{ y: [0, -64, 0] }}
+      transition={{
+        duration: 2,
+        repeat: Infinity,
+        ease: "linear",
+      }}
+    >
+      <div className="w-full h-16 bg-red-600" />
+      <div className="w-full h-16 bg-white" />
+      <div className="w-full h-16 bg-blue-600" />
+      <div className="w-full h-16 bg-white" />
+    </motion.div>
+    <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent pointer-events-none" />
+  </motion.div>
+);
+
+// Animated Hair Strand Component
+const AnimatedHairStrand: React.FC = () => (
+  <motion.div
+    className="absolute"
+    initial={{ opacity: 0, scaleY: 0 }}
+    animate={{
+      opacity: [0, 1, 0],
+      scaleY: [0, 1, 0],
+      rotate: [0, 15, -15, 0],
+    }}
+    transition={{
+      duration: 2,
+      repeat: Infinity,
+      ease: "easeInOut",
+    }}
+  >
+    <motion.div
+      className="w-1 h-12 bg-gradient-to-b from-[#1E4D8C] to-transparent rounded-full"
+      animate={{
+        scaleX: [1, 1.5, 1],
+      }}
+      transition={{
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+    />
+  </motion.div>
+);
 
 const DashboardProfile: React.FC = () => {
   const { apiRequest, apiCustomerPut } = useApi();
@@ -88,46 +219,100 @@ const DashboardProfile: React.FC = () => {
   if (!salonData) return <div className="p-10 text-center font-bold text-gray-400">Profile Not Found</div>;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-20 px-4 md:px-8 font-sans">
+    <motion.div
+      className="min-h-screen bg-[#F8FAFC] pb-20 px-4 md:px-8 font-sans"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <div className="max-w-7xl mx-auto space-y-6 pt-6">
 
         {/* HERO SECTION */}
-        <div className="relative h-48 md:h-80 rounded-[2.5rem] overflow-hidden shadow-2xl group border-4 border-white">
+        <motion.div
+          className="relative h-48 md:h-80 rounded-[2.5rem] overflow-hidden shadow-2xl group border-4 border-white"
+          initial={{ y: -50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        >
+          <FloatingParticles />
           <Swiper modules={[Pagination, Autoplay]} pagination={{ clickable: true }} autoplay={{ delay: 5000 }} className="h-full w-full">
             {(salonData.branding?.coverImages?.length > 0 ? salonData.branding.coverImages : ['/api/placeholder/1200/400']).map((img: string, i: number) => (
-              <SwiperSlide key={i}><img src={img} className="w-full h-full object-cover" alt="cover" /></SwiperSlide>
+              <SwiperSlide key={`slide-${i}`}><img src={img} className="w-full h-full object-cover" alt="cover" /></SwiperSlide>
             ))}
           </Swiper>
-          <div className="absolute top-6 right-6 z-10">
+          <div className="absolute top-6 right-6 z-10 flex items-center gap-3">
             <span className="px-4 py-2 bg-white/90 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase text-[#1E4D8C] border border-white/50 shadow-sm">{salonData.status}</span>
           </div>
-        </div>
+        </motion.div>
 
         {/* PROFILE HEADER */}
-        <div className="flex flex-col md:flex-row items-center md:items-end justify-between gap-6 px-4 -mt-16 md:-mt-20 relative z-20">
-          <div className="flex flex-col md:flex-row items-center md:items-end gap-5 text-center md:text-left">
-            <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] bg-white p-1.5 shadow-2xl border-4 border-white overflow-hidden">
+        <motion.div
+          className="flex flex-col md:flex-row items-center md:items-end justify-between gap-6 px-4 -mt-16 md:-mt-20 relative z-20"
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          <motion.div
+            className="flex flex-col md:flex-row items-center md:items-end gap-5 text-center md:text-left"
+            initial={{ x: -50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <motion.div
+              className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] bg-white p-1.5 shadow-2xl border-4 border-white overflow-hidden"
+              whileHover={{ scale: 1.05, rotate: 2 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
               <img src={salonData.branding?.logoUrl || '/api/placeholder/150/150'} className="w-full h-full object-cover rounded-[2rem]" alt="logo" />
-            </div>
+            </motion.div>
             <div className="mb-2">
-              <div className="flex items-center justify-center md:justify-start gap-2">
+              <motion.div
+                className="flex items-center justify-center md:justify-start gap-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+              >
                 <h1 className="text-3xl font-black text-slate-900 tracking-tight">{salonData.salonName}</h1>
                 {salonData.isVerified && <ShieldCheck className="text-blue-500 fill-blue-50" size={24} />}
-              </div>
+              </motion.div>
               <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">{salonData.salonType} • {salonData.pricing?.priceRange}</p>
             </div>
-          </div>
-          <div className="flex items-center gap-3 mb-2">
-            <button onClick={() => setIsEditModalOpen(true)} className="flex items-center gap-2 bg-[#1E4D8C] text-white px-8 py-4 rounded-2xl font-bold shadow-xl hover:bg-[#163a6b] transition-all active:scale-95">
+          </motion.div>
+          <motion.div
+            className="flex items-center gap-3 mb-2"
+            initial={{ x: 50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
+            <motion.button
+              onClick={() => setIsEditModalOpen(true)}
+              className="flex items-center gap-2 bg-[#1E4D8C] text-white px-8 py-4 rounded-2xl font-bold shadow-xl hover:bg-[#163a6b] transition-all active:scale-95"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
               <Edit3 size={18} /> Edit Profile
-            </button>
-          </div>
-        </div>
+            </motion.button>
+          </motion.div>
+        </motion.div>
 
         {/* MAIN DASHBOARD CONTENT */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-          <div className="space-y-6">
-            <div className="bg-white rounded-[2rem] border border-slate-100 p-8 shadow-sm">
+        <motion.div
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
+          <motion.div
+            className="space-y-6"
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
+            <motion.div
+              className="bg-white rounded-[2rem] border border-slate-100 p-8 shadow-sm"
+              whileHover={{ scale: 1.02, y: -5 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">About & Contact</h3>
               <p className="text-sm text-slate-600 font-medium leading-relaxed mb-6">{salonData.description || "No description provided."}</p>
               <div className="space-y-5 border-t pt-6">
@@ -135,20 +320,47 @@ const DashboardProfile: React.FC = () => {
                 <InfoRow icon={Mail} label="Email" value={salonData.email} />
                 <InfoRow icon={Phone} label="Primary Phone" value={salonData.primaryPhone} />
               </div>
-            </div>
+            </motion.div>
 
-            <div className="bg-[#1E4D8C] rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden">
+            <motion.div
+              className="bg-[#1E4D8C] rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden"
+              whileHover={{ scale: 1.05, rotate: 1 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
               <div className="absolute -right-4 -bottom-4 opacity-10 rotate-12"><Star size={120} fill="white" /></div>
+              <div className="absolute top-4 right-4"><AnimatedZap /></div>
               <p className="text-[10px] font-black uppercase opacity-60 mb-4">Performance</p>
-              <p className="text-4xl font-black">{salonData.ratings?.average || 0}</p>
+              <motion.p
+                className="text-4xl font-black"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", delay: 0.7 }}
+              >
+                {salonData.ratings?.average || 0}
+              </motion.p>
               <p className="text-xs font-bold opacity-60 mt-1 uppercase tracking-widest">Based on {salonData.ratings?.reviewsCount || 0} Reviews</p>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-[2rem] border border-slate-100 p-8 shadow-sm">
+          <motion.div
+            className="lg:col-span-2 space-y-6"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+          >
+            <motion.div
+              className="bg-white rounded-[2rem] border border-slate-100 p-8 shadow-sm relative overflow-hidden"
+              whileHover={{ scale: 1.01, y: -3 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
-                <Clock size={16} /> Operations & Weekly Off
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <Clock size={16} />
+                </motion.div>
+                Operations & Weekly Off
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <TimeBox label="Opens" value={salonData.timing?.openingTime} />
@@ -157,25 +369,45 @@ const DashboardProfile: React.FC = () => {
                 <TimeBox label="Lunch Out" value={salonData.timing?.lunchBreak?.end} />
               </div>
 
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100/50 flex flex-wrap gap-2 items-center">
+              <motion.div
+                className="p-4 bg-slate-50 rounded-2xl border border-slate-100/50 flex flex-wrap gap-2 items-center"
+                whileHover={{ scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">Weekly Off:</p>
                 {salonData.timing?.weeklyOff?.length > 0 ? (
                   salonData.timing.weeklyOff.map((day: string) => (
-                    <span key={day} className="px-3 py-1 bg-[#1E4D8C] text-white rounded-lg text-[10px] font-black uppercase">{day}</span>
+                    <motion.span
+                      key={day}
+                      className="px-3 py-1 bg-[#1E4D8C] text-white rounded-lg text-[10px] font-black uppercase"
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      transition={{ type: "spring", stiffness: 400 }}
+                    >
+                      {day}
+                    </motion.span>
                   ))
                 ) : <span className="text-xs font-bold text-slate-400">Open 7 days a week</span>}
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white rounded-[2rem] border border-slate-100 p-8 shadow-sm">
+            <motion.div
+              className="grid grid-cols-1 md:grid-cols-2 gap-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.7 }}
+            >
+              <motion.div
+                className="bg-white rounded-[2rem] border border-slate-100 p-8 shadow-sm"
+                whileHover={{ scale: 1.02, y: -5 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 font-sans">Location</h3>
                 <p className="text-sm font-bold text-slate-700 leading-relaxed font-sans mb-4">
                   {salonData.address?.street},<br />
                   {salonData.address?.city}, {salonData.address?.state}<br />
                   {salonData.address?.pincode}
                 </p>
-                
+
                 {/* DISPLAY COORDINATES */}
                 <div className="pt-4 border-t border-slate-50 grid grid-cols-2 gap-4">
                     <div>
@@ -187,18 +419,41 @@ const DashboardProfile: React.FC = () => {
                         <p className="text-xs font-bold text-[#1E4D8C] font-mono">{salonData.location?.longitude || '0.0000'}</p>
                     </div>
                 </div>
-              </div>
-              <div className="bg-white rounded-[2rem] border border-slate-100 p-8 shadow-sm">
+              </motion.div>
+              <motion.div
+                className="bg-white rounded-[2rem] border border-slate-100 p-8 shadow-sm relative overflow-hidden"
+                whileHover={{ scale: 1.02, y: -5 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 font-sans">Expertise</h3>
                 <div className="flex flex-wrap gap-2">
-                  {salonData.expertise?.map((ex: string) => (
-                    <span key={ex} className="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-[10px] font-black border border-slate-100 uppercase tracking-tighter font-sans">{ex}</span>
+                  {salonData.expertise?.map((ex: string, idx: number) => (
+                    <motion.span
+                      key={`${ex}-${idx}`}
+                      className="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-[10px] font-black border border-slate-100 uppercase tracking-tighter font-sans cursor-default"
+                      whileHover={{
+                        scale: 1.1,
+                        rotate: 5,
+                        backgroundColor: "#1E4D8C",
+                        color: "white",
+                        borderColor: "#1E4D8C"
+                      }}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        delay: 0.8 + idx * 0.1
+                      }}
+                    >
+                      {ex}
+                    </motion.span>
                   ))}
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
       </div>
 
       {isEditModalOpen && (
@@ -267,7 +522,7 @@ const DashboardProfile: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 

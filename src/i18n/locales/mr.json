@@ -519,7 +519,7 @@
     "serviceRendered": "प्रदान केलेली सेवा",
     "price": "किंमत",
     "noBookingsFound": "फिल्टरशी जुळणारी कोणतीही बुकिंग आढळली नाही.",
-    "pageOf": "पृष्ठ {current} / {total}",
+    "pageOf": "पृष्ठ {{current}} / {{total}}",
     "bookingDetail": "बुकिंग तपशील",
     "internalRemark": "अंतर्गत टिप्पणी / नोट",
     "remarkPlaceholder": "ग्राहकाने फोनवर पुष्टी केली...",

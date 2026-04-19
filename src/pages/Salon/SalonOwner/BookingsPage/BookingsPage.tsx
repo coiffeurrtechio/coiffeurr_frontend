@@ -361,6 +361,10 @@ const BookingsPage: React.FC = () => {
     }
   };
 
+  const formatStatusForDisplay = (status: string) => {
+    return status.charAt(0) + status.slice(1).toLowerCase();
+  };
+
   return (
     <div className="p-4 md:p-6 space-y-6 animate-in fade-in duration-500">
       <DashboardLoader isVisible={loading} />
@@ -437,7 +441,7 @@ const BookingsPage: React.FC = () => {
               >
                 <option value="ALL">{t('booking.allStatuses')}</option>
                 {filterMeta?.statuses?.map(s => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>{formatStatusForDisplay(s)}</option>
                 ))}
               </select>
               <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
@@ -612,7 +616,7 @@ const BookingsPage: React.FC = () => {
                     <td className="px-8 py-6 text-center">
                       <div className="flex items-center justify-center gap-2">
                         <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase border ${getStatusColor(row.status)}`}>
-                          {row.status}
+                          {formatStatusForDisplay(row.status)}
                         </span>
                         {row.isRescheduled && (
                           <span className="px-2 py-0.5 bg-orange-100 text-orange-600 text-[8px] font-black uppercase rounded-full border border-orange-200">

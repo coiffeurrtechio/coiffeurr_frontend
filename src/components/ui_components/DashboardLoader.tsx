@@ -1,27 +1,91 @@
-import { LayoutDashboard, Bell, Search, User, Sparkles } from "lucide-react"
+import { LayoutDashboard, Bell, Search, User, Sparkles, Scissors, Zap } from "lucide-react"
 
 interface DashboardLoaderProps {
   isVisible?: boolean
 }
 
+// Animated Scissors Component for Loader
+const AnimatedScissorsLoader = () => (
+  <div className="relative">
+    <style>{`
+      @keyframes scissorsCut {
+        0%, 100% { transform: rotate(0deg); }
+        25% { transform: rotate(-20deg); }
+        50% { transform: rotate(0deg); }
+        75% { transform: rotate(20deg); }
+      }
+      .scissors-cut-loader {
+        animation: scissorsCut 1.5s ease-in-out infinite;
+      }
+    `}</style>
+    <div className="scissors-cut-loader">
+      <Scissors size={32} className="text-[#1E4D8C]" />
+    </div>
+  </div>
+)
+
+// Animated Zap Component for Loader
+const AnimatedZapLoader = () => (
+  <div className="relative">
+    <style>{`
+      @keyframes zapPulseLoader {
+        0%, 100% { transform: scale(1); opacity: 0.6; }
+        50% { transform: scale(1.3); opacity: 1; }
+      }
+      .zap-pulse-loader {
+        animation: zapPulseLoader 1s ease-in-out infinite;
+      }
+    `}</style>
+    <div className="zap-pulse-loader">
+      <Zap size={24} className="text-yellow-500" />
+    </div>
+  </div>
+)
+
 export function DashboardLoader({ isVisible = true }: DashboardLoaderProps) {
   if (!isVisible) return null
 
   return (
-    <div className="w-full h-full min-h-screen bg-[#FDFDFF] p-6 lg:p-10 space-y-10 animate-in fade-in duration-700">
-      
+    <div className="w-full h-full min-h-screen bg-[#FDFDFF] p-6 lg:p-10 space-y-10 animate-in fade-in duration-700 relative overflow-hidden">
+      {/* Floating Salon-themed Particles */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <style>{`
+          @keyframes floatParticle {
+            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.2; }
+            50% { transform: translateY(-30px) rotate(180deg); opacity: 0.6; }
+          }
+          .particle-loader {
+            position: absolute;
+            animation: floatParticle 4s ease-in-out infinite;
+          }
+        `}</style>
+        {[...Array(8)].map((_, i) => (
+          <div
+            key={i}
+            className="particle-loader"
+            style={{
+              left: `${5 + i * 12}%`,
+              top: `${10 + (i % 4) * 25}%`,
+              animationDelay: `${i * 0.6}s`,
+            }}
+          >
+            <Scissors size={20} className="text-[#1E4D8C]/20" />
+          </div>
+        ))}
+      </div>
+
       {/* --- TOP NAV SKELETON (Integrated Feel) --- */}
-      <div className="flex items-center justify-between pb-4">
+      <div className="flex items-center justify-between pb-4 relative z-10">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center">
-            <LayoutDashboard className="w-5 h-5 text-slate-200" />
+            <AnimatedScissorsLoader />
           </div>
           <div className="space-y-2">
             <div className="h-5 w-40 bg-slate-200/60 rounded-full animate-pulse" />
             <div className="h-3 w-24 bg-slate-100 rounded-full animate-pulse" />
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-white rounded-xl border border-slate-100 flex items-center justify-center text-slate-200">
             <Bell size={18} />
@@ -31,15 +95,16 @@ export function DashboardLoader({ isVisible = true }: DashboardLoaderProps) {
       </div>
 
       {/* --- FEATURED ANALYTICS CARDS (Glassmorphism) --- */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
         {[1, 2, 3].map((i) => (
-          <div 
-            key={i} 
+          <div
+            key={`card-${i}`}
             className="group relative h-44 bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden"
           >
             {/* Subtle Gradient Spot */}
             <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-50/50 rounded-full blur-2xl group-hover:bg-blue-100/50 transition-colors" />
-            
+            {i === 1 && <div className="absolute top-4 right-4"><AnimatedZapLoader /></div>}
+
             <div className="relative z-10 space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-slate-50 animate-pulse" />
@@ -47,7 +112,7 @@ export function DashboardLoader({ isVisible = true }: DashboardLoaderProps) {
               </div>
               <div className="h-10 w-32 bg-slate-900/5 rounded-2xl animate-pulse" />
               <div className="h-2 w-full bg-slate-50 rounded-full overflow-hidden">
-                <div className="h-full bg-slate-200 w-1/3 animate-shimmer" 
+                <div className="h-full bg-slate-200 w-1/3 animate-shimmer"
                      style={{ animation: 'shimmer 2s infinite linear' }} />
               </div>
             </div>

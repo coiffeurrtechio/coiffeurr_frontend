@@ -519,7 +519,7 @@
     "serviceRendered": "Service Rendered",
     "price": "Price",
     "noBookingsFound": "No bookings found matching filters.",
-    "pageOf": "Page {current} of {total}",
+    "pageOf": "Page {{current}} / {{total}}",
     "bookingDetail": "Booking Detail",
     "internalRemark": "Internal Remark / Note",
     "remarkPlaceholder": "Customer confirmed via phone...",

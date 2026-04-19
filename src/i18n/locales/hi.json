@@ -519,7 +519,7 @@
     "serviceRendered": "प्रदान की गई सेवा",
     "price": "कीमत",
     "noBookingsFound": "फ़िल्टर से मेल खाती कोई बुकिंग नहीं मिली।",
-    "pageOf": "पृष्ठ {current} / {total}",
+    "pageOf": "पृष्ठ {{current}} / {{total}}",
     "bookingDetail": "बुकिंग विवरण",
     "internalRemark": "आंतरिक टिप्पणी / नोट",
     "remarkPlaceholder": "ग्राहक ने फोन पर पुष्टि की...",
