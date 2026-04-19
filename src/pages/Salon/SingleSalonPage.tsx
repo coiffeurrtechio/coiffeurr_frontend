@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
-  ArrowLeft, MapPin, Clock, Phone, Star, Heart, Share2,
+  ArrowLeft, MapPin, Clock, Phone, Star, Heart,
   Mail, CheckCircle, X, Scissors, Loader2,
   Check,
   Navigation
@@ -14,7 +14,6 @@ import { Button } from "../../components/ui_components/button";
 import { Badge } from "../../components/ui_components/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui_components/tabs";
 import { Loader } from "../../components/ui_components/Loader";
-import { Card, CardContent } from "../../components/ui_components/card";
 
 // API
 import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI";
@@ -29,7 +28,7 @@ export default function SalonDetailPage() {
   const { salonId } = useParams<{ salonId: string }>();
   const { apiRequest, apiCustomerpiPostReq } = useApi();
 
-  const { userapiRequest, userapiPost } = usersalonApi()
+  const { userapiPost } = usersalonApi()
   const navigate = useNavigate();
 
   const [salon, setSalon] = useState<any>(null);
@@ -142,7 +141,10 @@ export default function SalonDetailPage() {
     try {
       const res = await apiRequest<any>(`/salons/${salonId}/staff`);
       if (res.data) setSalonStaff(res.data);
-    } catch (error) { console.error(error); }
+    } catch (error) {
+      console.error('Error fetching salon staff:', error);
+      setSalonStaff([]);
+    }
   }
 
   const handleViewService = (service_id?: any) => {
@@ -226,7 +228,7 @@ export default function SalonDetailPage() {
           <button onClick={() => navigate(-1)} className="p-2 -ml-2 hover:bg-slate-50 rounded-full transition-all">
             <ArrowLeft className="w-5 h-5 text-slate-700" />
           </button>
-          <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">Salon Details</span>
+          <span className="text-[10px] font-serif font-bold uppercase tracking-[0.2em] text-slate-400">The Experience</span>
           <div className="flex gap-1">
             {isloggedin && (<button onClick={handleWishList} className={`p-2 rounded-full hover:bg-slate-50 transition-all ${isFavorite ? "text-red-500" : "text-slate-400"}`}>
               <Heart className={`w-5 h-5 ${isFavorite ? "fill-current" : ""}`} />
@@ -237,36 +239,44 @@ export default function SalonDetailPage() {
 
       <main className="pt-16">
         {/* --- Hero Section --- */}
-        <section className="relative h-[60vh] md:h-[75vh] w-full bg-slate-100">
+        <section className="relative h-[50vh] md:h-[65vh] w-full bg-slate-100">
           <Swiper modules={[Pagination, Autoplay, EffectFade]} effect="fade" pagination={{ clickable: true }} autoplay={{ delay: 5000 }} className="h-full w-full">
             {(salon?.branding?.coverImages?.length ? salon.branding.coverImages : ["/placeholder.svg"]).map((img: string, i: number) => (
               <SwiperSlide key={i}><img src={img.trim()} alt="Salon" className="w-full h-full object-cover" /></SwiperSlide>
             ))}
           </Swiper>
 
-          <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-8 md:p-16 z-10">
-            <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-6">
-              <div className="text-white space-y-3">
-                <Badge className="bg-white/20 backdrop-blur-md text-white border-none text-[10px] tracking-widest px-3 py-1">{salon?.salonType}</Badge>
-                <h1 className="text-4xl md:text-6xl font-light tracking-tight leading-tight">{salon?.salonName}</h1>
-                <div className="flex items-center gap-4 text-sm font-medium opacity-90">
-                  {/* <div className="flex items-center gap-1.5"><Star className="w-4 h-4 fill-white text-white" /><span>{salon?.ratings?.average || "5.0"}</span></div> */}
-                  <span className="opacity-50">•</span><span>{reviews?.length || "0"} Reviews</span>
-                  <span className="opacity-50">•</span><span className="text-orange-300">{salon?.pricing?.priceRange}</span>
+          {/* Glassmorphism Title Card - Overlapping bottom of hero */}
+          <div className="absolute -bottom-20 left-0 right-0 z-20 px-6">
+            <div className="max-w-3xl mx-auto bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 p-8 md:p-12">
+              <div className="text-center space-y-4">
+                <Badge className="bg-slate-900 text-white border-none text-[10px] tracking-widest px-4 py-1.5">{salon?.salonType}</Badge>
+                <h1 className="text-3xl md:text-5xl font-serif tracking-tight leading-tight text-slate-900">{salon?.salonName}</h1>
+                <div className="flex items-center justify-center gap-4 text-sm font-medium text-slate-600">
+                  <span>{reviews?.length || "0"} Reviews</span>
+                  <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+                  <span className="text-amber-600">{salon?.pricing?.priceRange}</span>
                 </div>
               </div>
-              {/* <Button className="bg-white text-black hover:bg-slate-100 rounded-none px-10 h-14 text-xs font-bold uppercase tracking-widest transition-all">Reserve Experience</Button> */}
             </div>
           </div>
         </section>
 
-        {/* --- Content Body --- */}
-        <section className="max-w-7xl mx-auto px-6 py-20 grid grid-cols-1 lg:grid-cols-12 gap-20">
-          <div className="lg:col-span-8 space-y-16">
+        {/* --- Content Body - Single Centered Column --- */}
+        <section className="max-w-3xl mx-auto px-4 md:px-6 pt-32 pb-20">
+          <div className="space-y-16">
             <div>
-              <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-6">The Studio</h2>
-              <p className="text-lg md:text-xl text-slate-600 font-light leading-relaxed">{salon?.description}</p>
-              <div className="mt-8 flex flex-wrap gap-2">
+              <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-6 text-center">The Studio</h2>
+              <p className="text-lg md:text-xl text-slate-600 font-light leading-relaxed text-center">{salon?.description}</p>
+              {salon?.description?.includes('"') && (
+                <blockquote className="mt-8 p-8 bg-gradient-to-br from-amber-50 via-orange-50/50 to-yellow-50/30 border border-amber-200/50 rounded-2xl italic font-serif text-slate-700 text-center text-lg leading-relaxed relative">
+                  <div className="absolute top-4 left-4 text-amber-400">
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21L14.017 18C14.017 16.8954 13.1216 16 12.017 16H9.01697C7.9124 16 7.01697 16.8954 7.01697 18L7.01697 21H14.017ZM12.017 14C13.1216 14 14.017 13.1046 14.017 12C14.017 10.8954 13.1216 10 12.017 10C10.9124 10 10.017 10.8954 10.017 12C10.017 13.1046 10.9124 14 12.017 14Z"/></svg>
+                  </div>
+                  <span className="relative z-10">{salon?.description?.match(/"([^"]*)"/)?.[1] || salon?.description}</span>
+                </blockquote>
+              )}
+              <div className="mt-8 flex flex-wrap justify-center gap-2">
                 {salon?.expertise?.map((exp: string, i: number) => (
                   <Badge key={i} variant="outline" className="rounded-full px-4 py-1 text-slate-500 border-slate-200">{exp}</Badge>
                 ))}
@@ -274,9 +284,9 @@ export default function SalonDetailPage() {
             </div>
 
             <Tabs defaultValue="services" className="w-full">
-              <TabsList className="w-full justify-start bg-transparent border-b border-slate-100 h-auto p-0 gap-10">
-                {["services", "stylists", "reviews"].map((tab) => (
-                  <TabsTrigger key={tab} value={tab} className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-black rounded-none px-0 py-4 text-xs font-bold uppercase tracking-widest text-slate-400 data-[state=active]:text-black">
+              <TabsList className="w-full justify-center bg-slate-100/50 border-b border-slate-200 rounded-none p-0 h-auto gap-0">
+                {["services", "meet the artisans", "truth spoken"].map((tab) => (
+                  <TabsTrigger key={tab} value={tab === "meet the artisans" ? "stylists" : tab === "truth spoken" ? "reviews" : tab} className="flex-1 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-slate-900 rounded-none px-3 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-500 data-[state=active]:text-slate-900 transition-all">
                     {tab}
                   </TabsTrigger>
                 ))}
@@ -285,20 +295,28 @@ export default function SalonDetailPage() {
               {/* SERVICES TAB */}
               <TabsContent value="services" className="pt-10">
                 {salonService?.length > 0 ? (
-                  <div className="grid gap-4">
+                  <div className="divide-y divide-slate-100">
                     {salonService.map((item: any, index: number) => (
-                      <Card key={index} className="border-0 bg-card/50 backdrop-blur-sm">
-                        <CardContent className="p-4 flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-2">
-                              <h4 className="font-medium">{item.serviceName}</h4>
-                              <div className="font-semibold text-accent-foreground">₹{item.price}</div>
-                            </div>
-                            <p className="text-sm text-muted-foreground">{item.description}</p>
+                      <div key={index} className="py-6 grid grid-cols-[1fr_auto_auto] gap-4 items-center">
+                        <div className="min-h-[60px] flex flex-col justify-center">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-medium">{item.serviceName.replace('Triming', 'Trimming')}</h4>
+                            {index === 0 && (
+                              <Badge className="bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 text-white border-none text-[9px] uppercase tracking-wider px-3 py-1 shadow-md shrink-0">
+                                <span className="flex items-center gap-1">
+                                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+                                  Signature Service
+                                </span>
+                              </Badge>
+                            )}
                           </div>
-                          <Button size="sm" className="ml-4 bg-slate-900" onClick={() => handleViewService(item?.service_id)}>Book Now</Button>
-                        </CardContent>
-                      </Card>
+                          <p className="text-sm text-slate-500">{item.description}</p>
+                        </div>
+                        <div className="font-semibold text-slate-900 text-right">
+                          <span className="text-sm text-slate-500 font-normal">₹</span>{item.price}
+                        </div>
+                        <Button size="sm" className="rounded-full border-2 border-slate-900 bg-transparent text-slate-900 hover:bg-slate-900 hover:text-white hover:shadow-lg hover:shadow-slate-900/20 transition-all duration-300 hover:scale-105 px-6" onClick={() => handleViewService(item?.service_id)}>Book Now</Button>
+                      </div>
                     ))}
                   </div>
                 ) : <div className="py-20 text-center"><Scissors className="w-8 h-8 text-slate-200 mx-auto mb-4" /><p className="text-sm text-slate-400">Digital Menu currently being updated.</p></div>}
@@ -307,14 +325,23 @@ export default function SalonDetailPage() {
               {/* STYLISTS TAB */}
               <TabsContent value="stylists" className="pt-10">
                 {salonStaff?.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
                     {salonStaff.map((staff: any) => (
                       <div
                         key={staff.staff_id}
                         onClick={() => handleStaffClick(staff.staff_id)}
-                        className="group bg-slate-50 p-6 transition-all cursor-pointer hover:bg-white hover:shadow-xl border border-transparent hover:border-slate-100 flex gap-6"
+                        className="group relative bg-white p-5 transition-all cursor-pointer hover:scale-[1.02] hover:shadow-xl border border-slate-100 rounded-2xl flex gap-5 min-h-[120px]"
                       >
-                        <div className="w-24 h-24 bg-slate-200 shrink-0 overflow-hidden">
+                        {/* Rating - Absolute Position Top Right */}
+                        {staff.rating?.average && (
+                          <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-slate-900 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-md">
+                            <Star className="w-3 h-3 fill-white" />
+                            {staff.rating.average.toFixed(1)}
+                          </div>
+                        )}
+
+                        {/* Artist Image */}
+                        <div className="w-20 h-20 bg-slate-100 shrink-0 overflow-hidden rounded-xl">
                           {staff.images?.[0] ? (
                             <img
                               src={staff.images[0]}
@@ -322,28 +349,22 @@ export default function SalonDetailPage() {
                               className="w-full h-full object-cover transition-transform group-hover:scale-110"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-slate-400">
-                              <Scissors className="w-8 h-8 opacity-20" />
+                            <div className="w-full h-full flex items-center justify-center text-slate-300">
+                              <Scissors className="w-8 h-8 opacity-30" />
                             </div>
                           )}
                         </div>
-                        <div className="space-y-2 flex-1">
-                          <div className="flex justify-between">
-                            <div>
-                              <h3 className="text-lg font-light">{staff.name}</h3>
-                              <p className="text-[10px] font-bold text-[#1E4D8C] uppercase tracking-wider">{staff.role}</p>
-                              <p className="text-[10px] text-slate-400 font-bold uppercase">{staff.experienceYears} Years Exp</p>
-                            </div>
-                            {staff.rating?.average && (
-                              <div className="flex items-center gap-1 text-xs font-bold">
-                                <Star className="w-3 h-3 fill-slate-900" />
-                                {staff.rating.average.toFixed(1)}
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {staff.expertise?.slice(0, 2).map((exp: string, i: number) => (
-                              <span key={i} className="text-[9px] bg-slate-200 px-2 py-0.5 rounded-full uppercase">{exp}</span>
+
+                        {/* Text Content - Right Aligned */}
+                        <div className="flex-1 flex flex-col justify-center">
+                          <h3 className="text-xl font-serif font-medium text-slate-900 mb-1">{staff.name}</h3>
+                          <p className="text-[10px] font-bold text-[#1E4D8C] uppercase tracking-wider mb-1">{staff.role}</p>
+                          <p className="text-[10px] text-slate-400 font-normal uppercase">{staff.experienceYears} Years Exp</p>
+                          
+                          {/* Specialty Tags - Pill Shaped with Border */}
+                          <div className="flex flex-wrap gap-2 mt-3">
+                            {staff.expertise?.slice(0, 3).map((exp: string, i: number) => (
+                              <span key={i} className="text-[9px] border border-slate-200 px-3 py-1 rounded-full uppercase text-slate-600">{exp}</span>
                             ))}
                           </div>
                         </div>
@@ -358,137 +379,247 @@ export default function SalonDetailPage() {
               {/* REVIEWS TAB */}
               <TabsContent value="reviews" className="pt-10">
                 <div className="space-y-12">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-8">
-                    <div>
-                      {/* <h3 className="text-4xl font-light">{salon?.ratings?.average || "5.0"}</h3> */}
-                      {/* <div className="flex gap-1 mt-1">
-                        {[1, 2, 3, 4, 5].map(s => <Star key={s} size={12} className={s <= Math.round(salon?.ratings?.average || 5) ? "fill-orange-400 text-orange-400" : "text-slate-200"} />)}
-                      </div> */}
-                      <p className="text-[10px] font-bold uppercase text-slate-400 mt-2">Based on {reviews.length} Reviews</p>
-                    </div>
-                    {isloggedin && (<Button variant="outline" className="rounded-none text-[10px] font-bold uppercase tracking-widest"
-                      onClick={() => setIsReviewModalOpen(true)}>Write a Review</Button>)}
+                  {/* Review Summary - Centered */}
+                  <div className="text-center border-b border-slate-100 pb-8">
+                    <h3 className="text-2xl font-serif font-semibold text-slate-900 mb-2">Truth Spoken</h3>
+                    <p className="text-[10px] font-normal text-slate-500 mb-6">Genuine experiences, authored by our community</p>
+                    
+                    {/* Calculate stats from reviews */}
+                    {(() => {
+                      const averageRatingNum = reviews.length > 0 ? reviews.reduce((sum, rev) => sum + (rev.rating || 0), 0) / reviews.length : 0;
+                      const fiveStarCount = reviews.filter(r => r.rating === 5).length;
+                      const fiveStarPercentage = reviews.length > 0 ? Math.round((fiveStarCount / reviews.length) * 100) : 0;
+                      const satisfactionRate = reviews.length > 0 ? Math.round((reviews.filter(r => r.rating >= 4).length / reviews.length) * 100) : 0;
+                      
+                      return (
+                        <>
+                          <div className="flex items-center justify-center gap-2 mb-4">
+                            {[1, 2, 3, 4, 5].map(s => <Star key={s} size={16} className={s <= Math.round(averageRatingNum) ? "fill-[#D4AF37] text-[#D4AF37]" : "text-slate-200"} />)}
+                          </div>
+                          <p className="text-[10px] font-bold uppercase text-slate-400 mb-4">Based on {reviews.length} Reviews</p>
+                          
+                          {/* Visual Rating Bar */}
+                          <div className="max-w-md mx-auto mb-4">
+                            <div className="flex items-center gap-3">
+                              <span className="text-[10px] font-bold uppercase text-slate-500">5-Star</span>
+                              <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                <div className="h-full bg-gradient-to-r from-[#D4AF37] to-[#F4C430] rounded-full" style={{width: `${fiveStarPercentage}%`}}></div>
+                              </div>
+                              <span className="text-[10px] font-bold text-[#D4AF37]">{fiveStarPercentage}%</span>
+                            </div>
+                          </div>
+                          
+                          <div className="inline-block bg-amber-50 border border-amber-200 rounded-full px-4 py-1.5">
+                            <span className="text-[10px] font-bold text-amber-700">{satisfactionRate}% Satisfaction Rate</span>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
 
                   {reviews.length > 0 ? (
                     <div className="grid gap-10">
                       {reviews.map((rev, i) => (
-                        <div key={i} className="animate-in fade-in slide-in-from-bottom-2">
-                          <div className="flex justify-between items-start mb-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold">{rev?.userName?.charAt(0).toUpperCase() || "U"}</div>
-                              <div><h4 className="text-sm font-bold">{rev?.userName || "Customer"}</h4><p className="text-[10px] text-slate-400">{new Date(rev.createdAt || Date.now()).toLocaleDateString()}</p></div>
+                        <div key={i} className="animate-in fade-in slide-in-from-bottom-2 relative mb-10">
+                          {/* Large Quote Mark Background */}
+                          <div className="absolute top-0 left-0 text-9xl text-slate-100 opacity-20 font-serif leading-none select-none">"</div>
+                          
+                          <div className="relative z-10 pl-8">
+                            <div className="flex justify-between items-start mb-6">
+                              <div className="flex items-center gap-4">
+                                {/* User Image or Gradient Avatar */}
+                                {rev?.userImage ? (
+                                  <img
+                                    src={rev.userImage}
+                                    alt={rev?.userName || "Customer"}
+                                    className="w-12 h-12 rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-slate-800 to-slate-600 flex items-center justify-center text-white text-sm font-bold">
+                                    {rev?.userName?.charAt(0).toUpperCase() || "U"}
+                                  </div>
+                                )}
+                                <div>
+                                  <h4 className="text-lg font-serif font-bold text-slate-900">{rev?.userName || "Customer"}</h4>
+                                  <p className="text-[10px] text-slate-400 font-normal">
+                                    {new Date(rev.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex gap-0.5">{[1, 2, 3, 4, 5].map(s => <Star key={s} size={12} className={s <= rev.rating ? "fill-[#D4AF37] text-[#D4AF37]" : "text-slate-200"} />)}</div>
                             </div>
-                            <div className="flex gap-0.5">{[1, 2, 3, 4, 5].map(s => <Star key={s} size={10} className={s <= rev.rating ? "fill-slate-900 text-slate-900" : "text-slate-200"} />)}</div>
+                            <p className="text-[#333] font-serif leading-relaxed text-base pl-16">{rev.reviewText}</p>
                           </div>
-                          <p className="text-slate-600 font-light text-sm pl-13">{rev.reviewText}</p>
                         </div>
                       ))}
                     </div>
                   ) : <div className="py-20 text-center"><Star className="w-8 h-8 text-slate-200 mx-auto mb-4" /><p className="text-sm text-slate-400 italic">No reviews yet. Share your experience!</p></div>}
+                  
+                  {/* Signature Tagline */}
+                  <div className="text-center pt-8 mt-8 border-t border-slate-100">
+                    <p className="text-sm font-serif text-slate-500 italic">Every transformation is a story. Thank you for sharing yours.</p>
+                  </div>
                 </div>
               </TabsContent>
             </Tabs>
-          </div>
 
-          {/* Sidebar */}
-          <div className="lg:col-span-4">
-            <div className="sticky top-24 space-y-10">
-              <div className="bg-slate-50 rounded-[2.5rem] p-10 border border-slate-100">
-                <h3 className="text-[11px] font-black text-[#1E4D8C] uppercase tracking-[0.3em] mb-10 border-b border-blue-100 pb-6">
-                  Concierge
-                </h3>
-                <div className="space-y-8">
-                  {/* Location & Directions */}
-                  <div className="flex gap-5">
-                    <MapPin className="w-5 h-5 shrink-0 text-[#1E4D8C]" />
-                    <div className="flex-1">
-                      <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Location</p>
-                      <p className="text-sm text-slate-800 font-medium leading-relaxed mb-3">
-                        {salon?.address?.street},<br />
-                        {salon?.address?.city}, {salon?.address?.state} - {salon?.address?.pincode}
-                      </p>
-                      {/* Added Directions Link */}
-                      <a
-                        href={salon?.location_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-[10px] font-black text-[#1E4D8C] uppercase tracking-wider hover:underline"
-                      >
-                        <Navigation size={12} /> Get Directions
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* Hours */}
-                  <div className="flex gap-5">
-                    <Clock className="w-5 h-5 shrink-0 text-[#1E4D8C]" />
-                    <div>
-                      <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Hours</p>
-                      <div className="flex items-center gap-3">
-                        <p className="text-sm text-slate-800 font-medium">
-                          {formatTime(salon?.timing?.openingTime)} — {formatTime(salon?.timing?.closingTime)}
-                        </p>
-                        {isOpen ?
-                          <Badge className="bg-green-500/10 text-green-600 border-none text-[9px] font-black">OPEN</Badge> :
-                          <Badge className="bg-red-500/10 text-red-600 border-none text-[9px] font-black">CLOSED</Badge>
-                        }
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Phone */}
-                  <div className="flex gap-5">
-                    <Phone className="w-5 h-5 shrink-0 text-[#1E4D8C]" />
-                    <div>
-                      <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Direct Line</p>
-                      <p className="text-sm text-slate-800 font-medium">{salon?.primaryPhone}</p>
-                    </div>
+            {/* Concierge Section - Below Services */}
+            <div className="bg-slate-50 rounded-3xl p-8 md:p-12 border border-slate-100">
+              <h3 className="text-[11px] font-black text-[#1E4D8C] uppercase tracking-[0.3em] mb-8 text-center">Concierge</h3>
+              
+              {/* Mobile Vertical List */}
+              <div className="space-y-6 md:hidden">
+                {/* Location */}
+                <div className="flex items-start gap-4">
+                  <MapPin className="w-6 h-6 text-[#1E4D8C] shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Location</p>
+                    <p className="text-sm text-slate-800 font-medium leading-relaxed mb-2">
+                      {salon?.address?.city}, {salon?.address?.state}
+                    </p>
+                    <a
+                      href={salon?.location_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-[10px] font-black text-[#1E4D8C] uppercase tracking-wider hover:underline"
+                    >
+                      <Navigation size={10} /> Get Directions
+                    </a>
                   </div>
                 </div>
 
-                {/* Ownership Section */}
-                <div className="mt-12 pt-10 border-t border-slate-200">
-                  <h4 className="text-[9px] font-black uppercase text-slate-400 mb-4 tracking-widest">Managed By</h4>
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-[#1E4D8C] flex items-center justify-center text-white font-black text-xs">
-                      {salon?.ownerName?.charAt(0)}
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-slate-800">{salon?.ownerName}</span>
-                      <span className="text-[10px] text-slate-400 font-medium lowercase">{salon?.email}</span>
-                    </div>
+                {/* Hours */}
+                <div className="flex items-start gap-4">
+                  <Clock className="w-6 h-6 text-[#1E4D8C] shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Hours</p>
+                    <p className="text-sm text-slate-800 font-medium mb-2">
+                      {formatTime(salon?.timing?.openingTime)} — {formatTime(salon?.timing?.closingTime)}
+                    </p>
+                    {isOpen ?
+                      <Badge className="bg-green-500/10 text-green-600 border-none text-[9px] font-black">OPEN</Badge> :
+                      <Badge className="bg-red-500/10 text-red-600 border-none text-[9px] font-black">CLOSED</Badge>
+                    }
+                  </div>
+                </div>
+
+                {/* Phone */}
+                <div className="flex items-start gap-4">
+                  <Phone className="w-6 h-6 text-[#1E4D8C] shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Direct Line</p>
+                    <p className="text-sm text-slate-800 font-medium">{salon?.primaryPhone}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Primary CTA */}
-              <a href={`tel:${salon?.primaryPhone}`} className="block">
-                <Button className="w-full h-16 rounded-2xl bg-[#1E4D8C] text-white text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-blue-900/30 hover:scale-[1.02] transition-all">
-                  Contact Front Desk
-                </Button>
-              </a>
+              {/* Desktop 3-Column Grid */}
+              <div className="hidden md:grid grid-cols-3 gap-8">
+                {/* Location */}
+                <div className="flex flex-col items-center text-center gap-3">
+                  <MapPin className="w-6 h-6 text-[#1E4D8C]" />
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Location</p>
+                    <p className="text-sm text-slate-800 font-medium leading-relaxed">
+                      {salon?.address?.city}, {salon?.address?.state}
+                    </p>
+                    <a
+                      href={salon?.location_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 mt-2 text-[10px] font-black text-[#1E4D8C] uppercase tracking-wider hover:underline"
+                    >
+                      <Navigation size={10} /> Get Directions
+                    </a>
+                  </div>
+                </div>
+
+                {/* Hours */}
+                <div className="flex flex-col items-center text-center gap-3">
+                  <Clock className="w-6 h-6 text-[#1E4D8C]" />
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Hours</p>
+                    <div className="flex items-center justify-center gap-2">
+                      <p className="text-sm text-slate-800 font-medium">
+                        {formatTime(salon?.timing?.openingTime)} — {formatTime(salon?.timing?.closingTime)}
+                      </p>
+                    </div>
+                    {isOpen ?
+                      <Badge className="bg-green-500/10 text-green-600 border-none text-[9px] font-black mt-1">OPEN</Badge> :
+                      <Badge className="bg-red-500/10 text-red-600 border-none text-[9px] font-black mt-1">CLOSED</Badge>
+                    }
+                  </div>
+                </div>
+
+                {/* Phone */}
+                <div className="flex flex-col items-center text-center gap-3">
+                  <Phone className="w-6 h-6 text-[#1E4D8C]" />
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Direct Line</p>
+                    <p className="text-sm text-slate-800 font-medium">{salon?.primaryPhone}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Ownership Section - Soft Bordered Card */}
+              <div className="mt-10 pt-8 border-t border-slate-200">
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-md mx-auto">
+                  <h4 className="text-[9px] font-black uppercase text-slate-400 tracking-widest text-center mb-4">Managed By</h4>
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#1E4D8C] flex items-center justify-center text-white font-black text-xs">
+                      {salon?.ownerName?.charAt(0)}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-slate-800">{salon?.ownerName}</span>
+                      <span className="text-[10px] text-slate-400 font-normal lowercase">{salon?.email}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
+
+        {/* Sticky Contact Button - Mobile Only */}
+        <div className="fixed bottom-0 left-0 right-0 lg:hidden z-50 p-4">
+          <div className="bg-white/80 backdrop-blur-lg rounded-2xl p-2 shadow-2xl border border-slate-200/50">
+            <a href={`tel:${salon?.primaryPhone}`} className="block">
+              <Button className="w-full h-14 rounded-xl bg-[#1E4D8C] text-white text-[11px] font-black uppercase tracking-[0.2em] shadow-lg hover:scale-[1.02] transition-all">
+                Contact Front Desk
+              </Button>
+            </a>
+          </div>
+        </div>
+
+        {/* Floating Write Review Button - Fixed FAB */}
+        {isloggedin && (
+          <button
+            onClick={() => setIsReviewModalOpen(true)}
+            className="fixed bottom-24 right-4 lg:bottom-8 lg:right-8 z-50 w-14 h-14 rounded-full bg-slate-900 text-white shadow-2xl hover:bg-[#D4AF37] transition-all duration-300 hover:scale-110 flex items-center justify-center group"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+            <span className="absolute right-16 bg-white text-slate-900 text-[10px] font-bold px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg border border-[#D4AF37]">Share Your Truth</span>
+          </button>
+        )}
       </main>
 
       {/* --- Review Modal --- */}
       {isReviewModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden p-8 space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-black text-gray-800">Rate {salon?.salonName}</h3>
-              <button
-                onClick={() => {
-                  setIsReviewModalOpen(false);
-                  setReviewError(null);
-                }}
-                className="p-2 hover:bg-gray-100 rounded-full"
-              >
-                <X size={20} />
-              </button>
-            </div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/30 backdrop-blur-[10px]">
+          <div className="bg-white w-full max-w-md rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden p-8 space-y-6 relative">
+            {/* Close Button - Top Right */}
+            <button
+              onClick={() => {
+                setIsReviewModalOpen(false);
+                setReviewError(null);
+              }}
+              className="absolute top-4 right-4 p-2 hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              <X size={20} className="text-gray-400" />
+            </button>
+
+            {/* Title - Serif Font */}
+            <h3 className="text-2xl font-serif font-semibold text-slate-900 text-center mt-2">How was your transformation?</h3>
 
             {/* Error Message Alert */}
             {reviewError && (
@@ -500,43 +631,52 @@ export default function SalonDetailPage() {
               </div>
             )}
 
-            <div className="flex justify-center gap-2">
+            {/* Champagne Gold Star Rating */}
+            <div className="flex justify-center gap-3">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star
                   key={star}
-                  size={32}
-                  className={`cursor-pointer transition-all ${star <= reviewData.rating ? "fill-orange-400 text-orange-400 scale-110" : "text-gray-200"}`}
+                  size={36}
+                  className={`cursor-pointer transition-all duration-300 ${
+                    star <= reviewData.rating 
+                      ? "fill-[#D4AF37] text-[#D4AF37] scale-110 drop-shadow-lg" 
+                      : "text-gray-200 hover:scale-125"
+                  }`}
                   onClick={() => {
                     setReviewData({ ...reviewData, rating: star });
-                    setReviewError(null); // Clear error when rating changes
+                    setReviewError(null);
                   }}
                 />
               ))}
             </div>
 
+            {/* Textarea - Inter Font */}
             <textarea
               disabled={isReviewSubmitting}
-              className={`w-full p-4 bg-gray-50 border rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-100 min-h-[120px] transition-all ${reviewError ? 'border-red-200' : 'border-gray-100'}`}
-              placeholder="Share your experience..."
+              className={`w-full p-[15px] bg-gray-50 border rounded-2xl text-sm font-sans outline-none focus:ring-2 focus:ring-[#D4AF37]/20 min-h-[120px] transition-all ${
+                reviewError ? 'border-red-200' : 'border-gray-200'
+              }`}
+              placeholder="Describe the magic of your visit..."
               value={reviewData.reviewText}
               onChange={(e) => {
                 setReviewData({ ...reviewData, reviewText: e.target.value });
-                if (reviewError) setReviewError(null); // Clear error as they type
+                if (reviewError) setReviewError(null);
               }}
             />
 
+            {/* Pill Button with Gold Hover */}
             <button
               disabled={isReviewSubmitting}
               onClick={handlePostReview}
-              className="w-full py-4 bg-[#1E4D8C] text-white rounded-2xl font-black text-sm shadow-lg disabled:opacity-70 flex items-center justify-center gap-2 transition-all"
+              className="w-full py-4 bg-slate-900 text-white rounded-full font-semibold text-sm tracking-[0.1em] shadow-lg disabled:opacity-70 flex items-center justify-center gap-2 transition-all hover:bg-[#D4AF37] hover:shadow-xl"
             >
               {isReviewSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Posting Review...</span>
+                  <span>Posting...</span>
                 </>
               ) : (
-                "Submit Review"
+                "Share with the Community"
               )}
             </button>
           </div>

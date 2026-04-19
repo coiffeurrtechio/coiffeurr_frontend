@@ -81,7 +81,17 @@ export function Header() {
 
               {isAuthenticated ? (
                 <Link to="/profile">
-                  <Avatar className="w-14 h-14 mx-auto border-4 border-accent/20">
+                  <Avatar className="w-14 h-14 mx-auto border-4 border-accent/20 hover:border-accent/40 transition-colors">
+                    {userDetails?.image_url || userDetails?.avatar ? (
+                      <img 
+                        src={userDetails?.image_url || userDetails?.avatar} 
+                        alt={userDetails?.username || "User"} 
+                        className="w-full h-full object-cover rounded-full"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : null}
                     <AvatarFallback className="bg-accent text-accent-foreground text-xl font-semibold">
                       {userDetails?.username
                         ?.split(" ")

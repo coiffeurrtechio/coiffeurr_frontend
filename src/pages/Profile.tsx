@@ -14,6 +14,7 @@ import { Button } from "../components/ui_components/button";
 import Config from "../configs/config";
 import SettingsPanel from "../components/SettingsPanel";
 import ParticleSystem from "../components/ParticleSystem";
+import Sponser_Footer from "../components/Sponser_Footer";
 
 export default function Profile() {
   const { t } = useTranslation();
@@ -548,6 +549,9 @@ export default function Profile() {
       )}
 
       <SettingsPanel isOpen={showLanguageModal} onClose={() => setShowLanguageModal(false)} />
+      <div className="mt-10">
+        <Sponser_Footer collapsed={false} />
+      </div>
     </div>
   );
 }

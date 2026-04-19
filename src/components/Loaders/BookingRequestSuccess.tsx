@@ -15,23 +15,34 @@ export function BookingRequestSuccess({
   if (!isVisible) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="flex flex-col items-center justify-center gap-6 bg-card p-8 rounded-2xl shadow-2xl max-w-sm mx-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-md animate-in fade-in duration-500">
+      <div className="flex flex-col items-center justify-center gap-8 bg-white/95 backdrop-blur-xl p-10 rounded-[2.5rem] shadow-2xl border border-white/30 max-w-sm mx-4 animate-in zoom-in-95 duration-300">
         {/* Success Icon */}
-        <div className="relative w-20 h-20">
-          <div className="absolute inset-0 bg-green-500/20 rounded-full animate-pulse" />
+        <div className="relative w-24 h-24">
+          <div className="absolute inset-0 bg-[#D4AF37]/20 rounded-full animate-pulse" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <CheckCircle className="w-16 h-16 text-green-600 fill-green-100" />
+            <div className="w-20 h-20 rounded-full bg-[#D4AF37] flex items-center justify-center shadow-lg">
+              <CheckCircle className="w-12 h-12 text-white" />
+            </div>
           </div>
+          {/* Pulsing Ring */}
+          <div className="absolute inset-0 rounded-full border-2 border-[#D4AF37] animate-ping opacity-20" />
         </div>
 
         {/* Success Message */}
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-foreground mb-2">Booking Request Send Successfully!</h2>
-          <p className="text-sm text-muted-foreground">
-            Your appointment request has been successfully sent to {salonName}
+        <div className="text-center space-y-3">
+          <h2 className="text-2xl font-light tracking-tight text-slate-900" style={{ fontFamily: 'Playfair Display, serif' }}>
+            Booking Request<br />Send Successfully!
+          </h2>
+          <p className="text-sm text-slate-600 font-medium leading-relaxed">
+            Your appointment request has been successfully sent to the salon
           </p>
         </div>
+
+        {/* Signature Tagline */}
+        <p className="text-[10px] text-slate-400 italic text-center" style={{ fontFamily: 'Playfair Display, serif' }}>
+          A signature session tailored to your unique aesthetic.
+        </p>
       </div>
     </div>
   )
