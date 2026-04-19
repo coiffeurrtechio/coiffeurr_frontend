@@ -121,7 +121,7 @@
     "friday": "Fri",
     "saturday": "Sat"
   },
-  "profile": {
+  "salonProfile": {
     "title": "Salon Profile",
     "subtitle": "Manage your public salon information and business hours.",
     "editProfile": "Edit Profile",
@@ -608,15 +608,5 @@
     "role": "Role",
     "utilization": "Utilization",
     "rating": "Rating"
-  },
-  "profile": {
-    "title": "Profile",
-    "editProfile": "Edit Profile",
-    "personalInfo": "Personal Information",
-    "contactInfo": "Contact Information",
-    "changePassword": "Change Password",
-    "saveChanges": "Save Changes",
-    "profileUpdated": "Profile updated successfully!",
-    "profileUpdateFailed": "Failed to update profile"
   }
 }

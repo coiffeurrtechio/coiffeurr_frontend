@@ -2,9 +2,9 @@ import React, { useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import {
   Camera, ArrowLeft, Mail, Phone, Calendar,
-  LayoutDashboard, LogOut, ChevronRight,
+  LayoutDashboard, LogOut, ChevronRight, ChevronDown,
   Heart, Edit3, X, MapPin, Loader2, CheckCircle2, AlertCircle,
-  Plus, Home, MapPinned, LocateFixed
+  Plus, Home, MapPinned, LocateFixed, User, Globe, Gift, MessageCircle, Link
 } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,8 @@ import { logoutUser } from "../API/APIs";
 import { usersalonApi } from "../API/SalonsAPIs/UserSalonAPI";
 import { Button } from "../components/ui_components/button";
 import Config from "../configs/config";
+import SettingsPanel from "../components/SettingsPanel";
+import ParticleSystem from "../components/ParticleSystem";
 
 export default function Profile() {
   const { t } = useTranslation();
@@ -24,6 +26,9 @@ export default function Profile() {
   const [isUploading, setIsUploading] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddressExpanded, setIsAddressExpanded] = useState(false);
+  const [isUserDetailsExpanded, setIsUserDetailsExpanded] = useState(false);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const authData = JSON.parse(localStorage.getItem("authState") || "{}");
@@ -32,13 +37,19 @@ export default function Profile() {
     email: "",
     phone: "",
     address: { house_no: "", street: "", locality: "", city: "", state: "", pincode: "", country: "", landmark: "" },
-    image_url: ""
+    image_url: "",
+    gender: "",
+    dob: "",
+    marital_status: ""
   });
 
   const [editForm, setEditForm] = useState({
     address: { house_no: "", street: "", locality: "", city: "", state: "", pincode: "", country: "India", landmark: "" },
     profileImage: "",
-    user_id: authData?.user?.user?.id || ""
+    user_id: authData?.user?.user?.id || "",
+    gender: "",
+    dob: "",
+    marital_status: ""
   });
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -65,7 +76,10 @@ export default function Profile() {
         setEditForm({
           address: res.data.address || { house_no: "", street: "", locality: "", city: "", state: "", pincode: "", country: "India", landmark: "" },
           profileImage: res.data.image_url || "",
-          user_id: id
+          user_id: id,
+          gender: res.data.gender || "",
+          dob: res.data.dob || "",
+          marital_status: res.data.marital_status || ""
         });
       }
     } catch (error) {
@@ -154,6 +168,24 @@ export default function Profile() {
         hasChanges = true;
       }
 
+      // Only add gender if it changed
+      if (editForm.gender !== usercontactdetails.gender) {
+        payload.gender = editForm.gender;
+        hasChanges = true;
+      }
+
+      // Only add dob if it changed
+      if (editForm.dob !== usercontactdetails.dob) {
+        payload.dob = editForm.dob;
+        hasChanges = true;
+      }
+
+      // Only add marital_status if it changed
+      if (editForm.marital_status !== usercontactdetails.marital_status) {
+        payload.marital_status = editForm.marital_status;
+        hasChanges = true;
+      }
+
       if (!hasChanges) {
         setIsEditModalOpen(false);
         setLoading(false);
@@ -184,14 +216,9 @@ export default function Profile() {
     }
   };
 
-  const getFormattedAddress = () => {
-    const addr = usercontactdetails.address;
-    if (!addr || !addr.city) return null;
-    return [addr.house_no, addr.street, addr.city].filter(Boolean).join(", ");
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 pb-10 overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-slate-50 pb-10 overflow-x-hidden">
+      <ParticleSystem />
       {toast && (
         <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-6 py-3 rounded-2xl shadow-2xl animate-in slide-in-from-top duration-300 ${toast.type === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
           {toast.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
@@ -199,85 +226,249 @@ export default function Profile() {
         </div>
       )}
 
-      <div className="h-32 bg-[#1E4D8C] relative">
+      <div className="h-40 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600 relative overflow-hidden">
         <div className="max-w-7xl mx-auto w-full h-full relative flex items-start justify-between p-6">
-          <button onClick={() => navigate("/")} className="p-2.5 bg-white/10 rounded-full text-white backdrop-blur-md active:scale-90 transition-all">
+          <button onClick={() => navigate("/")} className="p-3 bg-white/20 rounded-full text-white backdrop-blur-md hover:bg-white/30 active:scale-90 transition-all shadow-lg">
             <ArrowLeft size={20} />
-          </button>
-          <button onClick={() => setIsEditModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-white backdrop-blur-md text-xs font-bold uppercase tracking-widest active:scale-95 transition-all">
-            <Edit3 size={14} /> {t('profile.updateInfo')}
           </button>
         </div>
       </div>
 
       <div className="max-w-xl mx-auto px-4">
-        <div className="relative -mt-16 bg-white rounded-[2rem] shadow-sm p-6 text-center border border-gray-100">
-          <div className="relative inline-block">
-            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white overflow-hidden bg-gray-100 shadow-md relative">
-              {usercontactdetails.image_url ? <img src={usercontactdetails?.image_url} alt="Profile" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-orange-100 text-orange-600 text-3xl font-black">{user.name?.charAt(0)}</div>}
+        <div className="relative -mt-20 bg-gradient-to-br from-white/95 to-slate-50/95 rounded-[2.5rem] shadow-2xl p-8 text-center border border-white/20 backdrop-blur-[15px]">
+          <div className="absolute -top-16 left-1/2 -translate-x-1/2">
+            <div className="w-36 h-36 sm:w-40 sm:h-40 rounded-full border-4 border-white shadow-2xl overflow-hidden bg-gradient-to-br from-orange-100 to-orange-200 relative">
+              {usercontactdetails.image_url ? <img src={usercontactdetails?.image_url} alt="Profile" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-200 text-orange-600 text-5xl font-black">{user.name?.charAt(0)}</div>}
+            </div>
+            <div className="absolute bottom-1 right-1 w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full border-4 border-white shadow-lg" />
+          </div>
+          <p className="mt-24 text-[10px] font-bold uppercase text-gray-400 tracking-[2px] text-center">
+            Welcome Back
+          </p>
+          <h2 className="mt-1 text-3xl font-semibold text-gray-900 tracking-tight text-center whitespace-nowrap" style={{ fontFamily: "'Playfair Display', serif" }}>
+            {user.name} {usercontactdetails.name || t('profile.user')}
+          </h2>
+          <p className="mt-1 text-sm font-light italic text-gray-500 text-center opacity-70">
+            Ready for your next transformation?
+          </p>
+        </div>
+
+        <div className="mt-8 bg-gradient-to-br from-white/95 to-slate-50/95 rounded-[2rem] shadow-xl border border-white/20 overflow-hidden divide-y divide-slate-100 backdrop-blur-[15px]">
+          <MenuItem label={t('profile.myBookings')} icon={<Calendar className="text-slate-800" />} onClick={() => navigate("/bookings")} />
+          <MenuItem label={t('profile.wishlist')} icon={<Heart className="text-red-500" />} onClick={() => navigate("/wishlist")} />
+          <MenuItem label="Language" icon={<Globe className="text-slate-800" />} onClick={() => setShowLanguageModal(true)} />
+          {user.role === "OWNER" && <MenuItem label={t('profile.salonDashboard')} icon={<LayoutDashboard className="text-slate-800" />} onClick={() => navigate("/dashboard")} />}
+        </div>
+
+        <div className="mt-6">
+          <button
+            onClick={() => setIsUserDetailsExpanded(!isUserDetailsExpanded)}
+            className="w-full bg-gradient-to-br from-white/95 to-slate-50/95 rounded-2xl p-5 shadow-xl border border-white/20 flex items-center justify-between hover:shadow-2xl transition-all active:scale-[0.98] backdrop-blur-[15px]"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl text-slate-800 shadow-sm">
+                <User size={18} />
+              </div>
+              <span className="text-sm font-bold text-slate-700">User Details</span>
+            </div>
+            <ChevronDown size={18} className={`text-slate-400 transition-transform ${isUserDetailsExpanded ? 'rotate-180' : ''}`} />
+          </button>
+
+          {isUserDetailsExpanded && (
+            <div className="mt-4 bg-gradient-to-br from-white/95 to-slate-50/95 rounded-3xl p-6 shadow-xl border border-white/20 space-y-4 animate-in slide-in-from-top duration-200 backdrop-blur-[15px]">
+              <button
+                onClick={() => setIsEditModalOpen(true)}
+                className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg hover:shadow-2xl active:scale-95 transition-all"
+              >
+                <Edit3 size={16} /> {t('profile.updateInfo')}
+              </button>
+              {usercontactdetails?.phone ? (
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-5 border border-white/50 shadow-lg">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-white rounded-xl text-slate-800 shadow-sm">
+                      <Phone size={18} />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-tight">{t('profile.phone')}</span>
+                      <p className="mt-2 text-sm font-bold text-slate-900">{usercontactdetails.phone}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <AddContactPlaceholder
+                  icon={<Phone size={18} />}
+                  label={t('profile.phone')}
+                  onClick={() => navigate('/verify', { state: { phone: 'phone' } })}
+                />
+              )}
+
+
+              {/* Email Section */}
+              {usercontactdetails.email ? (
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-5 border border-white/50 shadow-lg">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-white rounded-xl text-slate-800 shadow-sm">
+                      <Mail size={18} />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-tight">{t('profile.email')}</span>
+                      <p className="mt-2 text-sm font-bold text-slate-900">{usercontactdetails.email}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <AddContactPlaceholder
+                  icon={<Mail size={18} />}
+                  label={t('profile.email')}
+                  onClick={() => navigate('/verify', { state: { email: 'email' } })}
+                />
+              )}
+
+
+              {usercontactdetails.dob && (
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-5 border border-white/50 shadow-lg">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-white rounded-xl text-slate-800 shadow-sm">
+                      <Calendar size={18} />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-tight">Date of Birth</span>
+                      <p className="mt-2 text-sm font-bold text-slate-900">{new Date(usercontactdetails.dob).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {usercontactdetails.gender && (
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-5 border border-white/50 shadow-lg">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-white rounded-xl text-slate-800 shadow-sm">
+                      <User size={18} />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-tight">Gender</span>
+                      <p className="mt-2 text-sm font-bold text-slate-900 capitalize">{usercontactdetails.gender}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {usercontactdetails.anniversary && (
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-5 border border-white/50 shadow-lg">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-white rounded-xl text-slate-700 shadow-sm">
+                      <Heart size={18} />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-tight">Anniversary</span>
+                      <p className="mt-2 text-sm font-bold text-slate-900">{new Date(usercontactdetails.anniversary).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {usercontactdetails.marital_status && (
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-5 border border-white/50 shadow-lg">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-white rounded-xl text-slate-800 shadow-sm">
+                      <User size={18} />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-tight">Marital Status</span>
+                      <p className="mt-2 text-sm font-bold text-slate-900 capitalize">{usercontactdetails.marital_status}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {usercontactdetails.address?.city ? (
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-5 border border-white/50 shadow-lg">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-white rounded-xl text-slate-800 shadow-sm">
+                      <MapPin size={18} />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-tight">{t('profile.address')}</span>
+                      <div className="mt-2 space-y-1">
+                        <p className="text-sm font-bold text-slate-900">{usercontactdetails.address.house_no}</p>
+                        <p className="text-sm font-bold text-slate-800">{usercontactdetails.address.street}</p>
+                        {isAddressExpanded && (
+                          <>
+                            <p className="text-sm font-bold text-slate-800">{usercontactdetails.address.locality}</p>
+                            <p className="text-sm font-bold text-slate-800">{usercontactdetails.address.city}, {usercontactdetails.address.state} - {usercontactdetails.address.pincode}</p>
+                            {usercontactdetails.address.country && <p className="text-sm font-bold text-slate-700">{usercontactdetails.address.country}</p>}
+                          </>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => setIsAddressExpanded(!isAddressExpanded)}
+                        className="mt-2 text-[10px] font-black uppercase text-slate-600 hover:text-slate-800 transition-colors"
+                      >
+                        {isAddressExpanded ? 'See Less' : 'See More'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <AddContactPlaceholder icon={<MapPin size={18} />} label={t('profile.address')} onClick={() => setIsEditModalOpen(true)} />
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-6 bg-gradient-to-br from-white/95 to-amber-50/20 rounded-[2rem] shadow-2xl border border-[rgba(212,175,55,0.3)] p-5 backdrop-blur-[15px]">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-gray-50 rounded-2xl border border-black/10">
+              <Gift className="text-gray-500" size={18} />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-black text-gray-900 tracking-tight">Share the Style</h3>
+              <p className="mt-1 text-sm font-medium text-gray-500 leading-relaxed">
+                Good style is meant to be shared.
+              </p>
             </div>
           </div>
-          <h2 className="mt-4 text-xl font-black text-gray-900 tracking-tight">{user.name}</h2>
-          <span className="text-[10px] font-black uppercase text-blue-600 bg-blue-50 px-3 py-1 rounded-full mt-2 inline-block">
-            {usercontactdetails.name || t('profile.user')}
-          </span>
+
+          <div className="mt-5 flex items-center justify-center gap-3">
+            <button
+              onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent("Hey! I just visited Mr & Mrs Coiffeurr and absolutely loved the experience. The vibe and the service are on another level. Thought you'd appreciate their style—check them out for your next refresh! ✂️✨\n\nView their work here: https://coiffeurr.com/")}`, '_blank')}
+              className="w-[35px] h-[35px] flex items-center justify-center border border-black/10 rounded-full bg-gray-50 hover:bg-green-50 hover:border-green-200 transition-all duration-300"
+            >
+              <MessageCircle className="text-gray-500 hover:text-green-600" size={18} />
+            </button>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText('https://coiffeurr.com');
+                showToast('Copied', 'success');
+              }}
+              className="w-[35px] h-[35px] flex items-center justify-center border border-black/10 rounded-full bg-gray-50 hover:bg-gray-100 transition-all duration-300"
+            >
+              <Link className="text-gray-500 hover:text-gray-700" size={18} />
+            </button>
+          </div>
         </div>
 
-        <div className="mt-6 bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-4">
-          {usercontactdetails?.phone ? (
-            <ContactItem icon={<Phone size={18} />} label={t('profile.phone')} value={usercontactdetails.phone} />
-          ) : (
-            <AddContactPlaceholder
-              icon={<Phone size={18} />}
-              label={t('profile.phone')}
-              onClick={() => navigate('/verify', { state: { phone: 'phone' } })}
-            />
-          )}
-
-
-          {/* Email Section */}
-          {usercontactdetails.email ? (
-            <ContactItem icon={<Mail size={18} />} label={t('profile.email')} value={usercontactdetails.email} />
-          ) : (
-            <AddContactPlaceholder
-              icon={<Mail size={18} />}
-              label={t('profile.email')}
-              onClick={() => navigate('/verify', { state: { email: 'email' } })}
-            />
-          )}
-
-
-          {usercontactdetails.address?.city ? (
-            <ContactItem icon={<MapPin size={18} />} label={t('profile.address')} value={getFormattedAddress()} />
-          ) : (
-            <AddContactPlaceholder icon={<MapPin size={18} />} label={t('profile.address')} onClick={() => setIsEditModalOpen(true)} />
-          )}
-        </div>
-
-        <div className="mt-8 bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">
-          <MenuItem label={t('profile.myBookings')} icon={<Calendar className="text-blue-600" />} onClick={() => navigate("/bookings")} />
-          {user.role === "OWNER" && <MenuItem label={t('profile.salonDashboard')} icon={<LayoutDashboard className="text-orange-600" />} onClick={() => navigate("/dashboard")} />}
-          <MenuItem label={t('profile.wishlist')} icon={<Heart className="text-red-500" />} onClick={() => navigate("/wishlist")} />
-          <MenuItem label={t('profile.logout')} icon={<LogOut className="text-gray-400" />} onClick={handleLogout} isRed />
+        <div className="mt-6 bg-gradient-to-br from-white/95 to-slate-50/95 rounded-[2rem] shadow-xl border border-white/20 overflow-hidden backdrop-blur-[15px]">
+          <MenuItem label={t('profile.logout')} icon={<LogOut className="text-slate-800" />} onClick={handleLogout} isRed />
         </div>
       </div>
 
       {isEditModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsEditModalOpen(false)} />
+          <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-md" onClick={() => setIsEditModalOpen(false)} />
           <div className="relative w-full max-w-lg bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 animate-in slide-in-from-bottom shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar">
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-xl font-black text-gray-900 tracking-tight uppercase">{t('profile.updateProfile')}</h2>
-              <button onClick={() => setIsEditModalOpen(false)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"><X size={20} /></button>
+              <h2 className="text-2xl font-black text-gray-900 tracking-tight uppercase">{t('profile.updateProfile')}</h2>
+              <button onClick={() => setIsEditModalOpen(false)} className="p-3 bg-gray-100 rounded-full hover:bg-gray-200 transition-all hover:scale-105 active:scale-95"><X size={20} /></button>
             </div>
 
             <div className="space-y-6">
-              <div className="flex flex-col items-center justify-center py-6 bg-slate-50 rounded-3xl border border-dashed border-slate-200 relative">
-                <div className="w-20 h-20 rounded-full border-4 border-white overflow-hidden shadow-md bg-gray-200 relative">
-                  {isUploading && <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10"><Loader2 className="w-5 h-5 text-white animate-spin" /></div>}
-                  {editForm.profileImage ? <img src={editForm.profileImage} alt="Preview" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold">{user.name?.charAt(0)}</div>}
+              <div className="flex flex-col items-center justify-center py-8 bg-gradient-to-br from-slate-50 to-slate-100 rounded-3xl border-2 border-dashed border-slate-200 relative hover:border-slate-300 transition-colors">
+                <div className="w-24 h-24 rounded-full border-4 border-white overflow-hidden shadow-xl bg-gradient-to-br from-gray-100 to-gray-200 relative">
+                  {isUploading && <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10 backdrop-blur-sm"><Loader2 className="w-6 h-6 text-white animate-spin" /></div>}
+                  {editForm.profileImage ? <img src={editForm.profileImage} alt="Preview" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-2xl">{user.name?.charAt(0)}</div>}
                 </div>
-                <button onClick={() => fileInputRef.current?.click()} className="absolute bottom-4 right-[40%] p-2 bg-[#1E4D8C] text-white rounded-full border-2 border-white shadow-lg active:scale-90 transition-transform"><Camera size={12} /></button>
+                <button onClick={() => fileInputRef.current?.click()} className="absolute bottom-6 right-[38%] p-3 bg-gradient-to-br from-slate-700 to-slate-800 text-white rounded-full border-3 border-white shadow-xl hover:shadow-2xl active:scale-90 transition-all"><Camera size={14} /></button>
                 <input type="file" ref={fileInputRef} onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
@@ -291,9 +482,48 @@ export default function Profile() {
                 }} accept="image/*" className="hidden" />
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[9px] font-black uppercase text-gray-400 ml-1">Gender</label>
+                  <select
+                    value={editForm.gender}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, gender: e.target.value }))}
+                    className="w-full h-10 mt-1 px-3 bg-gray-50 rounded-xl font-bold text-xs outline-none focus:ring-2 focus:ring-slate-100 transition-all"
+                  >
+                    <option value="">Select</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[9px] font-black uppercase text-gray-400 ml-1">Date of Birth</label>
+                  <input
+                    type="date"
+                    value={editForm.dob ? editForm.dob.split('T')[0] : ''}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, dob: e.target.value }))}
+                    className="w-full h-10 mt-1 px-3 bg-gray-50 rounded-xl font-bold text-xs outline-none focus:ring-2 focus:ring-slate-100 transition-all"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-[9px] font-black uppercase text-gray-400 ml-1">Marital Status</label>
+                  <select
+                    value={editForm.marital_status}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, marital_status: e.target.value }))}
+                    className="w-full h-10 mt-1 px-3 bg-gray-50 rounded-xl font-bold text-xs outline-none focus:ring-2 focus:ring-slate-100 transition-all"
+                  >
+                    <option value="">Select</option>
+                    <option value="single">Single</option>
+                    <option value="married">Married</option>
+                    <option value="divorced">Divorced</option>
+                    <option value="widowed">Widowed</option>
+                  </select>
+                </div>
+              </div>
+
               <div className="flex items-center justify-between px-1">
-                <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{t('profile.addressDetails')}</h3>
-                <button onClick={handleAutoDetectLocation} disabled={isLocating} className="text-[10px] font-black uppercase text-[#1E4D8C] flex items-center gap-1 hover:underline">
+                <h3 className="text-[11px] font-black uppercase text-slate-500 tracking-widest">{t('profile.addressDetails')}</h3>
+                <button onClick={handleAutoDetectLocation} disabled={isLocating} className="text-[11px] font-black uppercase text-slate-700 flex items-center gap-1.5 hover:text-slate-800 transition-colors">
                   {isLocating ? <Loader2 size={12} className="animate-spin" /> : <LocateFixed size={12} />}
                   {t('profile.autoDetect')}
                 </button>
@@ -309,20 +539,22 @@ export default function Profile() {
                 <EditInput label={t('profile.pincode')} value={editForm.address.pincode} onChange={(v: any) => handleAddressChange('pincode', v)} />
               </div>
 
-              <Button onClick={handleUpdateProfile} disabled={loading || isUploading} className="w-full h-14 bg-[#1E4D8C] text-white rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all">
+              <Button onClick={handleUpdateProfile} disabled={loading || isUploading} className="w-full h-14 bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:shadow-2xl active:scale-95 transition-all">
                 {loading ? <Loader2 className="animate-spin" /> : t('profile.saveChanges')}
               </Button>
             </div>
           </div>
         </div>
       )}
+
+      <SettingsPanel isOpen={showLanguageModal} onClose={() => setShowLanguageModal(false)} />
     </div>
   );
 }
 
 const ContactItem = ({ icon, label, value }: any) => (
   <div className="flex items-center gap-4">
-    <div className="p-2 bg-gray-50 rounded-xl text-[#1E4D8C]">{icon}</div>
+    <div className="p-2 bg-gray-50 rounded-xl text-slate-700">{icon}</div>
     <div className="flex flex-col">
       <span className="text-[10px] font-black text-gray-400 uppercase tracking-tight">{label}</span>
       <span className="text-sm font-bold text-gray-700">{value}</span>
@@ -334,14 +566,14 @@ const EditInput = ({ label, value, onChange, icon }: any) => (
   <div className="space-y-1">
     <label className="text-[9px] font-black uppercase text-gray-400 ml-1">{label}</label>
     <div className="relative">
-      {icon && <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#1E4D8C] opacity-60">{icon}</div>}
-      <input type="text" value={value || ""} onChange={(e) => onChange(e.target.value)} className={`w-full h-10 ${icon ? 'pl-9' : 'px-3'} bg-gray-50 rounded-xl font-bold text-xs outline-none focus:ring-2 focus:ring-blue-100 transition-all`} />
+      {icon && <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-700 opacity-60">{icon}</div>}
+      <input type="text" value={value || ""} onChange={(e) => onChange(e.target.value)} className={`w-full h-10 ${icon ? 'pl-9' : 'px-3'} bg-gray-50 rounded-xl font-bold text-xs outline-none focus:ring-2 focus:ring-slate-100 transition-all`} />
     </div>
   </div>
 );
 
 const MenuItem = ({ icon, label, onClick, isRed }: any) => (
-  <button onClick={onClick} className="w-full flex items-center justify-between p-5 hover:bg-gray-50 transition-all group">
+  <button onClick={onClick} className="w-full flex items-center justify-between p-5 hover:bg-gray-50 transition-all group hover:-translate-y-[2px] hover:shadow-lg">
     <div className="flex items-center gap-4">
       <div className="p-2 bg-gray-50 rounded-xl">{icon}</div>
       <span className={`text-sm font-bold ${isRed ? 'text-red-500' : 'text-gray-700'}`}>{label}</span>
@@ -353,11 +585,11 @@ const MenuItem = ({ icon, label, onClick, isRed }: any) => (
 const AddContactPlaceholder = ({ icon, label, onClick }: any) => {
   const { t } = useTranslation();
   return (
-    <button onClick={onClick} className="w-full flex items-center gap-4 p-3 rounded-2xl border-2 border-dashed border-gray-100 hover:border-blue-200 transition-all text-left">
+    <button onClick={onClick} className="w-full flex items-center gap-4 p-3 rounded-2xl border-2 border-dashed border-gray-100 hover:border-slate-200 transition-all text-left">
       <div className="p-2 bg-gray-50 rounded-xl text-gray-400">{icon}</div>
       <div className="flex flex-col flex-1">
         <span className="text-[10px] font-black text-gray-400 uppercase tracking-tight">{label}</span>
-        <span className="text-sm font-bold text-blue-600 flex items-center gap-1">{t('profile.add')} {label} <Plus size={14} /></span>
+        <span className="text-sm font-bold text-slate-700 flex items-center gap-1">{t('profile.add')} {label} <Plus size={14} /></span>
       </div>
     </button>
   );
