@@ -60,9 +60,9 @@ const FloatingParticles: React.FC = () => (
           rotate: [0, 180, 360],
         }}
         transition={{
-          duration: 3 + i * 0.5,
+          duration: 4 + i * 0.5,
           repeat: Infinity,
-          ease: "easeInOut",
+          ease: [0.25, 0.1, 0.25, 1],
           delay: i * 0.3,
         }}
         style={{
@@ -150,6 +150,78 @@ const AnimatedHairStrand: React.FC = () => (
   </motion.div>
 );
 
+// Animated Rating Stars Component
+const AnimatedRatingStars: React.FC<{ rating: number }> = ({ rating }) => {
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+
+  return (
+    <motion.div
+      className="flex items-center gap-1"
+      initial={{ opacity: 0, scale: 0.5 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.8, delay: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+    >
+      {[...Array(5)].map((_, i) => (
+        <motion.div
+          key={i}
+          initial={{ rotate: -180, scale: 0 }}
+          animate={{ rotate: 0, scale: 1 }}
+          transition={{
+            duration: 0.8,
+            delay: 0.8 + i * 0.1,
+            type: "spring",
+            stiffness: 150,
+            damping: 20
+          }}
+          whileHover={{ scale: 1.2, rotate: 15 }}
+        >
+          <Star
+            size={20}
+            className={
+              i < fullStars
+                ? "text-yellow-400 fill-yellow-400"
+                : i === fullStars && hasHalfStar
+                ? "text-yellow-400 fill-yellow-40"
+                : "text-gray-300"
+            }
+          />
+        </motion.div>
+      ))}
+    </motion.div>
+  );
+};
+
+// Animated Icon Component for Info Rows
+const AnimatedIcon: React.FC<{ icon: any }> = ({ icon: Icon }) => (
+  <motion.div
+    whileHover={{ scale: 1.2, rotate: 10 }}
+    whileTap={{ scale: 0.9 }}
+    transition={{ type: "spring", stiffness: 200, damping: 20 }}
+  >
+    <Icon size={16} className="text-[#1E4D8C]" />
+  </motion.div>
+);
+
+// Animated Gradient Background Component
+const AnimatedGradientBackground: React.FC = () => (
+  <motion.div
+    className="absolute inset-0 pointer-events-none"
+    animate={{
+      background: [
+        "radial-gradient(circle at 20% 50%, rgba(30, 77, 140, 0.05) 0%, transparent 50%)",
+        "radial-gradient(circle at 80% 50%, rgba(30, 77, 140, 0.05) 0%, transparent 50%)",
+        "radial-gradient(circle at 20% 50%, rgba(30, 77, 140, 0.05) 0%, transparent 50%)",
+      ],
+    }}
+    transition={{
+      duration: 15,
+      repeat: Infinity,
+      ease: [0.25, 0.1, 0.25, 1],
+    }}
+  />
+);
+
 const DashboardProfile: React.FC = () => {
   const { apiRequest, apiCustomerPut } = useApi();
   const [salonData, setSalonData] = useState<any>(null);
@@ -220,19 +292,20 @@ const DashboardProfile: React.FC = () => {
 
   return (
     <motion.div
-      className="min-h-screen bg-[#F8FAFC] pb-20 px-4 md:px-8 font-sans"
+      className="min-h-screen bg-[#F8FAFC] pb-20 px-4 md:px-8 font-sans relative"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
     >
-      <div className="max-w-7xl mx-auto space-y-6 pt-6">
+      <AnimatedGradientBackground />
+      <div className="max-w-7xl mx-auto space-y-6 pt-6 relative z-10">
 
         {/* HERO SECTION */}
         <motion.div
           className="relative h-48 md:h-80 rounded-[2.5rem] overflow-hidden shadow-2xl group border-4 border-white"
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
+          transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
         >
           <FloatingParticles />
           <Swiper modules={[Pagination, Autoplay]} pagination={{ clickable: true }} autoplay={{ delay: 5000 }} className="h-full w-full">
@@ -250,18 +323,18 @@ const DashboardProfile: React.FC = () => {
           className="flex flex-col md:flex-row items-center md:items-end justify-between gap-6 px-4 -mt-16 md:-mt-20 relative z-20"
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
         >
           <motion.div
             className="flex flex-col md:flex-row items-center md:items-end gap-5 text-center md:text-left"
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            transition={{ duration: 0.8, delay: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
           >
             <motion.div
               className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] bg-white p-1.5 shadow-2xl border-4 border-white overflow-hidden"
               whileHover={{ scale: 1.05, rotate: 2 }}
-              transition={{ type: "spring", stiffness: 300 }}
+              transition={{ type: "spring", stiffness: 200, damping: 25 }}
             >
               <img src={salonData.branding?.logoUrl || '/api/placeholder/150/150'} className="w-full h-full object-cover rounded-[2rem]" alt="logo" />
             </motion.div>
@@ -270,7 +343,7 @@ const DashboardProfile: React.FC = () => {
                 className="flex items-center justify-center md:justify-start gap-2"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
+                transition={{ duration: 0.8, delay: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
               >
                 <h1 className="text-3xl font-black text-slate-900 tracking-tight">{salonData.salonName}</h1>
                 {salonData.isVerified && <ShieldCheck className="text-blue-500 fill-blue-50" size={24} />}
@@ -282,13 +355,14 @@ const DashboardProfile: React.FC = () => {
             className="flex items-center gap-3 mb-2"
             initial={{ x: 50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
+            transition={{ duration: 0.8, delay: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
           >
             <motion.button
               onClick={() => setIsEditModalOpen(true)}
               className="flex items-center gap-2 bg-[#1E4D8C] text-white px-8 py-4 rounded-2xl font-bold shadow-xl hover:bg-[#163a6b] transition-all active:scale-95"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 200, damping: 20 }}
             >
               <Edit3 size={18} /> Edit Profile
             </motion.button>
@@ -300,18 +374,18 @@ const DashboardProfile: React.FC = () => {
           className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
+          transition={{ duration: 0.8, delay: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
         >
           <motion.div
             className="space-y-6"
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
+            transition={{ duration: 0.8, delay: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
           >
             <motion.div
               className="bg-white rounded-[2rem] border border-slate-100 p-8 shadow-sm"
               whileHover={{ scale: 1.02, y: -5 }}
-              transition={{ type: "spring", stiffness: 300 }}
+              transition={{ type: "spring", stiffness: 200, damping: 25 }}
             >
               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">About & Contact</h3>
               <p className="text-sm text-slate-600 font-medium leading-relaxed mb-6">{salonData.description || "No description provided."}</p>
@@ -325,7 +399,7 @@ const DashboardProfile: React.FC = () => {
             <motion.div
               className="bg-[#1E4D8C] rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden"
               whileHover={{ scale: 1.05, rotate: 1 }}
-              transition={{ type: "spring", stiffness: 300 }}
+              transition={{ type: "spring", stiffness: 200, damping: 25 }}
             >
               <div className="absolute -right-4 -bottom-4 opacity-10 rotate-12"><Star size={120} fill="white" /></div>
               <div className="absolute top-4 right-4"><AnimatedZap /></div>
@@ -334,11 +408,14 @@ const DashboardProfile: React.FC = () => {
                 className="text-4xl font-black"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ type: "spring", delay: 0.7 }}
+                transition={{ type: "spring", stiffness: 150, damping: 20, delay: 0.7 }}
               >
                 {salonData.ratings?.average || 0}
               </motion.p>
-              <p className="text-xs font-bold opacity-60 mt-1 uppercase tracking-widest">Based on {salonData.ratings?.reviewsCount || 0} Reviews</p>
+              <div className="mt-3">
+                <AnimatedRatingStars rating={salonData.ratings?.average || 0} />
+              </div>
+              <p className="text-xs font-bold opacity-60 mt-2 uppercase tracking-widest">Based on {salonData.ratings?.reviewsCount || 0} Reviews</p>
             </motion.div>
           </motion.div>
 
@@ -346,17 +423,17 @@ const DashboardProfile: React.FC = () => {
             className="lg:col-span-2 space-y-6"
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
+            transition={{ duration: 0.8, delay: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
           >
             <motion.div
               className="bg-white rounded-[2rem] border border-slate-100 p-8 shadow-sm relative overflow-hidden"
               whileHover={{ scale: 1.01, y: -3 }}
-              transition={{ type: "spring", stiffness: 300 }}
+              transition={{ type: "spring", stiffness: 200, damping: 25 }}
             >
               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
                 <motion.div
                   animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 2, repeat: Infinity }}
+                  transition={{ duration: 3, repeat: Infinity, ease: [0.25, 0.1, 0.25, 1] }}
                 >
                   <Clock size={16} />
                 </motion.div>
@@ -372,7 +449,7 @@ const DashboardProfile: React.FC = () => {
               <motion.div
                 className="p-4 bg-slate-50 rounded-2xl border border-slate-100/50 flex flex-wrap gap-2 items-center"
                 whileHover={{ scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 300 }}
+                transition={{ type: "spring", stiffness: 200, damping: 25 }}
               >
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">Weekly Off:</p>
                 {salonData.timing?.weeklyOff?.length > 0 ? (
@@ -381,7 +458,7 @@ const DashboardProfile: React.FC = () => {
                       key={day}
                       className="px-3 py-1 bg-[#1E4D8C] text-white rounded-lg text-[10px] font-black uppercase"
                       whileHover={{ scale: 1.1, rotate: 5 }}
-                      transition={{ type: "spring", stiffness: 400 }}
+                      transition={{ type: "spring", stiffness: 200, damping: 20 }}
                     >
                       {day}
                     </motion.span>
@@ -394,12 +471,12 @@ const DashboardProfile: React.FC = () => {
               className="grid grid-cols-1 md:grid-cols-2 gap-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.7 }}
+              transition={{ duration: 0.8, delay: 0.7, ease: [0.25, 0.1, 0.25, 1] }}
             >
               <motion.div
                 className="bg-white rounded-[2rem] border border-slate-100 p-8 shadow-sm"
                 whileHover={{ scale: 1.02, y: -5 }}
-                transition={{ type: "spring", stiffness: 300 }}
+                transition={{ type: "spring", stiffness: 200, damping: 25 }}
               >
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 font-sans">Location</h3>
                 <p className="text-sm font-bold text-slate-700 leading-relaxed font-sans mb-4">
@@ -423,7 +500,7 @@ const DashboardProfile: React.FC = () => {
               <motion.div
                 className="bg-white rounded-[2rem] border border-slate-100 p-8 shadow-sm relative overflow-hidden"
                 whileHover={{ scale: 1.02, y: -5 }}
-                transition={{ type: "spring", stiffness: 300 }}
+                transition={{ type: "spring", stiffness: 200, damping: 25 }}
               >
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 font-sans">Expertise</h3>
                 <div className="flex flex-wrap gap-2">
@@ -438,13 +515,13 @@ const DashboardProfile: React.FC = () => {
                         color: "white",
                         borderColor: "#1E4D8C"
                       }}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
                       transition={{
                         type: "spring",
-                        stiffness: 400,
-                        delay: 0.8 + idx * 0.1
+                        stiffness: 200,
+                        damping: 20
                       }}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
                     >
                       {ex}
                     </motion.span>
