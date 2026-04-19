@@ -1,38 +1,30 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Plus,
     Search,
     Edit2,
-    Trash2,
     User,
     X,
-    Briefcase,
-    Phone,
-    Mail,
-    Globe,
     Check,
-    Box,
     Scissors
 } from 'lucide-react';
 import { useApi } from '../../../../API/SalonsAPIs/ALLSalonAPI';
-import { Loader } from '../../../../components/ui_components/Loader';
 import { useSalonApi } from '../../../../API/Salon_Owner_API/SalonOwnerAPI';
-import { logoutUser } from '../../../../API/APIs';
-import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLoader } from '../../../../components/ui_components/DashboardLoader';
 
 const StaffManagement: React.FC = () => {
+    const { t } = useTranslation();
     const { apiRequest } = useApi();
     const { apiSalonPost, apiSalonPut } = useSalonApi();
-    const dispatch = useDispatch();
     const navigate = useNavigate();
 
     const [staffList, setStaffList] = useState<any[]>([]);
-    const [allServices, setAllServices] = useState<any[]>([]); // New: Available services
+    const [allServices, setAllServices] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [activeTab, setActiveTab] = useState('All Services');
+    const [activeTab, setActiveTab] = useState(t('staff.allStaff'));
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -83,6 +75,10 @@ const StaffManagement: React.FC = () => {
             const authData = localStorage.getItem("authState");
             const parsedAuth = authData ? JSON.parse(authData) : null;
             const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
+            if (!salonId) {
+                console.error('salonId is undefined in fetchServices');
+                return;
+            }
             const res = await apiRequest<any>(`/salons/${salonId}/services`);
             if (res.data) setAllServices(res.data);
         } catch (error) { console.error(error); }
@@ -196,71 +192,81 @@ const StaffManagement: React.FC = () => {
 
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div className="flex items-center gap-2 md:gap-4 bg-white p-1 rounded-xl border border-gray-100 shadow-sm overflow-x-auto no-scrollbar">
-                    {['All Staff'].map((tab) => (
-                        <button key={tab} className="px-6 py-2 rounded-lg text-sm font-bold bg-[#1E4D8C] text-white transition-all whitespace-nowrap">{tab}</button>
+                    {[t('staff.allStaff')].map((tab) => (
+                        <button 
+                            key={tab} 
+                            onClick={() => setActiveTab(tab)}
+                            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+                                activeTab === tab 
+                                    ? 'bg-[#1E4D8C] text-white' 
+                                    : 'text-gray-600 hover:bg-gray-50'
+                            }`}
+                        >
+                            {tab}
+                        </button>
                     ))}
                 </div>
                 <button onClick={() => { resetForm(); setIsModalOpen(true); }} className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-[#1E4D8C] text-white rounded-xl text-sm font-bold shadow-lg transition-all active:scale-95">
-                    <Plus size={18} /> Add Staff
+                    <Plus size={18} /> {t('staff.addStaff')}
                 </button>
             </div>
 
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="p-6 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <h2 className="text-lg font-bold text-gray-800">Staff Members</h2>
+                    <h2 className="text-lg font-bold text-gray-800">{t('staff.staffMembers')}</h2>
                     <div className="relative w-full md:w-64">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                        <input type="text" placeholder="Search staff..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 outline-none" />
+                        <input type="text" placeholder={t('staff.searchStaff')} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 outline-none" />
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-50/50 uppercase text-[10px] font-bold text-gray-400 tracking-wider">
-                            <tr>
-                                <th className="px-6 py-4">Name</th>
-                                <th className="px-6 py-4">Specialized Services</th>
-                                <th className="px-6 py-4 text-center">Status</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
+            <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                    <thead className="bg-gray-50/50 uppercase text-[10px] font-bold text-gray-400 tracking-wider">
+                        <tr>
+                            <th className="px-6 py-4">{t('staff.name')}</th>
+                            <th className="px-6 py-4">{t('staff.specializedServices')}</th>
+                            <th className="px-6 py-4 text-center">{t('staff.status')}</th>
+                            <th className="px-6 py-4 text-right">{t('staff.actions')}</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                        {staffList.filter(s => s.name?.toLowerCase().includes(searchQuery.toLowerCase())).map((staff) => (
+                            <tr key={staff.staff_id} className="hover:bg-gray-50/30 transition-colors">
+                                <td className="px-6 py-5 flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden border border-gray-100">
+                                        {staff.images?.[0] ? <img src={staff.images[0]} className="w-full h-full object-cover" /> : <User size={20} className="m-auto mt-2 text-slate-400" />}
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-gray-800">{staff.name}</p>
+                                        <p className="text-[10px] text-gray-400 uppercase">{staff.role}</p>
+                                    </div>
+                                </td>
+                                <td className="px-6 py-5">
+                                    <div className="flex flex-wrap gap-1 max-w-[250px]">
+                                        {staff.services?.length > 0 ? staff.services.map((ser: any) => (
+                                            <span key={ser.service_id} className="text-[9px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded font-bold uppercase">{ser.serviceName}</span>
+                                        )) : <span className="text-[10px] text-gray-300 italic">{t('staff.noServicesLinked')}</span>}
+                                    </div>
+                                </td>
+                                <td className="px-6 py-5 text-center">
+                                    <span className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase border ${staff.active ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'}`}>
+                                        {staff.active ? t('staff.active') : t('staff.inactive')}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-5 text-right">
+                                    <button onClick={() => handleEditClick(staff)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"><Edit2 size={16} /></button>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {staffList.filter(s => s.name?.toLowerCase().includes(searchQuery.toLowerCase())).map((staff) => (
-                                <tr key={staff.staff_id} className="hover:bg-gray-50/30 transition-colors">
-                                    <td className="px-6 py-5 flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden border border-gray-100">
-                                            {staff.images?.[0] ? <img src={staff.images[0]} className="w-full h-full object-cover" /> : <User size={20} className="m-auto mt-2 text-slate-400" />}
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-gray-800">{staff.name}</p>
-                                            <p className="text-[10px] text-gray-400 uppercase">{staff.role}</p>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-5">
-                                        <div className="flex flex-wrap gap-1 max-w-[250px]">
-                                            {staff.services?.length > 0 ? staff.services.map((ser: any) => (
-                                                <span key={ser.service_id} className="text-[9px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded font-bold uppercase">{ser.serviceName}</span>
-                                            )) : <span className="text-[10px] text-gray-300 italic">No services linked</span>}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-5 text-center">
-                                        <span className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase border ${staff.active ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'}`}>
-                                            {staff.active ? 'Active' : 'Inactive'}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-5 text-right">
-                                        <button onClick={() => handleEditClick(staff)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"><Edit2 size={16} /></button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                        ))}
+                    </tbody>
+                </table>
             </div>
+        </div>
 
             {(isModalOpen || isEditModalOpen) && (
                 <StaffFormModal
-                    title={isEditModalOpen ? "Update Staff" : "Add Staff Member"}
+                    title={isEditModalOpen ? t('staff.updateStaff') : t('staff.addStaffMember')}
                     onClose={() => { setIsModalOpen(false); setIsEditModalOpen(false); resetForm(); }}
                     onSubmit={isEditModalOpen ? handleUpdateStaff : handleCreateStaff}
                     formData={formData}
@@ -276,6 +282,7 @@ const StaffManagement: React.FC = () => {
 };
 
 const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allServices, submitting, uploading, handleFileUpload }: any) => {
+    const { t } = useTranslation();
     const [newSpec, setNewSpec] = useState("");
 
     const addSpec = () => {
@@ -303,7 +310,7 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
                     
                     {/* Photos Upload */}
                     <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Staff Photos {uploading && "(Uploading...)"}</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('staff.staffPhotos')} {uploading && t('staff.uploading')}</label>
                         <div className="grid grid-cols-4 gap-2">
                             <label className="aspect-square border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-all">
                                 <Plus size={20} className="text-gray-400" />
@@ -320,11 +327,11 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Full Name</label>
+                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('staff.fullName')}</label>
                             <input required className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Role</label>
+                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('staff.role')}</label>
                             <input required className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })} />
                         </div>
                     </div>
@@ -332,7 +339,7 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
                     {/* --- NEW: SERVICE SELECTION GRID --- */}
                     <div className="space-y-2">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                            <Scissors size={12}/> Assigned Services
+                            <Scissors size={12}/> {t('staff.assignedServices')}
                         </label>
                         <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-1 border border-gray-50 rounded-xl">
                             {allServices.map((service) => {
@@ -361,49 +368,48 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Email</label>
+                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('staff.email')}</label>
                             <input type="email" required className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Phone</label>
+                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('staff.phone')}</label>
                             <input required className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Gender</label>
+                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('staff.gender')}</label>
                             <select className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none" value={formData.gender} onChange={e => setFormData({ ...formData, gender: e.target.value })}>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Other">Other</option>
+                                <option value="Male">{t('staff.male')}</option>
+                                <option value="Female">{t('staff.female')}</option>
+                                <option value="Other">{t('staff.other')}</option>
                             </select>
                         </div>
                         <div className="space-y-1">
-    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-        Exp (Years)
-    </label>
-    <input 
-        type="number" 
-        required 
-        min="0" // Prevents using the increment arrows to go below 0
-        className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm" 
-        value={formData.experienceYears} 
-        onChange={e => {
-            const val = e.target.value;
-            // Only update if the value is not negative
-            if (val === "" || Number(val) >= 0) {
-                setFormData({ ...formData, experienceYears: val });
-            }
-        }} 
-    />
-</div>
+                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                {t('staff.expYears')}
+                            </label>
+                            <input 
+                                type="number" 
+                                required 
+                                min="0"
+                                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm" 
+                                value={formData.experienceYears} 
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    if (val === "" || Number(val) >= 0) {
+                                        setFormData({ ...formData, experienceYears: val });
+                                    }
+                                }} 
+                            />
+                        </div>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Specialization (Keywords)</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('staff.specializationKeywords')}</label>
                         <div className="flex gap-2">
-                            <input className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none" placeholder="Hit Enter to add" value={newSpec} onChange={e => setNewSpec(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSpec())} />
+                            <input className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none" placeholder={t('staff.hitEnterToAdd')} value={newSpec} onChange={e => setNewSpec(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSpec())} />
                             <button type="button" onClick={addSpec} className="p-2 bg-blue-50 text-blue-600 rounded-xl">+</button>
                         </div>
                         <div className="flex flex-wrap gap-1.5">
@@ -414,14 +420,14 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
                     </div>
 
                     <div className="flex items-center justify-between bg-blue-50/50 p-4 rounded-xl border border-blue-100">
-                        <span className="text-[11px] font-bold text-blue-600 uppercase tracking-widest">Active Status</span>
+                        <span className="text-[11px] font-bold text-blue-600 uppercase tracking-widest">{t('staff.activeStatus')}</span>
                         <button type="button" onClick={() => setFormData({ ...formData, active: !formData.active })} className={`w-12 h-6 rounded-full relative transition-colors ${formData.active ? 'bg-green-500' : 'bg-gray-300'}`}>
                             <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${formData.active ? 'left-7' : 'left-1'}`} />
                         </button>
                     </div>
 
                     <button type="submit" disabled={submitting} className="w-full py-3.5 bg-[#1E4D8C] text-white rounded-xl font-bold shadow-lg disabled:opacity-70 active:scale-[0.98] transition-all">
-                        {submitting ? "Processing..." : "Save Staff"}
+                        {submitting ? t('staff.processing') : t('staff.saveStaff')}
                     </button>
                 </form>
             </div>

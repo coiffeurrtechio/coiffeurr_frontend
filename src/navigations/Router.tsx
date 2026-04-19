@@ -1,7 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import routes, { type AppRoute } from "./AllRoutes";
 import AuthRouter from "../utils/Auth/AuthRouter";
-import React, { useState } from "react";
+import React from "react";
 
 const renderRoutes = (routeList: AppRoute[]) =>
 
@@ -16,9 +16,6 @@ const renderRoutes = (routeList: AppRoute[]) =>
       element
     );
 
-    const userdata = JSON.parse(localStorage.getItem("authState") || "{}");
-    // Accessing nested properties safely
-    const [user, setUser] = useState<any>(userdata?.user?.user);
     return (
       <Route key={key} path={path} element={wrappedElement}>
         {children && renderRoutes(children)}

@@ -10,8 +10,11 @@ import Config from '../configs/config';
 import { useDispatch } from 'react-redux';
 import { login } from '../utils/Storage/slice/authSlice';
 import { useToast } from '../components/Toast';
+import { useTranslation } from 'react-i18next';
+import i18n from '../i18n/config';
 
 const CustomerRegistration: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dispatch = useDispatch();
@@ -36,17 +39,28 @@ const CustomerRegistration: React.FC = () => {
     agreeToPolicy: true
   });
 
+  const user = localStorage.getItem("authState");
+  const parsedUser = user ? JSON.parse(user) : null;
+  const isloggedin = parsedUser?.isAuthenticated;
+
+  // Force English when user is not logged in
+  useEffect(() => {
+    if (!isloggedin) {
+      i18n.changeLanguage('en');
+    }
+  }, [isloggedin]);
+
   // Real-time password validation
   const passwordIssues = useMemo(() => {
     const issues = [];
     if (formData.password.length > 0) {
-      if (formData.password.length < 8) issues.push("At least 8 characters");
-      if (!/[A-Z]/.test(formData.password)) issues.push("One uppercase letter");
-      if (!/[0-9]/.test(formData.password)) issues.push("One number");
-      if (!/[!@#$%^&*]/.test(formData.password)) issues.push("One special character");
+      if (formData.password.length < 8) issues.push(t('auth.passwordMinLength'));
+      if (!/[A-Z]/.test(formData.password)) issues.push(t('auth.passwordUppercase'));
+      if (!/[0-9]/.test(formData.password)) issues.push(t('auth.passwordNumber'));
+      if (!/[!@#$%^&*]/.test(formData.password)) issues.push(t('auth.passwordSpecial'));
     }
     return issues;
-  }, [formData.password]);
+  }, [formData.password, t]);
 
   const maxDate = useMemo(() => {
     const today = new Date();
@@ -62,7 +76,7 @@ const CustomerRegistration: React.FC = () => {
 
   const handleSendOTP = async () => {
     if (formData.phone.length < 10) {
-      setErrors({ phone: "Enter a valid 10-digit number" });
+      setErrors({ phone: t('auth.invalidCredentials') });
       return;
     }
     setIsLoading(true);
@@ -74,7 +88,7 @@ const CustomerRegistration: React.FC = () => {
         body: JSON.stringify(payload),
       });
       const resData = await response.json();
-      if (!response.ok) throw new Error(resData?.detail || "Failed to send OTP");
+      if (!response.ok) throw new Error(resData?.detail || t('auth.signupFailed'));
       setNotification({ type: 'success', message: `OTP sent to ${formData.phone}!` });
       setStep(2);
     } catch (err: any) {
@@ -110,11 +124,11 @@ const CustomerRegistration: React.FC = () => {
 
   const handleSubmit = async () => {
     const newErrors: Record<string, string> = {};
-    if (!formData.otp) newErrors.otp = "OTP is required";
-    if (!formData.username) newErrors.username = "Name is required";
-    if (passwordIssues.length > 0) newErrors.password = "Password is too weak";
-    if (!formData.password) newErrors.password = "Password is required";
-    if (!formData.dob) newErrors.dob = "DOB is required";
+    if (!formData.otp) newErrors.otp = t('auth.requiredField');
+    if (!formData.username) newErrors.username = t('auth.requiredField');
+    if (passwordIssues.length > 0) newErrors.password = t('auth.requiredField');
+    if (!formData.password) newErrors.password = t('auth.requiredField');
+    if (!formData.dob) newErrors.dob = t('auth.requiredField');
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -144,14 +158,24 @@ const CustomerRegistration: React.FC = () => {
       });
 
       const resData = await response.json();
-      if (!response.ok) throw new Error(resData?.detail || 'Registration failed');
+      if (!response.ok) throw new Error(resData?.detail || t('auth.signupFailed'));
 
       dispatch(login({ user: resData }));
 
+      // Set language from user preference in signup response, default to English if not set
+      const languagePreference = resData?.user?.language_preference || 'en';
+      if (['en', 'hi', 'mr'].includes(languagePreference)) {
+        i18n.changeLanguage(languagePreference);
+        localStorage.setItem('selectedLanguage', languagePreference);
+      } else {
+        i18n.changeLanguage('en');
+        localStorage.setItem('selectedLanguage', 'en');
+      }
+
       showToast({
         type: "success",
-        title: "Registration Successful",
-        message: "Welcome back to Coiffeurr!",
+        title: t('auth.signupSuccess'),
+        message: t('auth.signupSuccess'),
         duration: 5000,
       });
 
@@ -202,15 +226,15 @@ const CustomerRegistration: React.FC = () => {
 
         <div className="p-8">
           <header className="mb-8 text-center">
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase">Register</h1>
-            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Step {step} of 2</p>
+            <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase">{t('auth.register')}</h1>
+            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">{t('auth.stepOf', { current: step, total: 2 })}</p>
           </header>
 
           {step === 1 ? (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-              <InputField label="Enter WhatsApp Number *" name="phone" type="tel" value={formData.phone} onChange={handleChange} icon={Smartphone} placeholder="9876543210" error={errors.phone} />
+              <InputField label={t('auth.enterPhone') + ' *'} name="phone" type="tel" value={formData.phone} onChange={handleChange} icon={Smartphone} placeholder="9876543210" error={errors.phone} />
               <Button onClick={handleSendOTP} disabled={isLoading || formData.phone.length < 10} className="w-full h-12 rounded-2xl bg-[#1E4D8C] text-white font-black shadow-xl shadow-blue-900/20">
-                {isLoading ? <Loader2 className="animate-spin" /> : 'Get Verification Code'}
+                {isLoading ? <Loader2 className="animate-spin" /> : t('auth.getVerificationCode')}
               </Button>
             </div>
           ) : (
@@ -237,27 +261,27 @@ const CustomerRegistration: React.FC = () => {
                   </button>
                   <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
                 </div>
-                <p className="mt-2 text-[9px] font-black text-gray-400 uppercase tracking-widest">Add Photo</p>
+                <p className="mt-2 text-[9px] font-black text-gray-400 uppercase tracking-widest">{t('auth.addPhoto')}</p>
               </div>
 
               <div className="bg-blue-50/50 p-4 rounded-3xl border border-blue-100 mb-2">
                 <InputField 
-                    label="Verification Code *" 
+                    label={t('auth.verificationCode') + ' *'} 
                     name="otp" 
                     value={formData.otp} 
                     onChange={handleChange} 
                     icon={ShieldCheck} 
-                    placeholder="Enter 6-digit OTP" 
+                    placeholder={t('auth.enterOTP')} 
                     error={errors.otp} 
                     maxLength={6}
                 />
               </div>
 
-              <InputField label="Full Name *" name="username" value={formData.username} onChange={handleChange} icon={User} placeholder="Enter your name" error={errors.username} />
+              <InputField label={t('auth.fullName') + ' *'} name="username" value={formData.username} onChange={handleChange} icon={User} placeholder={t('auth.fullName')} error={errors.username} />
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Gender</label>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t('auth.gender')}</label>
                   <div className="relative group">
                     <VenusAndMars className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                     <select name="gender" className="w-full h-11 pl-11 pr-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none appearance-none" value={formData.gender} onChange={handleChange}>
@@ -268,7 +292,7 @@ const CustomerRegistration: React.FC = () => {
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Date of Birth</label>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t('auth.dateOfBirth')}</label>
                   <div className="relative">
                     <CalendarDays className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                     <input 
@@ -286,7 +310,7 @@ const CustomerRegistration: React.FC = () => {
               {/* PASSWORD SECTION with issues display */}
               <div className="space-y-2">
                 <InputField 
-                    label="Secure Password *" 
+                    label={t('auth.securePassword') + ' *'} 
                     name="password" 
                     type={showPassword ? "text" : "password"} 
                     value={formData.password} 
@@ -317,16 +341,16 @@ const CustomerRegistration: React.FC = () => {
                 {formData.password.length >= 8 && passwordIssues.length === 0 && (
                   <div className="flex items-center gap-2 ml-1 animate-in fade-in">
                     <CheckCircle2 size={12} className="text-emerald-500" />
-                    <span className="text-[9px] font-bold text-emerald-500 uppercase">Strong Password</span>
+                    <span className="text-[9px] font-bold text-emerald-500 uppercase">{t('auth.strongPassword')}</span>
                   </div>
                 )}
               </div>
 
               <Button disabled={isLoading || isUploading} onClick={handleSubmit} className="w-full h-14 bg-[#1E4D8C] text-white font-black rounded-2xl shadow-xl mt-4 flex items-center justify-center gap-2">
-                {isLoading ? <Loader2 className="animate-spin" /> : 'Complete Signup'}
+                {isLoading ? <Loader2 className="animate-spin" /> : t('auth.completeSignup')}
                 {!isLoading && <ArrowRight size={18} />}
               </Button>
-              <button type="button" onClick={() => setStep(1)} className="w-full text-[10px] font-black uppercase text-gray-400 py-2">Back to mobile</button>
+              <button type="button" onClick={() => setStep(1)} className="w-full text-[10px] font-black uppercase text-gray-400 py-2">{t('auth.backToMobile')}</button>
             </div>
           )}
         </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   IndianRupee, 
   Users, 
@@ -40,12 +41,13 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, trend, isPositi
 );
 
 const DashBoardBusiness: React.FC = () => {
+  const { t } = useTranslation();
   // Dummy Data
   const businessStats = [
-    { label: 'Total Customers', value: '1,284', trend: '+14%', isPositive: true, icon: <Users size={20} /> },
-    { label: 'Avg. Ticket Size', value: '₹850', trend: '+5%', isPositive: true, icon: <ShoppingBag size={20} /> },
-    { label: 'Retention Rate', value: '64%', trend: '-2%', isPositive: false, icon: <UserCheck size={20} /> },
-    { label: 'Net Profit', value: '₹42,000', trend: '+18%', isPositive: true, icon: <TrendingUp size={20} /> },
+    { label: t('business.totalCustomers'), value: '1,284', trend: '+14%', isPositive: true, icon: <Users size={20} /> },
+    { label: t('business.avgTicketSize'), value: '₹850', trend: '+5%', isPositive: true, icon: <ShoppingBag size={20} /> },
+    { label: t('business.retentionRate'), value: '64%', trend: '-2%', isPositive: false, icon: <UserCheck size={20} /> },
+    { label: t('business.netProfit'), value: '₹42,000', trend: '+18%', isPositive: true, icon: <TrendingUp size={20} /> },
   ];
 
   const topServices = [
@@ -59,8 +61,8 @@ const DashBoardBusiness: React.FC = () => {
       {/* HEADER SECTION */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Business Analytics</h1>
-          <p className="text-sm text-gray-500">Track your salon's growth and performance metrics.</p>
+          <h1 className="text-2xl font-bold text-gray-800">{t('business.title')}</h1>
+          <p className="text-sm text-gray-500">{t('business.subtitle')}</p>
         </div>
         <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
           <MoreVertical className="text-gray-400" />
@@ -85,29 +87,29 @@ const DashBoardBusiness: React.FC = () => {
         {/* REVENUE CHART PLACEHOLDER */}
         <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="font-bold text-gray-800">Revenue Forecast</h3>
+            <h3 className="font-bold text-gray-800">{t('business.revenueForecast')}</h3>
             <select className="text-xs border-gray-200 rounded-md bg-gray-50 p-1 outline-none cursor-pointer">
-              <option>Last 7 Days</option>
-              <option>Last 30 Days</option>
+              <option>{t('business.last7Days')}</option>
+              <option>{t('business.last30Days')}</option>
             </select>
           </div>
           <div className="h-64 w-full bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center">
             <div className="text-gray-400 text-sm flex flex-col items-center gap-2">
               <TrendingUp size={32} />
-              <p>Chart Visualization (Integrate Recharts here)</p>
+              <p>{t('business.chartVisualization')}</p>
             </div>
           </div>
         </div>
 
         {/* TOP SERVICES TABLE */}
         <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <h3 className="font-bold text-gray-800 mb-6">Top Services</h3>
+          <h3 className="font-bold text-gray-800 mb-6">{t('business.topServices')}</h3>
           <div className="space-y-6">
             {topServices.map((service, i) => (
               <div key={i} className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-bold text-gray-800">{service.name}</p>
-                  <p className="text-xs text-gray-400">{service.bookings} Bookings</p>
+                  <p className="text-xs text-gray-400">{service.bookings} {t('business.bookings')}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold text-gray-900">{service.revenue}</p>
@@ -119,7 +121,7 @@ const DashBoardBusiness: React.FC = () => {
             ))}
           </div>
           <button className="w-full mt-8 py-3 text-xs font-bold text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors">
-            View Service Reports
+            {t('business.viewServiceReports')}
           </button>
         </div>
       </div>
@@ -127,16 +129,16 @@ const DashBoardBusiness: React.FC = () => {
       {/* STAFF PERFORMANCE TABLE */}
       <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-gray-50">
-          <h3 className="font-bold text-gray-800">Staff Performance</h3>
+          <h3 className="font-bold text-gray-800">{t('business.staffPerformance')}</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50/50">
               <tr className="text-[11px] uppercase text-gray-400 font-bold">
-                <th className="px-6 py-4">Staff Member</th>
-                <th className="px-6 py-4">Rating</th>
-                <th className="px-6 py-4 text-center">Appointments</th>
-                <th className="px-6 py-4 text-right">Total Sales</th>
+                <th className="px-6 py-4">{t('business.staffMember')}</th>
+                <th className="px-6 py-4">{t('business.rating')}</th>
+                <th className="px-6 py-4 text-center">{t('business.appointments')}</th>
+                <th className="px-6 py-4 text-right">{t('business.totalSales')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">

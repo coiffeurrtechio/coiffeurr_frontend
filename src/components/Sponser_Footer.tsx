@@ -1,42 +1,47 @@
-import React from 'react'
+import { Heart, Sparkles } from "lucide-react";
 
-function Sponser_Footer() {
+function Sponser_Footer({ collapsed }: { collapsed: boolean }) {
     return (
-        /* mt-auto is the key here if the parent is a flex column */
-        <footer className="mt-auto mb-8 px-6 w-full">
-            <div className="max-w-xs mx-auto text-center flex flex-col items-center">
-                
-                {/* 1. Brand Identity & Sponsorship combined vertically */}
-                <div className="flex flex-col items-center gap-4 w-full">
-                    
-                    {/* Logo */}
-                    <div className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-50 flex items-center justify-center rotate-3 overflow-hidden shrink-0">
-                        <img
-                            src="/Coiffeurr_Logo.png"
-                            alt="Coiffeurr Logo"
-                            className="w-7 h-7 object-contain -rotate-3"
-                        />
-                    </div>
+        <footer className="px-4 py-6 border-t border-white/5 bg-gradient-to-t from-white/5 to-transparent">
+            <div className="flex flex-col gap-4">
 
-                    {/* Sponsorship Section */}
-                    <div className="w-full pt-4 border-t border-gray-100 flex flex-col items-center gap-2">
-                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-[0.3em]">
-                            Supported by
-                        </p>
-                        <div className="flex items-center justify-center gap-4 text-[10px] font-black text-slate-500">
-                            <span className="hover:text-[#1E4D8C] transition-colors cursor-default">IIM SHILLONG</span>
-                            <div className="w-1 h-1 bg-blue-200 rounded-full" />
-                            <span className="hover:text-[#1E4D8C] transition-colors cursor-default">SIDBI</span>
+                {/* Sponsorship Section */}
+                {!collapsed && (
+                    <div className="flex flex-col items-center gap-3">
+                        <div className="flex items-center gap-2">
+                            <Sparkles size={12} className="text-blue-400" />
+                            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-[0.2em]">
+                                Supported by
+                            </p>
+                            <Sparkles size={12} className="text-blue-400" />
+                        </div>
+                        <div className="flex items-center gap-3 px-4 py-2 bg-white/5 rounded-full border border-white/10">
+                            <span className="text-[11px] font-medium text-gray-300 hover:text-white hover:scale-105 transition-all cursor-pointer">
+                                IIM SHILLONG
+                            </span>
+                            <span className="text-gray-600 text-[10px]">•</span>
+                            <span className="text-[11px] font-medium text-gray-300 hover:text-white hover:scale-105 transition-all cursor-pointer">
+                                SIDBI
+                            </span>
                         </div>
                     </div>
-                </div>
+                )}
 
-                {/* 2. Minimal Meta Section */}
-                <div className="mt-6 opacity-30">
-                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">
-                        v2.0.1 • © {new Date().getFullYear()} Coiffeurr Professional
-                    </p>
-                </div>
+                {/* Version Info - Hidden when collapsed */}
+                {!collapsed && (
+                    <div className="text-center pt-4 border-t border-white/5">
+                        <div className="flex items-center justify-center gap-2 text-[9px] text-gray-500 font-medium tracking-wide">
+                            <span className="px-2 py-0.5 bg-white/5 rounded-full border border-white/10">v1.0</span>
+                            <span>•</span>
+                            <span className="flex items-center gap-1">
+                                Made in India
+                                <Heart size={8} className="text-red-400 fill-red-400/20" />
+                            </span>
+                            <span>•</span>
+                            <span>© {new Date().getFullYear()} Coiffeurr</span>
+                        </div>
+                    </div>
+                )}
 
             </div>
         </footer>

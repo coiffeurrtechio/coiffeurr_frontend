@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, X, Clock, Search, Filter, MapPin, Check, Star } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '../components/ui_components/button';
@@ -6,6 +7,7 @@ import { useApi } from '../API/SalonsAPIs/ALLSalonAPI';
 // import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI"; // Ensure this path is correct
 
 function SearchPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { apiRequest } = useApi();
@@ -127,7 +129,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
             <input
               ref={searchInputRef}
               type="text"
-              placeholder="Search for salons..."
+              placeholder={t('search.searchForSalons')}
               className="w-full bg-gray-100 rounded-xl px-4 py-3 outline-none text-sm font-medium focus:ring-2 focus:ring-blue-100 transition-all"
               value={searchQuery}
               onChange={handlechangevalue}
@@ -165,7 +167,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
 
         {!fetchSalonAPI && salons.length > 0 && searchQuery && (
           <div className="space-y-4">
-            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Salons Found</h3>
+            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t('search.salonsFound')}</h3>
             {salons.map((salon) => (
               <div
                 key={salon.id}
@@ -200,7 +202,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
         {!searchQuery && (
           <div className="py-10 text-center">
             <Search className="w-12 h-12 text-gray-100 mx-auto mb-4" />
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Type to discover salons</p>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t('search.typeToDiscover')}</p>
           </div>
         )}
       </div>
@@ -211,7 +213,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsFilterModalOpen(false)} />
           <div className="relative w-full max-w-lg bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 animate-in slide-in-from-bottom duration-300 shadow-2xl">
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-xl font-black text-gray-900 tracking-tight">Search Settings</h2>
+              <h2 className="text-xl font-black text-gray-900 tracking-tight">{t('search.searchSettings')}</h2>
               <button onClick={() => setIsFilterModalOpen(false)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200">
                 <X size={20} />
               </button>
@@ -219,7 +221,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Location</label>
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{t('search.location')}</label>
                 <div className="relative">
                   <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                   <input
@@ -227,13 +229,13 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
                     value={tempFilters.city}
                     onChange={(e) => setTempFilters({ ...tempFilters, city: e.target.value })}
                     className="w-full h-14 pl-12 pr-4 bg-gray-50 border-none rounded-2xl font-bold text-sm outline-none"
-                    placeholder="City name..."
+                    placeholder={t('search.cityName')}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Limit</label>
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{t('search.limit')}</label>
                 <div className="grid grid-cols-3 gap-3">
                   {["10", "20", "50"].map((num) => (
                     <button
@@ -252,7 +254,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
                 onClick={() => setIsFilterModalOpen(false)}
                 className="w-full h-14 bg-[#1E4D8C] text-white rounded-2xl font-black text-sm uppercase tracking-widest mt-4 shadow-xl"
               >
-                Save Preferences
+                {t('search.savePreferences')}
               </Button>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import {
     ArrowLeft, Calendar, Clock, MapPin, ChevronRight,
     Star, X, Receipt, User as UserIcon, Scissors, Info,
@@ -13,6 +14,7 @@ import { usersalonApi } from "../API/SalonsAPIs/UserSalonAPI";
 import { useToast } from "../components/Toast";
 
 function BookingPage() {
+    const { t } = useTranslation();
     const { userapiRequest } = usersalonApi();
     const [filterStatus, setFilterStatus] = useState('ALL');
     const [bookingdata, setBookingData] = useState<any[]>([]);
@@ -55,13 +57,13 @@ function BookingPage() {
             } else {
                 showToast({
                     type: 'error',
-                    title: 'Error',
-                    message: res.error || 'Failed to fetch details'
+                    title: t('bookings.error'),
+                    message: res.error || t('bookings.failedToFetchDetails')
                 });
             }
         } catch (error) {
             console.error("Detail fetch error:", error);
-            showToast({ type: 'error', title: 'Network Error', message: 'Could not connect to server' });
+            showToast({ type: 'error', title: t('bookings.networkError'), message: t('bookings.couldNotConnect') });
         } finally {
             setloading(false);
         }
@@ -94,7 +96,7 @@ function BookingPage() {
                     <button onClick={() => window.history.back()} className="p-2 -ml-2 hover:bg-slate-50 rounded-full transition-colors">
                         <ArrowLeft className="w-5 h-5 text-slate-600" />
                     </button>
-                    <h1 className="text-xs font-black uppercase tracking-[0.2em] text-slate-800">Appointment History</h1>
+                    <h1 className="text-xs font-black uppercase tracking-[0.2em] text-slate-800">{t('bookings.appointmentHistory')}</h1>
                     <div className="w-5" />
                 </div>
             </header>
@@ -102,18 +104,18 @@ function BookingPage() {
             <main className="max-w-2xl mx-auto px-4 py-8">
                 {/* Status Summary */}
                 <div className="mb-6 flex justify-between items-center px-1">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Filter Bookings</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('bookings.filterBookings')}</label>
                     <div className="relative">
                         <select
                             value={filterStatus}
                             onChange={(e) => setFilterStatus(e.target.value)}
                             className="appearance-none bg-white border border-slate-100 rounded-xl px-4 py-2 pr-10 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer shadow-sm"
                         >
-                            <option value="ALL">All Bookings</option>
-                            <option value="PENDING">Pending</option>
-                            <option value="CONFIRMED">Confirmed</option>
-                            <option value="COMPLETED">Completed</option>
-                            <option value="CANCELLED">Cancelled</option>
+                            <option value="ALL">{t('bookings.allBookings')}</option>
+                            <option value="PENDING">{t('bookings.pending')}</option>
+                            <option value="CONFIRMED">{t('bookings.confirmed')}</option>
+                            <option value="COMPLETED">{t('bookings.completed')}</option>
+                            <option value="CANCELLED">{t('bookings.cancelled')}</option>
                         </select>
                         <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                     </div>
@@ -159,7 +161,7 @@ function BookingPage() {
                                 </div>
                             ))
                     ) : (
-                        <div className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">No Records Found</div>
+                        <div className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">{t('bookings.noRecordsFound')}</div>
                     )}
                 </div>
             </main>
@@ -199,7 +201,7 @@ function BookingPage() {
                                 </div>
                                 <div className="text-right">
                                     <p className="text-3xl font-black text-white">₹{selectedBooking.price}</p>
-                                    <p className="text-[10px] font-bold text-white/70 uppercase">Total Amount</p>
+                                    <p className="text-[10px] font-bold text-white/70 uppercase">{t('bookings.totalAmount')}</p>
                                 </div>
                             </div>
                         </div>
@@ -211,7 +213,7 @@ function BookingPage() {
                                 <div className="bg-amber-50 border border-amber-100 p-3 rounded-2xl flex items-center gap-3">
                                     <Clock size={16} className="text-amber-600" />
                                     <p className="text-[10px] font-bold text-amber-800 uppercase tracking-tight">
-                                        Expires on: {new Date(selectedBooking.validTill).toLocaleString()}
+                                        {t('bookings.expiresOn')} {new Date(selectedBooking.validTill).toLocaleString()}
                                     </p>
                                 </div>
                             )}
@@ -231,16 +233,16 @@ function BookingPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100">
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                        <Calendar size={14} className="text-[#1E4D8C]" /> Schedule
+                                        <Calendar size={14} className="text-[#1E4D8C]" /> {t('bookings.schedule')}
                                     </p>
                                     <p className="text-sm font-black text-slate-800">{selectedBooking.slot?.date}</p>
                                     <p className="text-xs font-bold text-slate-500 mt-0.5">{formatTo12Hour(selectedBooking.slot?.time)}</p>
-                                    <p className="text-[10px] font-bold text-[#1E4D8C] mt-1 uppercase tracking-tighter">{selectedBooking.slot?.duration} Minutes Session</p>
+                                    <p className="text-[10px] font-bold text-[#1E4D8C] mt-1 uppercase tracking-tighter">{selectedBooking.slot?.duration} {t('bookings.minutesSession')}</p>
                                 </div>
 
                                 <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100">
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                        <User size={14} className="text-[#1E4D8C]" /> Specialist
+                                        <User size={14} className="text-[#1E4D8C]" /> {t('bookings.specialist')}
                                     </p>
                                     <div className="flex items-center gap-3">
                                         <img
@@ -252,7 +254,7 @@ function BookingPage() {
                                             <p className="text-sm font-black text-slate-800">{selectedBooking.staff?.name}</p>
                                             <div className="flex items-center gap-1">
                                                 <Star size={10} className="fill-orange-400 text-orange-400" />
-                                                <span className="text-[10px] font-bold text-slate-500">{selectedBooking.staff?.rating?.average} ({selectedBooking.staff?.experienceYears}y exp)</span>
+                                                <span className="text-[10px] font-bold text-slate-500">{selectedBooking.staff?.rating?.average} ({selectedBooking.staff?.experienceYears}{t('bookings.yearsExp')})</span>
                                             </div>
                                         </div>
                                     </div>
@@ -266,7 +268,7 @@ function BookingPage() {
                                         <img src={selectedBooking.salon?.logoUrl} className="w-full h-full object-contain" alt="Salon Logo" />
                                     </div>
                                     <div className="flex-1">
-                                        <p className="text-[9px] font-black text-white/50 uppercase tracking-[0.2em]">Studio</p>
+                                        <p className="text-[9px] font-black text-white/50 uppercase tracking-[0.2em]">{t('bookings.studio')}</p>
                                         <h4 className="text-sm font-black tracking-tight">{selectedBooking.salon?.name}</h4>
                                     </div>
                                     <a
@@ -293,12 +295,12 @@ function BookingPage() {
                                         {selectedBooking.user?.name?.charAt(0)}
                                     </div>
                                     <div>
-                                        <p className="text-[9px] font-black text-slate-400 uppercase">Booked By</p>
+                                        <p className="text-[9px] font-black text-slate-400 uppercase">{t('bookings.bookedBy')}</p>
                                         <p className="text-sm font-black text-slate-800">{selectedBooking.user?.name}</p>
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-end">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase">Contact</p>
+                                    <p className="text-[9px] font-black text-slate-400 uppercase">{t('bookings.contact')}</p>
                                     <p className="text-xs font-bold text-slate-700">{selectedBooking.user?.phone}</p>
                                 </div>
                             </div>
@@ -306,13 +308,13 @@ function BookingPage() {
                             {/* Footer Actions */}
                             <div className="pt-2 space-y-3">
                                 <p className="text-center text-[9px] font-bold text-slate-300 uppercase tracking-[0.2em]">
-                                    Transaction ID: {selectedBooking.referenceId}
+                                    {t('bookings.transactionId')} {selectedBooking.referenceId}
                                 </p>
                                 <button
                                     onClick={() => setIsModalOpen(false)}
                                     className="w-full py-4 bg-[#1E4D8C] text-white rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-blue-900/20 active:scale-95 transition-all"
                                 >
-                                    Close Details
+                                    {t('bookings.closeDetails')}
                                 </button>
                             </div>
                         </div>

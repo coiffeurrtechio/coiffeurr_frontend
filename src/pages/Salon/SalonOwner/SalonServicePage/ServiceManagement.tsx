@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Plus,
     Search,
@@ -21,6 +22,7 @@ import { useNavigate } from 'react-router-dom';
 import { DashboardLoader } from '../../../../components/ui_components/DashboardLoader';
 
 const ServiceManagement: React.FC = () => {
+    const { t } = useTranslation();
     const { apiRequest } = useApi();
     const { apiSalonPost, apiSalonPut } = useSalonApi();
     const dispatch = useDispatch();
@@ -158,18 +160,18 @@ const ServiceManagement: React.FC = () => {
             <DashboardLoader isVisible={loading || submitting} />
 
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-800 tracking-tight">Services</h1>
+                <h1 className="text-2xl font-bold text-gray-800 tracking-tight">{t('services.title')}</h1>
                 <button onClick={() => { resetForm(); setIsModalOpen(true); }} className="flex items-center gap-2 px-5 py-2.5 bg-[#1E4D8C] text-white rounded-xl text-sm font-bold shadow-lg transition-all active:scale-95">
-                    <Plus size={18} /> Add Service
+                    <Plus size={18} /> {t('services.addService')}
                 </button>
             </div>
 
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="p-6 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <h2 className="text-lg font-bold text-gray-800">Service Catalogue</h2>
+                    <h2 className="text-lg font-bold text-gray-800">{t('services.serviceCatalogue')}</h2>
                     <div className="relative w-full md:w-64">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                        <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm outline-none" />
+                        <input type="text" placeholder={t('services.search')} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm outline-none" />
                     </div>
                 </div>
 
@@ -177,11 +179,11 @@ const ServiceManagement: React.FC = () => {
                     <table className="w-full text-left">
                         <thead className="bg-gray-50/50 uppercase text-[10px] font-bold text-gray-400 tracking-widest">
                             <tr>
-                                <th className="px-6 py-4">Service Details</th>
-                                <th className="px-6 py-4">Linked Staff</th>
-                                <th className="px-6 py-4">Price</th>
-                                <th className="px-6 py-4 text-center">Status</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
+                                <th className="px-6 py-4">{t('services.serviceDetails')}</th>
+                                <th className="px-6 py-4">{t('services.linkedStaff')}</th>
+                                <th className="px-6 py-4">{t('services.price')}</th>
+                                <th className="px-6 py-4 text-center">{t('services.status')}</th>
+                                <th className="px-6 py-4 text-right">{t('services.actions')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
@@ -198,7 +200,7 @@ const ServiceManagement: React.FC = () => {
                                             </div>
                                             <div>
                                                 <p className="text-sm font-bold text-gray-800">{service.serviceName}</p>
-                                                <p className="text-[10px] text-gray-400 flex items-center gap-1 mt-0.5 font-medium"><Clock size={10} /> {service.durationMinutes} mins</p>
+                                                <p className="text-[10px] text-gray-400 flex items-center gap-1 mt-0.5 font-medium"><Clock size={10} /> {service.durationMinutes} {t('services.mins')}</p>
                                             </div>
                                         </div>
                                     </td>
@@ -213,7 +215,7 @@ const ServiceManagement: React.FC = () => {
                                                         </div>
                                                     );
                                                 })
-                                            ) : <span className="text-[10px] text-gray-400 italic">No staff assigned</span>}
+                                            ) : <span className="text-[10px] text-gray-400 italic">{t('services.noStaffAssigned')}</span>}
                                             {service.staff_ids?.length > 3 && (
                                                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-50 text-[10px] font-bold text-gray-400 ring-2 ring-white">
                                                     +{service.staff_ids.length - 3}
@@ -224,7 +226,7 @@ const ServiceManagement: React.FC = () => {
                                     <td className="px-6 py-5"><span className="text-sm font-black text-[#1E4D8C]">₹{service.price}</span></td>
                                     <td className="px-6 py-5 text-center">
                                         <span className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase border ${service.active ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'}`}>
-                                            {service.active ? 'Active' : 'Inactive'}
+                                            {service.active ? t('services.active') : t('services.inactive')}
                                         </span>
                                     </td>
                                     <td className="px-6 py-5 text-right">
@@ -241,7 +243,7 @@ const ServiceManagement: React.FC = () => {
 
             {(isModalOpen || isEditModalOpen) && (
                 <ServiceFormModal
-                    title={isEditModalOpen ? "Edit Service" : "Add Service"}
+                    title={isEditModalOpen ? t('services.editService') : t('services.addService')}
                     onClose={() => { setIsModalOpen(false); setIsEditModalOpen(false); resetForm(); }}
                     onSubmit={isEditModalOpen ? handleUpdateService : handleCreateService}
                     formData={formData}
@@ -257,6 +259,7 @@ const ServiceManagement: React.FC = () => {
 };
 
 const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, allStaff, submitting, uploading, handleFileUpload }: any) => {
+    const { t } = useTranslation();
     const [newItem, setNewItem] = useState("");
 
     const addInclude = () => {
@@ -284,7 +287,7 @@ const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, all
 
                     {/* Image Section */}
                     <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Service Banner</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">{t('services.serviceBanner')}</label>
                         <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
                             <div className="relative w-20 h-20 rounded-xl bg-white border flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
                                 {formData.imageUrl ? (
@@ -301,24 +304,24 @@ const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, all
                             <div className="flex-1 space-y-2">
                                 <label className="inline-block">
                                     <span className="cursor-pointer px-4 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-100 transition-all">
-                                        {formData.imageUrl ? "Change Photo" : "Upload Photo"}
+                                        {formData.imageUrl ? t('services.changePhoto') : t('services.uploadPhoto')}
                                     </span>
                                     <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} disabled={uploading} />
                                 </label>
-                                <p className="text-[9px] text-gray-400 font-medium">Click to upload from device</p>
+                                <p className="text-[9px] text-gray-400 font-medium">{t('services.clickToUpload')}</p>
                             </div>
                         </div>
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Service Name</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('services.serviceName')}</label>
                         <input required className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-100" value={formData.serviceName} onChange={e => setFormData({ ...formData, serviceName: e.target.value })} />
                     </div>
 
                     {/* Assigned Staff Grid */}
                     <div className="space-y-2">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                            <Users size={12} /> Assign Professional Staff
+                            <Users size={12} /> {t('services.assignProfessionalStaff')}
                         </label>
                         <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-1 custom-scrollbar">
                             {allStaff.length > 0 ? allStaff.map((staff) => {
@@ -339,13 +342,13 @@ const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, all
                                         {isSelected && <Check size={12} className="ml-auto text-blue-600" />}
                                     </div>
                                 );
-                            }) : <p className="text-[10px] text-gray-400 italic col-span-2">No staff found for this salon.</p>}
+                            }) : <p className="text-[10px] text-gray-400 italic col-span-2">{t('services.noStaffFound')}</p>}
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Price (₹)</label>
+                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('services.priceRupee')}</label>
                             <input
                                 type="number"
                                 className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-blue-600"
@@ -359,7 +362,7 @@ const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, all
                             />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Duration (Min)</label>
+                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('services.durationMin')}</label>
                             <input
                                 type="number"
                                 className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm"
@@ -375,9 +378,9 @@ const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, all
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Included Benefits</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('services.includedBenefits')}</label>
                         <div className="flex gap-2">
-                            <input className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none" placeholder="e.g. Hairwash" value={newItem} onChange={e => setNewItem(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addInclude())} />
+                            <input className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none" placeholder={t('services.benefitPlaceholder')} value={newItem} onChange={e => setNewItem(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addInclude())} />
                             <button type="button" onClick={addInclude} className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100"><Plus size={20} /></button>
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -390,14 +393,14 @@ const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, all
                     </div>
 
                     <div className="flex items-center justify-between bg-blue-50/50 p-4 rounded-xl border border-blue-100">
-                        <span className="text-[11px] font-bold text-blue-600 uppercase tracking-widest">Active Status</span>
+                        <span className="text-[11px] font-bold text-blue-600 uppercase tracking-widest">{t('services.activeStatus')}</span>
                         <button type="button" onClick={() => setFormData({ ...formData, active: !formData.active })} className={`w-12 h-6 rounded-full relative transition-colors ${formData.active ? 'bg-green-500' : 'bg-gray-300'}`}>
                             <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${formData.active ? 'left-7' : 'left-1'}`} />
                         </button>
                     </div>
 
                     <button type="submit" disabled={submitting} className="w-full py-3.5 bg-[#1E4D8C] text-white rounded-xl font-bold shadow-lg disabled:opacity-70 active:scale-[0.98] transition-all">
-                        {submitting ? "Processing..." : "Save Service"}
+                        {submitting ? t('services.processing') : t('services.saveService')}
                     </button>
                 </form>
             </div>

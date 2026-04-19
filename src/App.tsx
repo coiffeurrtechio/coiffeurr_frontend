@@ -5,6 +5,7 @@ import Config from "./configs/config";
 import { login } from "./utils/Storage/slice/authSlice";
 import { useNavigate } from "react-router-dom";
 import { ToastProvider } from "./components/Toast";
+import './i18n/config';
 
 const App = () => {
   const THIRTY_MINUTES = 30 * 60 * 1000;

@@ -17,7 +17,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       devOptions: {
-        enabled: true 
+        enabled: true
       },
       manifest: {
         name: 'Coiffure App',
@@ -47,6 +47,10 @@ export default defineConfig({
       }
     })
   ],
+  server: {
+    port: 3001,
+    strictPort: true
+  },
   build: {
     outDir: 'dist',
     // Helpful for debugging PWA builds

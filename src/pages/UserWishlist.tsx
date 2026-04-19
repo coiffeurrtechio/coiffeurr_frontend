@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from "react-router-dom";
 import { Heart, MapPin, Star, ArrowLeft, Scissors, Trash2 } from "lucide-react";
 import { usersalonApi } from "../API/SalonsAPIs/UserSalonAPI";
@@ -8,6 +9,7 @@ import { Badge } from "../components/ui_components/badge";
 import { useToast } from "../components/Toast";
 
 export default function UserWishlist() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { userapiRequest } = usersalonApi();
   const [wishlist, setWishlist] = useState<any[]>([]);
@@ -38,8 +40,8 @@ export default function UserWishlist() {
       console.error("Error fetching wishlist:", error);
       showToast({
         type: "error",
-        title: "Login Failed",
-        message: error || "Something went wrong. Please try again.",
+        title: t('wishlist.loginFailed'),
+        message: error || t('wishlist.somethingWentWrong'),
         duration: 5000,
       });
     } finally {
@@ -63,8 +65,8 @@ export default function UserWishlist() {
       // Update local state immediately for a snappy UI
       showToast({
         type: "success",
-        title: "Login Successful",
-        message: "Successfully removed!",
+        title: t('wishlist.loginSuccessful'),
+        message: t('wishlist.successfullyRemoved'),
         duration: 5000,
       });
       setWishlist((prev) => prev.filter((item) => item.id !== salonId));
@@ -86,7 +88,7 @@ export default function UserWishlist() {
           <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-full transition-all">
             <ArrowLeft className="w-5 h-5 text-slate-700" />
           </button>
-          <h1 className="text-sm font-bold uppercase tracking-widest text-slate-800">My Wishlist</h1>
+          <h1 className="text-sm font-bold uppercase tracking-widest text-slate-800">{t('wishlist.myWishlist')}</h1>
         </div>
       </nav>
 
@@ -114,14 +116,14 @@ export default function UserWishlist() {
                         e.stopPropagation(); // Stop navigation to details page
                         handleRemoveFromWishlist(salon.id);
                       }}
-                      title="Remove from wishlist"
+                      title={t('wishlist.removeFromWishlist')}
                     >
                       <Trash2 className="w-4 h-4 transition-transform group-hover/trash:scale-110" />
                     </button>
                   </div>
 
                   <Badge className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-md text-white border-none text-[10px] uppercase tracking-tighter">
-                    {salon.salonType || "Studio"}
+                    {salon.salonType || t('wishlist.studio')}
                   </Badge>
                 </div>
 
@@ -145,7 +147,7 @@ export default function UserWishlist() {
 
                   <div className="flex items-center justify-between pt-4 border-t border-slate-50">
                     <span className="text-[10px] font-bold text-[#1E4D8C] uppercase tracking-widest">
-                      View Details
+                      {t('wishlist.viewDetails')}
                     </span>
                     <div className="w-6 h-6 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center">
                       <Scissors className="w-3 h-3 text-slate-400" />
@@ -160,12 +162,12 @@ export default function UserWishlist() {
             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
               <Heart className="w-8 h-8 text-slate-300" />
             </div>
-            <p className="text-slate-400 font-light text-lg">Your wishlist is empty.</p>
+            <p className="text-slate-400 font-light text-lg">{t('wishlist.wishlistEmpty')}</p>
             <button
               onClick={() => navigate("/")}
               className="text-xs font-bold uppercase tracking-widest text-[#1E4D8C] border-b border-[#1E4D8C] pb-1"
             >
-              Explore Salons
+              {t('wishlist.exploreSalons')}
             </button>
           </div>
         )}

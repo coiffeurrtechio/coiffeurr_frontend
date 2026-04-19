@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import i18n from '../i18n/config';
 import { MapPin, User, Search, Star, Navigation, ChevronRight, Award } from 'lucide-react';
 import { Loader } from '../components/ui_components/Loader';
 import { useApi } from '../API/SalonsAPIs/ALLSalonAPI';
@@ -7,6 +9,7 @@ import NoSalonsFound from './NoSalonsFound';
 import Config from '../configs/config';
 
 const HomePage: React.FC = () => {
+  const { t } = useTranslation();
   const [address, setAddress] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDataLoaded, setIsDataLoaded] = useState<boolean>(false);
@@ -18,6 +21,13 @@ const HomePage: React.FC = () => {
   const user = localStorage.getItem("authState");
   const parsedUser = user ? JSON.parse(user) : null;
   const isloggedin = parsedUser?.isAuthenticated;
+
+  // Force English when user is not logged in
+  useEffect(() => {
+    if (!isloggedin) {
+      i18n.changeLanguage('en');
+    }
+  }, [isloggedin]);
 
   useEffect(() => {
     getLocationAndFetch();
@@ -49,7 +59,7 @@ const HomePage: React.FC = () => {
 
             const city = data.address.city || data.address.town || data.address.village || "";
             const suburb = data.address.suburb || data.address.neighbourhood || "";
-            const displayAddress = suburb ? `${suburb}, ${city}` : city || "Nearby";
+            const displayAddress = suburb ? `${suburb}, ${city}` : city || t('home.nearby');
 
             setAddress(displayAddress);
             if (city) localStorage.setItem("Address", city);
@@ -64,7 +74,7 @@ const HomePage: React.FC = () => {
             setIsDataLoaded(true);
           } catch (error) {
             console.error("Geocoding error:", error);
-            setAddress(savedCity || "Nearby");
+            setAddress(savedCity || t('home.nearby'));
             await FetchAllSalons(latitude, longitude, savedCity || "");
             setIsDataLoaded(true);
           } finally {
@@ -129,13 +139,13 @@ const HomePage: React.FC = () => {
                 </div>
                 <MapPin className="w-4 h-4 text-blue-200 shrink-0" />
                 <span className="font-medium text-xs sm:text-sm truncate">
-                  {address || "Locating..."}
+                  {address || t('home.locating')}
                 </span>
               </div>
               {isloggedin ? (
                 <User className="w-8 h-8 sm:w-10 sm:h-10 p-1.5 bg-white/20 rounded-full cursor-pointer hover:bg-white/30 transition-colors" onClick={() => navigate("/profile")} />
               ) : (
-                <button onClick={() => navigate("/login")} className="text-[10px] font-bold uppercase tracking-[0.2em] px-5 py-2.5 bg-white text-[#1E4D8C] rounded-full hover:bg-opacity-90 transition-all shadow-sm">Login</button>
+                <button onClick={() => navigate("/login")} className="text-[10px] font-bold uppercase tracking-[0.2em] px-5 py-2.5 bg-white text-[#1E4D8C] rounded-full hover:bg-opacity-90 transition-all shadow-sm">{t('home.login')}</button>
               )}
             </div>
 
@@ -143,11 +153,11 @@ const HomePage: React.FC = () => {
               <div onClick={() => navigate("/search")} className="bg-white rounded-2xl p-4 shadow-xl -mb-12 sm:-mb-16 border border-gray-100 cursor-pointer active:scale-[0.98] transition-all">
                 <div className="flex items-center gap-2 mb-3">
                   <Search className="w-5 h-5 text-[#1E4D8C]" />
-                  <span className="text-gray-900 font-bold text-sm sm:text-base">Find a Salon Near You</span>
+                  <span className="text-gray-900 font-bold text-sm sm:text-base">{t('home.findSalonNearYou')}</span>
                 </div>
                 <div className="flex gap-2">
-                  <div className="flex-1 bg-gray-50 rounded-lg px-3 py-2.5 flex items-center border border-gray-100 font-bold text-xs text-gray-400">Tap to search</div>
-                  <button className="bg-[#1E4D8C] text-white px-5 sm:px-8 py-2 rounded-lg font-black text-xs sm:text-sm shadow-md">Search</button>
+                  <div className="flex-1 bg-gray-50 rounded-lg px-3 py-2.5 flex items-center border border-gray-100 font-bold text-xs text-gray-400">{t('home.tapToSearch')}</div>
+                  <button className="bg-[#1E4D8C] text-white px-5 sm:px-8 py-2 rounded-lg font-black text-xs sm:text-sm shadow-md">{t('home.search')}</button>
                 </div>
               </div>
             </div>
@@ -159,8 +169,8 @@ const HomePage: React.FC = () => {
           <div className="mt-20 sm:mt-24 mb-10 px-4 sm:px-8 max-w-7xl mx-auto animate-in fade-in duration-700">
             <div className="flex items-center justify-between px-1 mb-4">
               <div>
-                <h2 className="text-gray-900 text-lg sm:text-xl font-black tracking-tight">Top Artists Near You</h2>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1">Expert grooming at your doorstep</p>
+                <h2 className="text-gray-900 text-lg sm:text-xl font-black tracking-tight">{t('home.topArtistsNearYou')}</h2>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1">{t('home.expertGrooming')}</p>
               </div>
               {/* <button onClick={() => navigate('/all-experts')} className="text-[#1E4D8C] bg-blue-50 p-2 rounded-full active:scale-90 transition-transform"><ChevronRight size={20} /></button> */}
             </div>
@@ -179,7 +189,7 @@ const HomePage: React.FC = () => {
                   <div className="text-center w-full">
                     <h4 className="font-black text-gray-900 text-sm capitalize truncate leading-tight">{member.name}</h4>
                     <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter mt-0.5 truncate">{member.expertise[0]}</p>
-                    <div className="mt-2 flex items-center justify-center gap-1 text-[9px] font-black text-emerald-600 bg-emerald-50 py-1 px-2 rounded-lg w-fit mx-auto"><Award size={10} /><span>{member.experience_years}Y EXP</span></div>
+                    <div className="mt-2 flex items-center justify-center gap-1 text-[9px] font-black text-emerald-600 bg-emerald-50 py-1 px-2 rounded-lg w-fit mx-auto"><Award size={10} /><span>{member.experience_years}{t('home.yExp')}</span></div>
                   </div>
                 </div>
               ))}
@@ -189,7 +199,7 @@ const HomePage: React.FC = () => {
 
         <main className="max-w-7xl mx-auto px-4 sm:px-8 relative z-10">
           <div className={`${staff.length > 0 ? 'mt-4' : 'mt-20 sm:mt-24'} mb-4`}>
-            <h2 className="text-gray-800 text-lg sm:text-xl font-black tracking-tight mb-6">Recommended for You</h2>
+            <h2 className="text-gray-800 text-lg sm:text-xl font-black tracking-tight mb-6">{t('home.recommendedForYou')}</h2>
 
             <div className="grid grid-cols-1 gap-4 sm:gap-6 pb-4 min-h-[200px]">
 
@@ -199,7 +209,7 @@ const HomePage: React.FC = () => {
               {!isDataLoaded ? (
                 <div className="w-full py-20 flex flex-col items-center justify-center animate-pulse">
                   <div className="w-10 h-10 border-4 border-slate-100 border-t-[#1E4D8C] rounded-full animate-spin mb-4" />
-                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Finding best salons...</p>
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">{t('home.findingBestSalons')}</p>
                 </div>
               ) :
 
@@ -207,8 +217,8 @@ const HomePage: React.FC = () => {
                 !address ? (
                   <div className="w-full flex flex-col items-center justify-center py-16 px-6 backdrop-blur-md rounded-[2rem] border-2 border-dashed border-gray-100 animate-in fade-in duration-500">
                     <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4"><MapPin className="w-8 h-8 text-[#1E4D8C]" /></div>
-                    <h3 className="text-gray-900 font-black text-lg mb-2">Location Required</h3>
-                    <button onClick={handleEnableLocation} className="bg-[#1E4D8C] text-white px-8 py-3 rounded-2xl font-black text-sm shadow-lg flex items-center gap-2"><Navigation className="w-4 h-4" /> Enable Location</button>
+                    <h3 className="text-gray-900 font-black text-lg mb-2">{t('home.locationRequired')}</h3>
+                    <button onClick={handleEnableLocation} className="bg-[#1E4D8C] text-white px-8 py-3 rounded-2xl font-black text-sm shadow-lg flex items-center gap-2"><Navigation className="w-4 h-4" /> {t('home.enableLocation')}</button>
                   </div>
                 ) :
 
@@ -241,7 +251,7 @@ const HomePage: React.FC = () => {
                               <p className="text-[10px] text-gray-400 line-clamp-1">{salon.address?.street}</p>
                             </div>
                           </div>
-                          <button className="mt-4 sm:max-w-[140px] py-2 border-2 border-[#1E4D8C] text-[#1E4D8C] font-black text-xs rounded-xl hover:bg-[#1E4D8C] hover:text-white transition-all">Book Now</button>
+                          <button className="mt-4 sm:max-w-[140px] py-2 border-2 border-[#1E4D8C] text-[#1E4D8C] font-black text-xs rounded-xl hover:bg-[#1E4D8C] hover:text-white transition-all">{t('home.bookNow')}</button>
                         </div>
                       </Link>
                     ))

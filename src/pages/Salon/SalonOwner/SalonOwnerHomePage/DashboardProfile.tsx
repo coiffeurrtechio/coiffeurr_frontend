@@ -3,7 +3,8 @@ import {
   Mail, Phone, MapPin, Calendar, Clock,
   Edit3, UserCircle, Star, ShieldCheck, X, Check,
   Trash2, Plus, Globe, Camera, Image as ImageIcon,
-  CalendarDays, AlignLeft, Navigation, MapPinned, LocateFixed, Loader2
+  CalendarDays, AlignLeft, Navigation, MapPinned, LocateFixed, Loader2,
+  Power, AlertTriangle
 } from 'lucide-react';
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
@@ -23,6 +24,8 @@ const DashboardProfile: React.FC = () => {
   const [salonData, setSalonData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+  const [isBlocking, setIsBlocking] = useState(false);
 
 
   const fetchProfile = useCallback(async () => {
@@ -52,6 +55,28 @@ const DashboardProfile: React.FC = () => {
       }
     } catch (err) {
       console.error("Update failed:", err);
+    }
+  };
+
+  const handleBlockToggle = async () => {
+    setIsBlocking(true);
+    try {
+      const salonId = salonData._id || salonData.id;
+      if (!salonId) {
+        throw new Error("No salon ID found");
+      }
+      
+      const newBlockedStatus = !salonData.isBlocked;
+      const res = await apiCustomerPut<any>(`/salons/update/${salonId}`, { isBlocked: newBlockedStatus });
+      if (res.data) {
+        setSalonData(res.data);
+        setIsBlockModalOpen(false);
+      }
+    } catch (err) {
+      console.error("Block toggle failed:", err);
+      alert("Failed to update salon status. Please try again.");
+    } finally {
+      setIsBlocking(false);
     }
   };
 
@@ -92,9 +117,23 @@ const DashboardProfile: React.FC = () => {
               <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">{salonData.salonType} • {salonData.pricing?.priceRange}</p>
             </div>
           </div>
-          <button onClick={() => setIsEditModalOpen(true)} className="mb-2 flex items-center gap-2 bg-[#1E4D8C] text-white px-8 py-4 rounded-2xl font-bold shadow-xl hover:bg-[#163a6b] transition-all active:scale-95">
-            <Edit3 size={18} /> Edit Profile
-          </button>
+          <div className="flex items-center gap-3 mb-2">
+            <button
+              onClick={() => setIsBlockModalOpen(true)}
+              className={`flex items-center gap-2 px-6 py-4 rounded-2xl font-bold shadow-xl transition-all active:scale-95 ${
+                salonData.isBlocked 
+                  ? 'bg-red-500 text-white hover:bg-red-600' 
+                  : 'bg-green-500 text-white hover:bg-green-600'
+              }`}
+              title={salonData.isBlocked ? "Turn Visibility On" : "Turn Visibility Off"}
+            >
+              <Power size={18} />
+              {salonData.isBlocked ? 'Visibility Off' : 'Visibility On'}
+            </button>
+            <button onClick={() => setIsEditModalOpen(true)} className="flex items-center gap-2 bg-[#1E4D8C] text-white px-8 py-4 rounded-2xl font-bold shadow-xl hover:bg-[#163a6b] transition-all active:scale-95">
+              <Edit3 size={18} /> Edit Profile
+            </button>
+          </div>
         </div>
 
         {/* MAIN DASHBOARD CONTENT */}
@@ -180,6 +219,65 @@ const DashboardProfile: React.FC = () => {
           initialData={salonData}
           onUpdate={handleUpdateSalon}
         />
+      )}
+
+      {isBlockModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setIsBlockModalOpen(false)} />
+          <div className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-8">
+              <div className="flex items-center gap-4 mb-6">
+                <div className={`p-4 rounded-2xl ${salonData.isBlocked ? 'bg-red-50' : 'bg-green-50'}`}>
+                  <AlertTriangle size={24} className={salonData.isBlocked ? 'text-red-600' : 'text-green-600'} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-slate-900">
+                    {salonData.isBlocked ? 'Turn Visibility On' : 'Turn Visibility Off'}
+                  </h3>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
+                    {salonData.isBlocked ? 'Make your salon visible to users' : 'Hide your salon from users'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 rounded-2xl p-6 mb-6 border border-slate-100">
+                <p className="text-sm font-bold text-slate-700 leading-relaxed">
+                  {salonData.isBlocked
+                    ? 'Turning visibility on will make your salon visible to all users on the platform. Users will be able to search, view, and book appointments at your salon.'
+                    : 'Turning visibility off will make your salon invisible to users. Users will not be able to search, view, or book appointments at your salon until you turn visibility on again.'
+                  }
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsBlockModalOpen(false)}
+                  className="flex-1 h-14 rounded-2xl bg-slate-50 text-slate-400 font-bold hover:bg-slate-100 transition-all font-sans uppercase text-xs tracking-widest"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleBlockToggle}
+                  disabled={isBlocking}
+                  className={`flex-1 h-14 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-2 font-sans uppercase text-xs tracking-widest transition-all ${
+                    salonData.isBlocked
+                      ? 'bg-green-600 text-white hover:bg-green-700 shadow-green-900/20'
+                      : 'bg-red-600 text-white hover:bg-red-700 shadow-red-900/20'
+                  } ${isBlocking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {isBlocking ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : (
+                    <>
+                      <Power size={18} />
+                      {salonData.isBlocked ? 'Turn On' : 'Turn Off'}
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

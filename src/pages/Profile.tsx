@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useTranslation } from 'react-i18next';
 import {
   Camera, ArrowLeft, Mail, Phone, Calendar,
   LayoutDashboard, LogOut, ChevronRight,
@@ -13,6 +14,7 @@ import { Button } from "../components/ui_components/button";
 import Config from "../configs/config";
 
 export default function Profile() {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { userapiRequest, userapiPost } = usersalonApi();
@@ -67,7 +69,7 @@ export default function Profile() {
         });
       }
     } catch (error) {
-      showToast("Could not load profile", "error");
+      showToast(t('profile.couldNotLoadProfile'), "error");
     } finally {
       setLoading(false);
     }
@@ -85,7 +87,7 @@ export default function Profile() {
   };
 
   const handleAutoDetectLocation = () => {
-    if (!navigator.geolocation) return showToast("Geolocation not supported", "error");
+    if (!navigator.geolocation) return showToast(t('profile.geolocationNotSupported'), "error");
     setIsLocating(true);
 
     navigator.geolocation.getCurrentPosition(async (position) => {
@@ -121,15 +123,15 @@ export default function Profile() {
             country: addr.country || "India"
           }
         }));
-        showToast("Location detected!");
+        showToast(t('profile.locationDetected'));
       } catch (err) {
-        showToast("Failed to fetch address details", "error");
+        showToast(t('profile.failedToFetchAddress'), "error");
       } finally {
         setIsLocating(false);
       }
     }, () => {
       setIsLocating(false);
-      showToast("Location access denied", "error");
+      showToast(t('profile.locationAccessDenied'), "error");
     });
   };
 
@@ -171,12 +173,12 @@ export default function Profile() {
         setusercontactdetails((prev: any) => ({ ...prev, ...payload }));
         syncLocalStorage(payload);
         setIsEditModalOpen(false);
-        showToast("Profile updated successfully");
+        showToast(t('profile.profileUpdated'));
       } else {
         throw new Error();
       }
     } catch (error) {
-      showToast("Failed to save changes", "error");
+      showToast(t('profile.failedToSaveChanges'), "error");
     } finally {
       setLoading(false);
     }
@@ -203,7 +205,7 @@ export default function Profile() {
             <ArrowLeft size={20} />
           </button>
           <button onClick={() => setIsEditModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-white backdrop-blur-md text-xs font-bold uppercase tracking-widest active:scale-95 transition-all">
-            <Edit3 size={14} /> Update Info
+            <Edit3 size={14} /> {t('profile.updateInfo')}
           </button>
         </div>
       </div>
@@ -217,17 +219,17 @@ export default function Profile() {
           </div>
           <h2 className="mt-4 text-xl font-black text-gray-900 tracking-tight">{user.name}</h2>
           <span className="text-[10px] font-black uppercase text-blue-600 bg-blue-50 px-3 py-1 rounded-full mt-2 inline-block">
-            {usercontactdetails.name || "User"}
+            {usercontactdetails.name || t('profile.user')}
           </span>
         </div>
 
         <div className="mt-6 bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-4">
           {usercontactdetails?.phone ? (
-            <ContactItem icon={<Phone size={18} />} label="Phone" value={usercontactdetails.phone} />
+            <ContactItem icon={<Phone size={18} />} label={t('profile.phone')} value={usercontactdetails.phone} />
           ) : (
             <AddContactPlaceholder
               icon={<Phone size={18} />}
-              label="Phone"
+              label={t('profile.phone')}
               onClick={() => navigate('/verify', { state: { phone: 'phone' } })}
             />
           )}
@@ -235,28 +237,28 @@ export default function Profile() {
 
           {/* Email Section */}
           {usercontactdetails.email ? (
-            <ContactItem icon={<Mail size={18} />} label="Email" value={usercontactdetails.email} />
+            <ContactItem icon={<Mail size={18} />} label={t('profile.email')} value={usercontactdetails.email} />
           ) : (
             <AddContactPlaceholder
               icon={<Mail size={18} />}
-              label="Email"
+              label={t('profile.email')}
               onClick={() => navigate('/verify', { state: { email: 'email' } })}
             />
           )}
 
 
           {usercontactdetails.address?.city ? (
-            <ContactItem icon={<MapPin size={18} />} label="Location" value={getFormattedAddress()} />
+            <ContactItem icon={<MapPin size={18} />} label={t('profile.address')} value={getFormattedAddress()} />
           ) : (
-            <AddContactPlaceholder icon={<MapPin size={18} />} label="Address" onClick={() => setIsEditModalOpen(true)} />
+            <AddContactPlaceholder icon={<MapPin size={18} />} label={t('profile.address')} onClick={() => setIsEditModalOpen(true)} />
           )}
         </div>
 
         <div className="mt-8 bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">
-          <MenuItem label="My Bookings" icon={<Calendar className="text-blue-600" />} onClick={() => navigate("/bookings")} />
-          {user.role === "OWNER" && <MenuItem label="Salon Dashboard" icon={<LayoutDashboard className="text-orange-600" />} onClick={() => navigate("/dashboard")} />}
-          <MenuItem label="Wishlist" icon={<Heart className="text-red-500" />} onClick={() => navigate("/wishlist")} />
-          <MenuItem label="Logout" icon={<LogOut className="text-gray-400" />} onClick={handleLogout} isRed />
+          <MenuItem label={t('profile.myBookings')} icon={<Calendar className="text-blue-600" />} onClick={() => navigate("/bookings")} />
+          {user.role === "OWNER" && <MenuItem label={t('profile.salonDashboard')} icon={<LayoutDashboard className="text-orange-600" />} onClick={() => navigate("/dashboard")} />}
+          <MenuItem label={t('profile.wishlist')} icon={<Heart className="text-red-500" />} onClick={() => navigate("/wishlist")} />
+          <MenuItem label={t('profile.logout')} icon={<LogOut className="text-gray-400" />} onClick={handleLogout} isRed />
         </div>
       </div>
 
@@ -265,7 +267,7 @@ export default function Profile() {
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsEditModalOpen(false)} />
           <div className="relative w-full max-w-lg bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 animate-in slide-in-from-bottom shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar">
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-xl font-black text-gray-900 tracking-tight uppercase">Update Profile</h2>
+              <h2 className="text-xl font-black text-gray-900 tracking-tight uppercase">{t('profile.updateProfile')}</h2>
               <button onClick={() => setIsEditModalOpen(false)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"><X size={20} /></button>
             </div>
 
@@ -290,25 +292,25 @@ export default function Profile() {
               </div>
 
               <div className="flex items-center justify-between px-1">
-                <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Address Details</h3>
+                <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{t('profile.addressDetails')}</h3>
                 <button onClick={handleAutoDetectLocation} disabled={isLocating} className="text-[10px] font-black uppercase text-[#1E4D8C] flex items-center gap-1 hover:underline">
                   {isLocating ? <Loader2 size={12} className="animate-spin" /> : <LocateFixed size={12} />}
-                  Auto Detect
+                  {t('profile.autoDetect')}
                 </button>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <EditInput label="House/Flat No" value={editForm.address.house_no} onChange={(v: any) => handleAddressChange('house_no', v)} icon={<Home size={14} />} />
-                <EditInput label="Landmark" value={editForm.address.landmark} onChange={(v: any) => handleAddressChange('landmark', v)} icon={<MapPin size={14} />} />
-                <div className="col-span-2"><EditInput label="Street Name" value={editForm.address.street} onChange={(v: any) => handleAddressChange('street', v)} icon={<MapPinned size={14} />} /></div>
-                <EditInput label="Locality" value={editForm.address.locality} onChange={(v: any) => handleAddressChange('locality', v)} />
-                <EditInput label="City" value={editForm.address.city} onChange={(v: any) => handleAddressChange('city', v)} />
-                <EditInput label="State" value={editForm.address.state} onChange={(v: any) => handleAddressChange('state', v)} />
-                <EditInput label="Pincode" value={editForm.address.pincode} onChange={(v: any) => handleAddressChange('pincode', v)} />
+                <EditInput label={t('profile.houseFlatNo')} value={editForm.address.house_no} onChange={(v: any) => handleAddressChange('house_no', v)} icon={<Home size={14} />} />
+                <EditInput label={t('profile.landmark')} value={editForm.address.landmark} onChange={(v: any) => handleAddressChange('landmark', v)} icon={<MapPin size={14} />} />
+                <div className="col-span-2"><EditInput label={t('profile.streetName')} value={editForm.address.street} onChange={(v: any) => handleAddressChange('street', v)} icon={<MapPinned size={14} />} /></div>
+                <EditInput label={t('profile.locality')} value={editForm.address.locality} onChange={(v: any) => handleAddressChange('locality', v)} />
+                <EditInput label={t('profile.city')} value={editForm.address.city} onChange={(v: any) => handleAddressChange('city', v)} />
+                <EditInput label={t('profile.state')} value={editForm.address.state} onChange={(v: any) => handleAddressChange('state', v)} />
+                <EditInput label={t('profile.pincode')} value={editForm.address.pincode} onChange={(v: any) => handleAddressChange('pincode', v)} />
               </div>
 
               <Button onClick={handleUpdateProfile} disabled={loading || isUploading} className="w-full h-14 bg-[#1E4D8C] text-white rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all">
-                {loading ? <Loader2 className="animate-spin" /> : "Save Changes"}
+                {loading ? <Loader2 className="animate-spin" /> : t('profile.saveChanges')}
               </Button>
             </div>
           </div>
@@ -348,12 +350,15 @@ const MenuItem = ({ icon, label, onClick, isRed }: any) => (
   </button>
 );
 
-const AddContactPlaceholder = ({ icon, label, onClick }: any) => (
-  <button onClick={onClick} className="w-full flex items-center gap-4 p-3 rounded-2xl border-2 border-dashed border-gray-100 hover:border-blue-200 transition-all text-left">
-    <div className="p-2 bg-gray-50 rounded-xl text-gray-400">{icon}</div>
-    <div className="flex flex-col flex-1">
-      <span className="text-[10px] font-black text-gray-400 uppercase tracking-tight">{label}</span>
-      <span className="text-sm font-bold text-blue-600 flex items-center gap-1">Add {label} <Plus size={14} /></span>
-    </div>
-  </button>
-);
+const AddContactPlaceholder = ({ icon, label, onClick }: any) => {
+  const { t } = useTranslation();
+  return (
+    <button onClick={onClick} className="w-full flex items-center gap-4 p-3 rounded-2xl border-2 border-dashed border-gray-100 hover:border-blue-200 transition-all text-left">
+      <div className="p-2 bg-gray-50 rounded-xl text-gray-400">{icon}</div>
+      <div className="flex flex-col flex-1">
+        <span className="text-[10px] font-black text-gray-400 uppercase tracking-tight">{label}</span>
+        <span className="text-sm font-bold text-blue-600 flex items-center gap-1">{t('profile.add')} {label} <Plus size={14} /></span>
+      </div>
+    </button>
+  );
+};

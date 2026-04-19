@@ -9,561 +9,823 @@ import {
   XCircle,
   BarChart3,
   PieChart,
-  ArrowUpRight,
-  ArrowDownRight,
   RefreshCw,
   Star,
   Activity,
   Target,
-  Zap
+  Zap,
+  Calendar,
+  UserCheck,
+  AlertCircle,
+  CalendarDays,
+  Users2,
+  Building2,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { useSalonApi } from '../../../../API/Salon_Owner_API/SalonOwnerAPI';
 import { logoutUser } from '../../../../API/APIs';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Loader } from '../../../../components/ui_components/Loader';
+import { DashboardLoader } from '../../../../components/ui_components/DashboardLoader';
+import {
+  BarChart,
+  Bar,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
+} from 'recharts';
+import { useTranslation } from 'react-i18next';
 
 // --- Types ---
-interface BookingSlot {
-  date: string;
-  time: string;
-  duration: number;
-}
+type TimeRange = 'TODAY' | '7DAYS' | '30DAYS' | 'CUSTOM';
 
-interface BookingResponse {
-  userId: string;
+interface DashboardAnalytics {
   salonId: string;
-  staffId: string;
-  service_id: string;
-  slot: BookingSlot;
+  todayBookings: number;
+  todayIncome: number;
+  totalBookings: number;
+  monthlyIncome: number;
+  pendingCount: number;
+  confirmedCount: number;
+  cancelledCount: number;
+  completedCount: number;
+  dateRange: { start: string; end: string };
+}
+
+interface ServiceAnalytics {
+  salonId: string;
+  totalBookings: number;
+  services: ServiceData[];
+  dateRange: { start: string; end: string };
+}
+
+interface ServiceData {
+  serviceId: string;
+  serviceName: string;
   price: number;
-  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
-  validTill: string;
-  metadata: any;
-  id: string;
-  userData?: { username: string };
-  serviceData?: { serviceName: string };
-}
-
-interface DayStats {
-  date: string;
-  orders: number;
+  durationMinutes: number;
+  totalBookings: number;
+  confirmedBookings: number;
+  completedBookings: number;
+  cancelledBookings: number;
   revenue: number;
-  customers: number;
+  bookingRatio: number;
 }
 
-type TimeRange = 'TODAY' | 'YESTERDAY' | '7DAYS' | '30DAYS' | 'CUSTOM';
+interface CustomerAnalytics {
+  salonId: string;
+  dateRange: { start: string; end: string };
+  totalCustomers: number;
+  newCustomers: number;
+  returningCustomers: number;
+  retentionRate: number;
+  topCustomers: TopCustomer[];
+  bookingFrequencyDistribution: { [key: string]: number };
+}
+
+interface TopCustomer {
+  userId: string;
+  name: string;
+  totalBookings: number;
+  totalSpent: number;
+  firstBooking: string;
+  lastBooking: string;
+}
+
+interface StaffProductivity {
+  salonId: string;
+  dateRange: { start: string; end: string };
+  salonAverages: {
+    utilizationRate: number;
+    conversionRate: number;
+    servicesPerDay: number;
+  };
+  staffCount: number;
+  staffData: StaffData[];
+}
+
+interface StaffData {
+  staffId: string;
+  name: string;
+  role: string;
+  metrics: {
+    totalBookings: number;
+    confirmed: number;
+    completed: number;
+    cancelled: number;
+    pending: number;
+  };
+  utilization: {
+    availableSlots: number;
+    bookedSlots: number;
+    utilizationRate: number;
+  };
+  productivity: {
+    revenueGenerated: number;
+    conversionRate: number;
+    servicesPerDay: number;
+    averageServiceDuration: number;
+    uniqueCustomers: number;
+    busiestDay: { date: string; bookings: number } | null;
+  };
+  quality: {
+    averageRating: number;
+    totalReviews: number;
+  };
+}
 
 const AnalyticsPage: React.FC = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { apiSalonRequest } = useSalonApi();
   
-  const [bookings, setBookings] = useState<BookingResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<TimeRange>('7DAYS');
-  const [customDateRange] = useState({ start: '', end: '' });
+  const [activeTab, setActiveTab] = useState<'overview' | 'services' | 'customers' | 'staff'>('overview');
+  const [showTodayIncome, setShowTodayIncome] = useState(false);
+  const [showMonthlyIncome, setShowMonthlyIncome] = useState(false);
+  
+  const [dashboardData, setDashboardData] = useState<DashboardAnalytics | null>(null);
+  const [serviceData, setServiceData] = useState<ServiceAnalytics | null>(null);
+  const [customerData, setCustomerData] = useState<CustomerAnalytics | null>(null);
+  const [staffProductivityData, setStaffProductivityData] = useState<StaffProductivity | null>(null);
+  
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchBookings();
-  }, []);
+    fetchAllAnalytics();
+  }, [timeRange]);
 
-  const fetchBookings = async () => {
+  const getDateRange = () => {
+    const today = new Date();
+    const endDate = today.toISOString().split('T')[0];
+    let startDate: string;
+
+    switch (timeRange) {
+      case 'TODAY':
+        startDate = endDate;
+        break;
+      case '7DAYS':
+        const sevenDaysAgo = new Date(today);
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+        startDate = sevenDaysAgo.toISOString().split('T')[0];
+        break;
+      case '30DAYS':
+        const thirtyDaysAgo = new Date(today);
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
+        startDate = thirtyDaysAgo.toISOString().split('T')[0];
+        break;
+      default:
+        const defaultDaysAgo = new Date(today);
+        defaultDaysAgo.setDate(defaultDaysAgo.getDate() - 6);
+        startDate = defaultDaysAgo.toISOString().split('T')[0];
+    }
+
+    return { startDate, endDate };
+  };
+
+  const fetchAllAnalytics = async () => {
     setLoading(true);
+    setError(null);
+    
     try {
       const authData = localStorage.getItem("authState");
       const parsedAuth = authData ? JSON.parse(authData) : null;
       const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
+      
       if (!salonId) {
         dispatch(logoutUser() as any);
         navigate("/login");
         return;
       }
 
-      const res = await apiSalonRequest<BookingResponse[]>(`/bookings/salon/${salonId}`);
-      if (res.data) {
-        setBookings(res.data);
-      }
-    } catch (error) {
-      console.error("Fetch bookings error:", error);
+      const { startDate, endDate } = getDateRange();
+
+      // Fetch all analytics data in parallel
+      const [
+        dashboardRes,
+        serviceRes,
+        customerRes,
+        staffRes
+      ] = await Promise.all([
+        apiSalonRequest<DashboardAnalytics>(`/analytics/salon/${salonId}/dashboard?start_date=${startDate}&end_date=${endDate}`),
+        apiSalonRequest<ServiceAnalytics>(`/analytics/salon/${salonId}/services?start_date=${startDate}&end_date=${endDate}`),
+        apiSalonRequest<CustomerAnalytics>(`/analytics/salon/${salonId}/customers?start_date=${startDate}&end_date=${endDate}`),
+        apiSalonRequest<StaffProductivity>(`/analytics/salon/${salonId}/staff-productivity?start_date=${startDate}&end_date=${endDate}`)
+      ]);
+
+      if (dashboardRes.data) setDashboardData(dashboardRes.data);
+      if (serviceRes.data) setServiceData(serviceRes.data);
+      if (customerRes.data) setCustomerData(customerRes.data);
+      if (staffRes.data) setStaffProductivityData(staffRes.data);
+
+    } catch (err: any) {
+      console.error("Fetch analytics error:", err);
+      setError(err.message || "Failed to load analytics data");
     } finally {
       setLoading(false);
     }
   };
 
-  // Filter bookings based on selected time range
-  const getFilteredBookings = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  const formatCurrency = (amount: number) => `₹${amount.toLocaleString()}`;
 
-    return bookings.filter(booking => {
-      const bookingDate = new Date(booking.slot.date);
-      bookingDate.setHours(0, 0, 0, 0);
-
-      switch (timeRange) {
-        case 'TODAY':
-          return bookingDate.getTime() === today.getTime();
-        case 'YESTERDAY': {
-          const yesterday = new Date(today);
-          yesterday.setDate(yesterday.getDate() - 1);
-          return bookingDate.getTime() === yesterday.getTime();
-        }
-        case '7DAYS': {
-          const sevenDaysAgo = new Date(today);
-          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-          return bookingDate >= sevenDaysAgo;
-        }
-        case '30DAYS': {
-          const thirtyDaysAgo = new Date(today);
-          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-          return bookingDate >= thirtyDaysAgo;
-        }
-        case 'CUSTOM':
-          if (customDateRange.start && customDateRange.end) {
-            const start = new Date(customDateRange.start);
-            const end = new Date(customDateRange.end);
-            return bookingDate >= start && bookingDate <= end;
-          }
-          return true;
-        default:
-          return true;
-      }
-    });
-  };
-
-  const filteredBookings = getFilteredBookings();
-
-  // Calculate statistics
-  const calculateStats = () => {
-    const totalOrders = filteredBookings.length;
-    const totalRevenue = filteredBookings.reduce((sum, b) => sum + b.price, 0);
-    const uniqueCustomers = new Set(filteredBookings.map(b => b.userId)).size;
-    
-    const confirmedOrders = filteredBookings.filter(b => b.status === 'CONFIRMED').length;
-    const completedOrders = filteredBookings.filter(b => b.status === 'COMPLETED').length;
-    const pendingOrders = filteredBookings.filter(b => b.status === 'PENDING').length;
-    const cancelledOrders = filteredBookings.filter(b => b.status === 'CANCELLED').length;
-    
-    const successfulOrders = confirmedOrders + completedOrders;
-    const completionRate = totalOrders > 0 ? Math.round((successfulOrders / totalOrders) * 100) : 0;
-    const cancellationRate = totalOrders > 0 ? Math.round((cancelledOrders / totalOrders) * 100) : 0;
-    
-    // Calculate average order value
-    const avgOrderValue = successfulOrders > 0 ? Math.round(totalRevenue / successfulOrders) : 0;
-
-    return {
-      totalOrders,
-      totalRevenue,
-      uniqueCustomers,
-      confirmedOrders,
-      completedOrders,
-      pendingOrders,
-      cancelledOrders,
-      successfulOrders,
-      completionRate,
-      cancellationRate,
-      avgOrderValue
-    };
-  };
-
-  const stats = calculateStats();
-
-  // Get top services
-  const getTopServices = () => {
-    const serviceMap = new Map<string, { name: string; count: number; revenue: number }>();
-    
-    filteredBookings.forEach(booking => {
-      const serviceName = booking.serviceData?.serviceName || 'Unknown Service';
-      const existing = serviceMap.get(serviceName);
-      if (existing) {
-        existing.count += 1;
-        existing.revenue += booking.price;
-      } else {
-        serviceMap.set(serviceName, { name: serviceName, count: 1, revenue: booking.price });
-      }
-    });
-
-    return Array.from(serviceMap.values())
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
-  };
-
-  const topServices = getTopServices();
-
-  // Calculate daily stats for chart
-  const getDailyStats = (): DayStats[] => {
-    const daysMap = new Map<string, DayStats>();
-    const today = new Date();
-    
-    // Initialize last 7 days
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      daysMap.set(dateStr, { date: dateStr, orders: 0, revenue: 0, customers: 0 });
+  const formatRevenue = (amount: number, isVisible: boolean) => {
+    if (isVisible) {
+      return formatCurrency(amount);
     }
-
-    filteredBookings.forEach(booking => {
-      const dateStr = booking.slot.date;
-      const existing = daysMap.get(dateStr);
-      if (existing) {
-        existing.orders += 1;
-        existing.revenue += booking.price;
-      }
-    });
-
-    return Array.from(daysMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+    return '₹***';
   };
 
-  const dailyStats = getDailyStats();
-
-  // Calculate comparison with previous period
-  const getComparisonStats = () => {
-    const today = new Date();
-    const currentPeriodDays = timeRange === 'TODAY' ? 1 : timeRange === '7DAYS' ? 7 : 30;
-    
-    const previousStart = new Date(today);
-    previousStart.setDate(previousStart.getDate() - (currentPeriodDays * 2));
-    const previousEnd = new Date(today);
-    previousEnd.setDate(previousEnd.getDate() - currentPeriodDays);
-
-    const previousBookings = bookings.filter(booking => {
-      const bookingDate = new Date(booking.slot.date);
-      return bookingDate >= previousStart && bookingDate < previousEnd;
-    });
-
-    const previousRevenue = previousBookings.reduce((sum, b) => sum + b.price, 0);
-    const previousOrders = previousBookings.length;
-
-    const revenueChange = previousRevenue > 0 
-      ? Math.round(((stats.totalRevenue - previousRevenue) / previousRevenue) * 100) 
-      : 0;
-    const ordersChange = previousOrders > 0 
-      ? Math.round(((stats.totalOrders - previousOrders) / previousOrders) * 100) 
-      : 0;
-
-    return { revenueChange, ordersChange };
+  const truncateLabel = (label: string) => {
+    if (!label) return '';
+    return label.length > 15 ? `${label.substring(0, 12)}...` : label;
   };
 
-  const comparison = getComparisonStats();
-
-  const formatDateLabel = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
-  };
-
-  const getTimeRangeLabel = () => {
-    switch (timeRange) {
-      case 'TODAY': return 'Today';
-      case 'YESTERDAY': return 'Yesterday';
-      case '7DAYS': return 'Last 7 Days';
-      case '30DAYS': return 'Last 30 Days';
-      case 'CUSTOM': return 'Custom Range';
-      default: return 'Last 7 Days';
-    }
-  };
+  const COLORS = ['#1E4D8C', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
-      <Loader isVisible={loading} />
+      <DashboardLoader isVisible={loading} />
 
       {/* Header Section */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-[#1E4D8C] to-[#153a6b] rounded-xl shadow-lg shadow-blue-900/20">
-              <BarChart3 size={24} className="text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800 tracking-tight">Analytics Dashboard</h1>
-              <p className="text-sm text-gray-500">Track your salon's performance and growth metrics</p>
-            </div>
+            <h1 className="text-2xl font-bold text-gray-900">{t('analytics.title')}</h1>
+            <span className="px-3 py-1 bg-[#1E4D8C]/10 text-[#1E4D8C] text-xs font-bold rounded-full">{t('analytics.salonOwner')}</span>
           </div>
+          <p className="text-gray-500 text-sm mt-1">{t('analytics.trackPerformance')}</p>
         </div>
-        
         <div className="flex items-center gap-3">
-          {/* Time Range Selector */}
-          <div className="flex items-center bg-white rounded-xl border border-gray-200 p-1 shadow-sm">
-            {(['TODAY', '7DAYS', '30DAYS'] as TimeRange[]).map((range) => (
+          <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            {[
+              { id: 'TODAY' as const, label: t('analytics.today') },
+              { id: '7DAYS' as const, label: '7 Days' },
+              { id: '30DAYS' as const, label: '30 Days' },
+            ].map((range) => (
               <button
-                key={range}
-                onClick={() => setTimeRange(range)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  timeRange === range 
-                    ? 'bg-[#1E4D8C] text-white shadow-md' 
-                    : 'text-gray-500 hover:bg-gray-50'
+                key={range.id}
+                onClick={() => setTimeRange(range.id)}
+                className={`px-4 py-2 rounded-md text-xs font-bold transition-all ${
+                  timeRange === range.id 
+                    ? 'bg-white text-[#1E4D8C] shadow-sm' 
+                    : 'text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                {range === 'TODAY' ? 'Today' : range === '7DAYS' ? '7 Days' : '30 Days'}
+                {range.label}
               </button>
             ))}
           </div>
-          
-          <button 
-            onClick={fetchBookings}
-            className="p-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors shadow-sm"
+          <button
+            onClick={() => fetchAllAnalytics()}
+            className="p-2 bg-[#1E4D8C] text-white rounded-lg hover:bg-[#153a6b] transition-colors"
+            title="Refresh"
           >
-            <RefreshCw size={18} className="text-gray-600" />
+            <RefreshCw size={18} />
           </button>
         </div>
       </div>
 
-      {/* Primary Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          label="Total Orders"
-          value={stats.totalOrders.toString()}
-          icon={<ShoppingBag size={20} />}
-          trend={comparison.ordersChange}
-          isPositive={comparison.ordersChange >= 0}
-          color="blue"
-        />
-        <StatCard
-          label="Total Revenue"
-          value={`₹${stats.totalRevenue.toLocaleString()}`}
-          icon={<IndianRupee size={20} />}
-          trend={comparison.revenueChange}
-          isPositive={comparison.revenueChange >= 0}
-          color="green"
-        />
-        <StatCard
-          label="Unique Customers"
-          value={stats.uniqueCustomers.toString()}
-          icon={<Users size={20} />}
-          trend={0}
-          isPositive={true}
-          color="purple"
-        />
-        <StatCard
-          label="Avg. Order Value"
-          value={`₹${stats.avgOrderValue}`}
-          icon={<Target size={20} />}
-          trend={0}
-          isPositive={true}
-          color="orange"
-        />
-      </div>
-
-      {/* Secondary Metrics */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <MetricPill 
-          label="Confirmed" 
-          value={stats.confirmedOrders} 
-          total={stats.totalOrders} 
-          color="green" 
-          icon={CheckCircle}
-        />
-        <MetricPill 
-          label="Completed" 
-          value={stats.completedOrders} 
-          total={stats.totalOrders} 
-          color="blue" 
-          icon={Zap}
-        />
-        <MetricPill 
-          label="Pending" 
-          value={stats.pendingOrders} 
-          total={stats.totalOrders} 
-          color="orange" 
-          icon={Clock}
-        />
-        <MetricPill 
-          label="Cancelled" 
-          value={stats.cancelledOrders} 
-          total={stats.totalOrders} 
-          color="red" 
-          icon={XCircle}
-        />
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Orders Trend Chart */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                <Activity size={18} className="text-[#1E4D8C]" />
-                Orders Trend
-              </h3>
-              <p className="text-xs text-gray-500 mt-1">Daily order volume for {getTimeRangeLabel().toLowerCase()}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                Total: {stats.totalOrders}
-              </span>
-            </div>
-          </div>
-          
-          {/* Bar Chart Visualization */}
-          <div className="h-64 flex items-end gap-2">
-            {dailyStats.map((day) => {
-              const maxOrders = Math.max(...dailyStats.map(d => d.orders), 1);
-              const height = maxOrders > 0 ? (day.orders / maxOrders) * 100 : 0;
-              
-              return (
-                <div key={day.date} className="flex-1 flex flex-col items-center gap-2 group">
-                  <div className="relative w-full flex justify-center">
-                    {/* Tooltip */}
-                    <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-800 text-white text-xs font-bold px-2 py-1 rounded-lg whitespace-nowrap z-10">
-                      {day.orders} orders
-                      <br />
-                      ₹{day.revenue.toLocaleString()}
-                    </div>
-                    {/* Bar */}
-                    <div 
-                      className="w-full max-w-[40px] bg-gradient-to-t from-[#1E4D8C] to-[#3b82f6] rounded-t-lg transition-all duration-500 hover:from-[#153a6b] hover:to-[#1E4D8C]"
-                      style={{ height: `${Math.max(height, 4)}%` }}
-                    />
-                  </div>
-                  <span className="text-[10px] font-bold text-gray-400">
-                    {formatDateLabel(day.date)}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-          
-          {/* Legend */}
-          <div className="flex justify-center gap-6 mt-6 pt-4 border-t border-gray-50">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-gradient-to-t from-[#1E4D8C] to-[#3b82f6]" />
-              <span className="text-xs text-gray-500 font-medium">Orders</span>
-            </div>
-          </div>
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
+          <AlertCircle className="text-red-600" size={20} />
+          <p className="text-red-700 text-sm">{error}</p>
         </div>
+      )}
 
-        {/* Status Distribution */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
-            <PieChart size={18} className="text-[#1E4D8C]" />
-            Order Status
-          </h3>
-          
-          <div className="space-y-4">
-            <StatusBar 
-              label="Confirmed" 
-              value={stats.confirmedOrders} 
-              total={stats.totalOrders} 
-              color="bg-green-500" 
-            />
-            <StatusBar 
-              label="Completed" 
-              value={stats.completedOrders} 
-              total={stats.totalOrders} 
-              color="bg-blue-500" 
-            />
-            <StatusBar 
-              label="Pending" 
-              value={stats.pendingOrders} 
-              total={stats.totalOrders} 
-              color="bg-orange-500" 
-            />
-            <StatusBar 
-              label="Cancelled" 
-              value={stats.cancelledOrders} 
-              total={stats.totalOrders} 
-              color="bg-red-500" 
-            />
-          </div>
-          
-          {/* Completion Rate */}
-          <div className="mt-6 pt-4 border-t border-gray-50">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Success Rate</span>
-              <span className="text-lg font-bold text-gray-800">{stats.completionRate}%</span>
-            </div>
-            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-green-500 to-blue-500 rounded-full transition-all duration-1000"
-                style={{ width: `${stats.completionRate}%` }}
-              />
-            </div>
-          </div>
+      {/* Tab Navigation */}
+      <div className="bg-white rounded-xl border border-gray-200 p-1 shadow-sm overflow-x-auto">
+        <div className="flex gap-1 min-w-max">
+          {[
+            { id: 'overview' as const, label: t('analytics.overview'), icon: BarChart3 },
+            { id: 'services' as const, label: t('analytics.services'), icon: Star },
+            { id: 'customers' as const, label: t('analytics.customers'), icon: Users },
+            { id: 'staff' as const, label: t('analytics.staff'), icon: Users2 },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                activeTab === tab.id 
+                  ? 'bg-[#1E4D8C] text-white shadow-md' 
+                  : 'text-gray-500 hover:bg-gray-50'
+              }`}
+            >
+              <tab.icon size={16} />
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Bottom Section: Top Services & Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Services */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="font-bold text-gray-800 flex items-center gap-2">
-              <Star size={18} className="text-[#1E4D8C]" />
-              Top Services
-            </h3>
-            <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">
-              By Bookings
-            </span>
+      {/* Overview Tab */}
+      {activeTab === 'overview' && dashboardData && (
+        <div className="space-y-6">
+          {/* Dashboard Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              label={t('analytics.todayBookings')}
+              value={dashboardData.todayBookings.toString()}
+              icon={<ShoppingBag size={20} />}
+              color="blue"
+            />
+            <StatCard
+              label={t('analytics.todayIncome')}
+              value={formatRevenue(dashboardData.todayIncome, showTodayIncome)}
+              icon={<IndianRupee size={20} />}
+              color="green"
+              showEyeIcon={true}
+              onEyeClick={() => setShowTodayIncome(!showTodayIncome)}
+              isRevenueVisible={showTodayIncome}
+            />
+            <StatCard
+              label={t('analytics.totalBookings')}
+              value={dashboardData.totalBookings.toString()}
+              icon={<ShoppingBag size={20} />}
+              color="purple"
+            />
+            <StatCard
+              label={t('analytics.monthlyIncome')}
+              value={formatRevenue(dashboardData.monthlyIncome, showMonthlyIncome)}
+              icon={<IndianRupee size={20} />}
+              color="orange"
+              showEyeIcon={true}
+              onEyeClick={() => setShowMonthlyIncome(!showMonthlyIncome)}
+              isRevenueVisible={showMonthlyIncome}
+            />
           </div>
-          
-          <div className="space-y-4">
-            {topServices.length > 0 ? (
-              topServices.map((service, idx) => (
-                <div key={service.name} className="flex items-center gap-4">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
-                    {idx + 1}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-800 truncate">{service.name}</p>
-                    <p className="text-xs text-gray-400">{service.count} bookings</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-[#1E4D8C]">₹{service.revenue.toLocaleString()}</p>
-                    <p className="text-[10px] text-gray-400">Revenue</p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8 text-gray-400">
-                <p className="text-sm">No service data available</p>
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* Quick Insights */}
-        <div className="bg-gradient-to-br from-[#1E4D8C] to-[#153a6b] rounded-2xl shadow-lg p-6 text-white">
-          <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
-            <Target size={20} className="text-blue-200" />
-            Performance Insights
-          </h3>
-          
-          <div className="space-y-4">
-            <InsightCard
-              icon={TrendingUp}
-              title="Best Performing Day"
-              value={dailyStats.reduce((max, day) => day.orders > max.orders ? day : max, dailyStats[0] || { date: '-', orders: 0 }).date !== '-' 
-                ? formatDateLabel(dailyStats.reduce((max, day) => day.orders > max.orders ? day : max, dailyStats[0]).date)
-                : 'No data'
-              }
-              subtext="Highest order volume"
-            />
-            <InsightCard
-              icon={IndianRupee}
-              title="Revenue per Customer"
-              value={stats.uniqueCustomers > 0 ? `₹${Math.round(stats.totalRevenue / stats.uniqueCustomers)}` : '₹0'}
-              subtext="Average spend per unique customer"
-            />
-            <InsightCard
+          {/* Status Metrics */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <MetricPill
+              label={t('analytics.confirmed')}
+              value={dashboardData.confirmedCount}
+              color="green"
               icon={CheckCircle}
-              title="Fulfillment Rate"
-              value={`${stats.completionRate}%`}
-              subtext={stats.completionRate > 80 ? 'Excellent performance!' : stats.completionRate > 50 ? 'Good progress' : 'Needs improvement'}
-              highlight={stats.completionRate > 80}
+            />
+            <MetricPill
+              label={t('analytics.completed')}
+              value={dashboardData.completedCount}
+              color="blue"
+              icon={Zap}
+            />
+            <MetricPill
+              label={t('analytics.pending')}
+              value={dashboardData.pendingCount}
+              color="orange"
+              icon={Clock}
+            />
+            <MetricPill
+              label={t('analytics.cancelled')}
+              value={dashboardData.cancelledCount}
+              color="red"
+              icon={XCircle}
             />
           </div>
-          
-          {/* Motivational Footer */}
-          <div className="mt-6 pt-4 border-t border-white/20">
-            <p className="text-xs text-blue-200 italic">
-              "{stats.totalOrders > 10 
-                ? 'Your salon is performing well! Keep up the great work.' 
-                : 'Every booking counts! Keep promoting your services.'}"
-            </p>
+
+          {/* Booking Status Distribution */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
+                <PieChart size={18} className="text-[#1E4D8C]" />
+                {t('analytics.bookingStatusDistribution')}
+              </h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <RechartsPieChart>
+                  <Pie
+                    data={[
+                      { name: t('analytics.confirmed'), value: dashboardData.confirmedCount },
+                      { name: t('analytics.completed'), value: dashboardData.completedCount },
+                      { name: t('analytics.pending'), value: dashboardData.pendingCount },
+                      { name: t('analytics.cancelled'), value: dashboardData.cancelledCount },
+                    ].filter(d => d.value > 0)}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {[
+                      { name: t('analytics.confirmed'), value: dashboardData.confirmedCount },
+                      { name: t('analytics.completed'), value: dashboardData.completedCount },
+                      { name: t('analytics.pending'), value: dashboardData.pendingCount },
+                      { name: t('analytics.cancelled'), value: dashboardData.cancelledCount },
+                    ].filter(d => d.value > 0).map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </RechartsPieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Quick Insights */}
+            <div className="bg-gradient-to-br from-[#1E4D8C] to-[#153a6b] rounded-2xl shadow-lg p-6 text-white">
+              <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
+                <Target size={20} className="text-blue-200" />
+                {t('analytics.performanceInsights')}
+              </h3>
+
+              <div className="space-y-4">
+                <InsightCard
+                  icon={TrendingUp}
+                  title={t('analytics.completionRate')}
+                  value={`${dashboardData.totalBookings > 0 ? Math.round(((dashboardData.confirmedCount + dashboardData.completedCount) / dashboardData.totalBookings) * 100) : 0}%`}
+                  subtext={t('analytics.successfulBookingsRatio')}
+                />
+                <InsightCard
+                  icon={AlertCircle}
+                  title={t('analytics.cancellationRate')}
+                  value={`${dashboardData.totalBookings > 0 ? Math.round((dashboardData.cancelledCount / dashboardData.totalBookings) * 100) : 0}%`}
+                  subtext={t('analytics.cancelledBookingsRatio')}
+                />
+                <InsightCard
+                  icon={CalendarDays}
+                  title={t('analytics.pendingActions')}
+                  value={dashboardData.pendingCount.toString()}
+                  subtext={t('analytics.bookingsAwaitingConfirmation')}
+                />
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Services Tab */}
+      {activeTab === 'services' && serviceData && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Top Services Bar Chart */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
+                <Star size={18} className="text-[#1E4D8C]" />
+                {t('analytics.topServicesByBookings')}
+              </h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={serviceData.services.slice(0, 5)}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis
+                    dataKey="serviceName"
+                    tick={{ fontSize: 12 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                    tickFormatter={truncateLabel}
+                  />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip
+                    formatter={(value) => [value, t('analytics.bookings')]}
+                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #ddd', borderRadius: '8px' }}
+                  />
+                  <Bar dataKey="totalBookings" fill="#1E4D8C" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Services Revenue Chart */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
+                <IndianRupee size={18} className="text-[#1E4D8C]" />
+                {t('analytics.servicesRevenue')}
+              </h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={serviceData.services.slice(0, 5)}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis
+                    dataKey="serviceName"
+                    tick={{ fontSize: 12 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                    tickFormatter={truncateLabel}
+                  />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip
+                    formatter={(value) => [formatCurrency(value as number), t('analytics.revenue')]}
+                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #ddd', borderRadius: '8px' }}
+                  />
+                  <Bar dataKey="revenue" fill="#10b981" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Services Table */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
+              <Building2 size={18} className="text-[#1E4D8C]" />
+              {t('analytics.allServicesPerformance')}
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.service')}</th>
+                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.bookings')}</th>
+                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.revenue')}</th>
+                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.confirmed')}</th>
+                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.completed')}</th>
+                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.cancelled')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {serviceData.services.map((service) => (
+                    <tr key={service.serviceId} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4 text-sm font-medium text-gray-900">{service.serviceName}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{service.totalBookings}</td>
+                      <td className="py-3 px-4 text-sm font-bold text-green-600">{formatCurrency(service.revenue)}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{service.confirmedBookings}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{service.completedBookings}</td>
+                      <td className="py-3 px-4 text-sm text-red-600">{service.cancelledBookings}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Customers Tab */}
+      {activeTab === 'customers' && customerData && (
+        <div className="space-y-6">
+          {/* Customer Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              label={t('analytics.totalCustomers')}
+              value={customerData.totalCustomers.toString()}
+              icon={<Users size={20} />}
+              color="blue"
+            />
+            <StatCard
+              label={t('analytics.newCustomers')}
+              value={customerData.newCustomers.toString()}
+              icon={<UserCheck size={20} />}
+              color="green"
+            />
+            <StatCard
+              label={t('analytics.returningCustomers')}
+              value={customerData.returningCustomers.toString()}
+              icon={<Users2 size={20} />}
+              color="purple"
+            />
+            <StatCard
+              label={t('analytics.retentionRate')}
+              value={`${customerData.retentionRate}%`}
+              icon={<TrendingUp size={20} />}
+              color="orange"
+            />
+          </div>
+
+          {/* Customer Distribution */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
+                <Users size={18} className="text-[#1E4D8C]" />
+                {t('analytics.customerDistribution')}
+              </h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <RechartsPieChart>
+                  <Pie
+                    data={[
+                      { name: t('analytics.newCustomers'), value: customerData.newCustomers },
+                      { name: t('analytics.returningCustomers'), value: customerData.returningCustomers },
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    <Cell fill="#10b981" />
+                    <Cell fill="#1E4D8C" />
+                  </Pie>
+                  <Tooltip />
+                </RechartsPieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Booking Frequency */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
+                <Activity size={18} className="text-[#1E4D8C]" />
+                {t('analytics.bookingFrequency')}
+              </h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={Object.entries(customerData.bookingFrequencyDistribution).map(([key, value]) => ({
+                    name: key,
+                    customers: value
+                  }))}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="customers" fill="#3b82f6" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Top Customers Table */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
+              <Star size={18} className="text-[#1E4D8C]" />
+              {t('analytics.topCustomers')}
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.customer')}</th>
+                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.totalBookings')}</th>
+                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.totalSpent')}</th>
+                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.firstBooking')}</th>
+                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.lastBooking')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {customerData.topCustomers.map((customer) => (
+                    <tr key={customer.userId} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4 text-sm font-medium text-gray-900">{customer.name}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{customer.totalBookings}</td>
+                      <td className="py-3 px-4 text-sm font-bold text-green-600">{formatCurrency(customer.totalSpent)}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{customer.firstBooking}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{customer.lastBooking}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Staff Tab */}
+      {activeTab === 'staff' && staffProductivityData && (
+        <div className="space-y-6">
+          {/* Staff Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              label={t('analytics.totalStaff')}
+              value={staffProductivityData.staffCount.toString()}
+              icon={<Users2 size={20} />}
+              color="blue"
+            />
+            <StatCard
+              label={t('analytics.avgUtilization')}
+              value={`${staffProductivityData.salonAverages.utilizationRate}%`}
+              icon={<Activity size={20} />}
+              color="green"
+            />
+            <StatCard
+              label={t('analytics.avgConversion')}
+              value={`${staffProductivityData.salonAverages.conversionRate}%`}
+              icon={<Target size={20} />}
+              color="purple"
+            />
+            <StatCard
+              label={t('analytics.avgServicesPerDay')}
+              value={staffProductivityData.salonAverages.servicesPerDay.toFixed(1)}
+              icon={<Zap size={20} />}
+              color="orange"
+            />
+          </div>
+
+          {/* Staff Ranking Chart & Staff Occupancy Chart - Side by Side */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Staff Ranking Chart */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <div className="flex justify-between items-start mb-6">
+                <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                  <TrendingUp size={18} className="text-[#1E4D8C]" />
+                  {t('analytics.staffRankingByRevenue')}
+                </h3>
+                <p className="text-xs text-gray-500 bg-gray-50 px-3 py-1 rounded-full">{t('analytics.topPerformersByMoneyEarned')}</p>
+              </div>
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart
+                  data={staffProductivityData.staffData
+                    .sort((a, b) => b.productivity.revenueGenerated - a.productivity.revenueGenerated)
+                    .slice(0, 10)}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis 
+                    dataKey="name" 
+                    tick={{ fontSize: 12 }} 
+                    angle={-45} 
+                    textAnchor="end" 
+                    height={80}
+                    tickFormatter={truncateLabel}
+                  />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip 
+                    formatter={(value) => [formatCurrency(value as number), 'Revenue']}
+                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #ddd', borderRadius: '8px' }}
+                  />
+                  <Bar dataKey="productivity.revenueGenerated" fill="#10b981" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Staff Occupancy Chart */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <div className="flex justify-between items-start mb-6">
+                <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                  <Activity size={18} className="text-[#1E4D8C]" />
+                  {t('analytics.staffOccupancy')}
+                </h3>
+                <p className="text-xs text-gray-500 bg-gray-50 px-3 py-1 rounded-full">{t('analytics.totalAppointmentsPerStaff')}</p>
+              </div>
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart
+                  data={staffProductivityData.staffData
+                    .sort((a, b) => b.metrics.totalBookings - a.metrics.totalBookings)
+                    .slice(0, 10)}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis 
+                    dataKey="name" 
+                    tick={{ fontSize: 12 }} 
+                    angle={-45} 
+                    textAnchor="end" 
+                    height={80}
+                    tickFormatter={truncateLabel}
+                  />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip 
+                    formatter={(value) => [value, 'Bookings']}
+                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #ddd', borderRadius: '8px' }}
+                  />
+                  <Bar dataKey="metrics.totalBookings" fill="#1E4D8C" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Staff Performance Table */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
+              <Users2 size={18} className="text-[#1E4D8C]" />
+              {t('analytics.staffBookingsProductivity')}
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.rank')}</th>
+                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.staff')}</th>
+                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.role')}</th>
+                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.totalBookings')}</th>
+                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.completed')}</th>
+                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.revenue')}</th>
+                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.utilization')}</th>
+                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.rating')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {staffProductivityData.staffData
+                    .sort((a, b) => b.productivity.revenueGenerated - a.productivity.revenueGenerated)
+                    .map((staff, index) => (
+                    <tr key={staff.staffId} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4 text-sm font-bold text-gray-900">
+                        <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs ${
+                          index === 0 ? 'bg-yellow-100 text-yellow-700' :
+                          index === 1 ? 'bg-gray-100 text-gray-700' :
+                          index === 2 ? 'bg-orange-100 text-orange-700' :
+                          'bg-gray-50 text-gray-600'
+                        }`}>
+                          {index + 1}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-sm font-medium text-gray-900">{staff.name}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{staff.role}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{staff.metrics.totalBookings}</td>
+                      <td className="py-3 px-4 text-sm text-green-600 font-bold">{staff.metrics.completed}</td>
+                      <td className="py-3 px-4 text-sm font-bold text-green-600">{formatCurrency(staff.productivity.revenueGenerated)}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{staff.utilization.utilizationRate}%</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{staff.quality.averageRating.toFixed(1)} ⭐</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -574,55 +836,63 @@ interface StatCardProps {
   label: string;
   value: string;
   icon: React.ReactNode;
-  trend: number;
-  isPositive: boolean;
-  color: 'blue' | 'green' | 'purple' | 'orange';
+  color: string;
+  showEyeIcon?: boolean;
+  onEyeClick?: () => void;
+  isRevenueVisible?: boolean;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ label, value, icon, trend, isPositive, color }) => {
+const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color, showEyeIcon, onEyeClick, isRevenueVisible }) => {
   const colorClasses = {
     blue: 'bg-blue-50 text-blue-600',
     green: 'bg-green-50 text-green-600',
     purple: 'bg-purple-50 text-purple-600',
-    orange: 'bg-orange-50 text-orange-600'
+    orange: 'bg-orange-50 text-orange-600',
+    red: 'bg-red-50 text-red-600',
   };
 
   return (
-    <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex justify-between items-start mb-3">
-        <div className={`p-2.5 rounded-xl ${colorClasses[color]}`}>
-          {icon}
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <p className="text-sm text-gray-500 font-medium mb-2">{label}</p>
+          <p className="text-2xl font-bold text-gray-900">{value}</p>
         </div>
-        {trend !== 0 && (
-          <div className={`flex items-center gap-1 text-xs font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-            {isPositive ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-            {Math.abs(trend)}%
+        <div className="flex flex-col items-center gap-2">
+          <div className={`p-3 rounded-xl ${colorClasses[color as keyof typeof colorClasses]}`}>
+            {icon}
           </div>
-        )}
+          {showEyeIcon && (
+            <button
+              onClick={onEyeClick}
+              className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
+              title={isRevenueVisible ? "Hide Revenue" : "Show Revenue"}
+            >
+              {isRevenueVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          )}
+        </div>
       </div>
-      <p className="text-gray-500 text-xs font-bold uppercase tracking-wider">{label}</p>
-      <h3 className="text-xl font-bold text-gray-900 mt-1">{value}</h3>
     </div>
   );
 };
 
+// ...
+
 interface MetricPillProps {
   label: string;
   value: number;
-  total: number;
   color: 'green' | 'blue' | 'orange' | 'red';
   icon: React.ElementType;
 }
 
-const MetricPill: React.FC<MetricPillProps> = ({ label, value, total, color, icon: Icon }) => {
+const MetricPill: React.FC<MetricPillProps> = ({ label, value, color, icon: Icon }) => {
   const colorClasses = {
     green: 'bg-green-50 text-green-600 border-green-100',
     blue: 'bg-blue-50 text-blue-600 border-blue-100',
     orange: 'bg-orange-50 text-orange-600 border-orange-100',
     red: 'bg-red-50 text-red-600 border-red-100'
   };
-
-  const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
 
   return (
     <div className={`p-4 rounded-2xl border ${colorClasses[color]}`}>
@@ -632,33 +902,6 @@ const MetricPill: React.FC<MetricPillProps> = ({ label, value, total, color, ico
       </div>
       <div className="flex items-baseline gap-2">
         <span className="text-2xl font-bold">{value}</span>
-        <span className="text-xs opacity-70">({percentage}%)</span>
-      </div>
-    </div>
-  );
-};
-
-interface StatusBarProps {
-  label: string;
-  value: number;
-  total: number;
-  color: string;
-}
-
-const StatusBar: React.FC<StatusBarProps> = ({ label, value, total, color }) => {
-  const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-sm font-medium text-gray-700">{label}</span>
-        <span className="text-sm font-bold text-gray-900">{value}</span>
-      </div>
-      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-        <div 
-          className={`h-full ${color} rounded-full transition-all duration-500`}
-          style={{ width: `${Math.max(percentage, 2)}%` }}
-        />
       </div>
     </div>
   );
@@ -672,9 +915,9 @@ interface InsightCardProps {
   highlight?: boolean;
 }
 
-const InsightCard: React.FC<InsightCardProps> = ({ icon: Icon, title, value, subtext, highlight }) => (
+const InsightCard: React.FC<InsightCardProps> = ({ icon: Icon, title, value, subtext }) => (
   <div className="flex items-center gap-4 bg-white/10 rounded-xl p-4 backdrop-blur-sm">
-    <div className={`p-2 rounded-lg ${highlight ? 'bg-green-400/20 text-green-300' : 'bg-white/10 text-blue-200'}`}>
+    <div className="p-2 rounded-lg bg-white/10 text-blue-200">
       <Icon size={20} />
     </div>
     <div className="flex-1">

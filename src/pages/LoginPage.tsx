@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Users, Building2, Scissors, ArrowLeft,
@@ -13,6 +13,8 @@ import { useToast } from "../components/Toast";
 import { useDispatch } from "react-redux";
 import { login } from "../utils/Storage/slice/authSlice";
 import Config from '../configs/config';
+import { useTranslation } from 'react-i18next';
+import i18n from '../i18n/config';
 
 interface LoginPageProps {
   role: string;
@@ -20,7 +22,8 @@ interface LoginPageProps {
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ role, onBack }) => {
-  const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
+  const { t } = useTranslation();
+  const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('phone');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({ email: "", phone: "", password: "" });
@@ -30,19 +33,30 @@ const LoginPage: React.FC<LoginPageProps> = ({ role, onBack }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  const user = localStorage.getItem("authState");
+  const parsedUser = user ? JSON.parse(user) : null;
+  const isloggedin = parsedUser?.isAuthenticated;
+
+  // Force English when user is not logged in
+  useEffect(() => {
+    if (!isloggedin) {
+      i18n.changeLanguage('en');
+    }
+  }, [isloggedin]);
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
     if (loginMethod === 'email') {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!formData.email) newErrors.email = "Email is required";
-      else if (!emailRegex.test(formData.email)) newErrors.email = "Invalid email format";
+      if (!formData.email) newErrors.email = t('auth.requiredField');
+      else if (!emailRegex.test(formData.email)) newErrors.email = t('auth.invalidEmail');
     } else {
-      if (!formData.phone) newErrors.phone = "Phone is required";
-      else if (formData.phone.length < 10) newErrors.phone = "Invalid phone number";
+      if (!formData.phone) newErrors.phone = t('auth.requiredField');
+      else if (formData.phone.length < 10) newErrors.phone = t('auth.invalidCredentials');
     }
 
-    if (!formData.password) newErrors.password = "Password is required";
+    if (!formData.password) newErrors.password = t('auth.requiredField');
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -76,16 +90,26 @@ const LoginPage: React.FC<LoginPageProps> = ({ role, onBack }) => {
 
       if (!response.ok) {
         const errorMessage = await response.json();
-        throw new Error(errorMessage?.detail || "Login failed");
+        throw new Error(errorMessage?.detail || t('auth.loginFailed'));
       }
 
       const result = await response.json();
       dispatch(login({ user: result }));
 
+      // Set language from user preference in login response, default to English if not set
+      const languagePreference = result?.user?.language_preference || 'en';
+      if (['en', 'hi', 'mr'].includes(languagePreference)) {
+        i18n.changeLanguage(languagePreference);
+        localStorage.setItem('selectedLanguage', languagePreference);
+      } else {
+        i18n.changeLanguage('en');
+        localStorage.setItem('selectedLanguage', 'en');
+      }
+
       showToast({
         type: "success",
-        title: "Welcome back!",
-        message: "Logged in successfully.",
+        title: t('auth.loginSuccess'),
+        message: t('auth.loginSuccess'),
         duration: 3000,
       });
 
@@ -95,8 +119,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ role, onBack }) => {
     } catch (error: any) {
       showToast({
         type: "error",
-        title: "Login Error",
-        message: error.message || "Connection error",
+        title: t('auth.loginFailed'),
+        message: error.message || t('auth.loginFailed'),
         duration: 5000,
       });
     } finally {
@@ -118,7 +142,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ role, onBack }) => {
 
       <div className="relative z-10 w-full max-w-[420px] animate-in fade-in slide-in-from-bottom-8 duration-700">
         <button onClick={onBack} className="flex items-center gap-2 text-gray-400 hover:text-[#1E4D8C] mb-6 transition-colors font-black text-[10px] uppercase tracking-widest ml-1 group">
-          <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Back
+          <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> {t('common.back')}
         </button>
 
         <Card className="border-0 bg-white/80 backdrop-blur-2xl shadow-[0_32px_64px_-15px_rgba(30,77,140,0.15)] rounded-[2.5rem] overflow-hidden">
@@ -127,10 +151,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ role, onBack }) => {
               <Scissors className="w-8 h-8 text-white -rotate-3" />
             </div>
             <CardTitle className="text-2xl font-black text-gray-900 tracking-tight">
-              Welcome Back
+              {t('auth.signIn')}
             </CardTitle>
             <CardDescription className="text-gray-500 font-medium mt-1">
-              Login to your  account
+              {t('auth.login')}
             </CardDescription>
           </CardHeader>
 
@@ -138,23 +162,23 @@ const LoginPage: React.FC<LoginPageProps> = ({ role, onBack }) => {
             {/* Method Toggle */}
             <div className="flex bg-gray-100 p-1 rounded-2xl">
               <button
-                onClick={() => setLoginMethod('email')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${loginMethod === 'email' ? 'bg-white text-[#1E4D8C] shadow-sm' : 'text-gray-400'}`}
-              >
-                <Mail size={14} /> Email
-              </button>
-              <button
                 onClick={() => setLoginMethod('phone')}
                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${loginMethod === 'phone' ? 'bg-white text-[#1E4D8C] shadow-sm' : 'text-gray-400'}`}
               >
-                <Smartphone size={14} /> Phone
+                <Smartphone size={14} /> {t('common.phone')}
+              </button>
+              <button
+                onClick={() => setLoginMethod('email')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${loginMethod === 'email' ? 'bg-white text-[#1E4D8C] shadow-sm' : 'text-gray-400'}`}
+              >
+                <Mail size={14} /> {t('common.email')}
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {loginMethod === 'email' ? (
                 <div className="space-y-1.5 animate-in fade-in duration-300">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t('common.email')}</label>
                   <div className="relative group">
                     <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${errors.email ? "text-red-500" : "text-gray-400 group-focus-within:text-[#1E4D8C]"}`} />
                     <input
@@ -169,7 +193,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ role, onBack }) => {
                 </div>
               ) : (
                 <div className="space-y-1.5 animate-in fade-in duration-300">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Phone Number</label>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t('auth.phoneNumber')}</label>
                   <div className="relative group">
                     <Smartphone className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${errors.phone ? "text-red-500" : "text-gray-400 group-focus-within:text-[#1E4D8C]"}`} />
                     <input
@@ -186,8 +210,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ role, onBack }) => {
 
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center px-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Password</label>
-                  <Link to="/forgetpassword" className="text-[10px] font-black text-[#1E4D8C] hover:underline tracking-widest">Forgot?</Link>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('auth.password')}</label>
+                  <Link to="/forgetpassword" className="text-[10px] font-black text-[#1E4D8C] hover:underline tracking-widest">{t('auth.forgotPassword')}</Link>
                 </div>
                 <div className="relative group">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#1E4D8C]" />
@@ -213,14 +237,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ role, onBack }) => {
                 className="w-full h-14 bg-[#1E4D8C] hover:bg-[#153a6b] text-white font-black text-sm rounded-2xl shadow-xl shadow-blue-900/20 active:scale-[0.98] transition-all mt-4"
                 disabled={isLoading}
               >
-                {isLoading ? "Authenticating..." : "Sign In"}
+                {isLoading ? t('common.loading') : t('auth.signIn')}
               </Button>
             </form>
 
             <div className="text-center pt-2">
               <p className="text-xs font-bold text-gray-400">
-                Don't have an account?
-                <Link to="/signup" className="text-[#1E4D8C] hover:underline ml-1">Create account</Link>
+                {t('auth.dontHaveAccount')}
+                <Link to="/signup" className="text-[#1E4D8C] hover:underline ml-1">{t('auth.createAccount')}</Link>
               </p>
             </div>
           </CardContent>
