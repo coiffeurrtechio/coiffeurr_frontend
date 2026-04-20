@@ -7,7 +7,6 @@ import { useDispatch } from "react-redux";
 import { logoutUser } from "../API/APIs";
 import { useApi } from "../API/SalonsAPIs/ALLSalonAPI";
 import Config from "../configs/config";
-import { motion } from "framer-motion";
 
 const DashboardLayout: React.FC = () => {
   const [open, setOpen] = useState(false);
@@ -99,35 +98,21 @@ const DashboardLayout: React.FC = () => {
             </button>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-8">
             {salonData && (
               <button
                 onClick={handleVisibilityToggle}
                 disabled={isTogglingVisibility}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold transition-all ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold transition-all duration-300 ease-in-out ${
                   salonData.isBlocked 
                     ? 'bg-red-100 text-red-600 hover:bg-red-200' 
-                    : 'bg-green-100 text-green-600 hover:bg-green-200'
+                    : 'bg-emerald-500/10 text-emerald-600 border border-emerald-600 hover:bg-emerald-500/20'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
                 title={salonData.isBlocked ? 'Turn Salon Online' : 'Turn Salon Offline'}
               >
                 <Power size={16} />
-                <span className="hidden md:inline flex items-center gap-2">
+                <span className="hidden md:inline">
                   {salonData.isBlocked ? 'Salon Offline' : 'Salon Online'}
-                  {!salonData.isBlocked && (
-                    <motion.div
-                      className="w-2 h-2 bg-emerald-500 rounded-full"
-                      animate={{
-                        scale: [1, 1.2, 1],
-                        opacity: [1, 0.7, 1],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
-                    />
-                  )}
                 </span>
               </button>
             )}

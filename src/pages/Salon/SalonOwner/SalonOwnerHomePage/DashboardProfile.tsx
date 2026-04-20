@@ -306,8 +306,8 @@ const DashboardProfile: React.FC = () => {
     `${currentTime.getHours()}:${currentTime.getMinutes().toString().padStart(2, '0')}`
   );
   
-  const lunchStartPosition = salonData ? calculateTimelinePosition(salonData.timing?.lunchBreak?.start || '12:30') : 0;
-  const lunchEndPosition = salonData ? calculateTimelinePosition(salonData.timing?.lunchBreak?.end || '13:00') : 0;
+  const lunchStartPosition = salonData ? calculateTimelinePosition(formatTime(salonData.timing?.lunchBreak?.start || '12:30')) : 0;
+  const lunchEndPosition = salonData ? calculateTimelinePosition(formatTime(salonData.timing?.lunchBreak?.end || '13:00')) : 0;
   const lunchWidth = lunchEndPosition - lunchStartPosition;
 
   // Calculate status badge
@@ -520,10 +520,13 @@ const DashboardProfile: React.FC = () => {
               >
                 <h1 className="text-3xl font-black text-[#1a1a1a] tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>{salonData.salonName}</h1>
                 {salonData.isVerified && <ShieldCheck className="text-blue-600 fill-blue-50" size={24} />}
-                <span className="px-3 py-1 bg-emerald-50/90 backdrop-blur-sm rounded-full text-[10px] font-black uppercase text-emerald-700 border border-emerald-200 shadow-sm flex items-center gap-2">
-                  <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                  {salonData.status}
-                </span>
+                <button
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+                  title="Edit Salon Profile"
+                >
+                  <Edit3 size={16} className="text-gray-600" />
+                </button>
               </motion.div>
               <p className="text-xs font-bold text-[#4b5563] uppercase tracking-[0.1em] mt-2">UNISEX • <span className="text-[#1a1a1a] font-black">₹299–1,200</span></p>
             </div>
@@ -566,7 +569,7 @@ const DashboardProfile: React.FC = () => {
             {salonData.timing?.weeklyOff?.length > 0 && (
               <div className="absolute top-4 right-4">
                 <span className="px-2 py-1 text-[10px] font-bold text-gray-500 border border-gray-200 rounded-md uppercase tracking-wider" style={{ fontFamily: "'Playfair Display', serif" }}>
-                  Off: {salonData.timing.weeklyOff[0]}
+                  Off: {salonData.timing.weeklyOff.join(', ')}
                 </span>
               </div>
             )}
@@ -679,21 +682,21 @@ const DashboardProfile: React.FC = () => {
                 
                 {/* Lunch Zone - Semi-transparent Amber Block */}
                 <div 
-                  className="absolute top-0 h-full bg-amber-400/40 hover:bg-amber-400/60 transition-colors"
+                  className="absolute top-0 h-full bg-amber-400/40 hover:bg-amber-400/60 transition-colors group relative"
                   style={{ 
                     left: `${lunchStartPosition}%`, 
                     width: `${lunchWidth}%` 
                   }}
                 >
                   {/* Lunch Zone Hover Tooltip */}
-                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1 bg-gray-900 text-white text-[10px] font-bold rounded-full whitespace-nowrap opacity-0 hover:opacity-100 transition-opacity shadow-lg pointer-events-none">
-                    Lunch Break: 12:30 PM - 01:00 PM
+                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1 bg-gray-900 text-white text-[10px] font-bold rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity shadow-lg pointer-events-none">
+                    Lunch: 12:30 PM - 01:00 PM
                   </div>
                 </div>
                 
                 {/* Live Needle - Thin Vertical Line with Pulse */}
                 <div 
-                  className="absolute top-0 h-full w-0.5 bg-gray-900 transition-all duration-500 ease-out"
+                  className="absolute top-0 h-full w-0.5 bg-gray-900 transition-all duration-300 ease-in-out"
                   style={{ left: `${Math.max(0, Math.min(100, currentTimePosition))}%` }}
                 >
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-gray-900 rounded-full animate-ping opacity-75" />
@@ -701,7 +704,7 @@ const DashboardProfile: React.FC = () => {
                 
                 {/* Needle Tooltip - Bold Current Time */}
                 <div 
-                  className="absolute -top-7 transition-all duration-500 ease-out"
+                  className="absolute -top-8 transition-all duration-300 ease-in-out"
                   style={{ left: `${Math.max(0, Math.min(100, currentTimePosition))}%`, transform: 'translateX(-50%)' }}
                 >
                   <div className="px-3 py-1 bg-gray-900 text-white text-xs font-black rounded-full whitespace-nowrap shadow-lg">
@@ -722,8 +725,22 @@ const DashboardProfile: React.FC = () => {
                 )}
               </div>
 
+              {/* LUNCH Label - Below yellow segment */}
+              <div className="relative mt-2">
+                <div 
+                  className="absolute text-[10px] font-bold text-amber-600 uppercase tracking-wider"
+                  style={{ 
+                    left: `${lunchStartPosition + lunchWidth / 2}%`, 
+                    transform: 'translateX(-50%)',
+                    fontFamily: "'Playfair Display', serif"
+                  }}
+                >
+                  LUNCH
+                </div>
+              </div>
+
               {/* Time Labels - Bold but Small */}
-              <div className="flex justify-between items-center mt-2">
+              <div className="flex justify-between items-center mt-6">
                 <span className="text-xs font-bold text-gray-400 tracking-widest" style={{ fontFamily: "'Playfair Display', serif" }}>07:00 AM</span>
                 <span className="text-xs font-bold text-gray-400 tracking-widest" style={{ fontFamily: "'Playfair Display', serif" }}>09:00 PM</span>
               </div>
