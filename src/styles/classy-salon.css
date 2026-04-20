@@ -1,0 +1,442 @@
+/* Ultra-Classy Salon Authentication Styles */
+
+/* Animated Gradient Background */
+@keyframes salonGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.classy-salon-bg {
+  background: linear-gradient(
+    135deg,
+    #1a1a2e 0%,
+    #16213e 25%,
+    #1a1a2e 50%,
+    #0f3460 75%,
+    #16213e 100%
+  );
+  background-size: 400% 400%;
+  animation: salonGradient 15s ease infinite;
+}
+
+/* Dark Overlay */
+.classy-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1;
+}
+
+/* Glassmorphism Card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 32px 64px -15px rgba(0, 0, 0, 0.4);
+}
+
+/* Letter-by-Letter Slide Up Reveal */
+@keyframes letterSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+    filter: blur(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.letter-reveal {
+  animation: letterSlideUp 0.8s ease-out forwards;
+  opacity: 0;
+}
+
+/* Staggered Fade-In for form elements */
+@keyframes staggeredFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.staggered-1 {
+  animation: staggeredFadeIn 0.6s ease-out 0.1s forwards;
+  opacity: 0;
+}
+
+.staggered-2 {
+  animation: staggeredFadeIn 0.6s ease-out 0.2s forwards;
+  opacity: 0;
+}
+
+.staggered-3 {
+  animation: staggeredFadeIn 0.6s ease-out 0.3s forwards;
+  opacity: 0;
+}
+
+.staggered-4 {
+  animation: staggeredFadeIn 0.6s ease-out 0.4s forwards;
+  opacity: 0;
+}
+
+.staggered-5 {
+  animation: staggeredFadeIn 0.6s ease-out 0.5s forwards;
+  opacity: 0;
+}
+
+.staggered-6 {
+  animation: staggeredFadeIn 0.6s ease-out 0.6s forwards;
+  opacity: 0;
+}
+
+/* Smooth Horizontal Slide Transition */
+@keyframes slideFromRight {
+  0% {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideFromLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slide-in-right {
+  animation: slideFromRight 0.5s ease-out forwards;
+}
+
+.slide-in-left {
+  animation: slideFromLeft 0.5s ease-out forwards;
+}
+
+/* Elegant Underline Animation for Input Fields */
+.input-wrapper {
+  position: relative;
+  padding-bottom: 4px;
+}
+
+.input-wrapper::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  transition: background 0.3s ease;
+}
+
+.input-wrapper::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #D4AF37, #FFD700, #D4AF37);
+  transition: width 0.4s ease, left 0.4s ease;
+  border-radius: 1px;
+}
+
+.input-wrapper:focus-within::after {
+  width: 100%;
+  left: 0;
+}
+
+.input-wrapper:focus-within::before {
+  background: transparent;
+}
+
+/* Error state with crimson border */
+.input-wrapper.error::after {
+  background: #DC143C;
+  width: 100%;
+  left: 0;
+}
+
+.input-wrapper.error::before {
+  background: transparent;
+}
+
+/* Floating Label Effect */
+.floating-label {
+  position: absolute;
+  left: 44px;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: all 0.3s ease;
+  pointer-events: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+}
+
+.input-field:focus + .floating-label,
+.input-field:not(:placeholder-shown) + .floating-label {
+  top: 0;
+  left: 12px;
+  transform: translateY(-50%) scale(0.85);
+  color: #D4AF37;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0 6px;
+}
+
+/* Luxury Button with Enhanced Shimmer */
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(30, 77, 140, 0.4),
+                0 0 40px rgba(30, 77, 140, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(30, 77, 140, 0.5),
+                0 0 50px rgba(30, 77, 140, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+}
+
+.shimmer-button {
+  background: linear-gradient(
+    90deg,
+    #1E4D8C 0%,
+    #2a5fa8 25%,
+    #1E4D8C 50%,
+    #2a5fa8 75%,
+    #1E4D8C 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 4s ease-in-out infinite, pulse-glow 3s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.6s ease;
+}
+
+.shimmer-button:hover::before {
+  left: 100%;
+}
+
+.shimmer-button:hover {
+  animation: shimmer 2s ease-in-out infinite, pulse-glow 2s ease-in-out infinite;
+}
+
+/* Elegant Text Button with Slow-Grow Underline */
+.text-button {
+  position: relative;
+  color: rgba(255, 255, 255, 0.7);
+  transition: color 0.3s ease;
+}
+
+.text-button::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: #D4AF37;
+  transition: width 0.4s ease;
+}
+
+.text-button:hover {
+  color: #D4AF37;
+}
+
+.text-button:hover::after {
+  width: 100%;
+}
+
+/* Custom scrollbar for dark theme */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.3);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.5);
+}
+
+/* Focus state for accessibility */
+.focus-ring:focus-visible {
+  outline: 2px solid #D4AF37;
+  outline-offset: 2px;
+}
+
+/* Smooth loading state */
+@keyframes smooth-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.loading-state {
+  animation: smooth-pulse 1.5s ease-in-out infinite;
+}
+
+/* Minimalist Line Input for dark theme */
+.dark-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  transition: all 0.3s ease;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.dark-input:focus {
+  background: transparent;
+  border-bottom-color: #D4AF37;
+  outline: none;
+}
+
+.dark-input.error {
+  border-bottom-color: #DC143C;
+}
+
+.dark-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Override browser autofill styles */
+.dark-input:-webkit-autofill,
+.dark-input:-webkit-autofill:hover,
+.dark-input:-webkit-autofill:focus,
+.dark-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px rgba(0, 0, 0, 0) inset !important;
+  -webkit-text-fill-color: white !important;
+  background-color: transparent !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.dark-input:-internal-autofill-selected {
+  background-color: transparent !important;
+}
+
+/* Icon styling */
+.dark-icon {
+  color: rgba(255, 255, 255, 0.4);
+  transition: color 0.3s ease;
+}
+
+.input-wrapper:focus-within .dark-icon {
+  color: #D4AF37;
+}
+
+/* Label styling for dark theme */
+.dark-label {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Error state */
+.error-input {
+  border-bottom-color: #DC143C !important;
+}
+
+.error-text {
+  color: #DC143C;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+/* Step indicator */
+.step-indicator {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.step-indicator-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #D4AF37, #FFD700);
+  transition: width 0.5s ease;
+}
+
+/* Gold Divider Line */
+.gold-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.4), transparent);
+  margin: 24px 0;
+}
+
+/* Silver Divider Line */
+.silver-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(192, 192, 192, 0.3), transparent);
+  margin: 24px 0;
+}
+
+/* Punch Line Styling */
+.punch-line {
+  font-style: italic;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.05em;
+  margin-top: 8px;
+}

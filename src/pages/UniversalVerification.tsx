@@ -135,14 +135,14 @@ const UniversalVerification: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F7FE] flex items-center justify-center p-4 font-sans">
-      <div className="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden relative">
+    <div className="min-h-screen bg-[#F5F5F0] flex items-center justify-center p-4 font-sans">
+      <div className="w-full max-w-md bg-white border border-gray-200 rounded-[2.5rem] shadow-sm overflow-hidden relative" style={{ boxShadow: "rgba(0,0,0,0.03) 0 1px 3px" }}>
         <div className="p-8 relative z-10">
           <header className="text-center mb-10">
-            <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <ShieldCheck className="text-[#1E4D8C]" size={32} />
+            <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <ShieldCheck className="text-[#D4AF37]" size={32} />
             </div>
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase">
+            <h1 className="text-2xl font-black text-[#1a1a1a] tracking-tight uppercase" style={{ fontFamily: "'Playfair Display', serif" }}>
               {step === 1 ? t('verification.linkAccount') : t('verification.verifyDetails')}
             </h1>
           </header>
@@ -154,7 +154,7 @@ const UniversalVerification: React.FC = () => {
                 {/* User types Email ONLY if shouldVerifyEmail is true */}
                 {shouldVerifyEmail && (
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t('verification.emailAddress')}</label>
+                    <label className="text-[10px] font-black text-[#4b5563] uppercase tracking-widest ml-1">{t('verification.emailAddress')}</label>
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                       <input 
@@ -163,7 +163,7 @@ const UniversalVerification: React.FC = () => {
                         value={formData.email}
                         onChange={handleInputChange}
                         placeholder={t('verification.enterYourEmail')}
-                        className="w-full h-14 pl-12 pr-4 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-blue-50 transition-all"
+                        className="w-full h-14 pl-12 pr-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-[#1a1a1a] outline-none focus:ring-4 focus:ring-[#D4AF37]/50 transition-all"
                       />
                     </div>
                   </div>
@@ -172,7 +172,7 @@ const UniversalVerification: React.FC = () => {
                 {/* User types Phone ONLY if shouldVerifyPhone is true */}
                 {shouldVerifyPhone && (
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t('verification.phoneNumber')}</label>
+                    <label className="text-[10px] font-black text-[#4b5563] uppercase tracking-widest ml-1">{t('verification.phoneNumber')}</label>
                     <div className="relative">
                       <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                       <input 
@@ -181,7 +181,7 @@ const UniversalVerification: React.FC = () => {
                         value={formData.phone}
                         onChange={handleInputChange}
                         placeholder={t('verification.phonePlaceholder')}
-                        className="w-full h-14 pl-12 pr-4 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-blue-50 transition-all"
+                        className="w-full h-14 pl-12 pr-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-[#1a1a1a] outline-none focus:ring-4 focus:ring-[#D4AF37]/50 transition-all"
                       />
                     </div>
                   </div>
@@ -199,28 +199,30 @@ const UniversalVerification: React.FC = () => {
             ) : (
               /* OTP Step Remains the Same */
               <div className="space-y-6">
-                <div className="flex justify-between items-center bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                <div className="flex justify-between items-center bg-gray-50 p-4 rounded-2xl border border-gray-200">
                   <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-blue-400 uppercase">{t('verification.sendingTo')}</span>
-                    <span className="text-xs font-bold text-[#1E4D8C]">
+                    <span className="text-[9px] font-black text-[#4b5563] uppercase">{t('verification.sendingTo')}</span>
+                    <span className="text-xs font-bold text-[#1a1a1a]">
                         {shouldVerifyEmail ? formData.email : formData.phone}
                     </span>
                   </div>
-                  <button onClick={() => setStep(1)} className="p-2 text-[#1E4D8C] hover:bg-white rounded-xl transition-all">
+                  <button onClick={() => setStep(1)} className="p-2 text-[#D4AF37] hover:bg-gray-100 rounded-xl transition-all">
                     <Edit3 size={16} />
                   </button>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center block">{t('verification.enter6DigitOTP')}</label>
+                  <label className="text-[10px] font-black text-[#4b5563] uppercase tracking-widest text-center block">{t('verification.enter6DigitOTP')}</label>
                   <input 
                     name="otp"
-                    type="text"
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     maxLength={6}
                     value={formData.otp}
                     onChange={handleInputChange}
                     placeholder={t('verification.otpPlaceholder')}
-                    className="w-full h-16 bg-gray-50 border-none rounded-2xl text-center text-3xl font-black tracking-[0.3em] outline-none focus:ring-4 focus:ring-blue-100 transition-all"
+                    className="w-full h-16 bg-gray-50 border border-gray-200 rounded-2xl text-center text-3xl font-black tracking-[0.3em] text-[#1a1a1a] outline-none focus:ring-4 focus:ring-[#D4AF37]/50 transition-all"
                   />
                 </div>
 
@@ -230,9 +232,9 @@ const UniversalVerification: React.FC = () => {
 
                 <div className="text-center">
                   {timer > 0 ? (
-                    <p className="text-[10px] font-bold text-gray-400 uppercase">{t('verification.resendIn', { timer })}</p>
+                    <p className="text-[10px] font-bold text-[#4b5563] uppercase">{t('verification.resendIn', { timer })}</p>
                   ) : (
-                    <button onClick={handleSendOTP} className="text-[10px] font-black text-[#1E4D8C] uppercase tracking-widest flex items-center gap-2 mx-auto">
+                    <button onClick={handleSendOTP} className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest flex items-center gap-2 mx-auto">
                       <RefreshCcw size={12} /> {t('verification.resendCode')}
                     </button>
                   )}

@@ -47,15 +47,15 @@ function SalonDashboard({ open, setOpen, collapsed }: SidebarProps) {
       <aside
         className={`
           fixed top-0 left-0 h-screen z-[60]
-          bg-[#1A202C] text-white
+          bg-[#0A0A0A] text-white
           transform transition-all duration-300 ease-in-out
           ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
           ${collapsed ? "md:w-20" : "md:w-64"}
           w-64
-          border-r border-white/5 shadow-2xl
+          border-r border-white/10 shadow-2xl backdrop-blur-[20px]
         `}
       >
-        <div className="h-full flex flex-col overflow-hidden bg-[#1A202C]">
+        <div className="h-full flex flex-col overflow-hidden bg-[#0A0A0A]">
 
           {/* LOGO SECTION */}
           <div
@@ -67,8 +67,8 @@ function SalonDashboard({ open, setOpen, collapsed }: SidebarProps) {
             </div>
             {!collapsed && (
               <div className="flex flex-col">
-                <h1 className="font-black text-xl tracking-tight">Coiffeurr</h1>
-                {/* <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Admin Panel</span> */}
+                <h1 className="font-black text-xl tracking-tight text-white">Coiffeurr</h1>
+                <p className="text-xs text-gray-400">Salon Management</p>
               </div>
             )}
           </div>
@@ -93,20 +93,23 @@ function SalonDashboard({ open, setOpen, collapsed }: SidebarProps) {
                     if (window.innerWidth < 768) setOpen(false);
                   }}
                   className={`
-                    w-full justify-center group py-6 rounded-xl transition-all duration-200
+                    w-full justify-center group py-6 rounded-xl transition-all duration-200 relative
                     ${collapsed ? "px-2" : "justify-between px-4"}
                     ${isActive
-                      ? 'bg-white/10 text-white shadow-lg ring-1 ring-white/20'
+                      ? 'bg-white/10 text-white shadow-lg'
                       : 'text-gray-400 hover:bg-white/5 hover:text-white'
                     }
                   `}
                   title={collapsed ? item.label : ""}
                 >
+                  {isActive && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-r-full shadow-lg shadow-yellow-500/50" />
+                  )}
                   <div className={`flex items-center ${collapsed ? "" : "gap-3"}`}>
-                    <Icon size={18} className={isActive ? "text-blue-400" : "text-gray-500 group-hover:text-gray-300"} />
-                    {!collapsed && <span className="font-bold text-sm tracking-tight">{item.label}</span>}
+                    <Icon size={18} className={isActive ? "text-yellow-400" : "text-gray-500 group-hover:text-gray-300"} />
+                    {!collapsed && <span className={`font-bold text-sm tracking-tight ${isActive ? "text-yellow-400" : ""}`}>{item.label}</span>}
                   </div>
-                  {!collapsed && isActive && <ChevronRight size={14} className="text-gray-500" />}
+                  {!collapsed && isActive && <ChevronRight size={14} className="text-yellow-400" />}
                 </Button>
               );
             })}

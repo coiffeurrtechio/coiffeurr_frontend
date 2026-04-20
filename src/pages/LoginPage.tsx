@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  Users, Building2, Scissors, ArrowLeft,
-  Mail, Lock, Eye, EyeOff, Smartphone
+  Users, Building2, Mail, Lock, Eye, EyeOff, Smartphone
 } from "lucide-react";
 import { Button } from "../components/ui_components/button";
 import {
   Card, CardContent, CardHeader,
-  CardTitle, CardDescription
+  CardTitle
 } from "../components/ui_components/card";
 import { useToast } from "../components/Toast";
 import { useDispatch } from "react-redux";
@@ -15,13 +14,15 @@ import { login } from "../utils/Storage/slice/authSlice";
 import Config from '../configs/config';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n/config';
+import "../styles/classy-salon.css";
+import Sponser_Footer from "../components/Sponser_Footer";
+import { motion, AnimatePresence } from "motion/react";
 
 interface LoginPageProps {
   role: string;
-  onBack: () => void;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ role, onBack }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
   const { t } = useTranslation();
   const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('phone');
   const [showPassword, setShowPassword] = useState(false);
@@ -129,127 +130,166 @@ const LoginPage: React.FC<LoginPageProps> = ({ role, onBack }) => {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center p-4 overflow-hidden bg-gray-50">
-      <div
-        className="absolute inset-0 z-0 opacity-40"
-        style={{
-          backgroundImage: `url('/Background.jpeg')`,
-          backgroundSize: '320px',
-          backgroundRepeat: 'repeat',
-          filter: 'grayscale(100%) brightness(1.1)',
-        }}
-      />
+    <div className="relative min-h-screen w-full flex flex-col items-center justify-center p-4 overflow-hidden classy-salon-bg">
+      <div className="classy-overlay" />
 
-      <div className="relative z-10 w-full max-w-[420px] animate-in fade-in slide-in-from-bottom-8 duration-700">
-        <button onClick={onBack} className="flex items-center gap-2 text-gray-400 hover:text-[#1E4D8C] mb-6 transition-colors font-black text-[10px] uppercase tracking-widest ml-1 group">
-          <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> {t('common.back')}
-        </button>
-
-        <Card className="border-0 bg-white/80 backdrop-blur-2xl shadow-[0_32px_64px_-15px_rgba(30,77,140,0.15)] rounded-[2.5rem] overflow-hidden">
-          <CardHeader className="text-center pb-2 pt-10">
-            <div className="mx-auto w-16 h-16 bg-[#1E4D8C] rounded-2xl flex items-center justify-center mb-6 shadow-lg rotate-3 transition-transform hover:rotate-0 duration-300">
-              <Scissors className="w-8 h-8 text-white -rotate-3" />
-            </div>
-            <CardTitle className="text-2xl font-black text-gray-900 tracking-tight">
-              {t('auth.signIn')}
-            </CardTitle>
-            <CardDescription className="text-gray-500 font-medium mt-1">
-              {t('auth.login')}
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent className="space-y-6 px-8 pb-10">
-            {/* Method Toggle */}
-            <div className="flex bg-gray-100 p-1 rounded-2xl">
-              <button
-                onClick={() => setLoginMethod('phone')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${loginMethod === 'phone' ? 'bg-white text-[#1E4D8C] shadow-sm' : 'text-gray-400'}`}
+      <div className="relative z-10 w-full max-w-[420px] flex-1 flex flex-col justify-center">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        >
+          <Card className="border border-white/10 glass-card rounded-[2.5rem] overflow-hidden backdrop-blur-xl">
+            <CardHeader className="text-center pb-1 pt-4 px-4">
+              <motion.div 
+                className="mx-auto w-12 h-12 bg-white rounded-2xl flex items-center justify-center mb-2 shadow-lg border border-white/20 transition-transform hover:scale-105 duration-300"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
               >
-                <Smartphone size={14} /> {t('common.phone')}
-              </button>
-              <button
-                onClick={() => setLoginMethod('email')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${loginMethod === 'email' ? 'bg-white text-[#1E4D8C] shadow-sm' : 'text-gray-400'}`}
+                <img src="/Coiffeurr_Logo.png" alt="Coiffeurr" className="w-10 h-10 object-contain" />
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
               >
-                <Mail size={14} /> {t('common.email')}
-              </button>
-            </div>
+                <CardTitle 
+                  className="text-2xl font-bold text-white tracking-tight letter-reveal"
+                  style={{ fontFamily: 'Playfair Display, serif' }}
+                >
+                  {t('auth.signIn')}
+                </CardTitle>
+              </motion.div>
+              <motion.p 
+                className="punch-line text-[9px]"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+              >
+                Refining the art of your presence.
+              </motion.p>
+            </CardHeader>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {loginMethod === 'email' ? (
-                <div className="space-y-1.5 animate-in fade-in duration-300">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t('common.email')}</label>
-                  <div className="relative group">
-                    <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${errors.email ? "text-red-500" : "text-gray-400 group-focus-within:text-[#1E4D8C]"}`} />
-                    <input
-                      type="email"
-                      placeholder="name@example.com"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange("email", e.target.value)}
-                      className={`w-full h-12 pl-12 pr-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all ${errors.email ? "ring-2 ring-red-100" : ""}`}
-                    />
-                  </div>
-                  {errors.email && <p className="text-[10px] text-red-500 font-bold ml-1">{errors.email}</p>}
-                </div>
-              ) : (
-                <div className="space-y-1.5 animate-in fade-in duration-300">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t('auth.phoneNumber')}</label>
-                  <div className="relative group">
-                    <Smartphone className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${errors.phone ? "text-red-500" : "text-gray-400 group-focus-within:text-[#1E4D8C]"}`} />
-                    <input
-                      type="tel"
-                      placeholder="+91 00000 00000"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange("phone", e.target.value)}
-                      className={`w-full h-12 pl-12 pr-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all ${errors.phone ? "ring-2 ring-red-100" : ""}`}
-                    />
-                  </div>
-                  {errors.phone && <p className="text-[10px] text-red-500 font-bold ml-1">{errors.phone}</p>}
-                </div>
-              )}
+            <CardContent className="space-y-3 px-4 pb-4">
+              {/* Method Toggle */}
+              <motion.div 
+                className="flex bg-white/5 p-1 rounded-2xl"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+              >
+                <button
+                  onClick={() => setLoginMethod('phone')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${loginMethod === 'phone' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40'}`}
+                >
+                  <Smartphone size={12} /> {t('common.phone')}
+                </button>
+                <button
+                  onClick={() => setLoginMethod('email')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${loginMethod === 'email' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40'}`}
+                >
+                  <Mail size={12} /> {t('common.email')}
+                </button>
+              </motion.div>
 
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center px-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('auth.password')}</label>
-                  <Link to="/forgetpassword" className="text-[10px] font-black text-[#1E4D8C] hover:underline tracking-widest">{t('auth.forgotPassword')}</Link>
-                </div>
-                <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#1E4D8C]" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={formData.password}
-                    onChange={(e) => handleInputChange("password", e.target.value)}
-                    className="w-full h-12 pl-12 pr-12 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+              <AnimatePresence mode="wait">
+                <motion.form 
+                  key={loginMethod}
+                  onSubmit={handleSubmit} 
+                  className="space-y-5"
+                  initial={{ opacity: 0, x: loginMethod === 'email' ? 50 : -50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: loginMethod === 'email' ? -50 : 50 }}
+                  transition={{ duration: 0.4, ease: "easeInOut" }}
+                >
+                  {loginMethod === 'email' ? (
+                    <div className="space-y-2">
+                      <label className="dark-label ml-1">{t('common.email')}</label>
+                      <div className={`relative input-wrapper ${errors.email ? 'error' : ''}`}>
+                        <Mail className={`absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon z-10 ${errors.email ? "text-[#DC143C]" : ""}`} />
+                        <input
+                          type="email"
+                          placeholder="name@example.com"
+                          value={formData.email}
+                          onChange={(e) => handleInputChange("email", e.target.value)}
+                          className={`w-full h-12 pl-12 pr-12 dark-input text-sm font-bold outline-none transition-all duration-300 focus:ring-2 focus:ring-[#D4AF37]/50 ${errors.email ? "error" : ""}`}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <label className="dark-label ml-1">{t('auth.phoneNumber')}</label>
+                      <div className={`relative input-wrapper ${errors.phone ? 'error' : ''}`}>
+                        <Smartphone className={`absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon z-10 ${errors.phone ? "text-[#DC143C]" : ""}`} />
+                        <input
+                          type="tel"
+                          placeholder="+91 00000 00000"
+                          value={formData.phone}
+                          onChange={(e) => handleInputChange("phone", e.target.value)}
+                          className={`w-full h-12 pl-12 pr-4 dark-input text-sm font-bold outline-none transition-all duration-300 focus:ring-2 focus:ring-[#D4AF37]/50 ${errors.phone ? "error" : ""}`}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center px-1">
+                      <label className="dark-label">{t('auth.password')}</label>
+                      <Link to="/forgetpassword" className="text-[10px] font-black text-white/60 hover:text-[#D4AF37] tracking-widest text-button transition-colors focus-ring">
+                        {t('auth.forgotPassword')}
+                      </Link>
+                    </div>
+                    <div className="relative input-wrapper">
+                      <Lock className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon" />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={formData.password}
+                        onChange={(e) => handleInputChange("password", e.target.value)}
+                        className="w-full h-12 pl-12 pr-20 dark-input text-sm font-bold outline-none transition-all duration-300 focus:ring-2 focus:ring-[#D4AF37]/50"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white p-1 transition-colors focus-ring z-10"
+                      >
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className={`w-full h-11 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold text-xs rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 mt-3 focus-ring shadow-lg shadow-[#D4AF37]/30 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    disabled={isLoading}
                   >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </div>
+                    {isLoading ? t('common.loading') : t('auth.signIn')}
+                  </Button>
+                </motion.form>
+              </AnimatePresence>
 
-              <Button
-                type="submit"
-                className="w-full h-14 bg-[#1E4D8C] hover:bg-[#153a6b] text-white font-black text-sm rounded-2xl shadow-xl shadow-blue-900/20 active:scale-[0.98] transition-all mt-4"
-                disabled={isLoading}
+              <div className="gold-divider" />
+
+              <motion.div 
+                className="text-center pt-1"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
               >
-                {isLoading ? t('common.loading') : t('auth.signIn')}
-              </Button>
-            </form>
+                <p className="text-[10px] font-bold text-white/60">
+                  {t('auth.dontHaveAccount')}
+                  <Link to="/signup" className="text-[#D4AF37] hover:text-[#FFD700] ml-1 text-button transition-colors">{t('auth.createAccount')}</Link>
+                </p>
+              </motion.div>
 
-            <div className="text-center pt-2">
-              <p className="text-xs font-bold text-gray-400">
-                {t('auth.dontHaveAccount')}
-                <Link to="/signup" className="text-[#1E4D8C] hover:underline ml-1">{t('auth.createAccount')}</Link>
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="w-full h-px bg-white/10 my-2" />
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
+
+      <Sponser_Footer collapsed={false} />
     </div>
   );
 };

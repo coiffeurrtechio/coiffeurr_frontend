@@ -2,45 +2,48 @@ import { Heart, Sparkles } from "lucide-react";
 
 function Sponser_Footer({ collapsed }: { collapsed: boolean }) {
     return (
-        <footer className="px-4 py-6 border-t border-white/10 bg-gradient-to-t from-[#0f172a]/50 to-transparent">
-            <div className="flex flex-col gap-4">
+        <footer className="px-4 py-6 flex items-center justify-center border-t border-gray-100 bg-transparent">
+            <div className="flex flex-col items-center justify-center gap-4 w-full max-w-md">
 
                 {/* Sponsorship Section */}
                 {!collapsed && (
-                    <div className="flex flex-col items-center gap-3">
+                    <div className="flex flex-col items-center justify-center gap-2 w-full">
                         <div className="flex items-center gap-2">
                             <Sparkles size={12} className="text-[#D4AF37]" />
-                            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-[0.2em]">
+                            <p className="text-[10px] font-bold text-[#4b5563] uppercase tracking-[0.3em] text-center" style={{ fontFamily: "Playfair Display, serif" }}>
                                 Supported by
                             </p>
                             <Sparkles size={12} className="text-[#D4AF37]" />
                         </div>
-                        <div className="flex items-center gap-3 px-4 py-2 bg-white/10 rounded-full border border-white/20">
-                            <span className="text-[10px] font-medium text-gray-400 hover:text-gray-300 hover:scale-105 transition-all cursor-pointer">
+                        <div className="flex items-center justify-center gap-4 px-5 py-2.5 bg-gray-50 rounded-full border border-gray-100">
+                            <span className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-[0.1em] hover:text-[#1a1a1a] hover:scale-105 transition-all cursor-pointer" style={{ textShadow: "0 1px 2px rgba(212, 175, 55, 0.3)" }}>
                                 IIM SHILLONG
                             </span>
-                            <span className="text-white/40 text-[10px]">•</span>
-                            <span className="text-[10px] font-medium text-gray-400 hover:text-gray-300 hover:scale-105 transition-all cursor-pointer">
+                            <span className="text-gray-300 text-[10px]">•</span>
+                            <span className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-[0.1em] hover:text-[#1a1a1a] hover:scale-105 transition-all cursor-pointer" style={{ textShadow: "0 1px 2px rgba(212, 175, 55, 0.3)" }}>
                                 SIDBI
                             </span>
                         </div>
                     </div>
                 )}
 
+                {/* Separator Line */}
+                {!collapsed && <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-1" />}
+
                 {/* Version Info - Hidden when collapsed */}
                 {!collapsed && (
-                    <div className="text-center pt-4 border-t border-white/10">
-                        <div className="flex items-center justify-center gap-2 text-[9px] text-white/60 font-medium tracking-wide">
-                            <span className="px-2 py-0.5 bg-white/10 rounded-full border border-white/20">v1.0</span>
+                    <div className="flex flex-col items-center justify-center text-center w-full mt-0">
+                        <div className="flex items-center justify-center gap-2 text-[9px] text-[#4b5563]/80 font-medium tracking-wide">
+                            <span className="px-2 py-0.5 bg-gray-100 rounded-full border border-gray-100">v1.0</span>
                             <span>•</span>
                             <span className="flex items-center gap-1">
                                 Made in India
-                                <Heart size={8} className="text-[#D4AF37] fill-[#D4AF37]/20" />
+                                <Heart size={8} className="text-red-500 fill-red-500/20" aria-label="Heart" />
                             </span>
                             <span>•</span>
                             <span>© {new Date().getFullYear()} Coiffeurr</span>
                         </div>
-                        <p className="mt-3 text-[8px] text-white/40 italic tracking-wide" style={{ fontFamily: 'Playfair Display, serif' }}>
+                        <p className="mt-2 text-[8px] text-[#4b5563]/60 italic tracking-wide" style={{ fontFamily: "Playfair Display, serif" }}>
                             Bridging the gap between traditional artistry and modern luxury.
                         </p>
                     </div>

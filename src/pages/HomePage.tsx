@@ -403,36 +403,41 @@ const HomePage: React.FC = () => {
                     </div>
                   ) : (
                     /* 4. Success state */
-                    salons.map((salon, index) => (
-                      <Link to={`/salons/${salon.id}`} key={salon.id} className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 bg-white/90 backdrop-blur-sm rounded-2xl overflow-hidden group salon-slide-up active:scale-[0.97] transition-transform duration-100" style={{ boxShadow: '0 10px 30px rgba(0,0,0,0.1)', animationDelay: `${index * 0.15}s` }}>
+                    salons.map((salon, index) => {
+                      const distance = salon.distance ? parseFloat(salon.distance) : 0;
+                      const displayDistance = distance < 0.1 ? '< 0.1 km' : `${distance.toFixed(1)} km`;
+                      
+                      return (
+                      <Link to={`/salons/${salon.id}`} key={salon.id} className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 bg-white/95 backdrop-blur-sm rounded-2xl overflow-hidden group salon-slide-up active:scale-[0.97] transition-transform duration-100 hover:-translate-y-1 hover:shadow-xl" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)', animationDelay: `${index * 0.15}s` }}>
                         <div className="relative h-44 sm:h-full">
                           <img src={salon.logoUrl || "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=400"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={salon.salonName} />
                           {/* Social Proof Badge for Salons */}
                           {index < 2 && (
-                            <div className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-sm">Most Booked</div>
+                            <div className="absolute top-3 left-3 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-white text-[9px] font-black px-2.5 py-1 rounded-xl shadow-md">Most Booked</div>
                           )}
                           {salon.distance && (
-                            <div className="absolute bottom-3 left-3 bg-[#0f172a] text-white px-2 py-1 rounded-lg flex items-center gap-1 shadow-lg border border-white/20">
-                              <Navigation className="w-3 h-3 fill-current rotate-45" /><span className="text-[10px] font-black tracking-tighter">{salon.distance} km</span>
+                            <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md text-gray-600 px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-sm border border-gray-200">
+                              <MapPin className="w-3 h-3" /><span className="text-[9px] font-bold uppercase tracking-[0.05em]">{displayDistance}</span>
                             </div>
                           )}
-                          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm"><Star size={12} className="fill-orange-400 text-orange-400" /><span className="text-xs font-black">{salon.rating?.average || "5.0"}</span></div>
+                          <div className="absolute top-3 right-3 bg-white/95 backdrop-blur px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-sm"><Star size={12} className="fill-orange-400 text-orange-400" /><span className="text-xs font-black">{salon.rating?.average || "5.0"}</span></div>
                         </div>
                         <div className="p-6 flex-1 flex flex-col justify-between">
                           <div>
                             <div className="flex justify-between items-start mb-1">
                               <h3 className="font-black text-base sm:text-lg text-gray-800 pr-2" style={{ fontFamily: 'Playfair Display, serif' }}>{salon.salonName}</h3>
-                              {salon.priceRange && <span className="shrink-0 text-[10px] sm:text-xs font-black text-[#D4AF37] bg-amber-50 px-2 py-1 rounded">₹ {salon.priceRange}</span>}
+                              {salon.priceRange && <span className="shrink-0 text-[11px] sm:text-xs font-bold text-[#D4AF37] bg-gradient-to-r from-amber-50 to-yellow-50 px-3 py-1.5 rounded-xl border border-[#D4AF37]/20 shadow-sm">₹{salon.priceRange}</span>}
                             </div>
                             <div className="flex flex-col gap-1">
                               <p className="text-xs text-gray-400 flex items-center gap-1 font-bold"><MapPin size={12} className="text-[#0f172a]" /><span className="truncate">{salon.address?.city}</span></p>
                               <p className="text-[10px] text-gray-400 line-clamp-1">{salon.address?.street}</p>
                             </div>
                           </div>
-                          <button className="mt-4 sm:max-w-[140px] py-2.5 font-black text-xs rounded-xl transition-all hover:scale-105 book-now-button luxury-transition" style={{ background: '#D4AF37', color: '#0f172a' }}>{t('home.bookNow')}</button>
+                          <button className="mt-4 sm:max-w-[140px] py-2.5 font-black text-xs rounded-xl transition-all hover:scale-105 book-now-button luxury-transition bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-[#0f172a] shadow-lg shadow-[#D4AF37]/20">{t('home.bookNow')}</button>
                         </div>
                       </Link>
-                    ))
+                      );
+                    })
                   )}
             </div>
           </div>

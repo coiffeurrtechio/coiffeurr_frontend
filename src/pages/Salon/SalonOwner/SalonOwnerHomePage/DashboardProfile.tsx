@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Mail, Phone, MapPin, Calendar, Clock,
   Edit3, UserCircle, Star, ShieldCheck, X, Check,
   Trash2, Plus, Globe, Camera, Image as ImageIcon,
   CalendarDays, AlignLeft, Navigation, MapPinned, LocateFixed, Loader2,
-  Power, AlertTriangle, Scissors, Sparkles, Zap
+  Power, AlertTriangle, Scissors, Sparkles, Zap, ChevronRight
 } from 'lucide-react';
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
@@ -19,6 +19,13 @@ import { useSalonApi } from '../../../../API/Salon_Owner_API/SalonOwnerAPI';
 import { DashboardLoader } from '../../../../components/ui_components/DashboardLoader';
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+// Helper function to format time without seconds
+const formatTime = (time: string) => {
+  if (!time) return '--:--';
+  // Remove seconds if present (e.g., "08:00:00" -> "08:00")
+  return time.includes(':') ? time.split(':').slice(0, 2).join(':') : time;
+};
 
 // Advanced Animated Scissors Component with Motion
 const AnimatedScissors: React.FC = () => (
@@ -180,9 +187,9 @@ const AnimatedRatingStars: React.FC<{ rating: number }> = ({ rating }) => {
             size={20}
             className={
               i < fullStars
-                ? "text-yellow-400 fill-yellow-400"
+                ? "text-[#D4AF37] fill-[#D4AF37]"
                 : i === fullStars && hasHalfStar
-                ? "text-yellow-400 fill-yellow-40"
+                ? "text-[#D4AF37] fill-[#D4AF37]"
                 : "text-gray-300"
             }
           />
@@ -200,6 +207,23 @@ const AnimatedIcon: React.FC<{ icon: any }> = ({ icon: Icon }) => (
     transition={{ type: "spring", stiffness: 200, damping: 20 }}
   >
     <Icon size={16} className="text-[#1E4D8C]" />
+  </motion.div>
+);
+
+// Pulse Card Component for Daily Pulse Widget
+const PulseCard: React.FC<{ label: string; value: string; change: string; isPositive?: boolean }> = ({ label, value, change, isPositive }) => (
+  <motion.div
+    className="bg-white border border-gray-200 rounded-2xl p-6 relative overflow-hidden shadow-sm"
+    style={{ boxShadow: "rgba(0,0,0,0.03) 0 1px 3px" }}
+    whileHover={{ scale: 1.01 }}
+    transition={{ type: "spring", stiffness: 200, damping: 25 }}
+  >
+    <p className="text-[10px] font-black text-[#4b5563] uppercase tracking-widest mb-2">{label}</p>
+    <p className="text-3xl font-black text-[#1a1a1a] tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>{value}</p>
+    <div className="flex items-center gap-2 mt-2">
+      <span className={`text-xs font-bold ${isPositive ? 'text-emerald-600' : 'text-amber-600'}`}>{change}</span>
+      {isPositive && <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />}
+    </div>
   </motion.div>
 );
 
@@ -229,9 +253,93 @@ const DashboardProfile: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [isBlocking, setIsBlocking] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [progress, setProgress] = useState(0);
+  const [hoverTime, setHoverTime] = useState<string | null>(null);
+  const [hoverPosition, setHoverPosition] = useState<number>(0);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [ratingDistribution, setRatingDistribution] = useState<any>(null);
+  const [expandedReviews, setExpandedReviews] = useState<Set<number>>(new Set());
+  const hasAttemptedFetch = useRef(false);
+
+  const toggleReviewExpansion = (reviewIndex: number) => {
+    const newExpanded = new Set(expandedReviews);
+    if (newExpanded.has(reviewIndex)) {
+      newExpanded.delete(reviewIndex);
+    } else {
+      newExpanded.add(reviewIndex);
+    }
+    setExpandedReviews(newExpanded);
+  };
+
+  // Check if salon is currently open
+  const isSalonOpen = (() => {
+    if (!salonData || !salonData.timing) return false;
+    const now = new Date();
+    const currentHours = now.getHours();
+    const currentMinutes = now.getMinutes();
+    
+    const [openHours, openMinutes] = salonData.timing.openingTime.split(':').map(Number);
+    const [closeHours, closeMinutes] = salonData.timing.closingTime.split(':').map(Number);
+    
+    const currentTimeInMinutes = currentHours * 60 + currentMinutes;
+    const openTimeInMinutes = openHours * 60 + openMinutes;
+    const closeTimeInMinutes = closeHours * 60 + closeMinutes;
+    
+    // Check if current time is within operating hours
+    return currentTimeInMinutes >= openTimeInMinutes && currentTimeInMinutes <= closeTimeInMinutes;
+  })();
+
+  // Calculate timeline positions (07:00 to 21:00 = 14 hours = 840 minutes)
+  const calculateTimelinePosition = (timeStr: string) => {
+    if (!timeStr) return 0;
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes;
+    const startOfDay = 7 * 60; // 07:00
+    const endOfDay = 21 * 60; // 21:00
+    const dayDuration = endOfDay - startOfDay;
+    const position = ((totalMinutes - startOfDay) / dayDuration) * 100;
+    return Math.max(0, Math.min(100, position));
+  };
+
+  const currentTimePosition = calculateTimelinePosition(
+    `${currentTime.getHours()}:${currentTime.getMinutes().toString().padStart(2, '0')}`
+  );
+  
+  const lunchStartPosition = salonData ? calculateTimelinePosition(salonData.timing?.lunchBreak?.start || '12:30') : 0;
+  const lunchEndPosition = salonData ? calculateTimelinePosition(salonData.timing?.lunchBreak?.end || '13:00') : 0;
+  const lunchWidth = lunchEndPosition - lunchStartPosition;
+
+  // Calculate status badge
+  const getStatusBadge = () => {
+    const now = new Date();
+    const currentHours = now.getHours();
+    const currentMinutes = now.getMinutes();
+    const currentTimeInMinutes = currentHours * 60 + currentMinutes;
+    
+    const openTime = 8 * 60; // 08:00
+    const lunchStart = 12 * 60 + 30; // 12:30
+    const lunchEnd = 13 * 60; // 13:00
+    const closeTime = 21 * 60; // 21:00
+    
+    if (currentTimeInMinutes < openTime) {
+      const minutesUntilOpen = openTime - currentTimeInMinutes;
+      return `Opening in ${minutesUntilOpen} min${minutesUntilOpen > 1 ? 's' : ''}`;
+    } else if (currentTimeInMinutes >= lunchStart && currentTimeInMinutes <= lunchEnd) {
+      return 'On Lunch Break';
+    } else if (currentTimeInMinutes > closeTime) {
+      return 'Closed for the Day';
+    } else {
+      return 'Currently Open';
+    }
+  };
 
 
   const fetchProfile = useCallback(async () => {
+    // Prevent infinite retry loops
+    if (hasAttemptedFetch.current) return;
+    hasAttemptedFetch.current = true;
+    
     setLoading(true);
     try {
       const authData = localStorage.getItem("authState");
@@ -240,7 +348,39 @@ const DashboardProfile: React.FC = () => {
 
       if (!salonId) return;
       const res = await apiRequest<any>(`/salons/${salonId}`);
-      if (res.data) setSalonData(res.data);
+      if (res.data) {
+        // Handle both direct data and nested salonData structure
+        const data = res.data.salonData || res.data;
+        setSalonData(data);
+        
+        // Use reviewSummary from the API response if available
+        const reviewSummary = res.data.reviewSummary || data.reviewSummary;
+        if (reviewSummary?.recentReviews) {
+          setReviews(reviewSummary.recentReviews);
+          if (reviewSummary.ratingDistribution) {
+            setRatingDistribution(reviewSummary.ratingDistribution);
+          }
+        } else {
+          // If no reviewSummary in salon API, fetch reviews separately
+          try {
+            const reviewsRes = await apiRequest<any>(`/reviews/salons/${salonId}/reviews`);
+            if (reviewsRes.data) {
+              const reviewSummary = reviewsRes.data.reviewSummary;
+              if (reviewSummary?.recentReviews) {
+                setReviews(reviewSummary.recentReviews);
+              } else {
+                setReviews([]);
+              }
+              if (reviewSummary?.ratingDistribution) {
+                setRatingDistribution(reviewSummary.ratingDistribution);
+              }
+            }
+          } catch (reviewsErr) {
+            console.error("Failed to fetch reviews:", reviewsErr);
+            setReviews([]);
+          }
+        }
+      }
     } catch (err) {
       console.error("Fetch error:", err);
     } finally {
@@ -285,14 +425,54 @@ const DashboardProfile: React.FC = () => {
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [fetchProfile]);
+
+  // Dynamic progress bar calculation
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      setCurrentTime(now);
+
+      // Parse opening and closing times (assuming format like "09:00" or "09:00 AM")
+      const openTimeStr = salonData?.timing?.openingTime || "09:00";
+      const closeTimeStr = salonData?.timing?.closingTime || "21:00";
+
+      const parseTime = (timeStr: string) => {
+        const [time, period] = timeStr.split(" ");
+        let [hours, minutes] = time.split(":").map(Number);
+        if (period?.toUpperCase() === "PM" && hours !== 12) hours += 12;
+        if (period?.toUpperCase() === "AM" && hours === 12) hours = 0;
+        return hours * 60 + minutes;
+      };
+
+      const openMinutes = parseTime(openTimeStr);
+      const closeMinutes = parseTime(closeTimeStr);
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+      // Calculate progress percentage
+      if (currentMinutes >= openMinutes && currentMinutes <= closeMinutes) {
+        const totalMinutes = closeMinutes - openMinutes;
+        const elapsedMinutes = currentMinutes - openMinutes;
+        const calculatedProgress = Math.min(100, Math.max(0, (elapsedMinutes / totalMinutes) * 100));
+        setProgress(calculatedProgress);
+      } else if (currentMinutes < openMinutes) {
+        setProgress(0);
+      } else {
+        setProgress(100);
+      }
+    };
+
+    updateTime();
+    const interval = setInterval(updateTime, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, [salonData]);
 
   if (loading) return <DashboardLoader isVisible={true} />;
   if (!salonData) return <div className="p-10 text-center font-bold text-gray-400">Profile Not Found</div>;
 
   return (
     <motion.div
-      className="min-h-screen bg-[#F8FAFC] pb-20 px-4 md:px-8 font-sans relative"
+      className="min-h-screen bg-[#F5F5F0] pb-20 px-4 md:px-8 font-sans relative"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
@@ -313,222 +493,416 @@ const DashboardProfile: React.FC = () => {
               <SwiperSlide key={`slide-${i}`}><img src={img} className="w-full h-full object-cover" alt="cover" /></SwiperSlide>
             ))}
           </Swiper>
-          <div className="absolute top-6 right-6 z-10 flex items-center gap-3">
-            <span className="px-4 py-2 bg-white/90 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase text-[#1E4D8C] border border-white/50 shadow-sm">{salonData.status}</span>
-          </div>
         </motion.div>
 
         {/* PROFILE HEADER */}
         <motion.div
-          className="flex flex-col md:flex-row items-center md:items-end justify-between gap-6 px-4 -mt-16 md:-mt-20 relative z-20"
+          className="flex flex-col gap-6 px-4 -mt-16 md:-mt-20 relative z-20 pt-4"
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+          transition={{ duration: 0.8, delay: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
         >
-          <motion.div
-            className="flex flex-col md:flex-row items-center md:items-end gap-5 text-center md:text-left"
-            initial={{ x: -50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-          >
+          {/* Salon Info */}
+          <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-6">
             <motion.div
-              className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] bg-white p-1.5 shadow-2xl border-4 border-white overflow-hidden"
+              className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] bg-white p-1.5 shadow-2xl border-4 border-white overflow-hidden flex-shrink-0"
               whileHover={{ scale: 1.05, rotate: 2 }}
               transition={{ type: "spring", stiffness: 200, damping: 25 }}
             >
               <img src={salonData.branding?.logoUrl || '/api/placeholder/150/150'} className="w-full h-full object-cover rounded-[2rem]" alt="logo" />
             </motion.div>
-            <div className="mb-2">
+            <div className="flex-1 flex flex-col items-center md:items-start">
               <motion.div
-                className="flex items-center justify-center md:justify-start gap-2"
+                className="flex items-center justify-center md:justify-start gap-2 flex-wrap"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.8, delay: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
               >
-                <h1 className="text-3xl font-black text-slate-900 tracking-tight">{salonData.salonName}</h1>
-                {salonData.isVerified && <ShieldCheck className="text-blue-500 fill-blue-50" size={24} />}
+                <h1 className="text-3xl font-black text-[#1a1a1a] tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>{salonData.salonName}</h1>
+                {salonData.isVerified && <ShieldCheck className="text-blue-600 fill-blue-50" size={24} />}
+                <span className="px-3 py-1 bg-emerald-50/90 backdrop-blur-sm rounded-full text-[10px] font-black uppercase text-emerald-700 border border-emerald-200 shadow-sm flex items-center gap-2">
+                  <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                  {salonData.status}
+                </span>
               </motion.div>
-              <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">{salonData.salonType} • {salonData.pricing?.priceRange}</p>
+              <p className="text-xs font-bold text-[#4b5563] uppercase tracking-[0.1em] mt-2">UNISEX • <span className="text-[#1a1a1a] font-black">₹299–1,200</span></p>
             </div>
-          </motion.div>
-          <motion.div
-            className="flex items-center gap-3 mb-2"
-            initial={{ x: 50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-          >
-            <motion.button
-              onClick={() => setIsEditModalOpen(true)}
-              className="flex items-center gap-2 bg-[#1E4D8C] text-white px-8 py-4 rounded-2xl font-bold shadow-xl hover:bg-[#163a6b] transition-all active:scale-95"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 200, damping: 20 }}
-            >
-              <Edit3 size={18} /> Edit Profile
-            </motion.button>
-          </motion.div>
+          </div>
         </motion.div>
 
         {/* MAIN DASHBOARD CONTENT */}
         <motion.div
-          className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8"
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-12"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
         >
+          {/* Column 1: Quick Stats */}
           <motion.div
-            className="space-y-6"
+            className="bg-white border border-gray-100 rounded-2xl p-6 relative overflow-hidden shadow-sm flex flex-col flex-1"
+            style={{ boxShadow: "rgba(0,0,0,0.02) 0 1px 3px" }}
+            whileHover={{ scale: 1.01 }}
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
           >
-            <motion.div
-              className="bg-white rounded-[2rem] border border-slate-100 p-8 shadow-sm"
-              whileHover={{ scale: 1.02, y: -5 }}
-              transition={{ type: "spring", stiffness: 200, damping: 25 }}
-            >
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">About & Contact</h3>
-              <p className="text-sm text-slate-600 font-medium leading-relaxed mb-6">{salonData.description || "No description provided."}</p>
-              <div className="space-y-5 border-t pt-6">
-                <InfoRow icon={UserCircle} label="Owner" value={salonData.ownerName} />
-                <InfoRow icon={Mail} label="Email" value={salonData.email} />
-                <InfoRow icon={Phone} label="Primary Phone" value={salonData.primaryPhone} />
-              </div>
-            </motion.div>
-
-            <motion.div
-              className="bg-[#1E4D8C] rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden"
-              whileHover={{ scale: 1.05, rotate: 1 }}
-              transition={{ type: "spring", stiffness: 200, damping: 25 }}
-            >
-              <div className="absolute -right-4 -bottom-4 opacity-10 rotate-12"><Star size={120} fill="white" /></div>
-              <div className="absolute top-4 right-4"><AnimatedZap /></div>
-              <p className="text-[10px] font-black uppercase opacity-60 mb-4">Performance</p>
-              <motion.p
-                className="text-4xl font-black"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 150, damping: 20, delay: 0.7 }}
-              >
-                {salonData.ratings?.average || 0}
-              </motion.p>
-              <div className="mt-3">
-                <AnimatedRatingStars rating={salonData.ratings?.average || 0} />
-              </div>
-              <p className="text-xs font-bold opacity-60 mt-2 uppercase tracking-widest">Based on {salonData.ratings?.reviewsCount || 0} Reviews</p>
-            </motion.div>
+            <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-6" style={{ fontFamily: "'Playfair Display', serif" }}>Quick Stats</h3>
+            <div className="space-y-0">
+              <InfoRow icon={UserCircle} label="Owner" value={salonData.ownerName} />
+              <InfoRow icon={Mail} label="Email" value={salonData.email} />
+              <InfoRow icon={Phone} label="Primary Phone" value={salonData.primaryPhone} />
+            </div>
           </motion.div>
 
+          {/* Column 2: Operational Hours */}
           <motion.div
-            className="lg:col-span-2 space-y-6"
-            initial={{ opacity: 0, x: 30 }}
+            className="bg-white border border-gray-100 rounded-2xl p-3 relative overflow-hidden shadow-sm flex flex-col flex-1"
+            style={{ boxShadow: "rgba(0,0,0,0.02) 0 1px 3px" }}
+            whileHover={{ scale: 1.01 }}
+            initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
           >
-            <motion.div
-              className="bg-white rounded-[2rem] border border-slate-100 p-8 shadow-sm relative overflow-hidden"
-              whileHover={{ scale: 1.01, y: -3 }}
-              transition={{ type: "spring", stiffness: 200, damping: 25 }}
-            >
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+            {salonData.timing?.weeklyOff?.length > 0 && (
+              <div className="absolute top-4 right-4">
+                <span className="px-2 py-1 text-[10px] font-bold text-gray-500 border border-gray-200 rounded-md uppercase tracking-wider" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  Off: {salonData.timing.weeklyOff[0]}
+                </span>
+              </div>
+            )}
+            <h3 className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3" style={{ fontFamily: "'Playfair Display', serif" }}>Operational Hours</h3>
+            <div className="flex flex-col space-y-2">
+              <div>
+                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Opens</p>
+                <p className="text-sm font-bold text-[#1a1a1a]">{formatTime(salonData.timing?.openingTime) || '--:--'}</p>
+              </div>
+              <div>
+                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Closes</p>
+                <p className="text-sm font-bold text-[#1a1a1a]">{formatTime(salonData.timing?.closingTime) || '--:--'}</p>
+              </div>
+              <div>
+                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Current Status</p>
+                {isSalonOpen ? (
+                  <p className="text-sm font-bold text-emerald-700 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-pulse" />
+                    Open Now
+                  </p>
+                ) : (
+                  <span className="inline-block px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full shadow-lg shadow-red-500/50">
+                    Closed Now
+                  </span>
+                )}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Column 3: Expertise */}
+          <motion.div
+            className="bg-white border border-gray-100 rounded-2xl p-6 relative overflow-hidden shadow-sm flex flex-col flex-1"
+            style={{ boxShadow: "rgba(0,0,0,0.02) 0 1px 3px" }}
+            whileHover={{ scale: 1.01 }}
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.7, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-6" style={{ fontFamily: "'Playfair Display', serif" }}>Expertise</h3>
+            <div className="flex flex-wrap gap-2">
+              {salonData.expertise?.map((ex: string, idx: number) => (
+                <motion.span
+                  key={`${ex}-${idx}`}
+                  className="px-4 py-2 rounded-lg text-[10px] font-black border uppercase tracking-tighter cursor-default bg-[#F5F5F0] text-[#1a1a1a] border-gray-200"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                >
+                  {ex}
+                </motion.span>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* OPERATIONS & PROGRESS CARD - Full Width */}
+          <motion.div
+            className="lg:col-span-3 bg-white border border-gray-100 rounded-2xl p-8 shadow-sm relative overflow-hidden"
+            style={{ boxShadow: "rgba(0,0,0,0.02) 0 1px 3px" }}
+            whileHover={{ scale: 1.01 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <div className="flex items-center gap-4 mb-6">
+              <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-2" style={{ fontFamily: "'Playfair Display', serif" }}>
                 <motion.div
                   animate={{ rotate: [0, 10, -10, 0] }}
                   transition={{ duration: 3, repeat: Infinity, ease: [0.25, 0.1, 0.25, 1] }}
                 >
                   <Clock size={16} />
                 </motion.div>
-                Operations & Weekly Off
+                Day Timeline
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <TimeBox label="Opens" value={salonData.timing?.openingTime} />
-                <TimeBox label="Closes" value={salonData.timing?.closingTime} />
-                <TimeBox label="Lunch In" value={salonData.timing?.lunchBreak?.start} />
-                <TimeBox label="Lunch Out" value={salonData.timing?.lunchBreak?.end} />
+              
+              {/* Status Text - Bold Serif Next to Header */}
+              <p className="text-xs font-bold text-gray-600" style={{ fontFamily: "'Playfair Display', serif" }}>
+                {getStatusBadge()}
+              </p>
+            </div>
+
+            {/* Day Timeline Graph */}
+            <div className="mb-4">
+              {/* Timeline Track - 8px Height */}
+              <div 
+                className="relative h-2 bg-gray-100 rounded-full overflow-hidden backdrop-blur-sm cursor-crosshair"
+                style={{ boxShadow: "inset 0 1px 3px rgba(0,0,0,0.06)" }}
+                onMouseMove={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = e.clientX - rect.left;
+                  const percentage = (x / rect.width) * 100;
+                  const totalMinutes = 14 * 60; // 07:00 to 21:00 = 14 hours
+                  const minutesFromStart = (percentage / 100) * totalMinutes;
+                  const hours = Math.floor(minutesFromStart / 60) + 7;
+                  const minutes = Math.floor(minutesFromStart % 60);
+                  const displayTime = new Date();
+                  displayTime.setHours(hours, minutes);
+                  setHoverTime(displayTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }));
+                  setHoverPosition(percentage);
+                }}
+                onMouseLeave={() => {
+                  setHoverTime(null);
+                }}
+              >
+                {/* Past Time Fill - Soft Metallic Gradient */}
+                <div 
+                  className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#D4AF37] to-emerald-500 rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${Math.max(0, currentTimePosition)}%` }}
+                />
+                
+                {/* Lunch Zone - Semi-transparent Amber Block */}
+                <div 
+                  className="absolute top-0 h-full bg-amber-400/40 hover:bg-amber-400/60 transition-colors"
+                  style={{ 
+                    left: `${lunchStartPosition}%`, 
+                    width: `${lunchWidth}%` 
+                  }}
+                >
+                  {/* Lunch Zone Hover Tooltip */}
+                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1 bg-gray-900 text-white text-[10px] font-bold rounded-full whitespace-nowrap opacity-0 hover:opacity-100 transition-opacity shadow-lg pointer-events-none">
+                    Lunch Break: 12:30 PM - 01:00 PM
+                  </div>
+                </div>
+                
+                {/* Live Needle - Thin Vertical Line with Pulse */}
+                <div 
+                  className="absolute top-0 h-full w-0.5 bg-gray-900 transition-all duration-500 ease-out"
+                  style={{ left: `${Math.max(0, Math.min(100, currentTimePosition))}%` }}
+                >
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-gray-900 rounded-full animate-ping opacity-75" />
+                </div>
+                
+                {/* Needle Tooltip - Bold Current Time */}
+                <div 
+                  className="absolute -top-7 transition-all duration-500 ease-out"
+                  style={{ left: `${Math.max(0, Math.min(100, currentTimePosition))}%`, transform: 'translateX(-50%)' }}
+                >
+                  <div className="px-3 py-1 bg-gray-900 text-white text-xs font-black rounded-full whitespace-nowrap shadow-lg">
+                    {currentTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                  </div>
+                </div>
+
+                {/* Hover Time Tooltip - Follows Cursor */}
+                {hoverTime && (
+                  <div 
+                    className="absolute -top-7 transition-all duration-75 ease-out pointer-events-none"
+                    style={{ left: `${hoverPosition}%`, transform: 'translateX(-50%)' }}
+                  >
+                    <div className="px-2 py-1 bg-gray-800 text-white text-[10px] font-bold rounded-full whitespace-nowrap shadow-lg">
+                      {hoverTime}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <motion.div
-                className="p-4 bg-slate-50 rounded-2xl border border-slate-100/50 flex flex-wrap gap-2 items-center"
-                whileHover={{ scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 200, damping: 25 }}
-              >
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">Weekly Off:</p>
-                {salonData.timing?.weeklyOff?.length > 0 ? (
-                  salonData.timing.weeklyOff.map((day: string) => (
-                    <motion.span
-                      key={day}
-                      className="px-3 py-1 bg-[#1E4D8C] text-white rounded-lg text-[10px] font-black uppercase"
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                    >
-                      {day}
-                    </motion.span>
-                  ))
-                ) : <span className="text-xs font-bold text-slate-400">Open 7 days a week</span>}
-              </motion.div>
-            </motion.div>
+              {/* Time Labels - Bold but Small */}
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-xs font-bold text-gray-400 tracking-widest" style={{ fontFamily: "'Playfair Display', serif" }}>07:00 AM</span>
+                <span className="text-xs font-bold text-gray-400 tracking-widest" style={{ fontFamily: "'Playfair Display', serif" }}>09:00 PM</span>
+              </div>
+            </div>
+          </motion.div>
 
-            <motion.div
-              className="grid grid-cols-1 md:grid-cols-2 gap-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.7, ease: [0.25, 0.1, 0.25, 1] }}
-            >
-              <motion.div
-                className="bg-white rounded-[2rem] border border-slate-100 p-8 shadow-sm"
-                whileHover={{ scale: 1.02, y: -5 }}
-                transition={{ type: "spring", stiffness: 200, damping: 25 }}
-              >
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 font-sans">Location</h3>
-                <p className="text-sm font-bold text-slate-700 leading-relaxed font-sans mb-4">
-                  {salonData.address?.street},<br />
-                  {salonData.address?.city}, {salonData.address?.state}<br />
-                  {salonData.address?.pincode}
-                </p>
+          {/* PERFORMANCE CARD - Full Width */}
+          <motion.div
+            className="lg:col-span-3 bg-white border border-gray-100 rounded-2xl p-8 text-[#1a1a1a] shadow-sm relative overflow-hidden"
+            style={{ boxShadow: "rgba(0,0,0,0.02) 0 1px 3px" }}
+            whileHover={{ scale: 1.01 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.9, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <p className="text-[10px] font-black text-gray-500 uppercase mb-6" style={{ fontFamily: "'Playfair Display', serif" }}>Performance</p>
+            
+            <div className="flex flex-col md:flex-row gap-8">
+              {/* Left Side: Rating and Distribution */}
+              <div className="md:w-1/3 flex-shrink-0">
+                <motion.p
+                  className="text-5xl font-black mb-3"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 150, damping: 20, delay: 0.7 }}
+                  style={{ fontFamily: "'Playfair Display', serif" }}
+                >
+                  {salonData.ratings?.average || 0}
+                </motion.p>
+                <div className="mb-4">
+                  <AnimatedRatingStars rating={salonData.ratings?.average || 0} />
+                </div>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">Based on {salonData.ratings?.reviewsCount || 0} Reviews</p>
+                
+                {/* Rating Distribution Bar Graph */}
+                <div className="space-y-2">
+                  {ratingDistribution ? (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-gray-500 w-8">5★</span>
+                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div className="h-full bg-[#D4AF37] rounded-full" style={{ width: `${((ratingDistribution['5'] || 0) / (salonData.ratings?.reviewsCount || 1)) * 100}%` }} />
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-500 w-8">{Math.round(((ratingDistribution['5'] || 0) / (salonData.ratings?.reviewsCount || 1)) * 100)}%</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-gray-500 w-8">4★</span>
+                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div className="h-full bg-[#D4AF37] rounded-full" style={{ width: `${((ratingDistribution['4'] || 0) / (salonData.ratings?.reviewsCount || 1)) * 100}%` }} />
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-500 w-8">{Math.round(((ratingDistribution['4'] || 0) / (salonData.ratings?.reviewsCount || 1)) * 100)}%</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-gray-500 w-8">3★</span>
+                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div className="h-full bg-[#D4AF37] rounded-full" style={{ width: `${((ratingDistribution['3'] || 0) / (salonData.ratings?.reviewsCount || 1)) * 100}%` }} />
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-500 w-8">{Math.round(((ratingDistribution['3'] || 0) / (salonData.ratings?.reviewsCount || 1)) * 100)}%</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-gray-500 w-8">2★</span>
+                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div className="h-full bg-[#D4AF37] rounded-full" style={{ width: `${((ratingDistribution['2'] || 0) / (salonData.ratings?.reviewsCount || 1)) * 100}%` }} />
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-500 w-8">{Math.round(((ratingDistribution['2'] || 0) / (salonData.ratings?.reviewsCount || 1)) * 100)}%</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-gray-500 w-8">1★</span>
+                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div className="h-full bg-[#D4AF37] rounded-full" style={{ width: `${((ratingDistribution['1'] || 0) / (salonData.ratings?.reviewsCount || 1)) * 100}%` }} />
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-500 w-8">{Math.round(((ratingDistribution['1'] || 0) / (salonData.ratings?.reviewsCount || 1)) * 100)}%</span>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-[10px] text-gray-400 italic">No rating data available</p>
+                  )}
+                </div>
+              </div>
+              
+              {/* Vertical Separator */}
+              <div className="hidden md:block border-l border-gray-200" />
+              
+              {/* Right Side: User Reviews */}
+              <div className="md:w-2/3 flex-shrink-0">
+                <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>User Reviews</h4>
+                
+                {/* Scrollable Reviews Container */}
+                <div className="relative h-64 overflow-hidden">
+                  {/* Top Fade Effect */}
+                  <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-white to-transparent z-10 pointer-events-none" />
+                  
+                  {/* Scrollable Content */}
+                  <div className="h-full overflow-y-auto scrollbar-hide px-2">
+                    {reviews && reviews.length > 0 ? (
+                      reviews.map((review: any, idx: number) => {
+                        const isExpanded = expandedReviews.has(idx);
+                        const reviewText = review.reviewText || 'No review text provided';
+                        const shouldTruncate = reviewText.length > 150;
+                        const displayText = shouldTruncate && !isExpanded 
+                          ? reviewText.substring(0, 150) + '...' 
+                          : reviewText;
+                        
+                        return (
+                          <div key={review.id || idx} className="mb-4 pb-4 border-b border-gray-100 last:border-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <p className="text-sm font-bold text-[#1a1a1a]" style={{ fontFamily: "'Playfair Display', serif" }}>
+                                {review.userName || 'Anonymous'}
+                              </p>
+                              <Check size={12} className="text-[#D4AF37]" />
+                            </div>
+                            <div className="flex items-center gap-1 mb-2">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  size={12}
+                                  className={i < review.rating ? "text-[#D4AF37] fill-[#D4AF37]" : "text-gray-300"}
+                                />
+                              ))}
+                            </div>
+                            <p className="text-sm text-gray-600 italic leading-relaxed break-words" style={{ fontFamily: "'Inter', sans-serif" }}>
+                              {displayText}
+                            </p>
+                            {shouldTruncate && (
+                              <button
+                                onClick={() => toggleReviewExpansion(idx)}
+                                className="text-xs font-bold text-[#D4AF37] mt-2 hover:underline cursor-pointer flex items-center gap-1 transition-all"
+                                style={{ fontFamily: "'Inter', sans-serif" }}
+                              >
+                                {isExpanded ? 'See less' : 'See more'}
+                                {!isExpanded && <ChevronRight size={12} className="text-[#D4AF37]" />}
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <p className="text-sm text-gray-400 italic text-center leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>
+                          Customer feedback will appear here once submitted.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Bottom Fade Effect */}
+                  <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none" />
+                </div>
+              </div>
+            </div>
+          </motion.div>
 
-                {/* DISPLAY COORDINATES */}
-                <div className="pt-4 border-t border-slate-50 grid grid-cols-2 gap-4">
-                    <div>
-                        <p className="text-[9px] font-black text-slate-400 uppercase">Latitude</p>
-                        <p className="text-xs font-bold text-[#1E4D8C] font-mono">{salonData.location?.latitude || '0.0000'}</p>
-                    </div>
-                    <div>
-                        <p className="text-[9px] font-black text-slate-400 uppercase">Longitude</p>
-                        <p className="text-xs font-bold text-[#1E4D8C] font-mono">{salonData.location?.longitude || '0.0000'}</p>
-                    </div>
+          {/* LOCATION CARD - Full Width */}
+          <motion.div
+            className="lg:col-span-3 bg-white border border-gray-100 rounded-2xl p-8 relative overflow-hidden shadow-sm"
+            style={{ boxShadow: "rgba(0,0,0,0.02) 0 1px 3px" }}
+            whileHover={{ scale: 1.01 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.0, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-6 font-sans" style={{ fontFamily: "'Playfair Display', serif" }}>Location</h3>
+            <p className="text-sm font-bold text-[#1a1a1a] leading-relaxed font-sans mb-6">
+              {salonData.address?.street},<br />
+              {salonData.address?.city}, {salonData.address?.state}<br />
+              {salonData.address?.pincode}
+            </p>
+
+            {/* DISPLAY COORDINATES */}
+            <div className="pt-6 border-t border-gray-100 grid grid-cols-2 gap-6">
+                <div>
+                    <p className="text-[9px] font-black text-gray-500 uppercase mb-2">Latitude</p>
+                    <p className="text-xs font-bold text-blue-600 font-mono">{salonData.location?.latitude || '0.0000'}</p>
                 </div>
-              </motion.div>
-              <motion.div
-                className="bg-white rounded-[2rem] border border-slate-100 p-8 shadow-sm relative overflow-hidden"
-                whileHover={{ scale: 1.02, y: -5 }}
-                transition={{ type: "spring", stiffness: 200, damping: 25 }}
-              >
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 font-sans">Expertise</h3>
-                <div className="flex flex-wrap gap-2">
-                  {salonData.expertise?.map((ex: string, idx: number) => (
-                    <motion.span
-                      key={`${ex}-${idx}`}
-                      className="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-[10px] font-black border border-slate-100 uppercase tracking-tighter font-sans cursor-default"
-                      whileHover={{
-                        scale: 1.1,
-                        rotate: 5,
-                        backgroundColor: "#1E4D8C",
-                        color: "white",
-                        borderColor: "#1E4D8C"
-                      }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 200,
-                        damping: 20
-                      }}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                    >
-                      {ex}
-                    </motion.span>
-                  ))}
+                <div>
+                    <p className="text-[9px] font-black text-gray-500 uppercase mb-2">Longitude</p>
+                    <p className="text-xs font-bold text-blue-600 font-mono">{salonData.location?.longitude || '0.0000'}</p>
                 </div>
-              </motion.div>
-            </motion.div>
+            </div>
           </motion.div>
         </motion.div>
       </div>
@@ -543,25 +917,25 @@ const DashboardProfile: React.FC = () => {
 
       {isBlockModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setIsBlockModalOpen(false)} />
-          <div className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-md" onClick={() => setIsBlockModalOpen(false)} />
+          <div className="relative w-full max-w-md bg-white border border-gray-200 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-8">
               <div className="flex items-center gap-4 mb-6">
-                <div className={`p-4 rounded-2xl ${salonData.isBlocked ? 'bg-red-50' : 'bg-green-50'}`}>
-                  <AlertTriangle size={24} className={salonData.isBlocked ? 'text-red-600' : 'text-green-600'} />
+                <div className={`p-4 rounded-2xl relative ${salonData.isBlocked ? 'bg-red-50' : 'bg-emerald-50'}`}>
+                  <AlertTriangle size={24} className={salonData.isBlocked ? 'text-red-600' : 'text-emerald-600'} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-slate-900">
+                  <h3 className="text-xl font-black text-[#1a1a1a]" style={{ fontFamily: "'Playfair Display', serif" }}>
                     {salonData.isBlocked ? 'Turn Visibility On' : 'Turn Visibility Off'}
                   </h3>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
+                  <p className="text-xs font-bold text-[#4b5563] uppercase tracking-widest mt-1">
                     {salonData.isBlocked ? 'Make your salon visible to users' : 'Hide your salon from users'}
                   </p>
                 </div>
               </div>
 
-              <div className="bg-slate-50 rounded-2xl p-6 mb-6 border border-slate-100">
-                <p className="text-sm font-bold text-slate-700 leading-relaxed">
+              <div className="bg-gray-50 rounded-2xl p-6 mb-6 border border-gray-200">
+                <p className="text-sm font-bold text-[#1a1a1a] leading-relaxed">
                   {salonData.isBlocked
                     ? 'Turning visibility on will make your salon visible to all users on the platform. Users will be able to search, view, and book appointments at your salon.'
                     : 'Turning visibility off will make your salon invisible to users. Users will not be able to search, view, or book appointments at your salon until you turn visibility on again.'
@@ -572,17 +946,17 @@ const DashboardProfile: React.FC = () => {
               <div className="flex gap-3">
                 <button
                   onClick={() => setIsBlockModalOpen(false)}
-                  className="flex-1 h-14 rounded-2xl bg-slate-50 text-slate-400 font-bold hover:bg-slate-100 transition-all font-sans uppercase text-xs tracking-widest"
+                  className="flex-1 h-14 rounded-2xl bg-gray-100 text-[#4b5563] font-bold hover:bg-gray-200 transition-all font-sans uppercase text-xs tracking-widest border border-gray-200"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleBlockToggle}
                   disabled={isBlocking}
-                  className={`flex-1 h-14 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-2 font-sans uppercase text-xs tracking-widest transition-all ${
+                  className={`flex-1 h-14 rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2 font-sans uppercase text-xs tracking-widest transition-all border ${
                     salonData.isBlocked
-                      ? 'bg-green-600 text-white hover:bg-green-700 shadow-green-900/20'
-                      : 'bg-red-600 text-white hover:bg-red-700 shadow-red-900/20'
+                      ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-900/20 border-emerald-500'
+                      : 'bg-red-600 text-white hover:bg-red-700 shadow-red-900/20 border-red-500'
                   } ${isBlocking ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   {isBlocking ? (
@@ -1001,19 +1375,19 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
 
 // Helpers
 const InfoRow = ({ icon: Icon, label, value }: any) => (
-  <div className="flex items-center gap-4">
-    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400"><Icon size={18} /></div>
-    <div>
-      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</p>
-      <p className="text-sm font-bold text-slate-700 truncate max-w-[200px]">{value || 'N/A'}</p>
+  <div className="flex items-center gap-4 py-3 border-b border-gray-50 last:border-0">
+    <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-[#4b5563] flex-shrink-0"><Icon size={18} /></div>
+    <div className="flex-1 min-w-0">
+      <p className="text-[10px] font-black text-[#4b5563] uppercase tracking-widest mb-1">{label}</p>
+      <p className="text-sm font-bold text-[#1a1a1a] truncate">{value || 'N/A'}</p>
     </div>
   </div>
 );
 
 const TimeBox = ({ label, value }: any) => (
-  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100/50">
-    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
-    <p className="text-sm font-black text-slate-900">{value || '--:--'}</p>
+  <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200">
+    <p className="text-[10px] font-black text-[#4b5563] uppercase tracking-widest mb-2">{label}</p>
+    <p className="text-sm font-bold text-[#1a1a1a]">{formatTime(value) || '--:--'}</p>
   </div>
 );
 

@@ -7,6 +7,7 @@ import { useDispatch } from "react-redux";
 import { logoutUser } from "../API/APIs";
 import { useApi } from "../API/SalonsAPIs/ALLSalonAPI";
 import Config from "../configs/config";
+import { motion } from "framer-motion";
 
 const DashboardLayout: React.FC = () => {
   const [open, setOpen] = useState(false);
@@ -111,11 +112,27 @@ const DashboardLayout: React.FC = () => {
                 title={salonData.isBlocked ? 'Turn Salon Online' : 'Turn Salon Offline'}
               >
                 <Power size={16} />
-                <span className="hidden md:inline">{salonData.isBlocked ? 'Salon Offline' : 'Salon Online'}</span>
+                <span className="hidden md:inline flex items-center gap-2">
+                  {salonData.isBlocked ? 'Salon Offline' : 'Salon Online'}
+                  {!salonData.isBlocked && (
+                    <motion.div
+                      className="w-2 h-2 bg-emerald-500 rounded-full"
+                      animate={{
+                        scale: [1, 1.2, 1],
+                        opacity: [1, 0.7, 1],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    />
+                  )}
+                </span>
               </button>
             )}
             
-            <div className="ml-4">
+            <div className="ml-4 flex items-center">
               <NotificationCenter />
             </div>
             
@@ -124,8 +141,8 @@ const DashboardLayout: React.FC = () => {
               className="flex items-center gap-2 px-3 py-2 hover:bg-red-50 rounded-md transition-colors group"
               title="Logout"
             >
-              <LogOut className="w-5 h-5 text-red-600 group-hover:text-red-700 transition-colors" />
-              <span className="hidden md:inline text-sm font-medium text-red-600">Logout</span>
+              <LogOut className="w-4 h-4 text-red-600 group-hover:text-red-700 transition-colors" />
+              <span className="hidden md:inline text-sm font-bold text-red-600" style={{ fontFamily: "'Playfair Display', serif" }}>Logout</span>
             </button>
           </div>
         </header>
