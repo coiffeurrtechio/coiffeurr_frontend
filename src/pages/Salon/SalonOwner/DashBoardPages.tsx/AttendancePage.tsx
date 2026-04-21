@@ -17,7 +17,8 @@ import {
   Save,
   Download,
   Mail,
-  X
+  X,
+  Check
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSalonApi } from '../../../../API/Salon_Owner_API/SalonOwnerAPI';
@@ -577,13 +578,37 @@ const AttendancePage: React.FC = () => {
     <div className="min-h-screen p-6 animate-in fade-in duration-500" style={{ fontFamily: 'Inter, sans-serif', backgroundColor: 'var(--soft-ivory)' }}>
       <DashboardLoader isVisible={loading || saving} />
 
-      {/* Success Notification */}
+      {/* Success Notification - Screen Popup with Enhanced Animations */}
       {showSuccessNotification && (
-        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right duration-300">
-          <div className="bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3">
-            <CheckCircle size={20} />
-            <span className="font-semibold">{t('attendance.attendanceSaved')}</span>
+        <div className="fixed inset-0 flex items-center justify-center z-50 animate-in fade-in duration-300">
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl px-8 py-6 border border-white/40 flex items-center gap-4 animate-in zoom-in-95 duration-300" style={{ animation: 'successPopup 0.5s ease-out' }}>
+            <div className="relative">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center animate-bounce" style={{ backgroundColor: '#10b981', animation: 'pulse 2s infinite' }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" style={{ color: '#FFFFFF', strokeDasharray: '30', strokeDashoffset: '30', animation: 'drawCheck 0.5s ease-out 0.1s forwards' }} />
+                </svg>
+              </div>
+              <div className="absolute inset-0 rounded-full animate-ping" style={{ backgroundColor: '#10b981', opacity: 0.3 }}></div>
+            </div>
+            <div>
+              <span className="font-bold text-lg" style={{ color: '#2C2C2C', fontFamily: 'Inter, sans-serif', animation: 'slideIn 0.3s ease-out 0.2s both' }}>{t('attendance.attendanceSaved')}</span>
+            </div>
           </div>
+          <style>{`
+            @keyframes successPopup {
+              0% { transform: scale(0.8); opacity: 0; }
+              50% { transform: scale(1.05); }
+              100% { transform: scale(1); opacity: 1; }
+            }
+            @keyframes drawCheck {
+              0% { stroke-dashoffset: 30; }
+              100% { stroke-dashoffset: 0; }
+            }
+            @keyframes slideIn {
+              0% { transform: translateX(-10px); opacity: 0; }
+              100% { transform: translateX(0); opacity: 1; }
+            }
+          `}</style>
         </div>
       )}
 
@@ -836,153 +861,114 @@ const AttendancePage: React.FC = () => {
         </div>
       )}
 
+      {/* Header */}
+      <div className="flex flex-col gap-1 pb-4" style={{ borderBottom: '1px solid var(--ghost-row-line)' }}>
+        <h1 className="font-semibold typography-display" style={{ color: 'var(--deep-charcoal)', fontSize: '24px', letterSpacing: '0.05em', fontFamily: 'Playfair Display, serif' }}>Floor Status</h1>
+        <p className="text-sm font-normal tracking-[0.2em] typography-label-light" style={{ color: '#666' }}>Monitoring the rhythm of your elite crew</p>
+      </div>
+
       {/* View Tabs */}
       <div className="flex items-center gap-4 pb-4" style={{ borderBottom: '1px solid var(--ghost-row-line)' }}>
         <button
           onClick={() => handleViewModeChange('daily')}
-          className={`px-6 py-3 text-sm font-bold border-b-3 transition-all ${viewMode === 'daily' ? 'text-[#D4AF37]' : 'text-gray-500 hover:text-gray-700'}`}
+          className={`px-6 py-3 text-sm font-semibold border-b-3 transition-all ${viewMode === 'daily' ? 'text-[#D4AF37]' : 'text-gray-500 hover:text-gray-700'}`}
           style={{
             borderBottom: viewMode === 'daily' ? '3px solid #D4AF37' : '3px solid transparent',
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
+            letterSpacing: '0.15em',
             fontFamily: 'Inter, sans-serif'
           }}
         >
-          {t('attendance.dailyAttendance')}
+          Daily Attendance
         </button>
         <button
           onClick={() => handleViewModeChange('monthly')}
-          className={`px-6 py-3 text-sm font-bold border-b-3 transition-all ${viewMode === 'monthly' ? 'text-[#D4AF37]' : 'text-gray-500 hover:text-gray-700'}`}
+          className={`px-6 py-3 text-sm font-semibold border-b-3 transition-all ${viewMode === 'monthly' ? 'text-[#D4AF37]' : 'text-gray-500 hover:text-gray-700'}`}
           style={{
             borderBottom: viewMode === 'monthly' ? '3px solid #D4AF37' : '3px solid transparent',
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
+            letterSpacing: '0.15em',
             fontFamily: 'Inter, sans-serif'
           }}
         >
-          {t('attendance.monthlyView')}
+          Monthly View
         </button>
       </div>
 
       {/* Date Scroller - Daily View Only */}
       {viewMode === 'daily' && (
-        <div className="flex items-center gap-4 py-4 overflow-x-auto transition-opacity duration-300" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', opacity: isChangingDate ? 0.5 : 1 }}>
-          <button
-            onClick={() => changeDate(-1)}
-            className="p-2 rounded-full transition-all hover:bg-gray-100"
-            style={{ color: '#2C2C2C' }}
-          >
-            <ChevronLeft size={20} />
-          </button>
-          
-          <div className="flex gap-3">
-            {Array.from({ length: 7 }, (_, i) => {
-              const date = new Date(selectedDate);
-              date.setDate(date.getDate() - 3 + i);
-              const isSelected = date.toDateString() === selectedDate.toDateString();
-              const isToday = date.toDateString() === new Date().toDateString();
-              
-              return (
-                <button
-                  key={i}
-                  onClick={() => handleDateChange(date.toISOString().split('T')[0])}
-                  className="flex flex-col items-center justify-center px-4 py-3 rounded-xl transition-all duration-300 hover:scale-105"
-                  style={{
-                    backgroundColor: isSelected ? '#D4AF37' : 'transparent',
-                    border: isSelected ? '2px solid #D4AF37' : '2px solid #E8E4DE',
-                    boxShadow: isSelected ? '0 4px 12px rgba(212, 175, 55, 0.3)' : 'none',
-                    minWidth: '60px',
-                    transform: isChangingDate ? 'scale(0.95)' : 'scale(1)'
-                  }}
-                >
-                  <span className="text-xs font-medium" style={{ 
-                    color: isSelected ? '#FFFFFF' : '#999',
-                    fontFamily: 'Inter, sans-serif',
-                    fontSize: '10px',
-                    letterSpacing: '0.05em'
-                  }}>
-                    {date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
-                  </span>
-                  <span className="text-lg font-bold" style={{ 
-                    color: isSelected ? '#FFFFFF' : '#2C2C2C',
-                    fontFamily: 'Playfair Display, serif',
-                    fontSize: '18px'
-                  }}>
-                    {date.getDate()}
-                  </span>
-                  {isToday && (
+        <div className="flex items-center justify-between gap-3 py-2 transition-opacity duration-300" style={{ opacity: isChangingDate ? 0.5 : 1 }}>
+          <div className="flex items-center gap-3 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <button
+              onClick={() => changeDate(-1)}
+              className="p-1 rounded-full transition-all hover:bg-gray-100"
+              style={{ color: '#2C2C2C' }}
+            >
+              <ChevronLeft size={16} />
+            </button>
+            
+            <div className="flex gap-2">
+              {Array.from({ length: 7 }, (_, i) => {
+                const date = new Date(selectedDate);
+                date.setDate(date.getDate() - 3 + i);
+                const isSelected = date.toDateString() === selectedDate.toDateString();
+                const isToday = date.toDateString() === new Date().toDateString();
+                
+                return (
+                  <button
+                    key={i}
+                    onClick={() => handleDateChange(date.toISOString().split('T')[0])}
+                    className="flex flex-col items-center justify-center px-2 py-2 rounded-lg transition-all duration-300 hover:scale-105"
+                    style={{
+                      backgroundColor: isSelected ? '#D4AF37' : 'transparent',
+                      border: isSelected ? '1.5px solid #D4AF37' : '1.5px solid #E8E4DE',
+                      boxShadow: isSelected ? '0 2px 8px rgba(212, 175, 55, 0.3)' : 'none',
+                      minWidth: '45px',
+                      transform: isChangingDate ? 'scale(0.95)' : 'scale(1)'
+                    }}
+                  >
                     <span className="text-xs font-medium" style={{ 
-                      color: isSelected ? '#FFFFFF' : '#D4AF37',
+                      color: isSelected ? '#FFFFFF' : '#999',
                       fontFamily: 'Inter, sans-serif',
-                      fontSize: '9px'
+                      fontSize: '8px',
+                      letterSpacing: '0.05em'
                     }}>
-                      Today
+                      {date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
                     </span>
-                  )}
-                </button>
-              );
-            })}
+                    <span className="text-base font-bold" style={{ 
+                      color: isSelected ? '#FFFFFF' : '#2C2C2C',
+                      fontFamily: 'Playfair Display, serif',
+                      fontSize: '14px'
+                    }}>
+                      {date.getDate()}
+                    </span>
+                    {isToday && (
+                      <span className="text-xs font-medium" style={{ 
+                        color: isSelected ? '#FFFFFF' : '#D4AF37',
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: '7px'
+                      }}>
+                        Today
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => changeDate(1)}
+              className="p-1 rounded-full transition-all hover:bg-gray-100"
+              style={{ color: '#2C2C2C' }}
+            >
+              <ChevronRight size={16} />
+            </button>
           </div>
 
-          <button
-            onClick={() => changeDate(1)}
-            className="p-2 rounded-full transition-all hover:bg-gray-100"
-            style={{ color: '#2C2C2C' }}
-          >
-            <ChevronRight size={20} />
-          </button>
-        </div>
-      )}
-
-      <div className="space-y-6">
-      {/* Daily View Content */}
-      {viewMode === 'daily' && (
-        <>
-          {/* Stats Overview - Floating Tiles */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
-            <StatPill
-              label={t('attendance.present')}
-              value={stats.present}
-              total={stats.total}
-              color="green"
-              icon={CheckCircle}
-            />
-            <StatPill
-              label={t('attendance.absent')}
-              value={stats.absent}
-              total={stats.total}
-              color="red"
-              icon={XCircle}
-            />
-            <StatPill
-              label={t('attendance.late')}
-              value={stats.late}
-              total={stats.total}
-              color="orange"
-              icon={Clock}
-            />
-            <StatPill
-              label={t('attendance.halfDay')}
-              value={stats.halfDay}
-              total={stats.total}
-              color="yellow"
-              icon={AlertCircle}
-            />
-            <StatPill
-              label={t('attendance.notMarked')}
-              value={stats.notMarked}
-              total={stats.total}
-              color="gray"
-              icon={MoreHorizontal}
-            />
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3">
+          {/* Action Buttons - Expanded in Header */}
+          <div className="flex items-center gap-3 flex-shrink-0">
             <button
               onClick={handleMarkAllPresent}
               disabled={loading || saving}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all active:scale-95 disabled:opacity-50"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold text-sm transition-all active:scale-95 disabled:opacity-50"
               style={{
                 backgroundColor: '#FFFFFF',
                 color: '#2C2C2C',
@@ -992,48 +978,59 @@ const AttendancePage: React.FC = () => {
                 textTransform: 'uppercase',
                 fontFamily: 'Inter, sans-serif'
               }}
+              title="Mark All Present"
             >
               <UserCheck size={16} />
-              Mark All Present
+              Mark All
             </button>
             <button
               onClick={saveAttendance}
               disabled={loading || saving}
-              className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-sm transition-all active:scale-95 disabled:opacity-50 relative overflow-hidden"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold text-sm transition-all active:scale-95 disabled:opacity-50 relative overflow-hidden"
               style={{
                 background: 'linear-gradient(135deg, #D4AF37 0%, #B8962E 50%, #D4AF37 100%)',
                 backgroundSize: '200% 200%',
                 color: '#FFFFFF',
-                boxShadow: '0 8px 24px rgba(212, 175, 55, 0.4)',
-                letterSpacing: '0.1em',
+                boxShadow: '0 4px 16px rgba(212, 175, 55, 0.3)',
+                letterSpacing: '0.05em',
                 textTransform: 'uppercase',
                 fontFamily: 'Inter, sans-serif',
                 animation: 'shimmer 3s ease-in-out infinite'
               }}
+              title="Save Attendance"
             >
-              <span className="relative z-10 flex items-center gap-2">
-                <Save size={16} />
-                {saving ? 'Saving...' : 'Save Attendance'}
+              <span className="relative z-10 flex items-center gap-1">
+                <Check size={16} />
+                Save
               </span>
             </button>
           </div>
+        </div>
+      )}
 
-          {/* Add shimmer animation */}
-          <style>{`
-            @keyframes shimmer {
-              0%, 100% { background-position: 0% 50%; }
-              50% { background-position: 100% 50%; }
-            }
-          `}</style>
+      {/* Add shimmer animation */}
+      <style>{`
+        @keyframes shimmer {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+      `}</style>
 
-          {/* Attendance Grid - Ghost Row Table */}
-          <div style={{
-            borderRadius: '16px',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
-            border: '1px solid #E8E4DE',
-            background: '#FFFFFF',
-            overflow: 'hidden'
-          }}>
+      <div className="space-y-4">
+      {/* Daily View Content */}
+      {viewMode === 'daily' && (
+        <div className="flex gap-4">
+          {/* Main Content Area (100%) */}
+          <div className="flex-1 space-y-4">
+
+            {/* Attendance Grid - Ghost Row Table */}
+            <div style={{
+              borderRadius: '16px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #E8E4DE',
+              background: '#FFFFFF',
+              overflow: 'hidden'
+            }}>
             <div className="p-6 flex justify-between items-center" style={{ borderBottom: '1px solid #E8E4DE' }}>
               <h3 className="flex items-center gap-2" style={{ 
                 fontFamily: 'Playfair Display, serif', 
@@ -1058,6 +1055,7 @@ const AttendancePage: React.FC = () => {
                     <th className="text-left" style={{ fontSize: '11px', color: '#999', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Inter, sans-serif', fontWeight: '600', padding: '16px' }}>{t('attendance.role')}</th>
                     <th className="text-left" style={{ fontSize: '11px', color: '#999', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Inter, sans-serif', fontWeight: '600', padding: '16px' }}>{t('attendance.email')}</th>
                     <th className="text-left" style={{ fontSize: '11px', color: '#999', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Inter, sans-serif', fontWeight: '600', padding: '16px' }}>{t('attendance.phone')}</th>
+                    <th className="text-left" style={{ fontSize: '11px', color: '#999', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Inter, sans-serif', fontWeight: '600', padding: '16px' }}>Last Action</th>
                     <th className="text-center" style={{ fontSize: '11px', color: '#999', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Inter, sans-serif', fontWeight: '600', padding: '16px' }}>{t('attendance.status')}</th>
                   </tr>
                 </thead>
@@ -1090,10 +1088,13 @@ const AttendancePage: React.FC = () => {
                           <td className="typography-label-light" style={{ fontSize: '14px', padding: '16px' }}>{staff.role}</td>
                           <td className="typography-label-light" style={{ fontSize: '14px', padding: '16px' }}>{staff.email}</td>
                           <td className="typography-label-light" style={{ fontSize: '14px', padding: '16px' }}>{staff.phone || '-'}</td>
+                          <td className="typography-label-light" style={{ fontSize: '12px', padding: '16px', color: '#999' }}>
+                            {currentStatus !== 'NOT_MARKED' ? 'Today' : '-'}
+                          </td>
                           <td style={{ padding: '16px' }}>
                             <div className="flex items-center justify-center">
-                              <div className="flex items-center gap-1 p-1 rounded-xl" style={{ backgroundColor: '#F7F5F2', border: '1px solid #E8E4DE' }}>
-                                {(['PRESENT', 'ABSENT', 'LATE', 'HALF_DAY'] as AttendanceStatus[]).map((status) => {
+                              <div className="flex items-center" style={{ backgroundColor: '#F7F5F2', border: '1px solid #E8E4DE', borderRadius: '8px', padding: '2px' }}>
+                                {(['PRESENT', 'ABSENT', 'LATE', 'HALF_DAY'] as AttendanceStatus[]).map((status, index) => {
                                   const isSelected = currentStatus === status;
                                   const statusColors: Record<string, { bg: string; icon: string }> = {
                                     PRESENT: { bg: '#10b981', icon: '#FFFFFF' },
@@ -1102,28 +1103,35 @@ const AttendancePage: React.FC = () => {
                                     HALF_DAY: { bg: '#8b5cf6', icon: '#FFFFFF' }
                                   };
                                   const colors = statusColors[status];
+                                  const isFirst = index === 0;
+                                  const isLast = index === 3;
                                   return (
-                                    <button
-                                      key={`${staff.staff_id}-${status}`}
-                                      onClick={() => markAttendance(staff.staff_id, status)}
-                                      className="flex items-center justify-center p-2 rounded-lg transition-all duration-200"
-                                      style={{
-                                        backgroundColor: isSelected ? colors.bg : 'transparent',
-                                        opacity: isSelected ? 1 : 0.5,
-                                        transform: isSelected ? 'scale(1.1)' : 'scale(1)'
-                                      }}
-                                      title={getStatusLabel(status)}
-                                    >
-                                      {isSelected ? (
-                                        <div style={{ color: colors.icon }}>
-                                          {getStatusIcon(status)}
-                                        </div>
-                                      ) : (
-                                        <div style={{ color: '#2C2C2C' }}>
-                                          {getStatusIcon(status)}
-                                        </div>
-                                      )}
-                                    </button>
+                                    <div key={`${staff.staff_id}-${status}`} className="relative group">
+                                      <button
+                                        onClick={() => markAttendance(staff.staff_id, status)}
+                                        className="flex items-center justify-center p-1.5 transition-all duration-200"
+                                        style={{
+                                          backgroundColor: isSelected ? colors.bg : 'transparent',
+                                          opacity: isSelected ? 1 : 0.4,
+                                          borderRadius: isFirst ? '6px 0 0 6px' : isLast ? '0 6px 6px 0' : '0',
+                                          marginLeft: isFirst ? '0' : '1px'
+                                        }}
+                                      >
+                                        {isSelected ? (
+                                          <div style={{ color: colors.icon }}>
+                                            {getStatusIcon(status)}
+                                          </div>
+                                        ) : (
+                                          <div style={{ color: '#2C2C2C' }}>
+                                            {getStatusIcon(status)}
+                                          </div>
+                                        )}
+                                      </button>
+                                      {/* Tooltip */}
+                                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-[10px] font-medium rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10" style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '0.05em' }}>
+                                        {getStatusLabel(status)}
+                                      </div>
+                                    </div>
                                   );
                                 })}
                               </div>
@@ -1170,7 +1178,8 @@ const AttendancePage: React.FC = () => {
               );
             })}
           </div>
-        </>
+          </div>
+        </div>
       )}
 
       {/* Monthly View Content */}
@@ -1264,39 +1273,37 @@ const MonthlyCalendarView: React.FC<MonthlyCalendarViewProps> = ({
       background: 'linear-gradient(135deg, #FFFFFF 0%, #F7F5F2 100%)',
       overflow: 'hidden'
     }}>
-      <div className="p-5 flex items-center gap-4" style={{ borderBottom: '1px solid var(--ghost-row-line)' }}>
+      <div className="p-4 flex items-center gap-3" style={{ borderBottom: '1px solid #E8E4DE' }}>
         {/* Month Navigator */}
-        <div className="flex items-center rounded-xl" style={{ 
-          backgroundColor: 'var(--light-greige)', 
-          border: '1px solid var(--ghost-row-line)',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
-        }}>
+        <div className="flex items-center gap-2">
           <button
             onClick={() => changeMonth(-1)}
-            className="p-2.5 hover:bg-gray-50 rounded-l-xl transition-colors"
+            className="p-1 rounded-full transition-all hover:bg-gray-100"
+            style={{ color: '#2C2C2C' }}
           >
-            <ChevronLeft size={20} style={{ color: 'var(--deep-charcoal)' }} />
+            <ChevronLeft size={16} />
           </button>
-          <div className="px-5 py-2.5 flex items-center gap-2 border-x" style={{ borderColor: 'var(--ghost-row-line)' }}>
-            <span className="typography-label min-w-[180px] text-center font-bold" style={{ fontSize: '14px', color: 'var(--deep-charcoal)', letterSpacing: '0.02em' }}>
+          <div className="px-3 py-1.5 rounded-lg" style={{ backgroundColor: '#F7F5F2', border: '1px solid #E8E4DE' }}>
+            <span className="font-bold" style={{ fontSize: '13px', color: '#2C2C2C', letterSpacing: '0.02em', fontFamily: 'Inter, sans-serif' }}>
               {formatMonthYear(currentMonth)}
             </span>
           </div>
           <button
             onClick={() => changeMonth(1)}
-            className="p-2.5 hover:bg-gray-50 rounded-r-xl transition-colors"
+            className="p-1 rounded-full transition-all hover:bg-gray-100"
+            style={{ color: '#2C2C2C' }}
           >
-            <ChevronRight size={20} style={{ color: 'var(--deep-charcoal)' }} />
+            <ChevronRight size={16} />
           </button>
         </div>
 
         {/* Staff Filter */}
         <div className="flex items-center gap-2">
-          <Filter size={18} style={{ color: '#666' }} />
+          <Filter size={16} style={{ color: '#666' }} />
           <select
             value={selectedStaffFilter}
             onChange={(e) => setSelectedStaffFilter(e.target.value)}
-            className="px-4 py-2.5 rounded-xl text-sm outline-none cursor-pointer typography-label font-semibold" style={{ fontSize: '14px', backgroundColor: 'var(--light-greige)', border: '1px solid var(--ghost-row-line)', color: 'var(--deep-charcoal)', letterSpacing: '0.01em' }}
+            className="px-3 py-1.5 rounded-lg text-xs outline-none cursor-pointer font-semibold" style={{ fontSize: '12px', backgroundColor: '#F7F5F2', border: '1px solid #E8E4DE', color: '#2C2C2C', letterSpacing: '0.01em', fontFamily: 'Inter, sans-serif' }}
           >
             {[...staffList].sort((a, b) => a.name.localeCompare(b.name)).map(staff => (
               <option key={staff.staff_id} value={staff.staff_id}>{staff.name}</option>
@@ -1306,24 +1313,25 @@ const MonthlyCalendarView: React.FC<MonthlyCalendarViewProps> = ({
 
         <button
           onClick={fetchMonthlyAttendance}
-          className="p-2.5 rounded-xl hover:bg-gray-50 transition-colors" style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--ghost-row-line)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)' }}
+          className="p-1.5 rounded-lg transition-all hover:bg-gray-50" style={{ backgroundColor: '#F7F5F2', border: '1px solid #E8E4DE' }}
         >
-          <RefreshCw size={18} style={{ color: 'var(--deep-charcoal)' }} />
+          <RefreshCw size={14} style={{ color: '#2C2C2C' }} />
         </button>
 
         <button
           onClick={() => setShowDownloadModal(true)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95 ml-auto"
+          className="flex items-center gap-2 px-4 py-1.5 rounded-lg font-bold text-xs transition-all active:scale-95 ml-auto"
           style={{
-            backgroundColor: 'var(--muted-gold)',
-            color: 'var(--deep-charcoal)',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08)',
-            letterSpacing: '0.03em',
-            textTransform: 'uppercase'
+            backgroundColor: '#D4AF37',
+            color: '#FFFFFF',
+            boxShadow: '0 4px 16px rgba(212, 175, 55, 0.3)',
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase',
+            fontFamily: 'Inter, sans-serif'
           }}
         >
-          <Download size={18} />
-          {t('attendance.downloadMonthlyAttendance')}
+          <Download size={14} />
+          {t('attendance.download')}
         </button>
       </div>
 
@@ -1461,67 +1469,53 @@ const StatPill: React.FC<StatPillProps> = ({ label, value, total, color, icon: I
 
   const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
   const styles = colorClasses[color];
-  const circumference = 2 * Math.PI * 24; // radius = 24
+  const circumference = 2 * Math.PI * 16; // radius = 16
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
-    <div style={{ 
-      backgroundColor: styles.bg, 
-      borderRadius: '16px', 
-      padding: '20px', 
-      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
+    <div style={{
+      backgroundColor: styles.bg,
+      borderRadius: '10px',
+      padding: '8px',
+      boxShadow: '0 1px 8px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03)',
       border: '1px solid #E8E4DE',
       position: 'relative'
     }}>
-      <div className="flex items-center gap-3 mb-3">
-        <div style={{ 
-          backgroundColor: styles.iconBg, 
-          padding: '10px',
-          borderRadius: '10px',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
-        }}>
-          <Icon size={18} style={{ color: styles.iconColor }} />
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <svg width="36" height="36" style={{ transform: 'rotate(-90deg)' }}>
+            <circle
+              cx="18"
+              cy="18"
+              r="16"
+              fill="none"
+              stroke="#E8E4DE"
+              strokeWidth="2.5"
+            />
+            <circle
+              cx="18"
+              cy="18"
+              r="16"
+              fill="none"
+              stroke={styles.accent}
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+            />
+          </svg>
+          <div>
+            <span className="text-xs font-semibold uppercase tracking-wider" style={{ fontSize: '8px', color: styles.labelColor, letterSpacing: '0.05em', display: 'block' }}>
+              {label}
+            </span>
+            <div className="flex items-baseline gap-1">
+              <span style={{ fontSize: '16px', fontWeight: '700', letterSpacing: '-0.02em', color: styles.valueColor, fontFamily: 'Playfair Display, serif' }}>{value}</span>
+              <span className="text-[10px] font-bold" style={{ letterSpacing: '-0.01em', color: '#999' }}>/ {total}</span>
+              <span className="text-[10px] font-semibold" style={{ color: styles.accent }}>{percentage}%</span>
+            </div>
+          </div>
         </div>
-        <span className="text-xs font-semibold uppercase tracking-wider" style={{ fontSize: '11px', color: styles.labelColor, letterSpacing: '0.05em' }}>
-          {label}
-        </span>
-      </div>
-      <div className="flex items-end justify-between">
-        <div>
-          <span style={{ fontSize: '28px', fontWeight: '700', letterSpacing: '-0.02em', color: styles.valueColor, fontFamily: 'Playfair Display, serif' }}>{value}</span>
-          <span className="text-sm font-bold ml-1" style={{ letterSpacing: '-0.01em', color: '#999' }}>/{total}</span>
-        </div>
-        <svg width="56" height="56" style={{ transform: 'rotate(-90deg)' }}>
-          <circle
-            cx="28"
-            cy="28"
-            r="24"
-            fill="none"
-            stroke="#F7F5F2"
-            strokeWidth="4"
-          />
-          <circle
-            cx="28"
-            cy="28"
-            r="24"
-            fill="none"
-            stroke={styles.accent}
-            strokeWidth="4"
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
-            style={{ transition: 'stroke-dashoffset 0.5s ease' }}
-          />
-          <text
-            x="28"
-            y="28"
-            textAnchor="middle"
-            dy="5"
-            style={{ fontSize: '12px', fontWeight: '600', fill: styles.valueColor, transform: 'rotate(90deg)', transformOrigin: 'center' }}
-          >
-            {percentage}%
-          </text>
-        </svg>
       </div>
     </div>
   );

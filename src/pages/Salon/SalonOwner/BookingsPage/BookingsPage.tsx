@@ -412,8 +412,8 @@ const BookingsPage: React.FC = () => {
 
       <div className="flex justify-between items-center px-2">
         <div>
-          <h1 className="font-semibold typography-display" style={{ color: 'var(--deep-charcoal)', fontSize: '24px', letterSpacing: '0.05em' }}>{t('booking.appointmentDeck')}</h1>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] typography-label-light" style={{ color: '#666' }}>{t('booking.manageSchedule')}</p>
+          <h1 className="font-semibold typography-display" style={{ color: 'var(--deep-charcoal)', fontSize: '24px', letterSpacing: '0.05em' }}>Command Deck</h1>
+          <p className="text-[10px] font-normal tracking-[0.2em] typography-label-light" style={{ color: '#666' }}>Real-time flow of salon artistry</p>
         </div>
         <div className="flex items-center gap-3">
           <button onClick={handleResetFilters} className="p-2 transition-colors flex items-center gap-2 text-[10px] font-black uppercase typography-label-light" style={{ color: '#666' }}>

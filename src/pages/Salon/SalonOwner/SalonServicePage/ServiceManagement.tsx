@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
 import {
     Plus,
     Search,
@@ -165,11 +166,17 @@ const ServiceManagement: React.FC = () => {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4" style={{ borderBottom: '1px solid var(--light-greige)' }}>
                     <div>
                         <h1 className="font-semibold" style={{ fontFamily: 'Playfair Display, serif', fontSize: '24px', color: 'var(--deep-charcoal)' }}>{t('services.title')}</h1>
-                        <p className="typography-label-light" style={{ fontSize: '14px' }}>{t('services.manageServices')}</p>
+                        <p className="typography-label-light" style={{ fontSize: '14px', color: '#666' }}>Here is your armory</p>
                     </div>
-                    <button onClick={() => { resetForm(); setIsModalOpen(true); }} className="w-full md:w-auto flex items-center justify-center gap-2 px-6 text-white rounded-2xl text-sm font-semibold transition-all duration-300" style={{ backgroundColor: 'var(--muted-gold)', height: '44px' }}>
+                    <motion.button 
+                        onClick={() => { resetForm(); setIsModalOpen(true); }} 
+                        className="w-full md:w-auto flex items-center justify-center gap-2 px-6 text-white rounded-2xl text-sm font-semibold transition-all duration-300 bg-gradient-to-r from-[#D4AF37] to-[#C9A227] shadow-lg shadow-[#D4AF37]/20"
+                        style={{ height: '44px' }}
+                        whileHover={{ scale: 1.02, boxShadow: '0 10px 30px -10px rgba(212, 175, 55, 0.4)' }}
+                        whileTap={{ scale: 0.98 }}
+                    >
                         <Plus size={18} /> {t('services.addService')}
-                    </button>
+                    </motion.button>
                 </div>
 
                 {/* Search Bar - Integrated in Header Strip */}
@@ -189,62 +196,64 @@ const ServiceManagement: React.FC = () => {
             {/* Service Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-in fade-in duration-500 delay-200 mt-6">
                 {serviceList.filter(s => s.serviceName?.toLowerCase().includes(searchQuery.toLowerCase())).map((service) => (
-                    <div 
+                    <motion.div 
                         key={service.service_id} 
-                        className="floating-tile overflow-hidden hover-lift"
+                        className="floating-tile overflow-hidden bg-white/60 backdrop-blur-sm rounded-3xl border border-white/20 shadow-lg"
+                        whileHover={{ scale: 1.02, boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.15)' }}
+                        transition={{ duration: 0.3 }}
                     >
                         {/* Card Header with Image */}
-                        <div className="relative h-32 overflow-hidden" style={{ background: 'linear-gradient(135deg, var(--muted-gold) 0%, var(--deep-charcoal) 100%)' }}>
+                        <div className="relative h-32 overflow-hidden rounded-t-3xl" style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #0a0a0a 100%)' }}>
                             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0wIDQwaDQwVjBIMHY0MHptMjAgMjBWMjBIMHYyMGgyMHptMjAgMjBWMjBIMHYyMGgyMHoiIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvZz48L3N2Zz4=')] opacity-30"></div>
                             <div className="absolute bottom-3 left-4">
                                 <div className="w-24 h-24 rounded-xl bg-white shadow-lg overflow-hidden border-3 border-white">
                                     {service.imageUrl ? (
                                         <img src={service.imageUrl} className="w-full h-full object-cover" alt={service.serviceName} />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: 'var(--light-greige)' }}>
+                                        <div className="w-full h-full flex items-center justify-center bg-gray-100">
                                             <Scissors size={32} style={{ color: '#666' }} />
                                         </div>
                                     )}
                                 </div>
                             </div>
                             <div className="absolute top-3 right-3">
-                                <span className={`px-3 py-1.5 rounded-full text-[9px] font-semibold uppercase tracking-wider border-2 ${
+                                <span className={`px-3 py-1.5 rounded-full text-[9px] font-semibold uppercase tracking-wider border-2 shadow-sm ${
                                     service.active 
                                         ? 'text-white' 
                                         : 'text-gray-600 bg-white'
-                                }`} style={service.active ? { backgroundColor: 'var(--sage-green)', borderColor: 'var(--sage-green)' } : { borderColor: 'var(--light-greige)' }}>
+                                }`} style={service.active ? { backgroundColor: '#D4AF37', borderColor: '#D4AF37' } : { borderColor: '#e5e5e5' }}>
                                     {service.active ? t('services.active') : t('services.inactive')}
                                 </span>
                             </div>
                         </div>
 
                         {/* Card Body */}
-                        <div className="pt-10 pb-4 px-4">
+                        <div className="pt-8 pb-4 px-4">
                             <div className="mb-3">
-                                <h3 className="typography-label" style={{ fontSize: '16px', color: 'var(--deep-charcoal)' }}>{service.serviceName}</h3>
-                                <p className="typography-label-light flex items-center gap-1 mt-0.5" style={{ fontSize: '10px' }}>
+                                <h3 className="typography-label" style={{ fontSize: '16px', color: '#1a1a1a', fontFamily: 'Playfair Display, serif' }}>{service.serviceName}</h3>
+                                <p className="typography-label-light flex items-center gap-1 mt-0.5" style={{ fontSize: '10px', color: '#666' }}>
                                     <Clock size={10} /> {service.durationMinutes} {t('services.mins')}
                                 </p>
                             </div>
 
                             {/* Price */}
                             <div className="mb-3">
-                                <span className="typography-number" style={{ fontSize: '20px', color: 'var(--muted-gold)' }}>₹{service.price}</span>
+                                <span className="typography-number font-bold" style={{ fontSize: '20px', color: '#D4AF37' }}>₹{service.price}</span>
                             </div>
 
                             {/* Linked Staff */}
                             <div className="mb-3">
-                                <p className="typography-label-light uppercase tracking-wider mb-1.5" style={{ fontSize: '9px' }}>Assigned Staff</p>
+                                <p className="typography-label-light uppercase tracking-wider mb-1.5" style={{ fontSize: '9px', color: '#666' }}>Assigned Professionals</p>
                                 <div className="flex -space-x-2 overflow-hidden">
                                     {service.staff?.length > 0 ? (
                                         service.staff.slice(0, 3).map((s: any) => (
-                                            <div key={s.staff_id} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-100 overflow-hidden" title={s?.name}>
+                                            <div key={s.staff_id} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-100 overflow-hidden shadow-sm" title={s?.name}>
                                                 <img src={s?.image_url || '/placeholder.png'} className="h-full w-full object-cover" alt="" />
                                             </div>
                                         ))
                                     ) : <span className="text-[9px] text-gray-400 italic">{t('services.noStaffAssigned')}</span>}
                                     {service.staff?.length > 3 && (
-                                        <div className="flex h-8 w-8 items-center justify-center rounded-full typography-label-light ring-2 ring-white" style={{ backgroundColor: 'var(--light-greige)', fontSize: '9px' }}>
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-full typography-label-light ring-2 ring-white bg-gray-100 shadow-sm" style={{ fontSize: '9px', color: '#666' }}>
                                             +{service.staff.length - 3}
                                         </div>
                                     )}
@@ -252,16 +261,18 @@ const ServiceManagement: React.FC = () => {
                             </div>
 
                             {/* Action Button */}
-                            <button 
+                            <motion.button 
                                 onClick={() => handleEditClick(service)}
-                                className="w-full py-2 px-3 rounded-lg text-[10px] font-semibold border transition-all duration-300 flex items-center justify-center gap-1.5 group-hover:shadow-sm typography-label-light"
-                                style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)', color: 'var(--deep-charcoal)' }}
+                                className="w-full py-2 px-3 rounded-xl text-[10px] font-semibold border transition-all duration-300 flex items-center justify-center gap-1.5 shadow-sm"
+                                style={{ backgroundColor: '#f5f5f5', borderColor: '#e5e5e5', color: '#1a1a1a' }}
+                                whileHover={{ scale: 1.02, backgroundColor: '#D4AF37', borderColor: '#D4AF37', color: 'white' }}
+                                whileTap={{ scale: 0.98 }}
                             >
                                 <Edit2 size={12} />
                                 Edit Service
-                            </button>
+                            </motion.button>
                         </div>
-                    </div>
+                    </motion.div>
                 ))}
             </div>
 
@@ -301,35 +312,52 @@ const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, all
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-            <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in duration-200">
-                <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
-                    <h3 className="text-lg font-bold text-gray-800">{title}</h3>
-                    <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600"><X size={20} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0a0a0a]/60 backdrop-blur-sm">
+            <motion.div 
+                className="bg-white/90 backdrop-blur-xl w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-white/20"
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+            >
+                <div className="p-6 border-b border-gray-100/50 flex justify-between items-center bg-gradient-to-r from-gray-50/80 to-white/80">
+                    <h3 className="text-lg font-bold text-gray-800" style={{ fontFamily: 'Playfair Display, serif' }}>{title}</h3>
+                    <motion.button 
+                        onClick={onClose} 
+                        className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100/50 transition-all duration-300"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                    >
+                        <X size={20} />
+                    </motion.button>
                 </div>
                 <form onSubmit={onSubmit} className="p-6 space-y-5 max-h-[85vh] overflow-y-auto custom-scrollbar">
 
                     {/* Image Section */}
                     <div className="space-y-2">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">{t('services.serviceBanner')}</label>
-                        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                            <div className="relative w-20 h-20 rounded-xl bg-white border flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                        <div className="flex items-center gap-4 p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-100/50 shadow-sm">
+                            <div className="relative w-20 h-20 rounded-xl bg-white border border-gray-200 flex items-center justify-center overflow-hidden shrink-0 shadow-lg">
                                 {formData.imageUrl ? (
                                     <img src={formData.imageUrl} className="w-full h-full object-cover" alt="" />
                                 ) : (
                                     <ImageIcon size={24} className="text-gray-300" />
                                 )}
                                 {uploading && (
-                                    <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-                                        <div className="w-5 h-5 border-2 border-[#1E4D8C] border-t-transparent rounded-full animate-spin" />
+                                    <div className="absolute inset-0 bg-white/60 flex items-center justify-center backdrop-blur-sm">
+                                        <div className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
                                     </div>
                                 )}
                             </div>
                             <div className="flex-1 space-y-2">
                                 <label className="inline-block">
-                                    <span className="cursor-pointer px-4 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-100 transition-all">
+                                    <motion.span 
+                                        className="cursor-pointer px-4 py-2 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-100 transition-all shadow-sm"
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                    >
                                         {formData.imageUrl ? t('services.changePhoto') : t('services.uploadPhoto')}
-                                    </span>
+                                    </motion.span>
                                     <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} disabled={uploading} />
                                 </label>
                                 <p className="text-[9px] text-gray-400 font-medium">{t('services.clickToUpload')}</p>
@@ -339,7 +367,7 @@ const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, all
 
                     <div className="space-y-1">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('services.serviceName')}</label>
-                        <input required className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-100" value={formData.serviceName} onChange={e => setFormData({ ...formData, serviceName: e.target.value })} />
+                        <input required className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" value={formData.serviceName} onChange={e => setFormData({ ...formData, serviceName: e.target.value })} />
                     </div>
 
                     {/* Assigned Staff Grid */}
@@ -351,20 +379,22 @@ const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, all
                             {allStaff.length > 0 ? allStaff.map((staff) => {
                                 const isSelected = formData.staff_ids.includes(staff.staff_id);
                                 return (
-                                    <div
+                                    <motion.div
                                         key={staff.staff_id}
                                         onClick={() => toggleStaff(staff.staff_id)}
-                                        className={`flex items-center gap-2 p-2 rounded-xl border cursor-pointer transition-all ${isSelected ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-100' : 'bg-white border-gray-100 hover:bg-gray-50'
+                                        className={`flex items-center gap-2 p-2 rounded-xl border cursor-pointer transition-all shadow-sm ${isSelected ? 'bg-[#D4AF37]/10 border-[#D4AF37]/30 ring-1 ring-[#D4AF37]/20' : 'bg-white/60 backdrop-blur-sm border-gray-200/50 hover:bg-white/80'
                                             }`}
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
                                     >
-                                        <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden shrink-0 border border-white">
+                                        <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden shrink-0 border border-white shadow-sm">
                                             <img src={staff.images?.[0] || '/placeholder.png'} className="w-full h-full object-cover" alt="" />
                                         </div>
-                                        <span className={`text-[11px] font-bold truncate ${isSelected ? 'text-blue-600' : 'text-gray-600'}`}>
+                                        <span className={`text-[11px] font-bold truncate ${isSelected ? 'text-[#D4AF37]' : 'text-gray-600'}`}>
                                             {staff.name}
                                         </span>
-                                        {isSelected && <Check size={12} className="ml-auto text-blue-600" />}
-                                    </div>
+                                        {isSelected && <Check size={12} className="ml-auto text-[#D4AF37]" />}
+                                    </motion.div>
                                 );
                             }) : <p className="text-[10px] text-gray-400 italic col-span-2">{t('services.noStaffFound')}</p>}
                         </div>
@@ -375,13 +405,13 @@ const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, all
                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('services.priceRupee')}</label>
                             <input
                                 type="number"
-                                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-blue-600"
+                                className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm font-bold text-[#D4AF37] outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm"
                                 value={formData.price}
                                 min="0"
                                 // onChange={e => setFormData({ ...formData, price: e.target.value })} 
                                 onChange={e => {
-                                    const val = e.target.value === '' ? 0 : Number(e.target.value);
-                                    setFormData({ ...formData, price: Math.max(0, val) });
+                                    const val = e.target.value === '' ? '' : Number(e.target.value);
+                                    setFormData({ ...formData, price: val === '' ? '' : Math.max(0, val) });
                                 }}
                             />
                         </div>
@@ -389,12 +419,13 @@ const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, all
                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('services.durationMin')}</label>
                             <input
                                 type="number"
-                                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm"
+                                className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm appearance-none [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm"
                                 value={formData.durationMinutes}
                                 min="0"
+                                step="1"
                                 onChange={e => {
-                                    const val = e.target.value === '' ? 0 : Number(e.target.value);
-                                    setFormData({ ...formData, durationMinutes: Math.max(0, val) });
+                                    const val = e.target.value === '' ? '' : Math.floor(Number(e.target.value));
+                                    setFormData({ ...formData, durationMinutes: val === '' ? '' : Math.max(0, val) });
                                 }}
                             // onChange={e => setFormData({ ...formData, durationMinutes: (e.target.value) })}
                             />
@@ -402,32 +433,57 @@ const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, all
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('services.includedBenefits')}</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Benefits or products used</label>
                         <div className="flex gap-2">
-                            <input className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none" placeholder={t('services.benefitPlaceholder')} value={newItem} onChange={e => setNewItem(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addInclude())} />
-                            <button type="button" onClick={addInclude} className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100"><Plus size={20} /></button>
+                            <input className="flex-1 px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder={t('services.benefitPlaceholder')} value={newItem} onChange={e => setNewItem(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addInclude())} />
+                            <motion.button 
+                                type="button" 
+                                onClick={addInclude} 
+                                className="px-4 py-2 bg-[#D4AF37]/10 text-[#D4AF37] rounded-xl hover:bg-[#D4AF37]/20 transition-all shadow-sm text-xs font-bold"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                Add
+                            </motion.button>
                         </div>
                         <div className="flex flex-wrap gap-2">
                             {formData.includedItems.map((item: string, i: number) => (
-                                <span key={i} className="flex items-center gap-1.5 px-3 py-1 bg-[#1E4D8C] text-white rounded-full text-[10px] font-bold">
-                                    {item} <X size={10} className="cursor-pointer hover:text-red-300" onClick={() => setFormData({ ...formData, includedItems: formData.includedItems.filter((_: any, idx: number) => idx !== i) })} />
-                                </span>
+                                <motion.span 
+                                    key={i} 
+                                    className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-[#D4AF37] to-[#C9A227] text-white rounded-full text-[10px] font-bold shadow-sm"
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    {item} <X size={10} className="cursor-pointer hover:text-white/70 transition-colors" onClick={() => setFormData({ ...formData, includedItems: formData.includedItems.filter((_: any, idx: number) => idx !== i) })} />
+                                </motion.span>
                             ))}
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between bg-blue-50/50 p-4 rounded-xl border border-blue-100">
-                        <span className="text-[11px] font-bold text-blue-600 uppercase tracking-widest">{t('services.activeStatus')}</span>
-                        <button type="button" onClick={() => setFormData({ ...formData, active: !formData.active })} className={`w-12 h-6 rounded-full relative transition-colors ${formData.active ? 'bg-green-500' : 'bg-gray-300'}`}>
-                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${formData.active ? 'left-7' : 'left-1'}`} />
-                        </button>
+                    <div className="flex items-center justify-between bg-white/60 backdrop-blur-sm p-4 rounded-xl border border-gray-200/50 shadow-sm">
+                        <span className="text-[11px] font-bold text-gray-600 uppercase tracking-widest">{t('services.activeStatus')}</span>
+                        <motion.button 
+                            type="button" 
+                            onClick={() => setFormData({ ...formData, active: !formData.active })} 
+                            className={`w-12 h-6 rounded-full relative transition-colors shadow-sm ${formData.active ? 'bg-[#D4AF37]' : 'bg-gray-300'}`}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${formData.active ? 'left-7' : 'left-1'}`} />
+                        </motion.button>
                     </div>
 
-                    <button type="submit" disabled={submitting} className="w-full py-3.5 bg-[#1E4D8C] text-white rounded-xl font-bold shadow-lg disabled:opacity-70 active:scale-[0.98] transition-all">
+                    <motion.button 
+                        type="submit" 
+                        disabled={submitting} 
+                        className="w-full py-3.5 bg-gradient-to-r from-[#D4AF37] to-[#C9A227] text-white rounded-xl font-bold shadow-lg shadow-[#D4AF37]/20 disabled:opacity-70 transition-all"
+                        whileHover={{ scale: 1.02, boxShadow: '0 10px 30px -10px rgba(212, 175, 55, 0.4)' }}
+                        whileTap={{ scale: 0.98 }}
+                    >
                         {submitting ? t('services.processing') : t('services.saveService')}
-                    </button>
+                    </motion.button>
                 </form>
-            </div>
+            </motion.div>
         </div>
     );
 };
