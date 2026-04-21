@@ -963,44 +963,44 @@ const AttendancePage: React.FC = () => {
             </button>
           </div>
 
-          {/* Action Buttons - Expanded in Header */}
-          <div className="flex items-center gap-3 flex-shrink-0">
+          {/* Action Buttons - Premium Action Chips */}
+          <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={handleMarkAllPresent}
               disabled={loading || saving}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold text-sm transition-all active:scale-95 disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-xs transition-all active:scale-95 disabled:opacity-50 hover:bg-white/80"
               style={{
-                backgroundColor: '#FFFFFF',
+                backgroundColor: 'rgba(255, 255, 255, 0.6)',
                 color: '#2C2C2C',
-                border: '1px solid #E8E4DE',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+                border: '1px solid rgba(232, 228, 222, 0.8)',
+                backdropFilter: 'blur(8px)',
                 letterSpacing: '0.05em',
                 textTransform: 'uppercase',
                 fontFamily: 'Inter, sans-serif'
               }}
               title="Mark All Present"
             >
-              <UserCheck size={16} />
+              <UserCheck size={14} />
               Mark All
             </button>
             <button
               onClick={saveAttendance}
               disabled={loading || saving}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold text-sm transition-all active:scale-95 disabled:opacity-50 relative overflow-hidden"
+              className="flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-xs transition-all active:scale-95 disabled:opacity-50 relative overflow-hidden"
               style={{
-                background: 'linear-gradient(135deg, #D4AF37 0%, #B8962E 50%, #D4AF37 100%)',
-                backgroundSize: '200% 200%',
-                color: '#FFFFFF',
-                boxShadow: '0 4px 16px rgba(212, 175, 55, 0.3)',
+                backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                color: '#D4AF37',
+                border: '1px solid rgba(212, 175, 55, 0.4)',
+                backdropFilter: 'blur(8px)',
+                boxShadow: '0 0 20px rgba(212, 175, 55, 0.2)',
                 letterSpacing: '0.05em',
                 textTransform: 'uppercase',
-                fontFamily: 'Inter, sans-serif',
-                animation: 'shimmer 3s ease-in-out infinite'
+                fontFamily: 'Inter, sans-serif'
               }}
               title="Save Attendance"
             >
               <span className="relative z-10 flex items-center gap-1">
-                <Check size={16} />
+                <Check size={14} />
                 Save
               </span>
             </button>
@@ -1031,17 +1031,17 @@ const AttendancePage: React.FC = () => {
               background: '#FFFFFF',
               overflow: 'hidden'
             }}>
-            <div className="p-6 flex justify-between items-center" style={{ borderBottom: '1px solid #E8E4DE' }}>
+            <div className="p-4 flex justify-between items-center" style={{ borderBottom: '1px solid #E8E4DE' }}>
               <h3 className="flex items-center gap-2" style={{ 
-                fontFamily: 'Playfair Display, serif', 
-                fontSize: '20px', 
+                fontFamily: 'Cinzel, serif', 
+                fontSize: '16px', 
                 color: '#2C2C2C', 
-                letterSpacing: '-0.02em', 
-                fontWeight: '600' 
+                letterSpacing: '0.1em', 
+                fontWeight: '500' 
               }}>
-                <Users size={20} style={{ color: '#D4AF37' }} />
+                <Users size={18} style={{ color: '#D4AF37' }} />
                 {t('attendance.staffList')}
-                <span className="px-3 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: '#D4AF37', color: '#FFFFFF', letterSpacing: '0.05em' }}>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: '#D4AF37', color: '#FFFFFF', letterSpacing: '0.05em', fontFamily: 'Inter, sans-serif' }}>
                   {getFilteredStaff().length}
                 </span>
               </h3>
@@ -1088,19 +1088,23 @@ const AttendancePage: React.FC = () => {
                           <td className="typography-label-light" style={{ fontSize: '14px', padding: '16px' }}>{staff.role}</td>
                           <td className="typography-label-light" style={{ fontSize: '14px', padding: '16px' }}>{staff.email}</td>
                           <td className="typography-label-light" style={{ fontSize: '14px', padding: '16px' }}>{staff.phone || '-'}</td>
-                          <td className="typography-label-light" style={{ fontSize: '12px', padding: '16px', color: '#999' }}>
-                            {currentStatus !== 'NOT_MARKED' ? 'Today' : '-'}
+                          <td className="typography-label-light" style={{ fontSize: '11px', padding: '16px', color: '#999', fontFamily: 'Inter, sans-serif' }}>
+                            {currentStatus !== 'NOT_MARKED' ? (
+                              <span style={{ color: '#D4AF37', fontWeight: '500' }}>
+                                Check-in: {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                              </span>
+                            ) : '-'}
                           </td>
                           <td style={{ padding: '16px' }}>
                             <div className="flex items-center justify-center">
                               <div className="flex items-center" style={{ backgroundColor: '#F7F5F2', border: '1px solid #E8E4DE', borderRadius: '8px', padding: '2px' }}>
                                 {(['PRESENT', 'ABSENT', 'LATE', 'HALF_DAY'] as AttendanceStatus[]).map((status, index) => {
                                   const isSelected = currentStatus === status;
-                                  const statusColors: Record<string, { bg: string; icon: string }> = {
-                                    PRESENT: { bg: '#10b981', icon: '#FFFFFF' },
-                                    ABSENT: { bg: '#ef4444', icon: '#FFFFFF' },
-                                    LATE: { bg: '#f59e0b', icon: '#FFFFFF' },
-                                    HALF_DAY: { bg: '#8b5cf6', icon: '#FFFFFF' }
+                                  const statusColors: Record<string, { bg: string; icon: string; glow: string }> = {
+                                    PRESENT: { bg: '#10b981', icon: '#FFFFFF', glow: 'rgba(16, 185, 129, 0.4)' },
+                                    ABSENT: { bg: '#ef4444', icon: '#FFFFFF', glow: 'rgba(239, 68, 68, 0.4)' },
+                                    LATE: { bg: '#f59e0b', icon: '#FFFFFF', glow: 'rgba(245, 158, 11, 0.4)' },
+                                    HALF_DAY: { bg: '#8b5cf6', icon: '#FFFFFF', glow: 'rgba(139, 92, 246, 0.4)' }
                                   };
                                   const colors = statusColors[status];
                                   const isFirst = index === 0;
@@ -1114,7 +1118,8 @@ const AttendancePage: React.FC = () => {
                                           backgroundColor: isSelected ? colors.bg : 'transparent',
                                           opacity: isSelected ? 1 : 0.4,
                                           borderRadius: isFirst ? '6px 0 0 6px' : isLast ? '0 6px 6px 0' : '0',
-                                          marginLeft: isFirst ? '0' : '1px'
+                                          marginLeft: isFirst ? '0' : '1px',
+                                          boxShadow: isSelected ? `0 0 12px ${colors.glow}` : 'none'
                                         }}
                                       >
                                         {isSelected ? (
