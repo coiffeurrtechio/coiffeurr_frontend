@@ -29,6 +29,7 @@ import AttendancePage from "../pages/Salon/SalonOwner/DashBoardPages.tsx/Attenda
 import SettingsPage from "../pages/Salon/SalonOwner/DashBoardPages.tsx/SettingsPage";
 import ForgotPassword from "../pages/ForgotPassword";
 import UniversalVerification from "../pages/UniversalVerification";
+import SalonReviewsPage from "../pages/Salon/SalonReviewsPage";
 
 
 export interface AppRoute {
@@ -64,6 +65,7 @@ const routes: AppRoute[] = [
       { key: 20, path: "/wishlist", Element: UserWishlist, isProtected: true },
       { key: 21, path: "/salon/:salonId/staff/:staffId", Element: StaffDetailPage, isProtected: true },
       { key: 22, path: "/verify", Element: UniversalVerification, isProtected: true },
+      { key: 23, path: "/salon/:salonId/reviews", Element: SalonReviewsPage, isProtected: false },
 
     ],
   },

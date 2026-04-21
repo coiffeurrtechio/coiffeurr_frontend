@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, X, Scissors, Check, MoreHorizontal, Save, Download, Mail, Calendar, Clock, Users, CheckCircle, XCircle, AlertCircle, AlertTriangle, ChevronLeft, ChevronRight, ChevronDown, Search, Filter, RefreshCw, UserCheck, ImageIcon, Briefcase, MessageSquare } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { useApi } from "../../../../API/SalonsAPIs/ALLSalonAPI";
 import { useSalonApi } from '../../../../API/Salon_Owner_API/SalonOwnerAPI';
 import { useNavigate } from 'react-router-dom';
@@ -17,6 +17,7 @@ const StaffManagement: React.FC = () => {
     const [allServices, setAllServices] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -37,6 +38,8 @@ const StaffManagement: React.FC = () => {
         languages: [] as string[],
         expertise: [] as string[],
         instagramHandle: "",
+        facebookHandle: "",
+        otherLinks: "",
         experienceYears: "",
         active: true,
         certifications: [] as string[],
@@ -124,6 +127,7 @@ const StaffManagement: React.FC = () => {
             setIsModalOpen(false);
             resetForm();
             fetchStaff();
+            setShowSuccessPopup(true);
         } finally { setSubmitting(false); }
     };
 
@@ -138,6 +142,8 @@ const StaffManagement: React.FC = () => {
             languages: Array.isArray(staff.languages) ? staff.languages : [],
             expertise: Array.isArray(staff.expertise) ? staff.expertise : [],
             instagramHandle: staff.instagramHandle || "",
+            facebookHandle: staff.facebookHandle || "",
+            otherLinks: staff.otherLinks || "",
             experienceYears: staff.experienceYears?.toString() || "",
             active: staff.active ?? true,
             certifications: Array.isArray(staff.metadata?.certifications) ? staff.metadata.certifications : [],
@@ -171,14 +177,25 @@ const StaffManagement: React.FC = () => {
             setIsEditModalOpen(false);
             resetForm();
             fetchStaff();
+            setShowSuccessPopup(true);
         } finally { setSubmitting(false); }
     };
+
+    // Auto-hide success popup after 3 seconds
+    useEffect(() => {
+        if (showSuccessPopup) {
+            const timer = setTimeout(() => {
+                setShowSuccessPopup(false);
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [showSuccessPopup]);
 
     const resetForm = () => {
         setFormData({
             name: "", email: "", phone: "", role: "Hair Stylist",
             gender: "Male", languages: [], expertise: [],
-            instagramHandle: "", experienceYears: "", active: true,
+            instagramHandle: "", facebookHandle: "", otherLinks: "", experienceYears: "", active: true,
             certifications: [], specializations: [], images: [], services: []
         });
         setEditingStaffId(null);
@@ -305,7 +322,7 @@ const StaffManagement: React.FC = () => {
                             </div>
 
                             {/* Contact Info Row */}
-                            <div className="flex justify-between items-center mb-3 typography-label-light" style={{ fontSize: '9px' }}>
+                            <div className="flex flex-wrap gap-2 mb-3 typography-label-light" style={{ fontSize: '9px' }}>
                                 {staff.phone && (
                                     <span className="flex items-center gap-1">
                                         📞 {staff.phone}
@@ -330,6 +347,29 @@ const StaffManagement: React.FC = () => {
                                             <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" fill="url(#instagram-gradient)"/>
                                         </svg>
                                         {staff.instagramHandle}
+                                    </a>
+                                )}
+                                {staff.facebookHandle && (
+                                    <a 
+                                        href={`https://facebook.com/${staff.facebookHandle.replace('@', '')}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1 truncate max-w-[120px] text-blue-600 hover:text-blue-700"
+                                    >
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2"/>
+                                        </svg>
+                                        {staff.facebookHandle}
+                                    </a>
+                                )}
+                                {staff.otherLinks && (
+                                    <a 
+                                        href={staff.otherLinks}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1 truncate max-w-[120px] text-blue-600 hover:text-blue-700"
+                                    >
+                                        🔗 {staff.otherLinks}
                                     </a>
                                 )}
                             </div>
@@ -475,6 +515,35 @@ const StaffManagement: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* Success Popup */}
+            <AnimatePresence>
+                {showSuccessPopup && (
+                    <div className="fixed inset-0 flex items-center justify-center z-[200] animate-in fade-in duration-300">
+                        <motion.div
+                            className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl px-8 py-6 border border-white/40 flex items-center gap-4"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+                        >
+                            <motion.div
+                                initial={{ scale: 0, rotate: -180 }}
+                                animate={{ scale: 1, rotate: 0 }}
+                                transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.1 }}
+                                className="w-12 h-12 rounded-full flex items-center justify-center"
+                                style={{ backgroundColor: '#D4AF37' }}
+                            >
+                                <Check size={24} className="text-white" />
+                            </motion.div>
+                            <div>
+                                <p className="text-lg font-bold text-[#1a1a1a]" style={{ fontFamily: "'Playfair Display', serif" }}>Staff Updated</p>
+                                <p className="text-xs font-semibold text-gray-500">Changes saved successfully</p>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
@@ -618,6 +687,16 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
                     <div className="space-y-1">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Instagram Handle</label>
                         <input className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder="@username" value={formData.instagramHandle} onChange={e => setFormData({ ...formData, instagramHandle: e.target.value })} />
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Facebook Handle</label>
+                        <input className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder="@username" value={formData.facebookHandle} onChange={e => setFormData({ ...formData, facebookHandle: e.target.value })} />
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Other Links</label>
+                        <input className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder="https://..." value={formData.otherLinks} onChange={e => setFormData({ ...formData, otherLinks: e.target.value })} />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">

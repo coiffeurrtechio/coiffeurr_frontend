@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     Plus,
     Search,
@@ -35,6 +35,7 @@ const ServiceManagement: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [uploading, setUploading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -104,20 +105,6 @@ const ServiceManagement: React.FC = () => {
         finally { setUploading(false); }
     };
 
-    const handleCreateService = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setSubmitting(true);
-        try {
-            const authData = localStorage.getItem("authState");
-            const parsedAuth = authData ? JSON.parse(authData) : null;
-            const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
-            await apiSalonPost(`/salons/${salonId}/services`, formData);
-            setIsModalOpen(false);
-            resetForm();
-            fetchServices();
-        } finally { setSubmitting(false); }
-    };
-
     const handleEditClick = (service: any) => {
         setEditingServiceId(service.service_id);
         setFormData({
@@ -144,8 +131,42 @@ const ServiceManagement: React.FC = () => {
             setIsEditModalOpen(false);
             resetForm();
             fetchServices();
-        } finally { setSubmitting(false); }
+            setShowSuccessPopup(true);
+        } catch (error) {
+            console.error("Error updating service:", error);
+        } finally {
+            setSubmitting(false);
+        }
     };
+
+    const handleCreateService = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            const authData = localStorage.getItem("authState");
+            const parsedAuth = authData ? JSON.parse(authData) : null;
+            const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
+            await apiSalonPost(`/salons/${salonId}/services`, formData);
+            setIsModalOpen(false);
+            resetForm();
+            fetchServices();
+            setShowSuccessPopup(true);
+        } catch (error) {
+            console.error("Error creating service:", error);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    // Auto-hide success popup after 3 seconds
+    useEffect(() => {
+        if (showSuccessPopup) {
+            const timer = setTimeout(() => {
+                setShowSuccessPopup(false);
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [showSuccessPopup]);
 
     const resetForm = () => {
         setFormData({
@@ -289,6 +310,35 @@ const ServiceManagement: React.FC = () => {
                     handleFileUpload={handleFileUpload}
                 />
             )}
+
+            {/* Success Popup */}
+            <AnimatePresence>
+                {showSuccessPopup && (
+                    <div className="fixed inset-0 flex items-center justify-center z-[200] animate-in fade-in duration-300">
+                        <motion.div
+                            className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl px-8 py-6 border border-white/40 flex items-center gap-4"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+                        >
+                            <motion.div
+                                initial={{ scale: 0, rotate: -180 }}
+                                animate={{ scale: 1, rotate: 0 }}
+                                transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.1 }}
+                                className="w-12 h-12 rounded-full flex items-center justify-center"
+                                style={{ backgroundColor: '#D4AF37' }}
+                            >
+                                <Check size={24} className="text-white" />
+                            </motion.div>
+                            <div>
+                                <p className="text-lg font-bold text-[#1a1a1a]" style={{ fontFamily: "'Playfair Display', serif" }}>Service Updated</p>
+                                <p className="text-xs font-semibold text-gray-500">Changes saved successfully</p>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
