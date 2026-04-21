@@ -1,16 +1,10 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
-import {
-  Mail, Phone, MapPin, Calendar, Clock,
-  Edit3, UserCircle, Star, ShieldCheck, X, Check,
-  Trash2, Plus, Globe, Camera, Image as ImageIcon,
-  CalendarDays, AlignLeft, Navigation, MapPinned, LocateFixed, Loader2,
-  Power, AlertTriangle, Scissors, Sparkles, Zap, ChevronRight, Instagram, Facebook
-} from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Star, ChevronRight, ChevronLeft, Check, AlertTriangle, Power, X, ArrowLeft, Loader2, Globe, Instagram, Facebook, MapPin, Share2, Clock, Calendar, Award, TrendingUp, Users, Mail, Phone, Edit3, UserCircle, ShieldCheck, Trash2, Plus, Camera, Image as ImageIcon, CalendarDays, AlignLeft, Navigation, MapPinned, LocateFixed, Scissors, Sparkles, Zap } from 'lucide-react';
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import { useApi } from '../../../../API/SalonsAPIs/ALLSalonAPI';
 import { Loader } from '../../../../components/ui_components/Loader';
-import { motion, AnimatePresence } from 'motion/react';
 
 // Styles
 import "swiper/css";
@@ -1036,9 +1030,6 @@ const DashboardProfile: React.FC = () => {
                       </div>
                     )}
                   </div>
-                  
-                  {/* Bottom Fade Effect */}
-                  <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none" />
                 </div>
               </div>
             </div>

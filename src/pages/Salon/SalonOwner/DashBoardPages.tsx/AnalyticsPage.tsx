@@ -41,7 +41,12 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  Area,
+  AreaChart,
+  ReferenceLine
 } from 'recharts';
 import { useTranslation } from 'react-i18next';
 
@@ -144,17 +149,71 @@ interface StaffData {
   };
 }
 
+// Helper function to process review data for the line chart
+const processReviewData = (reviews: any[]) => {
+  if (!reviews || reviews.length === 0) {
+    return [];
+  }
+
+  // Group reviews by date
+  const groupedByDate: { [key: string]: any[] } = {};
+  
+  reviews.forEach((review) => {
+    if (review.createdAt) {
+      const date = new Date(review.createdAt);
+      const dateKey = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      
+      if (!groupedByDate[dateKey]) {
+        groupedByDate[dateKey] = [];
+      }
+      groupedByDate[dateKey].push({
+        rating: review.rating,
+        date: date
+      });
+    }
+  });
+
+  // Convert to array and sort by date
+  const sortedDates = Object.keys(groupedByDate).sort((a, b) => {
+    return new Date(groupedByDate[a][0].date).getTime() - new Date(groupedByDate[b][0].date).getTime();
+  });
+
+  // Calculate average rating per day
+  return sortedDates.map((dateKey) => {
+    const dayReviews = groupedByDate[dateKey];
+    const avgRating = dayReviews.reduce((sum, r) => sum + r.rating, 0) / dayReviews.length;
+    
+    // Determine sentiment based on rating
+    let sentiment = "Good";
+    if (avgRating >= 4.5) sentiment = "Excellent";
+    else if (avgRating >= 4.0) sentiment = "Great";
+    else if (avgRating >= 3.5) sentiment = "Good";
+    else if (avgRating >= 3.0) sentiment = "Fair";
+    else sentiment = "Poor";
+    
+    return {
+      day: dateKey,
+      rating: avgRating,
+      volume: dayReviews.length,
+      sentiment
+    };
+  });
+};
+
 const AnalyticsPage: React.FC = () => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { apiSalonRequest } = useSalonApi();
+  const [ratingData, setRatingData] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
   
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<TimeRange>('7DAYS');
   const [activeTab, setActiveTab] = useState<'overview' | 'services' | 'customers' | 'staff'>('overview');
   const [showTodayIncome, setShowTodayIncome] = useState(false);
   const [showMonthlyIncome, setShowMonthlyIncome] = useState(false);
+  const [reviewTimeRange, setReviewTimeRange] = useState<'2DAYS' | '1WEEK' | '1MONTH' | '1YEAR'>('1WEEK');
   
   const [dashboardData, setDashboardData] = useState<DashboardAnalytics | null>(null);
   const [serviceData, setServiceData] = useState<ServiceAnalytics | null>(null);
@@ -166,6 +225,61 @@ const AnalyticsPage: React.FC = () => {
   useEffect(() => {
     fetchAllAnalytics();
   }, [timeRange]);
+
+  useEffect(() => {
+    fetchReviews();
+  }, [reviewTimeRange]);
+
+  const fetchReviews = async () => {
+    try {
+      const authData = localStorage.getItem("authState");
+      const parsedAuth = authData ? JSON.parse(authData) : null;
+      const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
+      
+      if (!salonId) {
+        return;
+      }
+
+      // Calculate date range based on selected filter
+      const now = new Date();
+      let startDate: string | null = null;
+      
+      switch (reviewTimeRange) {
+        case '2DAYS':
+          startDate = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          break;
+        case '1WEEK':
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          break;
+        case '1MONTH':
+          startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          break;
+        case '1YEAR':
+          startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          break;
+        default:
+          break;
+      }
+
+      const endDate = now.toISOString().split('T')[0];
+      
+      let url = `/reviews/SALON/${salonId}?limit=500`;
+      if (startDate) {
+        url += `&start_date=${startDate}`;
+      }
+      if (endDate) {
+        url += `&end_date=${endDate}`;
+      }
+
+      const reviewsRes = await apiSalonRequest<any[]>(url);
+      if (reviewsRes.data) {
+        setReviews(reviewsRes.data);
+        setRatingData(processReviewData(reviewsRes.data));
+      }
+    } catch (err: any) {
+      console.error("Fetch reviews error:", err);
+    }
+  };
 
   const getDateRange = () => {
     const today = new Date();
@@ -364,13 +478,13 @@ const AnalyticsPage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
               label={t('analytics.todayBookings')}
-              value={dashboardData.todayBookings.toString()}
+              value={(dashboardData?.todayBookings ?? 0).toString()}
               icon={<ShoppingBag size={20} />}
               color="blue"
             />
             <StatCard
               label={t('analytics.todayIncome')}
-              value={formatRevenue(dashboardData.todayIncome, showTodayIncome)}
+              value={formatRevenue(dashboardData?.todayIncome ?? 0, showTodayIncome)}
               icon={<IndianRupee size={20} />}
               color="green"
               showEyeIcon={true}
@@ -380,13 +494,13 @@ const AnalyticsPage: React.FC = () => {
             />
             <StatCard
               label={t('analytics.totalBookings')}
-              value={dashboardData.totalBookings.toString()}
+              value={(dashboardData?.totalBookings ?? 0).toString()}
               icon={<ShoppingBag size={20} />}
               color="purple"
             />
             <StatCard
               label={t('analytics.monthlyIncome')}
-              value={formatRevenue(dashboardData.monthlyIncome, showMonthlyIncome)}
+              value={formatRevenue(dashboardData?.monthlyIncome ?? 0, showMonthlyIncome)}
               icon={<IndianRupee size={20} />}
               color="orange"
               showEyeIcon={true}
@@ -433,8 +547,8 @@ const AnalyticsPage: React.FC = () => {
               background: 'linear-gradient(135deg, #FFFFFF 0%, #F7F5F2 100%)',
               padding: '24px'
             }}>
-              <h3 className="typography-label mb-6 flex items-center gap-2" style={{ fontSize: '16px', color: 'var(--deep-charcoal)', letterSpacing: '0.03em', fontWeight: '700', textTransform: 'uppercase' }}>
-                <PieChart size={18} style={{ color: 'var(--muted-gold)' }} />
+              <h3 className="typography-label mb-6 flex items-center gap-2" style={{ fontSize: '16px', color: '#D4AF37', letterSpacing: '0.03em', fontWeight: '700', textTransform: 'uppercase', fontFamily: 'Playfair Display, serif' }}>
+                <PieChart size={18} style={{ color: '#D4AF37' }} />
                 {t('analytics.bookingStatusDistribution')}
               </h3>
               <ResponsiveContainer width="100%" height={300}>
@@ -499,6 +613,127 @@ const AnalyticsPage: React.FC = () => {
                   subtext={t('analytics.bookingsAwaitingConfirmation')}
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Artisan Quality Index Card */}
+          <div style={{
+            borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
+            border: '1px solid rgba(212, 175, 55, 0.3)',
+            background: '#FFFFFF',
+            padding: '24px',
+            color: '#1a1a1a'
+          }}>
+            <div className="flex flex-col gap-4 mb-6">
+              <div className="flex items-center justify-between">
+                <h3 className="typography-label flex items-center gap-2" style={{ fontSize: '16px', color: '#D4AF37', letterSpacing: '0.03em', fontWeight: '700', textTransform: 'uppercase', fontFamily: 'Playfair Display, serif' }}>
+                  <TrendingUp size={18} style={{ color: '#D4AF37' }} />
+                  Salon Stars Tracker
+                </h3>
+              </div>
+              
+              {/* Time Range Filter */}
+              <div className="flex items-center gap-2">
+                {[
+                  { id: '2DAYS' as const, label: '2 Days' },
+                  { id: '1WEEK' as const, label: '1 Week' },
+                  { id: '1MONTH' as const, label: '1 Month' },
+                  { id: '1YEAR' as const, label: '1 Year' },
+                ].map((range) => (
+                  <button
+                    key={range.id}
+                    onClick={() => setReviewTimeRange(range.id)}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                      reviewTimeRange === range.id 
+                        ? 'bg-[#D4AF37] text-white' 
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                    style={{ letterSpacing: '0.02em' }}
+                  >
+                    {range.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="relative" style={{ height: '256px', marginBottom: '16px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={ratingData}>
+                  <defs>
+                    <filter id="goldGlow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                      <feMerge>
+                        <feMergeNode in="coloredBlur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+                  <CartesianGrid strokeDasharray="0" vertical={false} horizontal={false} />
+                  <XAxis 
+                    dataKey="day" 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#666', fontSize: 10 }}
+                    tickFormatter={(value) => value.slice(0, 3)}
+                  />
+                  <YAxis 
+                    domain={[1, 5]}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#666', fontSize: 10 }}
+                    tickCount={5}
+                  />
+                  <ReferenceLine y={3} stroke="#D4AF37" strokeOpacity={0.2} strokeWidth={1} />
+                  <ReferenceLine y={4} stroke="#D4AF37" strokeOpacity={0.3} strokeWidth={1} />
+                  <ReferenceLine y={5} stroke="#D4AF37" strokeOpacity={0.4} strokeWidth={1} />
+                  <Tooltip 
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', borderRadius: '12px', padding: '16px', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)', border: '1px solid rgba(212, 175, 55, 0.3)' }}>
+                            <div className="flex items-center gap-2 mb-2">
+                              <Star size={14} style={{ color: '#D4AF37', fill: '#D4AF37' }} />
+                              <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#1a1a1a' }}>{data.rating.toFixed(1)}⭐</span>
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+                              <span style={{ fontWeight: '600' }}>Volume:</span> {data.volume} reviews
+                            </div>
+                            <div style={{ display: 'inline-block', padding: '4px 8px', backgroundColor: 'rgba(212, 175, 55, 0.2)', borderRadius: '20px' }}>
+                              <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#D4AF37' }}>{data.sentiment}</span>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="rating" 
+                    stroke="#D4AF37" 
+                    strokeWidth={3}
+                    filter="url(#goldGlow)"
+                    dot={(entry, index) => {
+                      const prevRating = index > 0 ? ratingData[index - 1].rating : entry.rating;
+                      const isUp = entry.rating >= prevRating;
+                      const color = isUp ? '#10b981' : '#ef4444';
+                      return (
+                        <circle
+                          key={`dot-${index}`}
+                          r={5}
+                          fill={color}
+                          stroke="#fff"
+                          strokeWidth={2}
+                        />
+                      );
+                    }}
+                    activeDot={{ r: 6, fill: '#D4AF37', stroke: '#fff', strokeWidth: 2 }}
+                    isAnimationActive={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>
