@@ -21,7 +21,10 @@ import {
   Users2,
   Building2,
   Eye,
-  EyeOff
+  EyeOff,
+  DollarSign,
+  TrendingDown,
+  Info
 } from 'lucide-react';
 import { useSalonApi } from '../../../../API/Salon_Owner_API/SalonOwnerAPI';
 import { logoutUser } from '../../../../API/APIs';
@@ -96,6 +99,7 @@ interface TopCustomer {
   totalSpent: number;
   firstBooking: string;
   lastBooking: string;
+  image?: string;
 }
 
 interface StaffProductivity {
@@ -234,7 +238,16 @@ const AnalyticsPage: React.FC = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => `₹${amount.toLocaleString()}`;
+  const formatCurrency = (amount: number) => `₹${Math.round(amount).toLocaleString()}`;
+
+  const calculateRevenueLeakage = () => {
+    if (!dashboardData) return 0;
+    // Estimate average booking value from completed bookings
+    const averageBookingValue = dashboardData.completedCount > 0 
+      ? dashboardData.monthlyIncome / dashboardData.completedCount 
+      : 500; // fallback estimate
+    return Math.round(dashboardData.cancelledCount * averageBookingValue);
+  };
 
   const formatRevenue = (amount: number, isVisible: boolean) => {
     if (isVisible) {
@@ -251,47 +264,66 @@ const AnalyticsPage: React.FC = () => {
   const COLORS = ['#1E4D8C', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 pb-10">
+    <div className="min-h-screen p-6 animate-in fade-in duration-500" style={{ fontFamily: 'Inter, sans-serif', backgroundColor: 'var(--soft-ivory)' }}>
       <DashboardLoader isVisible={loading} />
 
-      {/* Header Section */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
+      {/* Main Stage Container */}
+      <div className="main-stage p-6 space-y-6">
+        {/* Fixed Header Strip */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4" style={{ borderBottom: '1px solid var(--light-greige)' }}>
+          <div>
+            <h1 className="font-semibold" style={{ fontFamily: 'Playfair Display, serif', fontSize: '24px', color: 'var(--deep-charcoal)' }}>{t('analytics.title')}</h1>
+            <p className="typography-label-light" style={{ fontSize: '14px' }}>{t('analytics.trackPerformance')}</p>
+          </div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-900">{t('analytics.title')}</h1>
-            <span className="px-3 py-1 bg-[#1E4D8C]/10 text-[#1E4D8C] text-xs font-bold rounded-full">{t('analytics.salonOwner')}</span>
+            <div className="flex items-center rounded-lg p-1" style={{ 
+              backgroundColor: 'var(--light-greige)',
+              border: '1px solid var(--ghost-row-line)',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
+            }}>
+              {[
+                { id: 'TODAY' as const, label: t('analytics.today') },
+                { id: '7DAYS' as const, label: '7 Days' },
+                { id: '30DAYS' as const, label: '30 Days' },
+              ].map((range) => (
+                <button
+                  key={range.id}
+                  onClick={() => setTimeRange(range.id)}
+                  className={`px-5 rounded-md text-xs font-bold transition-all ${
+                    timeRange === range.id 
+                      ? 'bg-white shadow-md' 
+                      : 'text-gray-600 hover:bg-white/50'
+                  }`}
+                  style={{ 
+                    color: timeRange === range.id ? 'var(--deep-charcoal)' : '#666',
+                    height: '44px',
+                    letterSpacing: '0.02em',
+                    textTransform: 'uppercase'
+                  }}
+                >
+                  {range.label}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => fetchAllAnalytics()}
+              className="rounded-lg transition-colors"
+              style={{ 
+                backgroundColor: 'var(--muted-gold)', 
+                height: '44px', 
+                width: '44px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                color: 'var(--deep-charcoal)',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08)'
+              }}
+              title="Refresh"
+            >
+              <RefreshCw size={18} />
+            </button>
           </div>
-          <p className="text-gray-500 text-sm mt-1">{t('analytics.trackPerformance')}</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center bg-gray-100 rounded-lg p-1">
-            {[
-              { id: 'TODAY' as const, label: t('analytics.today') },
-              { id: '7DAYS' as const, label: '7 Days' },
-              { id: '30DAYS' as const, label: '30 Days' },
-            ].map((range) => (
-              <button
-                key={range.id}
-                onClick={() => setTimeRange(range.id)}
-                className={`px-4 py-2 rounded-md text-xs font-bold transition-all ${
-                  timeRange === range.id 
-                    ? 'bg-white text-[#1E4D8C] shadow-sm' 
-                    : 'text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {range.label}
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={() => fetchAllAnalytics()}
-            className="p-2 bg-[#1E4D8C] text-white rounded-lg hover:bg-[#153a6b] transition-colors"
-            title="Refresh"
-          >
-            <RefreshCw size={18} />
-          </button>
-        </div>
-      </div>
 
       {/* Error Display */}
       {error && (
@@ -302,33 +334,32 @@ const AnalyticsPage: React.FC = () => {
       )}
 
       {/* Tab Navigation */}
-      <div className="bg-white rounded-xl border border-gray-200 p-1 shadow-sm overflow-x-auto">
-        <div className="flex gap-1 min-w-max">
-          {[
-            { id: 'overview' as const, label: t('analytics.overview'), icon: BarChart3 },
-            { id: 'services' as const, label: t('analytics.services'), icon: Star },
-            { id: 'customers' as const, label: t('analytics.customers'), icon: Users },
-            { id: 'staff' as const, label: t('analytics.staff'), icon: Users2 },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
-                activeTab === tab.id 
-                  ? 'bg-[#1E4D8C] text-white shadow-md' 
-                  : 'text-gray-500 hover:bg-gray-50'
-              }`}
-            >
-              <tab.icon size={16} />
-              {tab.label}
-            </button>
-          ))}
-        </div>
+      <div className="flex items-center gap-4 pb-4" style={{ borderBottom: '1px solid var(--ghost-row-line)' }}>
+        {[
+          { id: 'overview' as const, label: t('analytics.overview'), icon: BarChart3 },
+          { id: 'services' as const, label: t('analytics.services'), icon: Star },
+          { id: 'customers' as const, label: t('analytics.customers'), icon: Users },
+          { id: 'staff' as const, label: t('analytics.staff'), icon: Users2 },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-6 py-3 text-sm font-bold border-b-3 transition-all typography-label ${activeTab === tab.id ? 'text-[#1E4D8C]' : 'text-gray-500 hover:text-gray-700'}`}
+            style={{
+              borderBottom: activeTab === tab.id ? '3px solid #1E4D8C' : '3px solid transparent',
+              letterSpacing: '0.03em',
+              textTransform: 'uppercase'
+            }}
+          >
+            <tab.icon size={16} className="inline mr-2" />
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* Overview Tab */}
       {activeTab === 'overview' && dashboardData && (
-        <div className="space-y-6">
+        <div className="space-y-6 px-6">
           {/* Dashboard Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
@@ -345,6 +376,7 @@ const AnalyticsPage: React.FC = () => {
               showEyeIcon={true}
               onEyeClick={() => setShowTodayIncome(!showTodayIncome)}
               isRevenueVisible={showTodayIncome}
+              isRevenue={true}
             />
             <StatCard
               label={t('analytics.totalBookings')}
@@ -360,6 +392,7 @@ const AnalyticsPage: React.FC = () => {
               showEyeIcon={true}
               onEyeClick={() => setShowMonthlyIncome(!showMonthlyIncome)}
               isRevenueVisible={showMonthlyIncome}
+              isRevenue={true}
             />
           </div>
 
@@ -393,9 +426,15 @@ const AnalyticsPage: React.FC = () => {
 
           {/* Booking Status Distribution */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <PieChart size={18} className="text-[#1E4D8C]" />
+            <div style={{
+              borderRadius: '12px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
+              border: '1px solid rgba(0, 0, 0, 0.06)',
+              background: 'linear-gradient(135deg, #FFFFFF 0%, #F7F5F2 100%)',
+              padding: '24px'
+            }}>
+              <h3 className="typography-label mb-6 flex items-center gap-2" style={{ fontSize: '16px', color: 'var(--deep-charcoal)', letterSpacing: '0.03em', fontWeight: '700', textTransform: 'uppercase' }}>
+                <PieChart size={18} style={{ color: 'var(--muted-gold)' }} />
                 {t('analytics.bookingStatusDistribution')}
               </h3>
               <ResponsiveContainer width="100%" height={300}>
@@ -411,9 +450,10 @@ const AnalyticsPage: React.FC = () => {
                     cy="50%"
                     labelLine={false}
                     label={({ name, percent }) => `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`}
-                    outerRadius={80}
+                    outerRadius={100}
                     fill="#8884d8"
                     dataKey="value"
+                    style={{ filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))' }}
                   >
                     {[
                       { name: t('analytics.confirmed'), value: dashboardData.confirmedCount },
@@ -429,10 +469,13 @@ const AnalyticsPage: React.FC = () => {
               </ResponsiveContainer>
             </div>
 
-            {/* Quick Insights */}
-            <div className="bg-gradient-to-br from-[#1E4D8C] to-[#153a6b] rounded-2xl shadow-lg p-6 text-white">
-              <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
-                <Target size={20} className="text-blue-200" />
+            {/* Quick Insights with Actionable Insights */}
+            <div className="rounded-2xl shadow-lg p-6 hover-lift" style={{
+              background: 'linear-gradient(135deg, var(--luxury-charcoal) 0%, #2d2d2d 100%)',
+              color: 'white'
+            }}>
+              <h3 className="font-bold text-lg mb-6 flex items-center gap-2" style={{ fontFamily: 'Playfair Display, serif' }}>
+                <Target size={20} style={{ color: 'var(--luxury-gold)' }} />
                 {t('analytics.performanceInsights')}
               </h3>
 
@@ -447,7 +490,7 @@ const AnalyticsPage: React.FC = () => {
                   icon={AlertCircle}
                   title={t('analytics.cancellationRate')}
                   value={`${dashboardData.totalBookings > 0 ? Math.round((dashboardData.cancelledCount / dashboardData.totalBookings) * 100) : 0}%`}
-                  subtext={t('analytics.cancelledBookingsRatio')}
+                  subtext={`Lost approx ${formatCurrency(calculateRevenueLeakage())} this week.`}
                 />
                 <InsightCard
                   icon={CalendarDays}
@@ -463,90 +506,114 @@ const AnalyticsPage: React.FC = () => {
 
       {/* Services Tab */}
       {activeTab === 'services' && serviceData && (
-        <div className="space-y-6">
+        <div className="space-y-6 px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Top Services Bar Chart */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <Star size={18} className="text-[#1E4D8C]" />
+            <div style={{
+              borderRadius: '12px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
+              border: '1px solid rgba(0, 0, 0, 0.06)',
+              background: 'linear-gradient(135deg, #FFFFFF 0%, #F7F5F2 100%)',
+              padding: '24px'
+            }}>
+              <h3 className="typography-label mb-6 flex items-center gap-2" style={{ fontSize: '16px', color: 'var(--deep-charcoal)', letterSpacing: '0.03em', fontWeight: '700', textTransform: 'uppercase' }}>
+                <Star size={18} style={{ color: 'var(--muted-gold)' }} />
                 {t('analytics.topServicesByBookings')}
               </h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={serviceData.services.slice(0, 5)}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(212, 175, 55, 0.2)" />
                   <XAxis
                     dataKey="serviceName"
-                    tick={{ fontSize: 12 }}
+                    tick={{ fontSize: 12, fill: '#666', fontWeight: '600' }}
                     angle={-45}
                     textAnchor="end"
                     height={80}
                     tickFormatter={truncateLabel}
                   />
-                  <YAxis tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12, fill: '#666', fontWeight: '600' }} />
                   <Tooltip
                     formatter={(value) => [value, t('analytics.bookings')]}
-                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #ddd', borderRadius: '8px' }}
+                    contentStyle={{ backgroundColor: 'var(--luxury-white-glass)', border: '1px solid var(--luxury-gold-muted)', borderRadius: '8px', backdropFilter: 'blur(10px)' }}
                   />
-                  <Bar dataKey="totalBookings" fill="#1E4D8C" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="totalBookings" fill="#1E4D8C" radius={[6, 6, 0, 0]} style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))' }} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
 
             {/* Services Revenue Chart */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <IndianRupee size={18} className="text-[#1E4D8C]" />
+            <div style={{
+              borderRadius: '12px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
+              border: '1px solid rgba(0, 0, 0, 0.06)',
+              background: 'linear-gradient(135deg, #FFFFFF 0%, #F7F5F2 100%)',
+              padding: '24px'
+            }}>
+              <h3 className="typography-label mb-6 flex items-center gap-2" style={{ fontSize: '16px', color: 'var(--deep-charcoal)', letterSpacing: '0.03em', fontWeight: '700', textTransform: 'uppercase' }}>
+                <IndianRupee size={18} style={{ color: 'var(--muted-gold)' }} />
                 {t('analytics.servicesRevenue')}
               </h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={serviceData.services.slice(0, 5)}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(212, 175, 55, 0.2)" />
                   <XAxis
                     dataKey="serviceName"
-                    tick={{ fontSize: 12 }}
+                    tick={{ fontSize: 12, fill: '#666', fontWeight: '600' }}
                     angle={-45}
                     textAnchor="end"
                     height={80}
                     tickFormatter={truncateLabel}
                   />
-                  <YAxis tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12, fill: '#666', fontWeight: '600' }} />
                   <Tooltip
                     formatter={(value) => [formatCurrency(value as number), t('analytics.revenue')]}
-                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #ddd', borderRadius: '8px' }}
+                    contentStyle={{ backgroundColor: 'var(--luxury-white-glass)', border: '1px solid var(--luxury-gold-muted)', borderRadius: '8px', backdropFilter: 'blur(10px)' }}
                   />
-                  <Bar dataKey="revenue" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="revenue" fill="#D4AF37" radius={[6, 6, 0, 0]} style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))' }} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          {/* Services Table */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
-              <Building2 size={18} className="text-[#1E4D8C]" />
+          {/* Services Table with Revenue per Service */}
+          <div style={{
+            borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
+            border: '1px solid rgba(0, 0, 0, 0.06)',
+            background: 'linear-gradient(135deg, #FFFFFF 0%, #F7F5F2 100%)',
+            padding: '24px'
+          }}>
+            <h3 className="typography-label mb-6 flex items-center gap-2" style={{ fontSize: '16px', color: 'var(--deep-charcoal)', letterSpacing: '0.03em', fontWeight: '700', textTransform: 'uppercase' }}>
+                <Building2 size={18} style={{ color: 'var(--muted-gold)' }} />
               {t('analytics.allServicesPerformance')}
             </h3>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full ghost-row-table">
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.service')}</th>
-                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.bookings')}</th>
-                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.revenue')}</th>
-                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.confirmed')}</th>
-                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.completed')}</th>
-                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.cancelled')}</th>
+                  <tr style={{ borderBottom: '1px solid var(--ghost-row-line)' }}>
+                    <th className="text-left typography-label" style={{ fontSize: '12px', color: '#666' }}>{t('analytics.service')}</th>
+                    <th className="text-left typography-label" style={{ fontSize: '12px', color: '#666' }}>{t('analytics.bookings')}</th>
+                    <th className="text-left typography-label" style={{ fontSize: '12px', color: '#666' }}>{t('analytics.revenue')}</th>
+                    <th className="text-left typography-label" style={{ fontSize: '12px', color: '#666' }}>Revenue/Service</th>
+                    <th className="text-left typography-label" style={{ fontSize: '12px', color: '#666' }}>{t('analytics.confirmed')}</th>
+                    <th className="text-left typography-label" style={{ fontSize: '12px', color: '#666' }}>{t('analytics.completed')}</th>
+                    <th className="text-left typography-label" style={{ fontSize: '12px', color: '#666' }}>{t('analytics.cancelled')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {serviceData.services.map((service) => (
-                    <tr key={service.serviceId} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-3 px-4 text-sm font-medium text-gray-900">{service.serviceName}</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">{service.totalBookings}</td>
-                      <td className="py-3 px-4 text-sm font-bold text-green-600">{formatCurrency(service.revenue)}</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">{service.confirmedBookings}</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">{service.completedBookings}</td>
-                      <td className="py-3 px-4 text-sm text-red-600">{service.cancelledBookings}</td>
+                    <tr 
+                      key={service.serviceId} 
+                      className="hover-lift transition-all"
+                      style={{ height: '64px', borderBottom: '1px solid var(--ghost-row-line)' }}
+                    >
+                      <td className="typography-label" style={{ fontSize: '14px', color: 'var(--deep-charcoal)' }}>{service.serviceName}</td>
+                      <td className="typography-label-light" style={{ fontSize: '14px' }}>{service.totalBookings}</td>
+                      <td className="typography-number" style={{ fontSize: '14px', color: '#10b981' }}>{formatCurrency(service.revenue)}</td>
+                      <td className="typography-number" style={{ fontSize: '14px', color: 'var(--muted-gold)' }}>{service.totalBookings > 0 ? formatCurrency(service.revenue / service.totalBookings) : '₹0'}</td>
+                      <td className="typography-label-light" style={{ fontSize: '14px' }}>{service.confirmedBookings}</td>
+                      <td className="typography-label-light" style={{ fontSize: '14px' }}>{service.completedBookings}</td>
+                      <td className="typography-label-light" style={{ fontSize: '14px', color: 'var(--muted-terracotta)' }}>{service.cancelledBookings}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -558,40 +625,73 @@ const AnalyticsPage: React.FC = () => {
 
       {/* Customers Tab */}
       {activeTab === 'customers' && customerData && (
-        <div className="space-y-6">
+        <div className="space-y-6 px-6">
           {/* Customer Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
               label={t('analytics.totalCustomers')}
               value={customerData.totalCustomers.toString()}
-              icon={<Users size={20} />}
+              icon={<Users size={20} style={{ color: 'var(--icon-color)' }} />}
               color="blue"
             />
             <StatCard
               label={t('analytics.newCustomers')}
               value={customerData.newCustomers.toString()}
-              icon={<UserCheck size={20} />}
+              icon={<UserCheck size={20} style={{ color: 'var(--icon-color)' }} />}
               color="green"
             />
             <StatCard
               label={t('analytics.returningCustomers')}
               value={customerData.returningCustomers.toString()}
-              icon={<Users2 size={20} />}
+              icon={<Users2 size={20} style={{ color: 'var(--icon-color)' }} />}
               color="purple"
             />
             <StatCard
               label={t('analytics.retentionRate')}
               value={`${customerData.retentionRate}%`}
-              icon={<TrendingUp size={20} />}
+              icon={<TrendingUp size={20} style={{ color: 'var(--icon-color)' }} />}
               color="orange"
             />
           </div>
 
+          {/* Churn Risk Widget */}
+          <div className="floating-tile p-6" style={{
+            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%)',
+            border: '2px solid rgba(239, 68, 68, 0.3)'
+          }}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)', color: '#ef4444' }}>
+                  <AlertCircle size={24} />
+                </div>
+                <div>
+                  <h3 className="typography-number" style={{ fontSize: '18px', color: 'var(--deep-charcoal)' }}>Churn Risk</h3>
+                  <p className="typography-label-light" style={{ fontSize: '14px' }}>Clients who haven't returned in 30+ days</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="typography-number" style={{ fontSize: '28px', color: '#ef4444' }}>
+                  {Math.round(customerData.totalCustomers * (1 - customerData.retentionRate / 100))}
+                </p>
+                <div className="flex items-center gap-2 justify-end mt-1">
+                  <Info size={14} style={{ color: '#666' }} />
+                  <p className="text-xs" style={{ color: '#666' }}>Consider re-engagement campaigns</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Customer Distribution */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <Users size={18} className="text-[#1E4D8C]" />
+            <div style={{
+              borderRadius: '12px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
+              border: '1px solid rgba(0, 0, 0, 0.06)',
+              background: 'linear-gradient(135deg, #FFFFFF 0%, #F7F5F2 100%)',
+              padding: '24px'
+            }}>
+              <h3 className="typography-label mb-6 flex items-center gap-2" style={{ fontSize: '16px', color: 'var(--deep-charcoal)', letterSpacing: '0.02em', fontWeight: '700' }}>
+                <Users size={18} style={{ color: 'var(--muted-gold)' }} />
                 {t('analytics.customerDistribution')}
               </h3>
               <ResponsiveContainer width="100%" height={300}>
@@ -605,22 +705,29 @@ const AnalyticsPage: React.FC = () => {
                     cy="50%"
                     labelLine={false}
                     label={({ name, percent }) => `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`}
-                    outerRadius={80}
+                    outerRadius={100}
                     fill="#8884d8"
                     dataKey="value"
+                    style={{ filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))' }}
                   >
-                    <Cell fill="#10b981" />
+                    <Cell fill="#059669" />
                     <Cell fill="#1E4D8C" />
                   </Pie>
-                  <Tooltip />
+                  <Tooltip contentStyle={{ backgroundColor: 'var(--luxury-white-glass)', border: '1px solid var(--luxury-gold-muted)', borderRadius: '8px', backdropFilter: 'blur(10px)' }} />
                 </RechartsPieChart>
               </ResponsiveContainer>
             </div>
 
             {/* Booking Frequency */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <Activity size={18} className="text-[#1E4D8C]" />
+            <div style={{
+              borderRadius: '12px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
+              border: '1px solid rgba(0, 0, 0, 0.06)',
+              background: 'linear-gradient(135deg, #FFFFFF 0%, #F7F5F2 100%)',
+              padding: '24px'
+            }}>
+              <h3 className="typography-label mb-6 flex items-center gap-2" style={{ fontSize: '16px', color: 'var(--deep-charcoal)', letterSpacing: '0.02em', fontWeight: '700' }}>
+                <Activity size={18} style={{ color: 'var(--muted-gold)' }} />
                 {t('analytics.bookingFrequency')}
               </h3>
               <ResponsiveContainer width="100%" height={300}>
@@ -630,41 +737,74 @@ const AnalyticsPage: React.FC = () => {
                     customers: value
                   }))}
                 >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="customers" fill="#3b82f6" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(212, 175, 55, 0.2)" />
+                  <XAxis dataKey="name" tick={{ fill: '#666', fontWeight: '600' }} />
+                  <YAxis tick={{ fill: '#666', fontWeight: '600' }} />
+                  <Tooltip contentStyle={{ backgroundColor: 'var(--luxury-white-glass)', border: '1px solid var(--luxury-gold-muted)', borderRadius: '8px', backdropFilter: 'blur(10px)' }} />
+                  <Bar dataKey="customers" fill="#D4AF37" radius={[6, 6, 0, 0]} style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))' }} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
 
           {/* Top Customers Table */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
-              <Star size={18} className="text-[#1E4D8C]" />
-              {t('analytics.topCustomers')}
+          <div style={{
+            borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
+            border: '1px solid rgba(0, 0, 0, 0.06)',
+            background: 'linear-gradient(135deg, #FFFFFF 0%, #F7F5F2 100%)',
+            padding: '24px'
+          }}>
+            <h3 className="typography-label mb-6 flex items-center gap-2" style={{ fontSize: '16px', color: 'var(--deep-charcoal)', letterSpacing: '0.02em', fontWeight: '700' }}>
+              <Star size={18} style={{ color: 'var(--muted-gold)' }} />
+              Top 20 Customers
             </h3>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full ghost-row-table">
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.customer')}</th>
-                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.totalBookings')}</th>
-                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.totalSpent')}</th>
-                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.firstBooking')}</th>
-                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.lastBooking')}</th>
+                  <tr style={{ borderBottom: '1px solid var(--ghost-row-line)' }}>
+                    <th className="text-left typography-label" style={{ fontSize: '12px', color: '#666' }}>{t('analytics.customer')}</th>
+                    <th className="text-left typography-label" style={{ fontSize: '12px', color: '#666' }}>{t('analytics.totalBookings')}</th>
+                    <th className="text-left typography-label" style={{ fontSize: '12px', color: '#666' }}>{t('analytics.totalSpent')}</th>
+                    <th className="text-left typography-label" style={{ fontSize: '12px', color: '#666' }}>{t('analytics.firstBooking')}</th>
+                    <th className="text-left typography-label" style={{ fontSize: '12px', color: '#666' }}>{t('analytics.lastBooking')}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {customerData.topCustomers.map((customer) => (
-                    <tr key={customer.userId} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-3 px-4 text-sm font-medium text-gray-900">{customer.name}</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">{customer.totalBookings}</td>
-                      <td className="py-3 px-4 text-sm font-bold text-green-600">{formatCurrency(customer.totalSpent)}</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">{customer.firstBooking}</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">{customer.lastBooking}</td>
+                  {customerData.topCustomers.slice(0, 20).map((customer) => (
+                    <tr 
+                      key={customer.userId} 
+                      className="hover-lift transition-all"
+                      style={{ height: '64px', borderBottom: '1px solid var(--ghost-row-line)' }}
+                    >
+                      <td className="typography-label" style={{ fontSize: '14px', color: 'var(--deep-charcoal)' }}>
+                        <div className="flex items-center gap-3">
+                          {customer.image ? (
+                            <img 
+                              src={customer.image} 
+                              alt={customer.name}
+                              className="w-10 h-10 rounded-full object-cover"
+                              style={{ boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}
+                              onError={(e) => {
+                                console.error('Image load error for customer:', customer.name, customer.image);
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ 
+                              backgroundColor: 'var(--muted-gold)',
+                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+                            }}>
+                              {customer.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          {customer.name}
+                        </div>
+                      </td>
+                      <td className="typography-label-light" style={{ fontSize: '14px' }}>{customer.totalBookings}</td>
+                      <td className="typography-number" style={{ fontSize: '14px', color: '#10b981' }}>{formatCurrency(customer.totalSpent)}</td>
+                      <td className="typography-label-light" style={{ fontSize: '14px' }}>{customer.firstBooking}</td>
+                      <td className="typography-label-light" style={{ fontSize: '14px' }}>{customer.lastBooking}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -676,45 +816,76 @@ const AnalyticsPage: React.FC = () => {
 
       {/* Staff Tab */}
       {activeTab === 'staff' && staffProductivityData && (
-        <div className="space-y-6">
+        <div className="space-y-6 px-6">
           {/* Staff Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
               label={t('analytics.totalStaff')}
               value={staffProductivityData.staffCount.toString()}
-              icon={<Users2 size={20} />}
+              icon={<Users2 size={20} style={{ color: 'var(--icon-color)' }} />}
               color="blue"
             />
             <StatCard
               label={t('analytics.avgUtilization')}
               value={`${staffProductivityData.salonAverages.utilizationRate}%`}
-              icon={<Activity size={20} />}
+              icon={<Activity size={20} style={{ color: 'var(--icon-color)' }} />}
               color="green"
             />
             <StatCard
               label={t('analytics.avgConversion')}
               value={`${staffProductivityData.salonAverages.conversionRate}%`}
-              icon={<Target size={20} />}
+              icon={<Target size={20} style={{ color: 'var(--icon-color)' }} />}
               color="purple"
             />
             <StatCard
               label={t('analytics.avgServicesPerDay')}
               value={staffProductivityData.salonAverages.servicesPerDay.toFixed(1)}
-              icon={<Zap size={20} />}
+              icon={<Zap size={20} style={{ color: 'var(--icon-color)' }} />}
               color="orange"
             />
+          </div>
+
+          {/* Utilization Rate Highlight Widget */}
+          <div className="floating-tile p-6" style={{
+            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)',
+            border: '2px solid rgba(16, 185, 129, 0.3)'
+          }}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(16, 185, 129, 0.2)', color: '#10b981' }}>
+                  <Activity size={24} />
+                </div>
+                <div>
+                  <h3 className="typography-number" style={{ fontSize: '18px', color: 'var(--deep-charcoal)' }}>Staff Utilization Rate</h3>
+                  <p className="typography-label-light" style={{ fontSize: '14px' }}>Average time spent on appointments vs idle time</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="typography-number" style={{ fontSize: '28px', color: '#10b981' }}>{staffProductivityData.salonAverages.utilizationRate}%</p>
+                <div className="flex items-center gap-2 justify-end mt-1">
+                  <Info size={14} style={{ color: '#666' }} />
+                  <p className="text-xs" style={{ color: '#666' }}>Optimal range: 70-85%</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Staff Ranking Chart & Staff Occupancy Chart - Side by Side */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Staff Ranking Chart */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <div style={{
+              borderRadius: '12px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
+              border: '1px solid rgba(0, 0, 0, 0.06)',
+              background: 'linear-gradient(135deg, #FFFFFF 0%, #F7F5F2 100%)',
+              padding: '24px'
+            }}>
               <div className="flex justify-between items-start mb-6">
-                <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                  <TrendingUp size={18} className="text-[#1E4D8C]" />
+                <h3 className="typography-label flex items-center gap-2" style={{ fontSize: '16px', color: 'var(--deep-charcoal)', letterSpacing: '0.02em', fontWeight: '700' }}>
+                  <TrendingUp size={18} style={{ color: 'var(--muted-gold)' }} />
                   {t('analytics.staffRankingByRevenue')}
                 </h3>
-                <p className="text-xs text-gray-500 bg-gray-50 px-3 py-1 rounded-full">{t('analytics.topPerformersByMoneyEarned')}</p>
+                <p className="text-xs px-3 py-1 rounded-full typography-label-light" style={{ backgroundColor: 'var(--light-greige)', fontSize: '12px' }}>{t('analytics.topPerformersByMoneyEarned')}</p>
               </div>
               <ResponsiveContainer width="100%" height={350}>
                 <BarChart
@@ -722,33 +893,39 @@ const AnalyticsPage: React.FC = () => {
                     .sort((a, b) => b.productivity.revenueGenerated - a.productivity.revenueGenerated)
                     .slice(0, 10)}
                 >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(212, 175, 55, 0.2)" />
                   <XAxis 
                     dataKey="name" 
-                    tick={{ fontSize: 12 }} 
+                    tick={{ fontSize: 12, fill: '#666' }} 
                     angle={-45} 
                     textAnchor="end" 
                     height={80}
                     tickFormatter={truncateLabel}
                   />
-                  <YAxis tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12, fill: '#666' }} />
                   <Tooltip 
                     formatter={(value) => [formatCurrency(value as number), 'Revenue']}
-                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #ddd', borderRadius: '8px' }}
+                    contentStyle={{ backgroundColor: 'var(--luxury-white-glass)', border: '1px solid var(--luxury-gold-muted)', borderRadius: '8px', backdropFilter: 'blur(10px)' }}
                   />
-                  <Bar dataKey="productivity.revenueGenerated" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="productivity.revenueGenerated" fill="var(--luxury-gold)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
 
             {/* Staff Occupancy Chart */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <div style={{
+              borderRadius: '12px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
+              border: '1px solid rgba(0, 0, 0, 0.06)',
+              background: 'linear-gradient(135deg, #FFFFFF 0%, #F7F5F2 100%)',
+              padding: '24px'
+            }}>
               <div className="flex justify-between items-start mb-6">
-                <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                  <Activity size={18} className="text-[#1E4D8C]" />
+                <h3 className="typography-label flex items-center gap-2" style={{ fontSize: '16px', color: 'var(--deep-charcoal)', letterSpacing: '0.02em', fontWeight: '700' }}>
+                  <Activity size={18} style={{ color: 'var(--muted-gold)' }} />
                   {t('analytics.staffOccupancy')}
                 </h3>
-                <p className="text-xs text-gray-500 bg-gray-50 px-3 py-1 rounded-full">{t('analytics.totalAppointmentsPerStaff')}</p>
+                <p className="text-xs px-3 py-1 rounded-full typography-label-light" style={{ backgroundColor: 'var(--light-greige)', fontSize: '12px' }}>{t('analytics.totalAppointmentsPerStaff')}</p>
               </div>
               <ResponsiveContainer width="100%" height={350}>
                 <BarChart
@@ -756,52 +933,62 @@ const AnalyticsPage: React.FC = () => {
                     .sort((a, b) => b.metrics.totalBookings - a.metrics.totalBookings)
                     .slice(0, 10)}
                 >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(212, 175, 55, 0.2)" />
                   <XAxis 
                     dataKey="name" 
-                    tick={{ fontSize: 12 }} 
+                    tick={{ fontSize: 12, fill: '#666' }} 
                     angle={-45} 
                     textAnchor="end" 
                     height={80}
                     tickFormatter={truncateLabel}
                   />
-                  <YAxis tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12, fill: '#666' }} />
                   <Tooltip 
                     formatter={(value) => [value, 'Bookings']}
-                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #ddd', borderRadius: '8px' }}
+                    contentStyle={{ backgroundColor: 'var(--luxury-white-glass)', border: '1px solid var(--luxury-gold-muted)', borderRadius: '8px', backdropFilter: 'blur(10px)' }}
                   />
-                  <Bar dataKey="metrics.totalBookings" fill="#1E4D8C" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="metrics.totalBookings" fill="var(--luxury-charcoal)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
 
           {/* Staff Performance Table */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
-              <Users2 size={18} className="text-[#1E4D8C]" />
+          <div style={{
+            borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
+            border: '1px solid rgba(0, 0, 0, 0.06)',
+            background: 'linear-gradient(135deg, #FFFFFF 0%, #F7F5F2 100%)',
+            padding: '24px'
+          }}>
+            <h3 className="typography-label mb-6 flex items-center gap-2" style={{ fontSize: '16px', color: 'var(--deep-charcoal)', letterSpacing: '0.02em', fontWeight: '700' }}>
+                <Users2 size={18} style={{ color: 'var(--muted-gold)' }} />
               {t('analytics.staffBookingsProductivity')}
             </h3>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full ghost-row-table">
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.rank')}</th>
-                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.staff')}</th>
-                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.role')}</th>
-                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.totalBookings')}</th>
-                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.completed')}</th>
-                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.revenue')}</th>
-                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.utilization')}</th>
-                    <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t('analytics.rating')}</th>
+                  <tr style={{ borderBottom: '1px solid var(--ghost-row-line)' }}>
+                    <th className="text-left typography-label" style={{ fontSize: '12px', color: '#666' }}>{t('analytics.rank')}</th>
+                    <th className="text-left typography-label" style={{ fontSize: '12px', color: '#666' }}>{t('analytics.staff')}</th>
+                    <th className="text-left typography-label" style={{ fontSize: '12px', color: '#666' }}>{t('analytics.role')}</th>
+                    <th className="text-left typography-label" style={{ fontSize: '12px', color: '#666' }}>{t('analytics.totalBookings')}</th>
+                    <th className="text-left typography-label" style={{ fontSize: '12px', color: '#666' }}>{t('analytics.completed')}</th>
+                    <th className="text-left typography-label" style={{ fontSize: '12px', color: '#666' }}>{t('analytics.revenue')}</th>
+                    <th className="text-left typography-label" style={{ fontSize: '12px', color: '#666' }}>{t('analytics.utilization')}</th>
+                    <th className="text-left typography-label" style={{ fontSize: '12px', color: '#666' }}>{t('analytics.rating')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {staffProductivityData.staffData
                     .sort((a, b) => b.productivity.revenueGenerated - a.productivity.revenueGenerated)
                     .map((staff, index) => (
-                    <tr key={staff.staffId} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-3 px-4 text-sm font-bold text-gray-900">
+                    <tr 
+                      key={staff.staffId} 
+                      className="hover-lift transition-all"
+                      style={{ height: '64px', borderBottom: '1px solid var(--ghost-row-line)' }}
+                    >
+                      <td className="typography-number" style={{ fontSize: '14px', color: 'var(--deep-charcoal)' }}>
                         <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs ${
                           index === 0 ? 'bg-yellow-100 text-yellow-700' :
                           index === 1 ? 'bg-gray-100 text-gray-700' :
@@ -811,13 +998,13 @@ const AnalyticsPage: React.FC = () => {
                           {index + 1}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-sm font-medium text-gray-900">{staff.name}</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">{staff.role}</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">{staff.metrics.totalBookings}</td>
-                      <td className="py-3 px-4 text-sm text-green-600 font-bold">{staff.metrics.completed}</td>
-                      <td className="py-3 px-4 text-sm font-bold text-green-600">{formatCurrency(staff.productivity.revenueGenerated)}</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">{staff.utilization.utilizationRate}%</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">{staff.quality.averageRating.toFixed(1)} ⭐</td>
+                      <td className="typography-label" style={{ fontSize: '14px', color: 'var(--deep-charcoal)' }}>{staff.name}</td>
+                      <td className="typography-label-light" style={{ fontSize: '14px' }}>{staff.role}</td>
+                      <td className="typography-label-light" style={{ fontSize: '14px' }}>{staff.metrics.totalBookings}</td>
+                      <td className="typography-label-light" style={{ fontSize: '14px', color: '#10b981' }}>{staff.metrics.completed}</td>
+                      <td className="typography-number" style={{ fontSize: '14px', color: '#10b981' }}>{formatCurrency(staff.productivity.revenueGenerated)}</td>
+                      <td className="typography-number" style={{ fontSize: '14px', color: 'var(--muted-gold)' }}>{staff.utilization.utilizationRate}%</td>
+                      <td className="typography-label-light" style={{ fontSize: '14px' }}>{staff.quality.averageRating.toFixed(1)} ⭐</td>
                     </tr>
                   ))}
                 </tbody>
@@ -826,6 +1013,7 @@ const AnalyticsPage: React.FC = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };
@@ -840,9 +1028,10 @@ interface StatCardProps {
   showEyeIcon?: boolean;
   onEyeClick?: () => void;
   isRevenueVisible?: boolean;
+  isRevenue?: boolean;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color, showEyeIcon, onEyeClick, isRevenueVisible }) => {
+const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color, showEyeIcon, onEyeClick, isRevenueVisible, isRevenue }) => {
   const colorClasses = {
     blue: 'bg-blue-50 text-blue-600',
     green: 'bg-green-50 text-green-600',
@@ -851,26 +1040,63 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color, showEyeI
     red: 'bg-red-50 text-red-600',
   };
 
+  const iconBgColors = {
+    blue: '#3b82f6',
+    green: '#10b981',
+    purple: '#8b5cf6',
+    orange: '#f59e0b',
+    red: '#ef4444',
+  };
+
+  const displayValue = (isRevenue && !isRevenueVisible) ? '***' : value;
+
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+    <div style={{
+      borderRadius: '12px',
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
+      border: '1px solid rgba(0, 0, 0, 0.06)',
+      background: 'linear-gradient(135deg, #FFFFFF 0%, #F7F5F2 100%)',
+      padding: '20px'
+    }}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-sm text-gray-500 font-medium mb-2">{label}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
+          <p className="typography-label mb-2" style={{ fontSize: '12px', color: '#666', letterSpacing: '0.03em', textTransform: 'uppercase', fontWeight: '600' }}>{label}</p>
+          <p 
+            className="cursor-pointer transition-all" 
+            style={{ 
+              fontFamily: 'Playfair Display, serif',
+              fontWeight: '700',
+              color: 'var(--deep-charcoal)',
+              fontSize: isRevenue ? '32px' : '28px',
+              letterSpacing: '-0.02em',
+              cursor: isRevenue ? 'pointer' : 'default'
+            }}
+            onClick={() => isRevenue && onEyeClick && onEyeClick()}
+          >
+            {displayValue}
+          </p>
         </div>
-        <div className="flex flex-col items-center gap-2">
-          <div className={`p-3 rounded-xl ${colorClasses[color as keyof typeof colorClasses]}`}>
-            {icon}
-          </div>
+        <div className="flex items-center gap-2">
           {showEyeIcon && (
             <button
               onClick={onEyeClick}
-              className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
-              title={isRevenueVisible ? "Hide Revenue" : "Show Revenue"}
+              style={{ 
+                backgroundColor: 'var(--light-greige)',
+                padding: '6px',
+                borderRadius: '6px',
+                border: '1px solid var(--ghost-row-line)',
+                cursor: 'pointer'
+              }}
             >
-              {isRevenueVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+              {isRevenueVisible ? <Eye size={14} /> : <EyeOff size={14} />}
             </button>
           )}
+          <div className="p-3 rounded-xl" style={{ 
+            backgroundColor: iconBgColors[color],
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+          }}>
+            {icon}
+          </div>
         </div>
       </div>
     </div>
@@ -887,22 +1113,44 @@ interface MetricPillProps {
 }
 
 const MetricPill: React.FC<MetricPillProps> = ({ label, value, color, icon: Icon }) => {
-  const colorClasses = {
-    green: 'bg-green-50 text-green-600 border-green-100',
-    blue: 'bg-blue-50 text-blue-600 border-blue-100',
-    orange: 'bg-orange-50 text-orange-600 border-orange-100',
-    red: 'bg-red-50 text-red-600 border-red-100'
+  const iconBgColors = {
+    green: '#10b981',
+    blue: '#3b82f6',
+    orange: '#f59e0b',
+    red: '#ef4444'
+  };
+
+  const valueColorClasses = {
+    green: '#10b981',
+    blue: '#3b82f6',
+    orange: '#f59e0b',
+    red: '#ef4444'
   };
 
   return (
-    <div className={`p-4 rounded-2xl border ${colorClasses[color]}`}>
-      <div className="flex items-center gap-2 mb-2">
-        <Icon size={16} />
-        <span className="text-xs font-bold uppercase tracking-wider">{label}</span>
+    <div style={{
+      borderRadius: '12px',
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
+      border: '1px solid rgba(0, 0, 0, 0.06)',
+      background: 'linear-gradient(135deg, #FFFFFF 0%, #F7F5F2 100%)',
+      padding: '16px'
+    }}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div className="p-2.5 rounded-lg" style={{ 
+            backgroundColor: iconBgColors[color],
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+          }}>
+            <Icon size={16} style={{ color: '#FFFFFF' }} />
+          </div>
+          <span className="text-xs font-bold uppercase tracking-wider typography-label" style={{ color: '#4A4A4A', fontSize: '11px', letterSpacing: '0.05em' }}>
+            {label}
+          </span>
+        </div>
       </div>
-      <div className="flex items-baseline gap-2">
-        <span className="text-2xl font-bold">{value}</span>
-      </div>
+      <p className="typography-number font-bold" style={{ color: valueColorClasses[color], fontSize: '28px', letterSpacing: '-0.02em' }}>
+        {value}
+      </p>
     </div>
   );
 };
@@ -916,15 +1164,25 @@ interface InsightCardProps {
 }
 
 const InsightCard: React.FC<InsightCardProps> = ({ icon: Icon, title, value, subtext }) => (
-  <div className="flex items-center gap-4 bg-white/10 rounded-xl p-4 backdrop-blur-sm">
-    <div className="p-2 rounded-lg bg-white/10 text-blue-200">
+  <div style={{
+    borderRadius: '12px',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
+    border: '1px solid rgba(0, 0, 0, 0.06)',
+    background: 'linear-gradient(135deg, #FFFFFF 0%, #F7F5F2 100%)',
+    padding: '16px'
+  }} className="flex items-center gap-4">
+    <div className="p-2.5 rounded-lg" style={{ 
+      backgroundColor: 'var(--muted-gold)', 
+      color: 'var(--deep-charcoal)',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+    }}>
       <Icon size={20} />
     </div>
     <div className="flex-1">
-      <p className="text-xs text-blue-200 uppercase tracking-wider font-bold">{title}</p>
-      <p className="text-lg font-bold">{value}</p>
+      <p className="text-xs font-bold mb-1" style={{ color: '#4A4A4A', letterSpacing: '0.03em', textTransform: 'uppercase' }}>{title}</p>
+      <p className="text-xl font-bold" style={{ color: 'var(--deep-charcoal)', letterSpacing: '-0.02em' }}>{value}</p>
+      <p className="text-xs" style={{ color: '#666' }}>{subtext}</p>
     </div>
-    <p className="text-xs text-blue-200 text-right max-w-[100px]">{subtext}</p>
   </div>
 );
 

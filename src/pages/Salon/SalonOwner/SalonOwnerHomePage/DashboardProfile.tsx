@@ -261,6 +261,7 @@ const DashboardProfile: React.FC = () => {
   const [ratingDistribution, setRatingDistribution] = useState<any>(null);
   const [expandedReviews, setExpandedReviews] = useState<Set<number>>(new Set());
   const hasAttemptedFetch = useRef(false);
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   const toggleReviewExpansion = (reviewIndex: number) => {
     const newExpanded = new Set(expandedReviews);
@@ -520,13 +521,15 @@ const DashboardProfile: React.FC = () => {
               >
                 <h1 className="text-3xl font-black text-[#1a1a1a] tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>{salonData.salonName}</h1>
                 {salonData.isVerified && <ShieldCheck className="text-blue-600 fill-blue-50" size={24} />}
-                <button
+                <motion.button
                   onClick={() => setIsEditModalOpen(true)}
-                  className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+                  className="p-2 bg-gray-100 rounded-full transition-colors"
                   title="Edit Salon Profile"
+                  whileHover={{ scale: 1.02, boxShadow: "0 0 15px rgba(0,0,0,0.2)" }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   <Edit3 size={16} className="text-gray-600" />
-                </button>
+                </motion.button>
               </motion.div>
               <p className="text-xs font-bold text-[#4b5563] uppercase tracking-[0.1em] mt-2">UNISEX • <span className="text-[#1a1a1a] font-black">₹299–1,200</span></p>
             </div>
@@ -542,9 +545,9 @@ const DashboardProfile: React.FC = () => {
         >
           {/* Column 1: Quick Stats */}
           <motion.div
-            className="bg-white border border-gray-100 rounded-2xl p-6 relative overflow-hidden shadow-sm flex flex-col flex-1"
-            style={{ boxShadow: "rgba(0,0,0,0.02) 0 1px 3px" }}
-            whileHover={{ scale: 1.01 }}
+            className="bg-white/90 backdrop-blur-xl border border-white/20 rounded-2xl p-6 relative overflow-hidden shadow-lg flex flex-col flex-1"
+            style={{ boxShadow: "rgba(0,0,0,0.1) 0 8px 32px" }}
+            whileHover={{ scale: 1.02, boxShadow: "rgba(0,0,0,0.15) 0 8px 32px" }}
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
@@ -557,43 +560,110 @@ const DashboardProfile: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Column 2: Operational Hours */}
+          {/* Column 2: Operational Hours with SVG Timeline */}
           <motion.div
-            className="bg-white border border-gray-100 rounded-2xl p-3 relative overflow-hidden shadow-sm flex flex-col flex-1"
-            style={{ boxShadow: "rgba(0,0,0,0.02) 0 1px 3px" }}
-            whileHover={{ scale: 1.01 }}
+            className="bg-white/90 backdrop-blur-xl border border-white/20 rounded-2xl p-4 relative overflow-hidden shadow-lg flex flex-col flex-1"
+            style={{ boxShadow: "rgba(0,0,0,0.1) 0 8px 32px" }}
+            whileHover={{ scale: 1.02, boxShadow: "rgba(0,0,0,0.15) 0 8px 32px" }}
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
           >
             {salonData.timing?.weeklyOff?.length > 0 && (
               <div className="absolute top-4 right-4">
-                <span className="px-2 py-1 text-[10px] font-bold text-gray-500 border border-gray-200 rounded-md uppercase tracking-wider" style={{ fontFamily: "'Playfair Display', serif" }}>
+                <span className="px-2 py-1 text-[10px] font-bold text-gray-500 border border-gray-200 rounded-md uppercase tracking-wider backdrop-blur-sm bg-white/50" style={{ fontFamily: "'Playfair Display', serif" }}>
                   Off: {salonData.timing.weeklyOff.join(', ')}
                 </span>
               </div>
             )}
-            <h3 className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3" style={{ fontFamily: "'Playfair Display', serif" }}>Operational Hours</h3>
-            <div className="flex flex-col space-y-2">
-              <div>
-                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Opens</p>
-                <p className="text-sm font-bold text-[#1a1a1a]">{formatTime(salonData.timing?.openingTime) || '--:--'}</p>
-              </div>
-              <div>
-                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Closes</p>
-                <p className="text-sm font-bold text-[#1a1a1a]">{formatTime(salonData.timing?.closingTime) || '--:--'}</p>
-              </div>
-              <div>
-                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Current Status</p>
+            <h3 className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>Operational Hours</h3>
+            
+            {/* SVG Timeline */}
+            <div className="relative">
+              <svg width="100%" height="60" viewBox="0 0 200 60" className="overflow-visible">
+                {/* Timeline Track */}
+                <defs>
+                  <linearGradient id="timelineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.3" />
+                    <stop offset={`${currentTimePosition}%`} stopColor="#D4AF37" stopOpacity="0.8" />
+                    <stop offset={`${currentTimePosition}%`} stopColor="#10b981" stopOpacity="0.8" />
+                    <stop offset="100%" stopColor="#10b981" stopOpacity="0.3" />
+                  </linearGradient>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                </defs>
+                
+                {/* Main Timeline Bar */}
+                <rect x="10" y="28" width="180" height="4" rx="2" fill="url(#timelineGradient)" />
+                
+                {/* Opening Time Marker */}
+                <circle cx="10" cy="30" r="4" fill="#D4AF37" filter="url(#glow)" />
+                <text x="10" y="18" textAnchor="middle" fontSize="7" fontWeight="bold" fill="#666" fontFamily="sans-serif">
+                  {formatTime(salonData.timing?.openingTime) || '--:--'}
+                </text>
+                
+                {/* Closing Time Marker */}
+                <circle cx="190" cy="30" r="4" fill="#10b981" filter="url(#glow)" />
+                <text x="190" y="18" textAnchor="middle" fontSize="7" fontWeight="bold" fill="#666" fontFamily="sans-serif">
+                  {formatTime(salonData.timing?.closingTime) || '--:--'}
+                </text>
+                
+                {/* Current Time Indicator with Pulse */}
+                <g>
+                  <circle 
+                    cx={10 + (currentTimePosition / 100) * 180} 
+                    cy="30" 
+                    r="6" 
+                    fill="#1a1a1a" 
+                    filter="url(#glow)"
+                  >
+                    <animate attributeName="r" values="6;8;6" dur="2s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="1;0.7;1" dur="2s" repeatCount="indefinite" />
+                  </circle>
+                  <circle 
+                    cx={10 + (currentTimePosition / 100) * 180} 
+                    cy="30" 
+                    r="10" 
+                    fill="none" 
+                    stroke="#1a1a1a" 
+                    strokeWidth="1"
+                    opacity="0.3"
+                  >
+                    <animate attributeName="r" values="10;14;10" dur="2s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.3;0;0.3" dur="2s" repeatCount="indefinite" />
+                  </circle>
+                </g>
+                
+                {/* Current Time Label */}
+                <text 
+                  x={10 + (currentTimePosition / 100) * 180} 
+                  y="50" 
+                  textAnchor="middle" 
+                  fontSize="8" 
+                  fontWeight="bold" 
+                  fill="#1a1a1a" 
+                  fontFamily="sans-serif"
+                >
+                  {currentTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                </text>
+              </svg>
+              
+              {/* Current Status */}
+              <div className="mt-2 flex items-center justify-center">
                 {isSalonOpen ? (
-                  <p className="text-sm font-bold text-emerald-700 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-pulse" />
-                    Open Now
-                  </p>
+                  <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 rounded-full border border-emerald-200">
+                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                    <span className="text-xs font-bold text-emerald-700">Open Now</span>
+                  </div>
                 ) : (
-                  <span className="inline-block px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full shadow-lg shadow-red-500/50">
-                    Closed Now
-                  </span>
+                  <div className="px-3 py-1 bg-red-50 rounded-full border border-red-200">
+                    <span className="text-xs font-bold text-red-700">Closed Now</span>
+                  </div>
                 )}
               </div>
             </div>
@@ -601,9 +671,9 @@ const DashboardProfile: React.FC = () => {
 
           {/* Column 3: Expertise */}
           <motion.div
-            className="bg-white border border-gray-100 rounded-2xl p-6 relative overflow-hidden shadow-sm flex flex-col flex-1"
-            style={{ boxShadow: "rgba(0,0,0,0.02) 0 1px 3px" }}
-            whileHover={{ scale: 1.01 }}
+            className="bg-white/90 backdrop-blur-xl border border-white/20 rounded-2xl p-6 relative overflow-hidden shadow-lg flex flex-col flex-1"
+            style={{ boxShadow: "rgba(0,0,0,0.1) 0 8px 32px" }}
+            whileHover={{ scale: 1.02, boxShadow: "rgba(0,0,0,0.15) 0 8px 32px" }}
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.7, ease: [0.25, 0.1, 0.25, 1] }}
@@ -613,8 +683,8 @@ const DashboardProfile: React.FC = () => {
               {salonData.expertise?.map((ex: string, idx: number) => (
                 <motion.span
                   key={`${ex}-${idx}`}
-                  className="px-4 py-2 rounded-lg text-[10px] font-black border uppercase tracking-tighter cursor-default bg-[#F5F5F0] text-[#1a1a1a] border-gray-200"
-                  whileHover={{ scale: 1.05 }}
+                  className="px-4 py-2 rounded-lg text-[10px] font-black border uppercase tracking-tighter cursor-default bg-white/50 text-[#1a1a1a] border-white/30"
+                  whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(0,0,0,0.1)" }}
                   transition={{ type: "spring", stiffness: 200, damping: 20 }}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -627,9 +697,9 @@ const DashboardProfile: React.FC = () => {
 
           {/* OPERATIONS & PROGRESS CARD - Full Width */}
           <motion.div
-            className="lg:col-span-3 bg-white border border-gray-100 rounded-2xl p-8 shadow-sm relative overflow-hidden"
-            style={{ boxShadow: "rgba(0,0,0,0.02) 0 1px 3px" }}
-            whileHover={{ scale: 1.01 }}
+            className="lg:col-span-3 bg-white/90 backdrop-blur-xl border border-white/20 rounded-2xl p-8 shadow-lg relative overflow-hidden"
+            style={{ boxShadow: "rgba(0,0,0,0.1) 0 8px 32px" }}
+            whileHover={{ scale: 1.01, boxShadow: "rgba(0,0,0,0.15) 0 8px 32px" }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
@@ -749,9 +819,9 @@ const DashboardProfile: React.FC = () => {
 
           {/* PERFORMANCE CARD - Full Width */}
           <motion.div
-            className="lg:col-span-3 bg-white border border-gray-100 rounded-2xl p-8 text-[#1a1a1a] shadow-sm relative overflow-hidden"
-            style={{ boxShadow: "rgba(0,0,0,0.02) 0 1px 3px" }}
-            whileHover={{ scale: 1.01 }}
+            className="lg:col-span-3 bg-white/90 backdrop-blur-xl border border-white/20 rounded-2xl p-8 text-[#1a1a1a] shadow-lg relative overflow-hidden"
+            style={{ boxShadow: "rgba(0,0,0,0.1) 0 8px 32px" }}
+            whileHover={{ scale: 1.01, boxShadow: "rgba(0,0,0,0.15) 0 8px 32px" }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.9, ease: [0.25, 0.1, 0.25, 1] }}
@@ -759,61 +829,96 @@ const DashboardProfile: React.FC = () => {
             <p className="text-[10px] font-black text-gray-500 uppercase mb-6" style={{ fontFamily: "'Playfair Display', serif" }}>Performance</p>
             
             <div className="flex flex-col md:flex-row gap-8">
-              {/* Left Side: Rating and Distribution */}
-              <div className="md:w-1/3 flex-shrink-0">
-                <motion.p
-                  className="text-5xl font-black mb-3"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 150, damping: 20, delay: 0.7 }}
-                  style={{ fontFamily: "'Playfair Display', serif" }}
-                >
-                  {salonData.ratings?.average || 0}
-                </motion.p>
-                <div className="mb-4">
-                  <AnimatedRatingStars rating={salonData.ratings?.average || 0} />
+              {/* Left Side: Glowing Circular Gauge */}
+              <div className="md:w-1/3 flex-shrink-0 flex flex-col items-center">
+                <div className="relative w-40 h-40">
+                  <svg width="160" height="160" viewBox="0 0 160 160" className="transform -rotate-90">
+                    {/* Background Circle */}
+                    <circle
+                      cx="80"
+                      cy="80"
+                      r="70"
+                      fill="none"
+                      stroke="#e5e7eb"
+                      strokeWidth="12"
+                    />
+                    {/* Progress Circle with Gradient */}
+                    <defs>
+                      <linearGradient id="ratingGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#D4AF37" />
+                        <stop offset="100%" stopColor="#10b981" />
+                      </linearGradient>
+                      <filter id="glowEffect">
+                        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                        <feMerge>
+                          <feMergeNode in="coloredBlur"/>
+                          <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    <circle
+                      cx="80"
+                      cy="80"
+                      r="70"
+                      fill="none"
+                      stroke="url(#ratingGradient)"
+                      strokeWidth="12"
+                      strokeLinecap="round"
+                      strokeDasharray={2 * Math.PI * 70}
+                      strokeDashoffset={2 * Math.PI * 70 * (1 - (salonData.ratings?.average || 0) / 5)}
+                      filter="url(#glowEffect)"
+                      style={{ transition: 'stroke-dashoffset 1s ease-out' }}
+                    />
+                  </svg>
+                  {/* Rating in Center */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <motion.p
+                      className="text-4xl font-black"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 150, damping: 20, delay: 0.7 }}
+                      style={{ fontFamily: "'Playfair Display', serif" }}
+                    >
+                      {salonData.ratings?.average || 0}
+                    </motion.p>
+                    <div className="flex items-center gap-0.5 mt-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          size={10}
+                          className={i < Math.round(salonData.ratings?.average || 0) ? "text-[#D4AF37] fill-[#D4AF37]" : "text-gray-300"}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">Based on {salonData.ratings?.reviewsCount || 0} Reviews</p>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mt-4">Based on {salonData.ratings?.reviewsCount || 0} Reviews</p>
                 
-                {/* Rating Distribution Bar Graph */}
-                <div className="space-y-2">
+                {/* Minimalist Bar Chart */}
+                <div className="space-y-3 mt-4">
                   {ratingDistribution ? (
                     <>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-gray-500 w-8">5★</span>
-                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-[#D4AF37] rounded-full" style={{ width: `${((ratingDistribution['5'] || 0) / (salonData.ratings?.reviewsCount || 1)) * 100}%` }} />
-                        </div>
-                        <span className="text-[10px] font-bold text-gray-500 w-8">{Math.round(((ratingDistribution['5'] || 0) / (salonData.ratings?.reviewsCount || 1)) * 100)}%</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-gray-500 w-8">4★</span>
-                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-[#D4AF37] rounded-full" style={{ width: `${((ratingDistribution['4'] || 0) / (salonData.ratings?.reviewsCount || 1)) * 100}%` }} />
-                        </div>
-                        <span className="text-[10px] font-bold text-gray-500 w-8">{Math.round(((ratingDistribution['4'] || 0) / (salonData.ratings?.reviewsCount || 1)) * 100)}%</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-gray-500 w-8">3★</span>
-                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-[#D4AF37] rounded-full" style={{ width: `${((ratingDistribution['3'] || 0) / (salonData.ratings?.reviewsCount || 1)) * 100}%` }} />
-                        </div>
-                        <span className="text-[10px] font-bold text-gray-500 w-8">{Math.round(((ratingDistribution['3'] || 0) / (salonData.ratings?.reviewsCount || 1)) * 100)}%</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-gray-500 w-8">2★</span>
-                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-[#D4AF37] rounded-full" style={{ width: `${((ratingDistribution['2'] || 0) / (salonData.ratings?.reviewsCount || 1)) * 100}%` }} />
-                        </div>
-                        <span className="text-[10px] font-bold text-gray-500 w-8">{Math.round(((ratingDistribution['2'] || 0) / (salonData.ratings?.reviewsCount || 1)) * 100)}%</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-gray-500 w-8">1★</span>
-                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-[#D4AF37] rounded-full" style={{ width: `${((ratingDistribution['1'] || 0) / (salonData.ratings?.reviewsCount || 1)) * 100}%` }} />
-                        </div>
-                        <span className="text-[10px] font-bold text-gray-500 w-8">{Math.round(((ratingDistribution['1'] || 0) / (salonData.ratings?.reviewsCount || 1)) * 100)}%</span>
-                      </div>
+                      {[5, 4, 3, 2, 1].map((star) => {
+                        const percentage = Math.round(((ratingDistribution[star.toString()] || 0) / (salonData.ratings?.reviewsCount || 1)) * 100);
+                        return (
+                          <div key={star} className="flex items-center gap-3">
+                            <span className="text-[9px] font-bold text-gray-400 w-6 text-right">{star}★</span>
+                            <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${percentage}%` }}
+                                transition={{ duration: 1, delay: 0.8 + (5 - star) * 0.1 }}
+                                className="h-full rounded-full"
+                                style={{ 
+                                  background: `linear-gradient(90deg, ${star >= 4 ? '#D4AF37' : '#9ca3af'} 0%, ${star >= 4 ? '#10b981' : '#6b7280'} 100%)`,
+                                  boxShadow: star >= 4 ? '0 0 10px rgba(212, 175, 55, 0.3)' : 'none'
+                                }}
+                              />
+                            </div>
+                            <span className="text-[9px] font-bold text-gray-400 w-10">{percentage}%</span>
+                          </div>
+                        );
+                      })}
                     </>
                   ) : (
                     <p className="text-[10px] text-gray-400 italic">No rating data available</p>
@@ -895,9 +1000,9 @@ const DashboardProfile: React.FC = () => {
 
           {/* LOCATION CARD - Full Width */}
           <motion.div
-            className="lg:col-span-3 bg-white border border-gray-100 rounded-2xl p-8 relative overflow-hidden shadow-sm"
-            style={{ boxShadow: "rgba(0,0,0,0.02) 0 1px 3px" }}
-            whileHover={{ scale: 1.01 }}
+            className="lg:col-span-3 bg-white/90 backdrop-blur-xl border border-white/20 rounded-2xl p-8 relative overflow-hidden shadow-lg"
+            style={{ boxShadow: "rgba(0,0,0,0.1) 0 8px 32px" }}
+            whileHover={{ scale: 1.01, boxShadow: "rgba(0,0,0,0.15) 0 8px 32px" }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 1.0, ease: [0.25, 0.1, 0.25, 1] }}
@@ -909,17 +1014,16 @@ const DashboardProfile: React.FC = () => {
               {salonData.address?.pincode}
             </p>
 
-            {/* DISPLAY COORDINATES */}
-            <div className="pt-6 border-t border-gray-100 grid grid-cols-2 gap-6">
-                <div>
-                    <p className="text-[9px] font-black text-gray-500 uppercase mb-2">Latitude</p>
-                    <p className="text-xs font-bold text-blue-600 font-mono">{salonData.location?.latitude || '0.0000'}</p>
-                </div>
-                <div>
-                    <p className="text-[9px] font-black text-gray-500 uppercase mb-2">Longitude</p>
-                    <p className="text-xs font-bold text-blue-600 font-mono">{salonData.location?.longitude || '0.0000'}</p>
-                </div>
-            </div>
+            {/* View Location Button */}
+            <motion.button
+              onClick={() => setIsMapModalOpen(true)}
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-[#1a1a1a] text-white rounded-xl font-bold uppercase tracking-widest text-xs transition-all"
+              whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(26, 26, 26, 0.3)" }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <MapPinned size={16} />
+              View Location
+            </motion.button>
           </motion.div>
         </motion.div>
       </div>
@@ -930,6 +1034,46 @@ const DashboardProfile: React.FC = () => {
           initialData={salonData}
           onUpdate={handleUpdateSalon}
         />
+      )}
+
+      {isMapModalOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+        >
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-md" onClick={() => setIsMapModalOpen(false)} />
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="relative w-full max-w-4xl h-[600px] bg-[#1a1a1a] border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden"
+          >
+            <div className="absolute top-6 right-6 z-10">
+              <button
+                onClick={() => setIsMapModalOpen(false)}
+                className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors backdrop-blur-md"
+              >
+                <X size={24} className="text-white" />
+              </button>
+            </div>
+            
+            {/* Embedded Map */}
+            <div className="w-full h-full">
+              <iframe
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                loading="lazy"
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
+                src={`https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=${encodeURIComponent(salonData.address?.street + ', ' + salonData.address?.city + ', ' + salonData.address?.state)}`}
+              />
+            </div>
+          </motion.div>
+        </motion.div>
       )}
 
       {isBlockModalOpen && (
@@ -961,13 +1105,15 @@ const DashboardProfile: React.FC = () => {
               </div>
 
               <div className="flex gap-3">
-                <button
+                <motion.button
                   onClick={() => setIsBlockModalOpen(false)}
                   className="flex-1 h-14 rounded-2xl bg-gray-100 text-[#4b5563] font-bold hover:bg-gray-200 transition-all font-sans uppercase text-xs tracking-widest border border-gray-200"
+                  whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(0,0,0,0.1)" }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   Cancel
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                   onClick={handleBlockToggle}
                   disabled={isBlocking}
                   className={`flex-1 h-14 rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2 font-sans uppercase text-xs tracking-widest transition-all border ${
@@ -975,6 +1121,8 @@ const DashboardProfile: React.FC = () => {
                       ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-900/20 border-emerald-500'
                       : 'bg-red-600 text-white hover:bg-red-700 shadow-red-900/20 border-red-500'
                   } ${isBlocking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  whileHover={{ scale: 1.02, boxShadow: salonData.isBlocked ? "0 0 30px rgba(16, 185, 129, 0.4)" : "0 0 30px rgba(239, 68, 68, 0.4)" }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   {isBlocking ? (
                     <Loader2 size={18} className="animate-spin" />
@@ -984,7 +1132,7 @@ const DashboardProfile: React.FC = () => {
                       {salonData.isBlocked ? 'Turn On' : 'Turn Off'}
                     </>
                   )}
-                </button>
+                </motion.button>
               </div>
             </div>
           </div>
@@ -1169,7 +1317,14 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
               <h2 className="text-2xl font-black text-slate-900">Edit Salon Profile</h2>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Refine your brand story and ops</p>
             </div>
-            <button onClick={onClose} className="p-3 bg-slate-50 text-slate-400 hover:text-slate-900 rounded-2xl transition-all"><X size={20} /></button>
+            <motion.button 
+              onClick={onClose} 
+              className="p-3 bg-slate-50 text-slate-400 hover:text-slate-900 rounded-2xl transition-all"
+              whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(0,0,0,0.1)" }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <X size={20} />
+            </motion.button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -1376,13 +1531,22 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
           </div>
 
           <div className="mt-12 pt-8 border-t border-slate-50 flex flex-col md:flex-row gap-4">
-            <button onClick={onClose} className="flex-1 h-14 rounded-2xl bg-slate-50 text-slate-400 font-bold hover:bg-slate-100 transition-all font-sans uppercase text-xs tracking-widest">Discard Changes</button>
-            <button
+            <motion.button 
+              onClick={onClose} 
+              className="flex-1 h-14 rounded-2xl bg-slate-50 text-slate-400 font-bold hover:bg-slate-100 transition-all font-sans uppercase text-xs tracking-widest"
+              whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(0,0,0,0.1)" }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Discard Changes
+            </motion.button>
+            <motion.button
               onClick={() => onUpdate(formData)}
               className="flex-[2] h-14 rounded-2xl bg-[#1E4D8C] text-white font-bold shadow-xl shadow-blue-900/20 hover:bg-[#163a6b] flex items-center justify-center gap-2 font-sans uppercase text-xs tracking-widest"
+              whileHover={{ scale: 1.02, boxShadow: "0 0 30px rgba(30, 77, 140, 0.4)" }}
+              whileTap={{ scale: 0.98 }}
             >
               <Check size={18} /> Update Salon Profile
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>
@@ -1390,6 +1554,7 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
   );
 };
 
+// ... (rest of the code remains the same)
 // Helpers
 const InfoRow = ({ icon: Icon, label, value }: any) => (
   <div className="flex items-center gap-4 py-3 border-b border-gray-50 last:border-0">

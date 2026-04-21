@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import {
   Search, Calendar, Clock, CheckCircle, XCircle, X,
   CreditCard, CheckCircle2, User, MessageSquare, Filter, ChevronDown, RefreshCcw,
-  Users, ChevronLeft, ChevronRight
+  Users, ChevronLeft, ChevronRight, Phone
 } from 'lucide-react';
 import { Loader } from '../../../../components/ui_components/Loader';
 import { useSalonApi } from '../../../../API/Salon_Owner_API/SalonOwnerAPI';
@@ -74,6 +74,9 @@ const BookingsPage: React.FC = () => {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [isRescheduling, setIsRescheduling] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [showSlowLoader, setShowSlowLoader] = useState(false);
+  const [priceError, setPriceError] = useState<{ min?: string; max?: string }>({});
 
   // --- FILTER STATES ---
   const initialFilters = {
@@ -91,6 +94,27 @@ const BookingsPage: React.FC = () => {
 
   const [draftFilters, setDraftFilters] = useState(initialFilters);
   const [appliedFilters, setAppliedFilters] = useState(initialFilters);
+
+  // --- SLOW LOADER HELPER ---
+  const withSlowLoader = async (operation: () => Promise<any>) => {
+    let loaderTimeout: NodeJS.Timeout;
+    
+    // Start timer to show loader after 1 second
+    loaderTimeout = setTimeout(() => {
+      setShowSlowLoader(true);
+    }, 1000);
+
+    try {
+      const result = await operation();
+      clearTimeout(loaderTimeout);
+      setShowSlowLoader(false);
+      return result;
+    } catch (error) {
+      clearTimeout(loaderTimeout);
+      setShowSlowLoader(false);
+      throw error;
+    }
+  };
 
   // --- AUTH HELPERS ---
   const getAuthData = () => {
@@ -114,13 +138,15 @@ const BookingsPage: React.FC = () => {
     const userId = getUserId();
     if (!salonId) return;
     try {
-      const res = await apiSalonRequest<FilterOptions>(
-        `/bookings/salon/${salonId}/filters`,
-        { headers: { "X-User-Id": userId } }
-      );
-      if (res.data) {
-        setFilterMeta(res.data);
-      }
+      await withSlowLoader(async () => {
+        const res = await apiSalonRequest<FilterOptions>(
+          `/bookings/salon/${salonId}/filters`,
+          { headers: { "X-User-Id": userId } }
+        );
+        if (res.data) {
+          setFilterMeta(res.data);
+        }
+      });
     } catch (err) { console.error("Filter fetch error", err); }
   };
 
@@ -136,41 +162,43 @@ const BookingsPage: React.FC = () => {
 
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      params.append('page', page.toString());
-      params.append('limit', itemsPerPage.toString());
+      await withSlowLoader(async () => {
+        const params = new URLSearchParams();
+        params.append('page', page.toString());
+        params.append('limit', itemsPerPage.toString());
 
-      // PRECISION: Only append if value is not 'ALL' or empty
-      if (filtersToUse.status && filtersToUse.status !== 'ALL') {
-        params.append('status', filtersToUse.status);
-      }
-      if (filtersToUse.staff_id && filtersToUse.staff_id !== 'ALL') {
-        params.append('staff_id', filtersToUse.staff_id);
-      }
-
-      if (filtersToUse.search) params.append('search', filtersToUse.search);
-      if (filtersToUse.date) params.append('date', filtersToUse.date);
-      if (filtersToUse.from_date) params.append('from_date', filtersToUse.from_date);
-      if (filtersToUse.to_date) params.append('to_date', filtersToUse.to_date);
-      if (filtersToUse.date_preset) params.append('date_preset', filtersToUse.date_preset);
-      if (filtersToUse.min_price) params.append('min_price', filtersToUse.min_price);
-      if (filtersToUse.max_price) params.append('max_price', filtersToUse.max_price);
-      if (filtersToUse.global_search) params.append('global_search', filtersToUse.global_search);
-
-      const res = await apiSalonRequest<BookingResponse[]>(
-        `/bookings/salon/${salonId}?${params.toString()}`,
-        { headers: { "X-User-Id": userId } }
-      );
-      if (res.data) {
-        setBookings(res.data);
-        // For now, estimate total pages based on returned items
-        // If API returns fewer items than limit, we might be on last page
-        if (res.data.length < itemsPerPage) {
-          setTotalPages(page);
-        } else {
-          setTotalPages(page + 1); // At least one more page exists
+        // PRECISION: Only append if value is not 'ALL' or empty
+        if (filtersToUse.status && filtersToUse.status !== 'ALL') {
+          params.append('status', filtersToUse.status);
         }
-      }
+        if (filtersToUse.staff_id && filtersToUse.staff_id !== 'ALL') {
+          params.append('staff_id', filtersToUse.staff_id);
+        }
+
+        if (filtersToUse.search) params.append('search', filtersToUse.search);
+        if (filtersToUse.date) params.append('date', filtersToUse.date);
+        if (filtersToUse.from_date) params.append('from_date', filtersToUse.from_date);
+        if (filtersToUse.to_date) params.append('to_date', filtersToUse.to_date);
+        if (filtersToUse.date_preset) params.append('date_preset', filtersToUse.date_preset);
+        if (filtersToUse.min_price) params.append('min_price', filtersToUse.min_price);
+        if (filtersToUse.max_price) params.append('max_price', filtersToUse.max_price);
+        if (filtersToUse.global_search) params.append('global_search', filtersToUse.global_search);
+
+        const res = await apiSalonRequest<BookingResponse[]>(
+          `/bookings/salon/${salonId}?${params.toString()}`,
+          { headers: { "X-User-Id": userId } }
+        );
+        if (res.data) {
+          setBookings(res.data);
+          // For now, estimate total pages based on returned items
+          // If API returns fewer items than limit, we might be on last page
+          if (res.data.length < itemsPerPage) {
+            setTotalPages(page);
+          } else {
+            setTotalPages(page + 1); // At least one more page exists
+          }
+        }
+      });
     } catch (error) {
       console.error("Fetch bookings error:", error);
     } finally {
@@ -237,7 +265,7 @@ const BookingsPage: React.FC = () => {
     }
   };
 
-  const sortedBookings = [...bookings].sort((a, b) => {
+  const sortedBookings = [...(bookings || [])].sort((a, b) => {
     let aValue: any;
     let bValue: any;
 
@@ -276,18 +304,20 @@ const BookingsPage: React.FC = () => {
       setLoading(true);
     }
     try {
-      const encodedNote = encodeURIComponent(statusNote.trim() || `Updated to ${newStatus}`);
-      const res = await apiSalonPatch(
-        `/bookings/${bookingId}/status?status=${newStatus}&note=${encodedNote}`,
-        {},
-        { headers: { "X-User-Id": userId } }
-      );
+      await withSlowLoader(async () => {
+        const encodedNote = encodeURIComponent(statusNote.trim() || `Updated to ${newStatus}`);
+        const res = await apiSalonPatch(
+          `/bookings/${bookingId}/status?status=${newStatus}&note=${encodedNote}`,
+          {},
+          { headers: { "X-User-Id": userId } }
+        );
 
-      if (res.error) throw new Error(res.error);
-      setNotification({ type: 'success', message: t('booking.bookingMarkedAs', { status: newStatus }) });
-      setIsModalOpen(false);
-      setStatusNote("");
-      fetchBookings();
+        if (res.error) throw new Error(res.error);
+        setNotification({ type: 'success', message: t('booking.bookingMarkedAs', { status: newStatus }) });
+        setIsModalOpen(false);
+        setStatusNote("");
+        fetchBookings();
+      });
     } catch (error: any) {
       setNotification({ type: 'error', message: error.message || t('booking.updateFailed') });
     } finally {
@@ -299,24 +329,26 @@ const BookingsPage: React.FC = () => {
   const handleRescheduleBooking = async () => {
     setIsRescheduling(true);
     try {
-      const res = await apiSalonPost(
-        `/bookings/${selectedBooking?.id}/modify`,
-        {
-          new_date: rescheduleDate,
-          new_time: rescheduleTime,
-          reason: rescheduleReason
-        }
-      );
+      await withSlowLoader(async () => {
+        const res = await apiSalonPost(
+          `/bookings/${selectedBooking?.id}/modify`,
+          {
+            new_date: rescheduleDate,
+            new_time: rescheduleTime,
+            reason: rescheduleReason
+          }
+        );
 
-      if (res.error) throw new Error(res.error);
-      setNotification({ type: 'success', message: t('booking.bookingRescheduledSuccessfully') });
-      setIsModalOpen(false);
-      setIsRescheduleMode(false);
-      setRescheduleDate("");
-      setRescheduleTime("");
-      setRescheduleReason("");
-      setAvailableSlots([]);
-      fetchBookings();
+        if (res.error) throw new Error(res.error);
+        setNotification({ type: 'success', message: t('booking.bookingRescheduledSuccessfully') });
+        setIsModalOpen(false);
+        setIsRescheduleMode(false);
+        setRescheduleDate("");
+        setRescheduleTime("");
+        setRescheduleReason("");
+        setAvailableSlots([]);
+        fetchBookings();
+      });
     } catch (error: any) {
       setNotification({ type: 'error', message: error.message || t('booking.rescheduleFailed') });
     } finally {
@@ -331,18 +363,20 @@ const BookingsPage: React.FC = () => {
 
     setLoadingSlots(true);
     try {
-      const res = await apiSalonRequest(
-        `/salons/${salonId}/slots?date=${date}&service_id=${selectedBooking.service_id || ''}`,
-        { headers: { "X-User-Id": getUserId() } }
-      );
-      if (res.data && 'slots' in res.data) {
-        const slots = (res.data as any).slots.map((slot: any) => ({
-          time: slot.time,
-          capacity: slot.totalCapacity,
-          booked: slot.bookedCount
-        }));
-        setAvailableSlots(slots);
-      }
+      await withSlowLoader(async () => {
+        const res = await apiSalonRequest(
+          `/salons/${salonId}/slots?date=${date}&service_id=${selectedBooking.service_id || ''}`,
+          { headers: { "X-User-Id": getUserId() } }
+        );
+        if (res.data && 'slots' in res.data) {
+          const slots = (res.data as any).slots.map((slot: any) => ({
+            time: slot.time,
+            capacity: slot.totalCapacity,
+            booked: slot.bookedCount
+          }));
+          setAvailableSlots(slots);
+        }
+      });
     } catch (error) {
       console.error("Failed to fetch slots:", error);
       setAvailableSlots([]);
@@ -353,11 +387,11 @@ const BookingsPage: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'CONFIRMED': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-      case 'COMPLETED': return 'bg-blue-50 text-blue-600 border-blue-100';
-      case 'CANCELLED': return 'bg-red-50 text-red-600 border-red-100';
-      case 'PENDING': return 'bg-amber-50 text-amber-600 border-amber-100';
-      default: return 'bg-gray-50 text-gray-500 border-gray-100';
+      case 'CONFIRMED': return { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-100', glow: 'shadow-[0_0_10px_rgba(16,185,129,0.3)]' };
+      case 'COMPLETED': return { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-100', glow: 'shadow-[0_0_10px_rgba(59,130,246,0.3)]' };
+      case 'CANCELLED': return { bg: 'bg-red-50', text: 'text-red-600', border: 'border-red-100', glow: 'shadow-[0_0_10px_rgba(239,68,68,0.3)]' };
+      case 'PENDING': return { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-100', glow: 'shadow-[0_0_10px_rgba(245,158,11,0.3)]', animate: 'animate-pulse' };
+      default: return { bg: 'bg-gray-50', text: 'text-gray-500', border: 'border-gray-100', glow: '' };
     }
   };
 
@@ -366,7 +400,7 @@ const BookingsPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-6 animate-in fade-in duration-500">
+    <div className="p-4 md:p-6 space-y-6 animate-in fade-in duration-500" style={{ fontFamily: 'Manrope, sans-serif', backgroundColor: 'var(--soft-ivory)' }}>
       <DashboardLoader isVisible={loading} />
 
       {notification && (
@@ -378,125 +412,78 @@ const BookingsPage: React.FC = () => {
 
       <div className="flex justify-between items-center px-2">
         <div>
-          <h1 className="text-2xl font-black text-gray-800 tracking-tight">{t('booking.appointmentDeck')}</h1>
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('booking.manageSchedule')}</p>
+          <h1 className="font-semibold typography-display" style={{ color: 'var(--deep-charcoal)', fontSize: '24px', letterSpacing: '0.05em' }}>{t('booking.appointmentDeck')}</h1>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] typography-label-light" style={{ color: '#666' }}>{t('booking.manageSchedule')}</p>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={handleResetFilters} className="p-2 text-gray-400 hover:text-red-500 transition-colors flex items-center gap-2 text-[10px] font-black uppercase">
+          <button onClick={handleResetFilters} className="p-2 transition-colors flex items-center gap-2 text-[10px] font-black uppercase typography-label-light" style={{ color: '#666' }}>
             <RefreshCcw size={14} /> {t('booking.reset')}
           </button>
-          <button onClick={handleApplyFilters} className="bg-[#1E4D8C] hover:bg-[#153a6b] text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-900/20 flex items-center gap-2">
+          <button onClick={handleApplyFilters} className="text-white px-6 rounded-2xl text-[10px] font-semibold uppercase tracking-widest transition-all flex items-center gap-2 hover:-translate-y-0.5 shadow-lg" style={{ height: '44px', background: 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)', boxShadow: '0 4px 20px rgba(212, 175, 55, 0.3)' }}>
             <Filter size={14} /> {t('booking.applyFilters')}
           </button>
         </div>
       </div>
 
-      {/* --- SERVER SIDE FILTERS PANEL --- */}
-      <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm space-y-6">
-
-        {/* TOP SEARCH BAR (Prominent Position) */}
-        <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">{t('booking.searchEverywhere')}</label>
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+      {/* --- CONDENSED SMART FILTER BAR --- */}
+      <div className="p-4 space-y-4" style={{ background: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(16px)', border: '1px solid rgba(0, 0, 0, 0.05)', borderRadius: '1.5rem', boxShadow: '0 4px 30px rgba(0, 0, 0, 0.05)' }}>
+        {/* Single-line smart filter bar */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Search Bar */}
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#666' }} />
             <input
               type="text"
               value={draftFilters.global_search}
               onChange={(e) => setDraftFilters({ ...draftFilters, global_search: e.target.value })}
               onKeyPress={handleKeyPress}
               placeholder={t('booking.searchPlaceholder')}
-              className="w-full pl-12 h-14 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-50 transition-all outline-none"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 pt-2">
-          {/* Staff Filter */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">{t('booking.specialist')}</label>
-            <div className="relative">
-              <select
-                value={draftFilters.staff_id || 'ALL'}
-                onChange={(e) => setDraftFilters({ ...draftFilters, staff_id: e.target.value })}
-                className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none cursor-pointer focus:ring-4 focus:ring-blue-50 appearance-none"
-              >
-                <option value="ALL">{t('booking.allStaff')}</option>
-                {filterMeta?.staff?.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">{t('booking.processStatus')}</label>
-            <div className="relative">
-              <select
-                value={draftFilters.status || 'ALL'}
-                onChange={(e) => setDraftFilters({ ...draftFilters, status: e.target.value })}
-                className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none cursor-pointer focus:ring-4 focus:ring-blue-50 appearance-none transition-all"
-              >
-                <option value="ALL">{t('booking.allStatuses')}</option>
-                {filterMeta?.statuses?.map(s => (
-                  <option key={s} value={s}>{formatStatusForDisplay(s)}</option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">{t('booking.dateRangeFrom')}</label>
-            <input
-              type="date"
-              min={filterMeta?.date_range.min_date}
-              max={filterMeta?.date_range.max_date}
-              value={draftFilters.from_date}
-              onChange={(e) => setDraftFilters({ ...draftFilters, from_date: e.target.value, date: '', date_preset: '' })}
-              onKeyPress={handleKeyPress}
-              className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-4 focus:ring-blue-50"
+              className="w-full pl-12 pr-4 rounded-2xl text-sm font-semibold focus:ring-4 focus:ring-blue-50 transition-all outline-none typography-label-light"
+              style={{ height: '44px', backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">{t('booking.dateRangeTo')}</label>
-            <input
-              type="date"
-              min={filterMeta?.date_range.min_date}
-              max={filterMeta?.date_range.max_date}
-              value={draftFilters.to_date}
-              onChange={(e) => setDraftFilters({ ...draftFilters, to_date: e.target.value, date: '', date_preset: '' })}
-              onKeyPress={handleKeyPress}
-              className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-4 focus:ring-blue-50"
-            />
+          {/* Status Dropdown */}
+          <div className="relative min-w-[140px]">
+            <select
+              value={draftFilters.status || 'ALL'}
+              onChange={(e) => setDraftFilters({ ...draftFilters, status: e.target.value })}
+              className="w-full px-4 rounded-2xl text-sm font-bold outline-none cursor-pointer focus:ring-4 focus:ring-blue-50 appearance-none transition-all typography-label-light"
+              style={{ height: '44px', backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
+            >
+              <option value="ALL">{t('booking.allStatuses')}</option>
+              {filterMeta?.statuses?.map(s => (
+                <option key={s} value={s}>{formatStatusForDisplay(s)}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" size={14} style={{ color: '#666' }} />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">{t('booking.specialist')}</label>
-            <div className="relative">
-              <select
-                value={draftFilters.staff_id}
-                onChange={(e) => setDraftFilters({ ...draftFilters, staff_id: e.target.value })}
-                className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none cursor-pointer focus:ring-4 focus:ring-blue-50 appearance-none"
-              >
-                <option value="ALL">{t('booking.allStaff')}</option>
-                {filterMeta?.staff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
-            </div>
+          {/* Staff Dropdown */}
+          <div className="relative min-w-[140px]">
+            <select
+              value={draftFilters.staff_id || 'ALL'}
+              onChange={(e) => setDraftFilters({ ...draftFilters, staff_id: e.target.value })}
+              className="w-full px-4 rounded-2xl text-sm font-semibold outline-none cursor-pointer focus:ring-4 focus:ring-blue-50 appearance-none transition-all typography-label-light"
+              style={{ height: '44px', backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
+            >
+              <option value="ALL">{t('booking.allStaff')}</option>
+              {filterMeta?.staff?.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" size={14} style={{ color: '#666' }} />
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-gray-50">
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">{t('booking.quickDatePreset')}</label>
+          {/* Date Preset Dropdown */}
+          <div className="relative min-w-[140px]">
             <select
               value={draftFilters.date_preset}
               onChange={(e) => setDraftFilters({ ...draftFilters, date_preset: e.target.value, from_date: '', to_date: '', date: '' })}
-              className="w-full h-12 px-4 bg-blue-50/50 text-[#1E4D8C] border-none rounded-2xl text-sm font-bold outline-none cursor-pointer"
+              className="w-full px-4 rounded-2xl text-sm font-semibold outline-none cursor-pointer focus:ring-4 focus:ring-blue-50 appearance-none transition-all typography-label-light"
+              style={{ height: '44px', backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
             >
               <option value="">{t('booking.noPreset')}</option>
               <option value="today">{t('booking.today')}</option>
@@ -504,80 +491,159 @@ const BookingsPage: React.FC = () => {
               <option value="this_week">{t('booking.thisWeek')}</option>
               <option value="last_month">{t('booking.lastMonth')}</option>
             </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" size={14} style={{ color: '#666' }} />
           </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">{t('booking.minPrice')}</label>
-            <input type="number"
-              min={filterMeta?.price_range?.min_price}
-              max={filterMeta?.price_range?.max_price}
-              value={draftFilters.min_price}
-              onChange={(e) => setDraftFilters({ ...draftFilters, min_price: e.target.value })}
-              onKeyPress={handleKeyPress}
-              className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">{t('booking.maxPrice')}</label>
-            <input type="number"
-              min={filterMeta?.price_range?.min_price}
-              max={filterMeta?.price_range?.max_price}
-              value={draftFilters.max_price}
-              onChange={(e) => setDraftFilters({ ...draftFilters, max_price: e.target.value })}
-              onKeyPress={handleKeyPress}
-              className="w-full h-12 px-4 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none" />
-          </div>
+
+          {/* Advanced Filters Toggle */}
+          <button
+            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            className="flex items-center gap-2 px-4 rounded-2xl text-sm font-semibold transition-all hover:-translate-y-0.5 shadow-lg typography-label-light"
+            style={{ height: '44px', backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
+          >
+            <Filter size={14} style={{ color: 'var(--muted-gold)' }} />
+            {showAdvancedFilters ? 'Less' : 'More'}
+            <ChevronDown size={14} style={{ color: '#666', transform: showAdvancedFilters ? 'rotate(180deg)' : '', transition: 'transform 0.3s' }} />
+          </button>
         </div>
+
+        {/* Expandable Advanced Filters */}
+        {showAdvancedFilters && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 animate-in slide-in-from-top-2 duration-300" style={{ borderTop: '1px solid rgba(0, 0, 0, 0.05)' }}>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest ml-1 typography-label-light" style={{ color: '#666' }}>{t('booking.dateRangeFrom')}</label>
+              <input
+                type="date"
+                min={filterMeta?.date_range.min_date}
+                max={filterMeta?.date_range.max_date}
+                value={draftFilters.from_date}
+                onChange={(e) => setDraftFilters({ ...draftFilters, from_date: e.target.value, date: '', date_preset: '' })}
+                onKeyPress={handleKeyPress}
+                className="w-full px-4 rounded-2xl text-sm focus:ring-4 focus:ring-blue-50 typography-label-light"
+                style={{ height: '44px', backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest ml-1 typography-label-light" style={{ color: '#666' }}>{t('booking.dateRangeTo')}</label>
+              <input
+                type="date"
+                min={filterMeta?.date_range.min_date}
+                max={filterMeta?.date_range.max_date}
+                value={draftFilters.to_date}
+                onChange={(e) => setDraftFilters({ ...draftFilters, to_date: e.target.value, date: '', date_preset: '' })}
+                onKeyPress={handleKeyPress}
+                className="w-full px-4 rounded-2xl text-sm focus:ring-4 focus:ring-blue-50 typography-label-light"
+                style={{ height: '44px', backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest ml-1 typography-label-light" style={{ color: '#666' }}>{t('booking.minPrice')}</label>
+              <input type="number"
+                min={filterMeta?.price_range?.min_price}
+                max={filterMeta?.price_range?.max_price}
+                value={draftFilters.min_price}
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value);
+                  const minAllowed = filterMeta?.price_range?.min_price;
+                  const maxAllowed = filterMeta?.price_range?.max_price;
+                  
+                  if (value < minAllowed) {
+                    setPriceError({ ...priceError, min: `Too low! Minimum is ₹${minAllowed}` });
+                  } else if (value > maxAllowed) {
+                    setPriceError({ ...priceError, min: `Too high! Maximum is ₹${maxAllowed}` });
+                  } else {
+                    setPriceError({ ...priceError, min: undefined });
+                  }
+                  
+                  setDraftFilters({ ...draftFilters, min_price: e.target.value });
+                }}
+                onKeyPress={handleKeyPress}
+                className="w-full px-4 rounded-2xl text-sm font-semibold outline-none typography-label-light"
+                style={{ height: '44px', backgroundColor: 'var(--light-greige)', border: priceError.min ? '1px solid #ef4444' : '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }} />
+              {priceError.min && <p className="text-[9px] font-bold text-red-500 ml-1">{priceError.min}</p>}
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest ml-1 typography-label-light" style={{ color: '#666' }}>{t('booking.maxPrice')}</label>
+              <input type="number"
+                min={filterMeta?.price_range?.min_price}
+                max={filterMeta?.price_range?.max_price}
+                value={draftFilters.max_price}
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value);
+                  const minAllowed = filterMeta?.price_range?.min_price;
+                  const maxAllowed = filterMeta?.price_range?.max_price;
+                  
+                  if (value < minAllowed) {
+                    setPriceError({ ...priceError, max: `Too low! Minimum is ₹${minAllowed}` });
+                  } else if (value > maxAllowed) {
+                    setPriceError({ ...priceError, max: `Too high! Maximum is ₹${maxAllowed}` });
+                  } else {
+                    setPriceError({ ...priceError, max: undefined });
+                  }
+                  
+                  setDraftFilters({ ...draftFilters, max_price: e.target.value });
+                }}
+                onKeyPress={handleKeyPress}
+                className="w-full px-4 rounded-2xl text-sm font-semibold outline-none typography-label-light"
+                style={{ height: '44px', backgroundColor: 'var(--light-greige)', border: priceError.max ? '1px solid #ef4444' : '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }} />
+              {priceError.max && <p className="text-[9px] font-bold text-red-500 ml-1">{priceError.max}</p>}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* TABLE */}
-      <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden min-h-[400px]">
+      <div className="overflow-hidden min-h-[400px]" style={{ background: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(16px)', border: '1px solid rgba(0, 0, 0, 0.05)', borderRadius: '1.5rem', boxShadow: '0 4px 30px rgba(0, 0, 0, 0.05)' }}>
         {loading ? (
           <div className="flex items-center justify-center py-32">
             <div className="flex flex-col items-center gap-4">
-              <div className="w-12 h-12 border-4 border-[#1E4D8C] border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-sm font-bold text-gray-400">{t('booking.loadingBookings')}</p>
+              <div className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--muted-gold)', borderTopColor: 'transparent' }}></div>
+              <p className="text-sm font-bold typography-label-light" style={{ color: '#666' }}>{t('booking.loadingBookings')}</p>
             </div>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="bg-gray-50/50">
-                <tr className="text-[10px] uppercase text-gray-400 font-black tracking-[0.2em]">
-                  <th className="px-8 py-5 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('booking_id')}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid rgba(0, 0, 0, 0.05)' }}>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }} onClick={() => handleSort('booking_id')}>
                     {t('booking.bookingId')} {sortField === 'booking_id' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="px-8 py-5 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('slot.date')}>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }} onClick={() => handleSort('slot.date')}>
                     {t('booking.schedule')} {sortField === 'slot.date' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="px-8 py-5 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('userData.username')}>
-                    {t('booking.customer')} {sortField === 'userData.username' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }} onClick={() => handleSort('userData.username')}>
+                    Customer {sortField === 'userData.username' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="px-8 py-5 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('staffData.name')}>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-center typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }}>
+                    Customer No
+                  </th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }} onClick={() => handleSort('staffData.name')}>
                     {t('booking.specialist')} {sortField === 'staffData.name' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="px-8 py-5 cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('serviceData.serviceName')}>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }} onClick={() => handleSort('serviceData.serviceName')}>
                     {t('booking.serviceRendered')} {sortField === 'serviceData.serviceName' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="px-8 py-5 text-center cursor-pointer hover:text-gray-600 transition-colors" onClick={() => handleSort('status')}>
-                    {t('booking.status')} {sortField === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-center cursor-pointer hover:text-gray-600 transition-colors typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }} onClick={() => handleSort('status')}>
+                    Status {sortField === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
                 </tr>
               </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody>
               {sortedBookings.length > 0 ? (
                 sortedBookings.map((row) => (
-                  <tr key={row.id} onClick={() => { setSelectedBooking(row); setStatusNote(""); setIsModalOpen(true); }} className="group cursor-pointer hover:bg-blue-50/30 transition-all">
-                    <td className="px-8 py-6">
-                      <p className="text-xs font-black text-gray-600">{row.booking_id}</p>
+                  <tr key={row.id} onClick={() => { setSelectedBooking(row); setStatusNote(""); setIsModalOpen(true); }} className="group cursor-pointer hover:-translate-y-0.5 transition-all duration-300" style={{ borderBottom: '1px solid rgba(0, 0, 0, 0.05)' }}>
+                    <td className="px-6 py-4">
+                      <p className="text-xs font-semibold typography-label-light" style={{ color: '#666' }}>{row.booking_id}</p>
                     </td>
-                    <td className="px-8 py-6">
+                    <td className="px-6 py-4">
                       <div className="flex flex-col gap-1">
-                        <p className="text-sm font-black text-gray-800">{row.slot.date}</p>
-                        <p className="text-[11px] text-gray-400 font-bold flex items-center gap-1.5">
-                          <Clock size={12} className="text-[#1E4D8C]" /> {row.slot.time}
+                        <p className="text-sm font-semibold typography-display" style={{ color: 'var(--deep-charcoal)' }}>{row.slot.date}</p>
+                        <p className="text-[11px] font-semibold flex items-center gap-1.5 typography-label-light" style={{ color: '#666' }}>
+                          <Clock size={12} style={{ color: 'var(--muted-gold)' }} /> {row.slot.time}
                         </p>
                       </div>
                     </td>
-                    <td className="px-8 py-6">
+                    <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         {row.userData?.imageUrl ? (
                           <img
@@ -586,14 +652,17 @@ const BookingsPage: React.FC = () => {
                             className="w-8 h-8 rounded-full object-cover"
                           />
                         ) : (
-                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[#1E4D8C] font-black text-[10px] uppercase">
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center font-black text-[10px] uppercase" style={{ background: 'linear-gradient(135deg, var(--muted-gold) 0%, var(--deep-charcoal) 100%)', color: 'white' }}>
                             {row.userData?.username?.charAt(0)}
                           </div>
                         )}
-                        <p className="text-sm font-bold text-gray-700">{row.userData?.username}</p>
+                        <p className="text-sm font-semibold typography-display" style={{ color: 'var(--deep-charcoal)' }}>{row.userData?.username}</p>
                       </div>
                     </td>
-                    <td className="px-8 py-6">
+                    <td className="px-6 py-4 text-center">
+                      <p className="text-sm font-semibold typography-label-light" style={{ color: '#666' }}>{row.userData?.phone || '-'}</p>
+                    </td>
+                    <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         {row.staffData?.imageUrl ? (
                           <img
@@ -602,24 +671,24 @@ const BookingsPage: React.FC = () => {
                             className="w-8 h-8 rounded-full object-cover"
                           />
                         ) : (
-                          <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-black text-[10px] uppercase">
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center font-black text-[10px] uppercase" style={{ background: 'linear-gradient(135deg, var(--muted-gold) 0%, var(--deep-charcoal) 100%)', color: 'white' }}>
                             {row.staffData?.name?.charAt(0) || '?'}
                           </div>
                         )}
-                        <p className="text-sm font-bold text-gray-800">{row.staffData?.name || t('booking.notAssigned')}</p>
+                        <p className="text-sm font-semibold typography-display" style={{ color: 'var(--deep-charcoal)' }}>{row.staffData?.name || t('booking.notAssigned')}</p>
                       </div>
                     </td>
-                    <td className="px-8 py-6">
-                      <p className="text-sm font-bold text-gray-800">{row.serviceData?.serviceName}</p>
-                      <p className="text-[11px] text-[#1E4D8C] font-black mt-1 uppercase tracking-tighter">₹{row.price}</p>
+                    <td className="px-6 py-4">
+                      <p className="text-sm font-semibold typography-display" style={{ color: 'var(--deep-charcoal)' }}>{row.serviceData?.serviceName}</p>
+                      <p className="text-[11px] font-semibold mt-1 uppercase tracking-tighter typography-number" style={{ color: 'var(--muted-gold)' }}>₹{row.price}</p>
                     </td>
-                    <td className="px-8 py-6 text-center">
+                    <td className="px-6 py-4 text-center">
                       <div className="flex items-center justify-center gap-2">
-                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase border ${getStatusColor(row.status)}`}>
+                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-semibold uppercase border ${getStatusColor(row.status).bg} ${getStatusColor(row.status).text} ${getStatusColor(row.status).border} ${getStatusColor(row.status).glow} ${getStatusColor(row.status).animate || ''} transition-all duration-300`}>
                           {formatStatusForDisplay(row.status)}
                         </span>
                         {row.isRescheduled && (
-                          <span className="px-2 py-0.5 bg-orange-100 text-orange-600 text-[8px] font-black uppercase rounded-full border border-orange-200">
+                          <span className="px-2 py-0.5 text-[8px] font-semibold uppercase rounded-full border typography-label-light" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)', color: 'var(--muted-gold)' }}>
                             RESC
                           </span>
                         )}
@@ -629,7 +698,7 @@ const BookingsPage: React.FC = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-8 py-32 text-center text-gray-400 italic font-bold">{t('booking.noBookingsFound')}</td>
+                  <td colSpan={6} className="px-6 py-32 text-center italic font-semibold typography-label-light" style={{ color: '#666' }}>{t('booking.noBookingsFound')}</td>
                 </tr>
               )}
             </tbody>
@@ -640,100 +709,112 @@ const BookingsPage: React.FC = () => {
 
       {/* PAGINATION CONTROLS */}
       {!loading && (
-        <div className="flex items-center justify-between px-8 py-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
-          <p className="text-xs font-bold text-gray-600">
+        <div className="flex items-center justify-between px-8 py-4" style={{ background: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(16px)', border: '1px solid rgba(0, 0, 0, 0.05)', borderRadius: '1.5rem', boxShadow: '0 4px 30px rgba(0, 0, 0, 0.05)' }}>
+          <p className="text-xs font-bold typography-label-light" style={{ color: '#666' }}>
             {t('booking.pageOf', { current: currentPage, total: totalPages })}
           </p>
           <div className="flex items-center gap-2">
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="p-2 rounded-xl bg-gray-50 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="p-2 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 shadow-lg"
+              style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', boxShadow: 'var(--inset-shadow)' }}
             >
-              <ChevronLeft size={16} className="text-gray-600" />
+              <ChevronLeft size={16} style={{ color: '#666' }} />
             </button>
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="p-2 rounded-xl bg-gray-50 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="p-2 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 shadow-lg"
+              style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', boxShadow: 'var(--inset-shadow)' }}
             >
-              <ChevronRight size={16} className="text-gray-600" />
+              <ChevronRight size={16} style={{ color: '#666' }} />
             </button>
           </div>
         </div>
       )}
 
-      {/* DETAIL MODAL */}
+      {/* GLOBAL SLOW LOADER OVERLAY */}
+      {showSlowLoader && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/30 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="flex flex-col items-center gap-4 p-8 rounded-3xl" style={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(16px)' }}>
+            <RefreshCcw size={48} className="animate-spin" style={{ color: 'var(--muted-gold)' }} />
+            <p className="text-sm font-black uppercase tracking-widest typography-label-light" style={{ color: 'var(--deep-charcoal)' }}>Loading...</p>
+          </div>
+        </div>
+      )}
+
+      {/* DETAIL SIDE-DRAWER */}
       {isModalOpen && selectedBooking && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-lg max-h-[85vh] rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300 flex flex-col">
-            <div className="relative h-40 bg-[#1E4D8C] flex-shrink-0">
+        <div className="fixed inset-0 z-[100] flex items-center justify-end bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="w-full max-w-lg max-h-[100vh] overflow-y-auto no-scrollbar floating-tile animate-in slide-in-from-right duration-300 mr-4" style={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(16px)' }}>
+            <div className="relative h-48 flex-shrink-0" style={{ background: 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)' }}>
               {selectedBooking.serviceData?.imageUrl && (
                 <img src={selectedBooking.serviceData.imageUrl} alt="service" className="w-full h-full object-cover opacity-40" />
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent" />
-              <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 p-2 bg-white/20 hover:bg-white/40 rounded-full text-white backdrop-blur-md transition-all"><X size={20} /></button>
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)' }} />
+              <button onClick={() => { setIsModalOpen(false); setIsRescheduleMode(false); }} className="absolute top-6 right-6 p-2 bg-white/20 hover:bg-white/40 rounded-full text-white backdrop-blur-md transition-all"><X size={20} /></button>
+              <div className="absolute bottom-6 left-6 right-6">
+                <span className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-white" style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)' }}>{t('booking.bookingDetail')}</span>
+                <h2 className="text-xl font-black text-white typography-display mt-2">{selectedBooking.serviceData?.serviceName}</h2>
+                <p className="text-[10px] font-bold text-white/80 uppercase tracking-[0.2em] typography-label-light mt-1">{t('booking.bookingId')}: {selectedBooking.booking_id}</p>
+              </div>
             </div>
 
-            <div className="px-8 pb-10 -mt-10 relative z-10 space-y-6 overflow-y-auto flex-1">
-              <div>
-                <span className="bg-[#1E4D8C] text-white text-[9px] px-3 py-1 rounded-full uppercase tracking-widest mb-3 inline-block font-black">{t('booking.bookingDetail')}</span>
-                <h2 className="text-lg font-black text-gray-800">{selectedBooking.serviceData?.serviceName}</h2>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-1 flex items-center gap-2">{t('booking.bookingId')}: {selectedBooking.booking_id}</p>
-              </div>
-
+            <div className="px-8 pb-10 pt-8 space-y-6 overflow-y-auto">
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 p-5 rounded-3xl border border-gray-100 shadow-sm">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2"><Calendar size={14} className="text-[#1E4D8C]" /> {t('booking.schedule')}</p>
-                  <p className="text-sm font-black text-gray-800">{selectedBooking.slot.date}</p>
-                  <p className="text-xs text-gray-500 font-bold mt-1">{selectedBooking.slot.time}</p>
+                <div className="p-5 rounded-3xl shadow-sm floating-tile" style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)' }}>
+                  <p className="text-[10px] font-black uppercase tracking-widest mb-3 flex items-center gap-2 typography-label-light" style={{ color: '#666' }}><Calendar size={14} style={{ color: 'var(--muted-gold)' }} /> {t('booking.schedule')}</p>
+                  <p className="text-sm font-black typography-display" style={{ color: 'var(--deep-charcoal)' }}>{selectedBooking.slot.date}</p>
+                  <p className="text-xs font-bold mt-1 typography-label-light" style={{ color: '#666' }}>{selectedBooking.slot.time}</p>
                 </div>
-                <div className="bg-gray-50 p-5 rounded-3xl border border-gray-100 shadow-sm">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2"><User size={14} className="text-[#1E4D8C]" /> {t('booking.customer')}</p>
-                  <p className="text-sm font-black text-gray-800">{selectedBooking.userData?.username}</p>
-                  <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">{t('booking.price')}: ₹{selectedBooking.price}</p>
+                <div className="p-5 rounded-3xl shadow-sm floating-tile" style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)' }}>
+                  <p className="text-[10px] font-black uppercase tracking-widest mb-3 flex items-center gap-2 typography-label-light" style={{ color: '#666' }}><User size={14} style={{ color: 'var(--muted-gold)' }} /> {t('booking.customer')}</p>
+                  <p className="text-sm font-black typography-display" style={{ color: 'var(--deep-charcoal)' }}>{selectedBooking.userData?.username}</p>
+                  <p className="text-[10px] font-bold uppercase mt-1 typography-label-light" style={{ color: '#666' }}>{t('booking.price')}: ₹{selectedBooking.price}</p>
                 </div>
               </div>
 
               {selectedBooking.isRescheduled && (
-                <div className="bg-orange-50/50 p-5 rounded-3xl border border-orange-100">
-                  <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-3 flex items-center gap-2">
-                    <span className="px-2 py-0.5 bg-orange-100 text-orange-600 text-[8px] font-black uppercase rounded-full border border-orange-200">{t('booking.rescheduled')}</span>
+                <div className="p-5 rounded-3xl border floating-tile" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)' }}>
+                  <p className="text-[10px] font-black uppercase tracking-widest mb-3 flex items-center gap-2 typography-label-light" style={{ color: 'var(--muted-gold)' }}>
+                    <span className="px-2 py-0.5 text-[8px] font-black uppercase rounded-full border typography-label-light" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)', color: 'var(--muted-gold)' }}>{t('booking.rescheduled')}</span>
                   </p>
                   {selectedBooking.previousSlot && (
                     <div className="mb-3">
-                      <p className="text-[9px] font-bold text-gray-500">{t('booking.original')}: {selectedBooking.previousSlot.date} at {selectedBooking.previousSlot.time}</p>
+                      <p className="text-[9px] font-bold typography-label-light" style={{ color: '#666' }}>{t('booking.original')}: {selectedBooking.previousSlot.date} at {selectedBooking.previousSlot.time}</p>
                     </div>
                   )}
                   {(selectedBooking.rescheduleReason || selectedBooking.modificationReason) && (
                     <div className="mb-2">
-                      <p className="text-[9px] font-bold text-gray-600">{t('booking.reason')}: {selectedBooking.rescheduleReason || selectedBooking.modificationReason}</p>
+                      <p className="text-[9px] font-bold typography-label-light" style={{ color: '#666' }}>{t('booking.reason')}: {selectedBooking.rescheduleReason || selectedBooking.modificationReason}</p>
                     </div>
                   )}
                   {(selectedBooking.rescheduledAt || selectedBooking.modifiedAt) && (
-                    <p className="text-[9px] font-bold text-gray-500">{t('booking.modified')}: {new Date(selectedBooking.rescheduledAt || selectedBooking.modifiedAt || '').toLocaleString()}</p>
+                    <p className="text-[9px] font-bold typography-label-light" style={{ color: '#666' }}>{t('booking.modified')}: {new Date(selectedBooking.rescheduledAt || selectedBooking.modifiedAt || '').toLocaleString()}</p>
                   )}
                 </div>
               )}
 
               {(selectedBooking.status === 'PENDING' || selectedBooking.status === 'CONFIRMED') && (
                 <div className="space-y-2 animate-in slide-in-from-bottom-2">
-                  <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1 flex items-center gap-2">
-                    <MessageSquare size={12} className="text-[#1E4D8C]" /> {t('booking.internalRemark')}
+                  <label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-2 typography-label-light" style={{ color: '#666' }}>
+                    <MessageSquare size={12} style={{ color: 'var(--muted-gold)' }} /> {t('booking.internalRemark')}
                   </label>
                   <textarea
                     value={statusNote}
                     onChange={(e) => setStatusNote(e.target.value)}
                     placeholder={t('booking.remarkPlaceholder')}
-                    className="w-full p-4 bg-gray-50 border-none rounded-2xl text-sm font-bold text-slate-900 focus:ring-4 focus:ring-blue-50 transition-all outline-none resize-none h-24"
+                    className="w-full p-4 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-50 transition-all outline-none resize-none h-24 typography-label-light"
+                    style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
                   />
                 </div>
               )}
 
               {isRescheduleMode && (
-                <div className="space-y-4 animate-in slide-in-from-bottom-2 bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                <div className="space-y-4 animate-in slide-in-from-bottom-2 p-4 rounded-2xl border floating-tile" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)' }}>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">{t('booking.newDate')}</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest ml-1 typography-label-light" style={{ color: '#666' }}>{t('booking.newDate')}</label>
                     <input
                       type="date"
                       value={rescheduleDate}
@@ -742,14 +823,15 @@ const BookingsPage: React.FC = () => {
                         setRescheduleDate(e.target.value);
                         setRescheduleTime("");
                       }}
-                      className="w-full h-12 px-4 bg-white border border-gray-200 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-blue-50"
+                      className="w-full h-12 px-4 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-blue-50 typography-label-light"
+                      style={{ backgroundColor: 'white', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
                     />
                   </div>
                   {rescheduleDate && (
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">{t('booking.availableTimeSlots')}</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest ml-1 typography-label-light" style={{ color: '#666' }}>{t('booking.availableTimeSlots')}</label>
                       {loadingSlots ? (
-                        <div className="w-full h-12 px-4 bg-white border border-gray-200 rounded-2xl flex items-center justify-center text-sm text-gray-400">
+                        <div className="w-full h-12 px-4 rounded-2xl flex items-center justify-center text-sm typography-label-light" style={{ backgroundColor: 'white', border: '1px solid var(--light-greige)', color: '#666' }}>
                           {t('booking.loadingSlots')}
                         </div>
                       ) : availableSlots.length > 0 ? (
@@ -759,13 +841,20 @@ const BookingsPage: React.FC = () => {
                               key={slot.time}
                               onClick={() => setRescheduleTime(slot.time)}
                               disabled={slot.booked >= slot.capacity}
-                              className={`h-12 px-4 rounded-2xl text-sm font-bold transition-all ${
+                              className={`h-12 px-4 rounded-2xl text-sm font-bold transition-all hover:-translate-y-0.5 shadow-lg typography-label-light ${
                                 rescheduleTime === slot.time
-                                  ? 'bg-[#1E4D8C] text-white'
+                                  ? ''
                                   : slot.booked >= slot.capacity
-                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                  : 'bg-white border border-gray-200 hover:bg-blue-50'
+                                  ? ''
+                                  : ''
                               }`}
+                              style={
+                                rescheduleTime === slot.time
+                                  ? { background: 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)', color: 'white', boxShadow: '0 4px 20px rgba(212, 175, 55, 0.3)' }
+                                  : slot.booked >= slot.capacity
+                                  ? { backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: '#666', boxShadow: 'var(--inset-shadow)' }
+                                  : { backgroundColor: 'white', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }
+                              }
                             >
                               {slot.time}
                               {slot.booked > 0 && <span className="text-[9px] ml-1">({slot.booked}/{slot.capacity})</span>}
@@ -773,28 +862,29 @@ const BookingsPage: React.FC = () => {
                           ))}
                         </div>
                       ) : (
-                        <div className="w-full h-12 px-4 bg-white border border-gray-200 rounded-2xl flex items-center justify-center text-sm text-gray-400">
+                        <div className="w-full h-12 px-4 rounded-2xl flex items-center justify-center text-sm typography-label-light" style={{ backgroundColor: 'white', border: '1px solid var(--light-greige)', color: '#666' }}>
                           {t('booking.noSlotsAvailable')}
                         </div>
                       )}
                     </div>
                   )}
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">{t('booking.reasonOptional')}</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest ml-1 typography-label-light" style={{ color: '#666' }}>{t('booking.reasonOptional')}</label>
                     <textarea
                       value={rescheduleReason}
                       onChange={(e) => setRescheduleReason(e.target.value)}
                       placeholder={t('booking.reasonPlaceholder')}
-                      className="w-full p-4 bg-white border border-gray-200 rounded-2xl text-sm font-bold text-slate-900 focus:ring-4 focus:ring-blue-50 transition-all outline-none resize-none h-20"
+                      className="w-full p-4 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-50 transition-all outline-none resize-none h-20 typography-label-light"
+                      style={{ backgroundColor: 'white', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
                     />
                   </div>
                 </div>
               )}
 
               {selectedBooking.note && (
-                <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
-                  <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1">{t('booking.lastRemark')}</p>
-                  <p className="text-xs text-amber-800 font-bold italic">"{selectedBooking.note}"</p>
+                <div className="p-4 rounded-2xl border floating-tile" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)' }}>
+                  <p className="text-[9px] font-black uppercase tracking-widest mb-1 typography-label-light" style={{ color: 'var(--muted-gold)' }}>{t('booking.lastRemark')}</p>
+                  <p className="text-xs font-bold italic typography-label-light" style={{ color: '#666' }}>"{selectedBooking.note}"</p>
                 </div>
               )}
 
@@ -803,8 +893,8 @@ const BookingsPage: React.FC = () => {
                   <>
                     {!isRescheduleMode ? (
                       <div className="grid grid-cols-2 gap-4">
-                        <button onClick={() => updateBookingStatus(selectedBooking.id, 'CANCELLED')} className="h-14 bg-red-50 text-red-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition-all active:scale-95">{t('booking.reject')}</button>
-                        <button onClick={() => updateBookingStatus(selectedBooking.id, 'CONFIRMED')} disabled={isConfirming} className="h-14 bg-[#1E4D8C] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-900/20 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+                        <button onClick={() => updateBookingStatus(selectedBooking.id, 'CANCELLED')} className="h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 hover:-translate-y-0.5 shadow-lg typography-label-light" style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}>{t('booking.reject')}</button>
+                        <button onClick={() => updateBookingStatus(selectedBooking.id, 'CONFIRMED')} disabled={isConfirming} className="h-14 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed hover:-translate-y-0.5 shadow-lg typography-label-light" style={{ backgroundColor: '#000000', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)' }}>
                           {isConfirming ? (
                             <>
                               <RefreshCcw size={14} className="animate-spin" /> {t('booking.pleaseWait')}
@@ -816,8 +906,8 @@ const BookingsPage: React.FC = () => {
                       </div>
                     ) : (
                       <div className="grid grid-cols-2 gap-4">
-                        <button onClick={() => setIsRescheduleMode(false)} disabled={isRescheduling} className="h-14 bg-gray-100 text-gray-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">{t('booking.cancel')}</button>
-                        <button onClick={handleRescheduleBooking} disabled={!rescheduleDate || !rescheduleTime || isRescheduling} className="h-14 bg-[#1E4D8C] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-900/20 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <button onClick={() => setIsRescheduleMode(false)} disabled={isRescheduling} className="h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 shadow-lg typography-label-light" style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}>{t('booking.cancel')}</button>
+                        <button onClick={handleRescheduleBooking} disabled={!rescheduleDate || !rescheduleTime || isRescheduling} className="h-14 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 shadow-lg typography-label-light" style={{ backgroundColor: '#000000', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)' }}>
                           {isRescheduling ? (
                             <>
                               <RefreshCcw size={14} className="animate-spin" /> {t('booking.rescheduling')}
@@ -830,7 +920,7 @@ const BookingsPage: React.FC = () => {
                         </button>
                       </div>
                     )}
-                    <button onClick={() => setIsRescheduleMode(!isRescheduleMode)} disabled={isRescheduling} className="w-full mt-3 h-12 bg-blue-50 text-[#1E4D8C] rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button onClick={() => setIsRescheduleMode(!isRescheduleMode)} disabled={isRescheduling} className="w-full mt-3 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 shadow-lg typography-label-light" style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}>
                       <RefreshCcw size={14} /> {isRescheduleMode ? t('booking.cancelReschedule') : t('booking.rescheduleBooking')}
                     </button>
                   </>
@@ -839,13 +929,13 @@ const BookingsPage: React.FC = () => {
                 {selectedBooking.status === 'CONFIRMED' && (
                   <>
                     {!isRescheduleMode ? (
-                      <button onClick={() => updateBookingStatus(selectedBooking.id, 'COMPLETED')} className="w-full h-16 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-emerald-900/20 active:scale-95 transition-all flex items-center justify-center gap-3">
+                      <button onClick={() => updateBookingStatus(selectedBooking.id, 'COMPLETED')} className="w-full h-16 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-3 hover:-translate-y-0.5 shadow-lg typography-label-light" style={{ backgroundColor: '#000000', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)' }}>
                         <CheckCircle size={18} /> {t('booking.markAsCompleted')}
                       </button>
                     ) : (
                       <div className="grid grid-cols-2 gap-4">
-                        <button onClick={() => setIsRescheduleMode(false)} disabled={isRescheduling} className="h-14 bg-gray-100 text-gray-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">{t('booking.cancel')}</button>
-                        <button onClick={handleRescheduleBooking} disabled={!rescheduleDate || !rescheduleTime || isRescheduling} className="h-14 bg-[#1E4D8C] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-900/20 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <button onClick={() => setIsRescheduleMode(false)} disabled={isRescheduling} className="h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 shadow-lg typography-label-light" style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}>{t('booking.cancel')}</button>
+                        <button onClick={handleRescheduleBooking} disabled={!rescheduleDate || !rescheduleTime || isRescheduling} className="h-14 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 shadow-lg typography-label-light" style={{ backgroundColor: '#000000', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)' }}>
                           {isRescheduling ? (
                             <>
                               <RefreshCcw size={14} className="animate-spin" /> {t('booking.rescheduling')}
@@ -858,7 +948,7 @@ const BookingsPage: React.FC = () => {
                         </button>
                       </div>
                     )}
-                    <button onClick={() => setIsRescheduleMode(!isRescheduleMode)} disabled={isRescheduling} className="w-full mt-3 h-12 bg-blue-50 text-[#1E4D8C] rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button onClick={() => setIsRescheduleMode(!isRescheduleMode)} disabled={isRescheduling} className="w-full mt-3 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 shadow-lg typography-label-light" style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}>
                       <RefreshCcw size={14} /> {isRescheduleMode ? t('booking.cancelReschedule') : t('booking.rescheduleBooking')}
                     </button>
                   </>

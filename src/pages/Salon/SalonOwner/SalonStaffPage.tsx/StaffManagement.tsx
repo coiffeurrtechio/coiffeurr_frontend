@@ -8,7 +8,9 @@ import {
     X,
     Check,
     Scissors,
-    Briefcase
+    Briefcase,
+    Star,
+    MessageSquare
 } from 'lucide-react';
 import { useApi } from '../../../../API/SalonsAPIs/ALLSalonAPI';
 import { useSalonApi } from '../../../../API/Salon_Owner_API/SalonOwnerAPI';
@@ -28,9 +30,13 @@ const StaffManagement: React.FC = () => {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isReviewsModalOpen, setIsReviewsModalOpen] = useState(false);
     const [editingStaffId, setEditingStaffId] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [selectedStaff, setSelectedStaff] = useState<any>(null);
+    const [staffReviews, setStaffReviews] = useState<any[]>([]);
+    const [loadingReviews, setLoadingReviews] = useState(false);
 
     const [formData, setFormData] = useState({
         name: "",
@@ -188,59 +194,78 @@ const StaffManagement: React.FC = () => {
         setEditingStaffId(null);
     };
 
+    const handleViewReviews = async (staff: any) => {
+        setSelectedStaff(staff);
+        setIsReviewsModalOpen(true);
+        setLoadingReviews(true);
+        try {
+            const res = await apiRequest<any>(`/reviews/reviews/STAFF/${staff.staff_id}?page=1&limit=20`);
+            if (res.data) setStaffReviews(res.data);
+        } catch (error) {
+            console.error("Error fetching reviews:", error);
+            setStaffReviews([]);
+        } finally {
+            setLoadingReviews(false);
+        }
+    };
+
     return (
-        <div className="p-4 md:p-6 space-y-6 animate-in fade-in duration-500 bg-gradient-to-br from-slate-50 to-blue-50/30 min-h-screen">
+        <div className="min-h-screen p-6 animate-in fade-in duration-500" style={{ fontFamily: 'Inter, sans-serif', backgroundColor: 'var(--soft-ivory)' }}>
             <DashboardLoader isVisible={loading || submitting} />
 
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-in slide-in-from-top duration-500">
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">Team Members</h1>
-                    <p className="text-sm text-gray-500 mt-1">Manage your salon staff and their services</p>
-                </div>
-                <button onClick={() => { resetForm(); setIsModalOpen(true); }} className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#1E4D8C] to-[#2a5fa8] text-white rounded-2xl text-sm font-bold hover:shadow-lg hover:shadow-blue-500/25 hover:scale-105 transition-all duration-300">
+            {/* Main Stage Container */}
+            <div className="main-stage p-6 space-y-6">
+                {/* Fixed Header Strip */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4" style={{ borderBottom: '1px solid var(--light-greige)' }}>
+                    <div>
+                        <h1 className="font-semibold" style={{ fontFamily: 'Playfair Display, serif', fontSize: '24px', color: 'var(--deep-charcoal)' }}>Team Members</h1>
+                        <p className="typography-label-light" style={{ fontSize: '14px' }}>Manage your salon staff and their services</p>
+                    </div>
+                    <button onClick={() => { resetForm(); setIsModalOpen(true); }} className="w-full md:w-auto flex items-center justify-center gap-2 px-6 text-white rounded-2xl text-sm font-semibold transition-all duration-300" style={{ backgroundColor: 'var(--muted-gold)', height: '44px' }}>
                     <Plus size={18} /> {t('staff.addStaff')}
                 </button>
             </div>
 
-            {/* Search Bar */}
-            <div className="relative w-full md:w-96 animate-in slide-in-from-top duration-500 delay-100">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <input 
-                    type="text" 
-                    placeholder={t('staff.searchStaff')} 
-                    value={searchQuery} 
-                    onChange={(e) => setSearchQuery(e.target.value)} 
-                    className="w-full pl-12 pr-4 py-3 bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none shadow-sm transition-all" 
-                />
+                {/* Search Bar - Integrated in Header Strip */}
+                <div className="relative w-full md:w-96">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2" size={18} style={{ color: '#666' }} />
+                    <input 
+                        type="text" 
+                        placeholder={t('staff.searchStaff')} 
+                        value={searchQuery} 
+                        onChange={(e) => setSearchQuery(e.target.value)} 
+                        className="w-full pl-12 pr-4 rounded-2xl text-sm outline-none transition-all typography-label-light" 
+                        style={{ height: '44px', backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
+                    />
+                </div>
             </div>
 
             {/* Staff Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-in fade-in duration-500 delay-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-in fade-in duration-500 delay-200 mt-6">
                 {staffList.filter(s => s.name?.toLowerCase().includes(searchQuery.toLowerCase())).map((staff) => (
                     <div 
                         key={staff.staff_id} 
-                        className="group bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 border border-gray-100/50 hover:border-blue-200/50"
+                        className="floating-tile overflow-hidden hover-lift"
                     >
                         {/* Card Header with Image */}
-                        <div className="relative h-32 bg-gradient-to-br from-[#1E4D8C] to-[#3a7bc8] overflow-hidden">
+                        <div className="relative h-32 overflow-hidden" style={{ background: 'linear-gradient(135deg, var(--muted-gold) 0%, var(--deep-charcoal) 100%)' }}>
                             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0wIDQwaDQwVjBIMHY0MHptMjAgMjBWMjBIMHYyMGgyMHptMjAgMjBWMjBIMHYyMGgyMHoiIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvZz48L3N2Zz4=')] opacity-30"></div>
                             <div className="absolute bottom-3 left-4">
                                 <div className="w-24 h-24 rounded-xl bg-white shadow-lg overflow-hidden border-3 border-white">
                                     {staff.images?.[0] ? 
                                         <img src={staff.images[0]} className="w-full h-full object-cover" alt={staff.name} /> : 
-                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                                            <User size={40} className="text-gray-400" />
+                                        <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: 'var(--light-greige)' }}>
+                                            <User size={40} style={{ color: '#666' }} />
                                         </div>
                                     }
                                 </div>
                             </div>
                             <div className="absolute top-3 right-3">
-                                <span className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider border-2 ${
+                                <span className={`px-3 py-1.5 rounded-full text-[9px] font-semibold uppercase tracking-wider border-2 ${
                                     staff.active 
-                                        ? 'text-white bg-[#1E4D8C] border-[#1E4D8C]' 
-                                        : 'text-gray-600 bg-white border-gray-300'
-                                }`}>
+                                        ? 'text-white' 
+                                        : 'text-gray-600 bg-white'
+                                }`} style={staff.active ? { backgroundColor: 'var(--sage-green)', borderColor: 'var(--sage-green)' } : { borderColor: 'var(--light-greige)' }}>
                                     {staff.active ? t('staff.active') : t('staff.inactive')}
                                 </span>
                             </div>
@@ -250,25 +275,25 @@ const StaffManagement: React.FC = () => {
                         <div className="pt-10 pb-4 px-4">
                             <div className="flex justify-between items-start mb-3">
                                 <div className="flex-1">
-                                    <h3 className="text-base font-bold text-gray-800">{staff.name}</h3>
-                                    <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">{staff.role}</p>
+                                    <h3 className="typography-label" style={{ fontSize: '16px', color: 'var(--deep-charcoal)' }}>{staff.name}</h3>
+                                    <p className="typography-label-light" style={{ fontSize: '10px', letterSpacing: '0.05em' }}>{staff.role}</p>
                                 </div>
                                 {/* Experience & Rating on right */}
                                 <div className="flex flex-col gap-1 items-end">
                                     {staff.experienceYears && (
                                         <div className="flex items-center gap-1">
-                                            <div className="w-4 h-4 rounded bg-amber-50 flex items-center justify-center">
-                                                <Briefcase size={8} className="text-amber-600" />
+                                            <div className="w-4 h-4 rounded flex items-center justify-center" style={{ backgroundColor: 'var(--light-greige)' }}>
+                                                <Briefcase size={8} style={{ color: 'var(--muted-gold)' }} />
                                             </div>
-                                            <span className="text-[9px] text-gray-600 font-medium">{staff.experienceYears}y</span>
+                                            <span className="typography-label-light font-semibold" style={{ fontSize: '11px' }}>{staff.experienceYears}y</span>
                                         </div>
                                     )}
                                     {staff.rating?.average && (
                                         <div className="flex items-center gap-1">
-                                            <div className="w-4 h-4 rounded bg-green-50 flex items-center justify-center">
-                                                <span className="text-[7px]">★</span>
+                                            <div className="w-4 h-4 rounded flex items-center justify-center" style={{ backgroundColor: 'var(--light-greige)' }}>
+                                                <span style={{ fontSize: '7px', color: 'var(--muted-gold)' }}>★</span>
                                             </div>
-                                            <span className="text-[9px] text-gray-600 font-medium">{staff.rating.average.toFixed(1)}</span>
+                                            <span className="typography-label-light font-semibold" style={{ fontSize: '11px' }}>{staff.rating.average.toFixed(1)}</span>
                                         </div>
                                     )}
                                 </div>
@@ -281,16 +306,16 @@ const StaffManagement: React.FC = () => {
                                         const serviceId = typeof ser === 'string' ? ser : ser.service_id;
                                         const service = allServices.find((s: any) => s.service_id === serviceId);
                                         return service ? (
-                                            <span key={serviceId} className="px-2.5 py-1 bg-gradient-to-r from-[#1E4D8C]/10 to-[#2a5fa8]/10 text-[#1E4D8C] rounded-lg text-[10px] font-semibold border border-[#1E4D8C]/20 shadow-sm">
+                                            <span key={serviceId} className="px-2.5 py-1 rounded-lg text-[10px] font-semibold border typography-label-light" style={{ backgroundColor: 'var(--light-greige)', color: 'var(--deep-charcoal)', borderColor: 'var(--light-greige)' }}>
                                                 {service.serviceName}
                                             </span>
                                         ) : null;
-                                    }) : <span className="text-[9px] text-gray-400 italic w-full text-center">{t('staff.noServicesLinked')}</span>}
+                                    }) : <span className="typography-label-light italic w-full text-center" style={{ fontSize: '9px' }}>{t('staff.noServicesLinked')}</span>}
                                 </div>
                             </div>
 
                             {/* Contact Info Row */}
-                            <div className="flex justify-between items-center mb-3 text-[9px] text-gray-500">
+                            <div className="flex justify-between items-center mb-3 typography-label-light" style={{ fontSize: '9px' }}>
                                 {staff.phone && (
                                     <span className="flex items-center gap-1">
                                         📞 {staff.phone}
@@ -319,14 +344,23 @@ const StaffManagement: React.FC = () => {
                                 )}
                             </div>
 
-                            {/* Action Button */}
-                            <button 
-                                onClick={() => handleEditClick(staff)}
-                                className="w-full py-2 px-3 bg-gradient-to-r from-gray-50 to-gray-100 hover:from-blue-50 hover:to-indigo-50 text-gray-700 hover:text-blue-700 rounded-lg text-[10px] font-semibold border border-gray-200 hover:border-blue-200 transition-all duration-300 flex items-center justify-center gap-1.5 group-hover:shadow-sm"
-                            >
-                                <Edit2 size={12} />
-                                Edit Profile
-                            </button>
+                            {/* Action Buttons */}
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={() => handleViewReviews(staff)}
+                                    className="flex-1 py-2 px-3 bg-gradient-to-r from-gray-50 to-gray-100 hover:from-amber-50 hover:to-yellow-50 text-gray-700 hover:text-amber-700 rounded-lg text-[10px] font-semibold border border-gray-200 hover:border-amber-200 transition-all duration-300 flex items-center justify-center gap-1.5"
+                                >
+                                    <MessageSquare size={12} />
+                                    Reviews
+                                </button>
+                                <button 
+                                    onClick={() => handleEditClick(staff)}
+                                    className="flex-1 py-2 px-3 bg-gradient-to-r from-gray-50 to-gray-100 hover:from-blue-50 hover:to-indigo-50 text-gray-700 hover:text-blue-700 rounded-lg text-[10px] font-semibold border border-gray-200 hover:border-blue-200 transition-all duration-300 flex items-center justify-center gap-1.5"
+                                >
+                                    <Edit2 size={12} />
+                                    Edit
+                                </button>
+                            </div>
                         </div>
                     </div>
                 ))}
@@ -344,6 +378,112 @@ const StaffManagement: React.FC = () => {
                     uploading={uploading}
                     handleFileUpload={handleFileUpload}
                 />
+            )}
+
+            {/* Reviews Modal */}
+            {isReviewsModalOpen && selectedStaff && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(8px)' }}>
+                    <div className="w-full max-w-2xl rounded-2xl overflow-hidden animate-in fade-in zoom-in duration-300" style={{
+                        borderRadius: '20px',
+                        boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.3)',
+                        background: '#FFFFFF',
+                        border: '1px solid rgba(212, 175, 55, 0.2)'
+                    }}>
+                        {/* Modal Header */}
+                        <div className="p-8 pb-6" style={{ 
+                            background: 'linear-gradient(135deg, #FFF8F0 0%, #FFFFFF 100%)',
+                            borderBottom: '1px solid rgba(212, 175, 55, 0.15)'
+                        }}>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-5">
+                                    {selectedStaff.images?.[0] ? (
+                                        <div className="relative">
+                                            <img src={selectedStaff.images[0]} className="w-20 h-20 rounded-2xl object-cover" alt={selectedStaff.name} style={{ boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)' }} />
+                                            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: '#D4AF37', boxShadow: '0 2px 8px rgba(212, 175, 55, 0.4)' }}>
+                                                <Star size={12} fill="white" style={{ color: 'white' }} />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="w-20 h-20 rounded-2xl flex items-center justify-center relative" style={{ backgroundColor: 'var(--light-greige)', boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)' }}>
+                                            <User size={36} style={{ color: '#999' }} />
+                                            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: '#D4AF37', boxShadow: '0 2px 8px rgba(212, 175, 55, 0.4)' }}>
+                                                <Star size={12} fill="white" style={{ color: 'white' }} />
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div>
+                                        <h3 className="text-2xl font-bold mb-1" style={{ fontFamily: 'Playfair Display, serif', color: 'var(--deep-charcoal)', letterSpacing: '-0.02em' }}>{selectedStaff.name}</h3>
+                                        <p className="text-sm font-medium mb-2" style={{ color: '#666', letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '11px' }}>{selectedStaff.role}</p>
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full" style={{ backgroundColor: 'rgba(212, 175, 55, 0.1)' }}>
+                                                <Star size={14} fill="#D4AF37" style={{ color: '#D4AF37' }} />
+                                                <span className="text-sm font-bold" style={{ color: '#D4AF37' }}>{selectedStaff.rating?.average?.toFixed(1) || 'N/A'}</span>
+                                            </div>
+                                            <span className="text-xs font-medium" style={{ color: '#999' }}>{staffReviews.length} review{staffReviews.length !== 1 ? 's' : ''}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onClick={() => setIsReviewsModalOpen(false)} className="p-3 hover:bg-gray-100 rounded-xl transition-all duration-200" style={{ backgroundColor: 'transparent' }}>
+                                    <X size={22} style={{ color: '#666' }} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="p-8 max-h-[55vh] overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#E8E4DE transparent' }}>
+                            {loadingReviews ? (
+                                <div className="flex items-center justify-center py-16">
+                                    <div className="text-center">
+                                        <div className="animate-spin rounded-full h-10 w-10 border-2 border-gray-200 border-t-gray-900 mx-auto mb-4"></div>
+                                        <p className="text-sm font-medium" style={{ color: '#666' }}>Loading reviews...</p>
+                                    </div>
+                                </div>
+                            ) : staffReviews.length > 0 ? (
+                                <div className="space-y-5">
+                                    {staffReviews.map((review, index) => (
+                                        <div key={index} className="p-5 rounded-2xl transition-all duration-300 hover:shadow-lg" style={{ 
+                                            backgroundColor: '#FAFAFA',
+                                            border: '1px solid #E8E4DE',
+                                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
+                                        }}>
+                                            <div className="flex justify-between items-start mb-3">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-base font-bold" style={{ 
+                                                        backgroundColor: 'linear-gradient(135deg, #D4AF37 0%, #B8962E 100%)',
+                                                        color: 'white',
+                                                        boxShadow: '0 4px 12px rgba(212, 175, 55, 0.3)'
+                                                    }}>
+                                                        {review.userName?.charAt(0).toUpperCase() || 'U'}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-semibold text-base mb-0.5" style={{ color: 'var(--deep-charcoal)', fontFamily: 'Playfair Display, serif' }}>{review.userName || 'Customer'}</p>
+                                                        <p className="text-xs font-medium" style={{ color: '#999', letterSpacing: '0.05em' }}>
+                                                            {new Date(review.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-1">
+                                                    {[1, 2, 3, 4, 5].map(star => (
+                                                        <Star key={star} size={14} className={star <= review.rating ? "fill-[#D4AF37]" : "text-gray-200"} style={{ color: star <= review.rating ? '#D4AF37' : '#E5E7EB' }} />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <p className="text-base leading-relaxed italic" style={{ color: '#333', fontFamily: 'Georgia, serif', lineHeight: '1.7' }}>"{review.reviewText}"</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-16">
+                                    <div className="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(212, 175, 55, 0.1)' }}>
+                                        <MessageSquare size={36} style={{ color: '#D4AF37' }} />
+                                    </div>
+                                    <p className="text-base font-medium mb-2" style={{ color: '#666', fontFamily: 'Playfair Display, serif' }}>No reviews yet</p>
+                                    <p className="text-sm" style={{ color: '#999' }}>Be the first to share your experience</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

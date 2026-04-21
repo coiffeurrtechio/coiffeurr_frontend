@@ -40,6 +40,34 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  
+  /* Luxury Color Scheme */
+  --luxury-charcoal: #1A1A1A;
+  --luxury-gold: #D4AF37;
+  --luxury-gold-muted: #B8962E;
+  --luxury-cream: #F5F5DC;
+  --luxury-cream-light: #FAFAF0;
+  --luxury-white-glass: rgba(255, 255, 255, 0.85);
+  --luxury-charcoal-glass: rgba(26, 26, 26, 0.85);
+  
+  /* Unified Design System */
+  --champagne-silk: #F9F7F2;
+  --glass-bg: rgba(255, 255, 255, 0.95);
+  --glass-border: #EAEAEA;
+  --ambient-glow: 0 8px 30px rgba(0, 0, 0, 0.04);
+  --table-separator: #F0F0F0;
+  --inset-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+
+  /* Salon Owner Model Design System */
+  --soft-ivory: #FCFAF7;
+  --muted-gold: #D4AF37;
+  --light-greige: #E0E0E0;
+  --deep-charcoal: #121212;
+  --sage-green: #8FBC8F;
+  --champagne: #F7E7CE;
+  --muted-terracotta: #C4A484;
+  --floating-tile-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  --ghost-row-line: rgba(0, 0, 0, 0.06);
 }
 
 .dark {

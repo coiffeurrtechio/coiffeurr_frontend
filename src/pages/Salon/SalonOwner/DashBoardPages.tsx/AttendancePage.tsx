@@ -66,6 +66,7 @@ const AttendancePage: React.FC = () => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [isChangingDate, setIsChangingDate] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState('ALL');
   const [viewMode, setViewMode] = useState<'daily' | 'monthly'>('daily');
@@ -77,10 +78,31 @@ const AttendancePage: React.FC = () => {
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showEmailSuccess, setShowEmailSuccess] = useState(false);
+  const [salonEmail, setSalonEmail] = useState('');
+  const [useRegisteredEmail, setUseRegisteredEmail] = useState(false);
+  const [emailAnimationPhase, setEmailAnimationPhase] = useState<'idle' | 'sending' | 'success'>('idle');
 
   useEffect(() => {
     fetchStaffAndAttendance();
+    fetchSalonProfile();
   }, [selectedDate]);
+
+  const fetchSalonProfile = async () => {
+    try {
+      const authData = localStorage.getItem("authState");
+      const parsedAuth = authData ? JSON.parse(authData) : null;
+      const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
+      if (!salonId) return;
+
+      const salonRes = await apiSalonRequest<any>(`/salons/${salonId}`);
+      if (salonRes.data) {
+        const salonData = salonRes.data.salonData || salonRes.data;
+        setSalonEmail(salonData.email || '');
+      }
+    } catch (error) {
+      console.error("Fetch salon profile error:", error);
+    }
+  };
 
   useEffect(() => {
     if (viewMode === 'monthly' && staffList.length > 0) {
@@ -282,6 +304,17 @@ const AttendancePage: React.FC = () => {
     console.log('Current attendance map after:', new Map(attendance));
   };
 
+  const handleMarkAllPresent = () => {
+    const newAttendance = new Map(attendance);
+    getFilteredStaff().forEach(staff => {
+      if (!newAttendance.has(staff.staff_id) || newAttendance.get(staff.staff_id) === 'NOT_MARKED') {
+        newAttendance.set(staff.staff_id, 'PRESENT');
+      }
+    });
+    setAttendance(newAttendance);
+    setHasUnsavedChanges(true);
+  };
+
   const changeDate = (days: number) => {
     if (hasUnsavedChanges) {
       setPendingNavigation(() => {
@@ -344,7 +377,9 @@ const AttendancePage: React.FC = () => {
       setShowUnsavedChangesDialog(true);
       return;
     }
+    setIsChangingDate(true);
     setSelectedDate(new Date(dateStr));
+    setTimeout(() => setIsChangingDate(false), 300);
   };
 
   const handleViewModeChange = (mode: 'daily' | 'monthly') => {
@@ -400,7 +435,7 @@ const AttendancePage: React.FC = () => {
       case 'PRESENT': return 'bg-green-500 text-white border-green-500';
       case 'ABSENT': return 'bg-red-500 text-white border-red-500';
       case 'LATE': return 'bg-orange-500 text-white border-orange-500';
-      case 'HALF_DAY': return 'bg-yellow-500 text-white border-yellow-500';
+      case 'HALF_DAY': return 'bg-purple-500 text-white border-purple-500';
       default: return 'bg-gray-100 text-gray-400 border-gray-200';
     }
   };
@@ -473,12 +508,15 @@ const AttendancePage: React.FC = () => {
   };
 
   const handleSendEmail = async () => {
-    if (!emailInput || !emailInput.includes('@')) {
+    const emailToSend = useRegisteredEmail ? salonEmail : emailInput;
+    
+    if (!emailToSend || !emailToSend.includes('@')) {
       alert(t('attendance.validEmail'));
       return;
     }
 
     setIsSendingEmail(true);
+    setEmailAnimationPhase('sending');
     try {
       const authData = localStorage.getItem("authState");
       const parsedAuth = authData ? JSON.parse(authData) : null;
@@ -505,7 +543,7 @@ const AttendancePage: React.FC = () => {
         body: JSON.stringify({
           year,
           month,
-          email: emailInput
+          email: emailToSend
         })
       });
 
@@ -513,14 +551,20 @@ const AttendancePage: React.FC = () => {
         throw new Error('Failed to send email');
       }
 
-      setShowEmailSuccess(true);
+      // Show success animation
+      setEmailAnimationPhase('success');
+      
+      // Auto-dismiss after success
       setTimeout(() => {
         setShowEmailSuccess(false);
         setShowDownloadModal(false);
         setEmailInput('');
+        setUseRegisteredEmail(false);
+        setEmailAnimationPhase('idle');
       }, 2000);
     } catch (error) {
       console.error("Email error:", error);
+      setEmailAnimationPhase('idle');
       alert(t('attendance.emailFailed'));
     } finally {
       setIsSendingEmail(false);
@@ -530,7 +574,7 @@ const AttendancePage: React.FC = () => {
   const isToday = selectedDate.toDateString() === new Date().toDateString();
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="min-h-screen p-6 animate-in fade-in duration-500" style={{ fontFamily: 'Inter, sans-serif', backgroundColor: 'var(--soft-ivory)' }}>
       <DashboardLoader isVisible={loading || saving} />
 
       {/* Success Notification */}
@@ -623,17 +667,19 @@ const AttendancePage: React.FC = () => {
 
       {/* Download Modal */}
       {showDownloadModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-800">{t('attendance.downloadAttendance')}</h3>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-[20px] flex items-center justify-center z-50">
+          <div className="bg-white/95 backdrop-blur-xl border border-white/30 rounded-[2.5rem] shadow-2xl max-w-md w-full mx-4 p-8" style={{ boxShadow: "rgba(0,0,0,0.15) 0 8px 32px" }}>
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-xl font-black text-[#1a1a1a]" style={{ fontFamily: "'Playfair Display', serif" }}>{t('attendance.downloadAttendance')}</h3>
               <button
                 onClick={() => {
                   setShowDownloadModal(false);
                   setEmailInput('');
                   setShowEmailSuccess(false);
+                  setEmailAnimationPhase('idle');
                 }}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-all hover:scale-105"
+                style={{ boxShadow: "0 0 15px rgba(0,0,0,0.1)" }}
               >
                 <X size={20} className="text-gray-600" />
               </button>
@@ -641,59 +687,149 @@ const AttendancePage: React.FC = () => {
 
             {!showEmailSuccess ? (
               <>
-                <p className="text-gray-600 mb-6">
-                  {t('attendance.downloadAttendanceMessage')}
-                </p>
-
-                <div className="space-y-4">
+                {/* Glassmorphism Card 1: Download CSV */}
+                <div className="bg-white/60 backdrop-blur-md border border-white/40 rounded-2xl p-6 mb-6 shadow-lg" style={{ boxShadow: "rgba(0,0,0,0.05) 0 4px 16px" }}>
+                  <p className="text-gray-600 mb-4 text-sm leading-relaxed">
+                    {t('attendance.downloadAttendanceMessage')}
+                  </p>
                   <button
                     onClick={handleDownloadCSV}
                     disabled={isDownloading}
-                    className="w-full flex items-center justify-center gap-3 px-4 py-4 bg-[#1E4D8C] text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-900/10 hover:bg-[#153a6b] transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full flex items-center justify-center gap-3 px-4 py-4 bg-[#1a1a1a] text-white rounded-2xl font-bold text-sm shadow-lg transition-all hover:scale-1.02 hover:shadow-[0_0_30px_rgba(26,26,26,0.4)] active:scale-0.98 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Download size={20} />
                     {isDownloading ? t('attendance.downloading') : t('attendance.downloadCSV')}
                   </button>
+                </div>
 
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-200"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-4 bg-white text-gray-500">{t('common.or')}</span>
-                    </div>
+                {/* Elegant Divider */}
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300/50"></div>
                   </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-4 bg-white/80 text-gray-500 font-semibold tracking-widest uppercase text-xs">{t('common.or')}</span>
+                  </div>
+                </div>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Mail size={18} className="text-gray-500" />
-                      <label className="text-sm font-semibold text-gray-700">{t('attendance.sendViaEmail')}</label>
-                    </div>
-                    <input
-                      type="email"
-                      value={emailInput}
-                      onChange={(e) => setEmailInput(e.target.value)}
-                      placeholder={t('attendance.enterEmailAddress')}
-                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500"
-                    />
-                    <button
-                      onClick={handleSendEmail}
-                      disabled={isSendingEmail || !emailInput}
-                      className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-200 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Mail size={18} />
-                      {isSendingEmail ? t('attendance.sending') : t('attendance.sendEmail')}
-                    </button>
+                {/* Glassmorphism Card 2: Send via Email */}
+                <div className="bg-white/60 backdrop-blur-md border border-white/40 rounded-2xl p-6 shadow-lg" style={{ boxShadow: "rgba(0,0,0,0.05) 0 4px 16px" }}>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Mail size={18} className="text-gray-500" />
+                    <label className="text-sm font-bold text-gray-700 uppercase tracking-wider">{t('attendance.sendViaEmail')}</label>
                   </div>
+                  
+                  {salonEmail && (
+                    <div className="flex items-center justify-between mb-4 p-3 bg-white/40 rounded-xl border border-white/30">
+                      <span className="text-sm font-semibold text-gray-600">Use registered email</span>
+                      <button
+                        onClick={() => {
+                          setUseRegisteredEmail(!useRegisteredEmail);
+                          if (!useRegisteredEmail) {
+                            setEmailInput(salonEmail);
+                          } else {
+                            setEmailInput('');
+                          }
+                        }}
+                        className={`relative w-14 h-8 rounded-full transition-all duration-300 ${
+                          useRegisteredEmail ? 'bg-[#D4AF37]' : 'bg-gray-300'
+                        }`}
+                        style={{ boxShadow: useRegisteredEmail ? "0 0 15px rgba(212, 175, 55, 0.4)" : "none" }}
+                      >
+                        <div
+                          className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-all duration-300 ${
+                            useRegisteredEmail ? 'translate-x-6' : 'translate-x-0.5'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  )}
+                  
+                  <input
+                    type="email"
+                    value={emailInput}
+                    onChange={(e) => {
+                      setEmailInput(e.target.value);
+                      if (useRegisteredEmail && e.target.value !== salonEmail) {
+                        setUseRegisteredEmail(false);
+                      }
+                    }}
+                    placeholder={t('attendance.enterEmailAddress')}
+                    disabled={useRegisteredEmail}
+                    className={`w-full px-4 py-3 rounded-2xl text-sm outline-none transition-all duration-300 ${
+                      useRegisteredEmail || !emailInput 
+                        ? 'bg-white/30 border-white/40 text-gray-400 backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed' 
+                        : 'bg-white/70 border-white/50 focus:ring-2 focus:ring-blue-100 focus:border-blue-500'
+                    }`}
+                    style={{ boxShadow: "var(--inset-shadow)" }}
+                  />
+                  
+                  {/* Animated Send Button */}
+                  <button
+                    onClick={handleSendEmail}
+                    disabled={isSendingEmail || (!emailInput && !useRegisteredEmail)}
+                    className="w-full mt-4 h-12 flex items-center justify-center gap-3 rounded-2xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
+                    style={{ 
+                      backgroundColor: emailAnimationPhase === 'idle' ? '#f3f4f6' : emailAnimationPhase === 'sending' ? '#1a1a1a' : '#10b981',
+                      color: emailAnimationPhase === 'idle' ? '#374151' : '#ffffff',
+                      boxShadow: emailAnimationPhase === 'idle' ? 'none' : emailAnimationPhase === 'sending' ? '0 0 20px rgba(26, 26, 26, 0.3)' : '0 0 20px rgba(16, 185, 129, 0.3)'
+                    }}
+                  >
+                    {emailAnimationPhase === 'idle' && (
+                      <>
+                        <Mail size={18} />
+                        <span>{t('attendance.sendEmail')}</span>
+                      </>
+                    )}
+                    
+                    {emailAnimationPhase === 'sending' && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <svg width="100%" height="100%" viewBox="0 0 200 48" className="overflow-visible">
+                          <defs>
+                            <filter id="portalGlow">
+                              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                              <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                              </feMerge>
+                            </filter>
+                          </defs>
+                          <circle cx="190" cy="24" r="8" fill="#D4AF37" filter="url(#portalGlow)" opacity="0.8">
+                            <animate attributeName="r" values="8;12;8" dur="1s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" values="0.8;0.4;0.8" dur="1s" repeatCount="indefinite" />
+                          </circle>
+                          <g>
+                            <rect x="10" y="20" width="24" height="16" rx="2" fill="#D4AF37" />
+                            <polygon points="34,28 44,24 34,20" fill="#D4AF37" />
+                            <line x1="14" y1="24" x2="30" y2="24" stroke="#1a1a1a" strokeWidth="1.5" />
+                            <animateMotion
+                              path="M10,24 L180,24"
+                              dur="1.5s"
+                              repeatCount="indefinite"
+                              calcMode="spline"
+                              keySplines="0.4 0 0.2 1; 0.4 0 0.2 1"
+                            />
+                          </g>
+                        </svg>
+                      </div>
+                    )}
+                    
+                    {emailAnimationPhase === 'success' && (
+                      <div className="flex items-center gap-2">
+                        <CheckCircle size={18} className="text-white" />
+                        <span className="text-white">Sent!</span>
+                      </div>
+                    )}
+                  </button>
                 </div>
               </>
             ) : (
               <div className="text-center py-8">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle size={32} className="text-green-600" />
+                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/30">
+                  <CheckCircle size={32} className="text-emerald-600" />
                 </div>
-                <h4 className="text-lg font-bold text-gray-800 mb-2">{t('attendance.emailSent')}</h4>
-                <p className="text-gray-600">{t('attendance.emailSentMessage')}</p>
+                <h4 className="text-lg font-black text-[#1a1a1a] mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>{t('attendance.emailSent')}</h4>
+                <p className="text-gray-600 text-sm">{t('attendance.emailSentMessage')}</p>
               </div>
             )}
           </div>
@@ -701,191 +837,108 @@ const AttendancePage: React.FC = () => {
       )}
 
       {/* View Tabs */}
-      <div className="flex items-center gap-6 border-b border-gray-200 pb-4">
+      <div className="flex items-center gap-4 pb-4" style={{ borderBottom: '1px solid var(--ghost-row-line)' }}>
         <button
           onClick={() => handleViewModeChange('daily')}
-          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-all ${viewMode === 'daily' ? 'border-[#1E4D8C] text-[#1E4D8C]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          className={`px-6 py-3 text-sm font-bold border-b-3 transition-all ${viewMode === 'daily' ? 'text-[#D4AF37]' : 'text-gray-500 hover:text-gray-700'}`}
+          style={{
+            borderBottom: viewMode === 'daily' ? '3px solid #D4AF37' : '3px solid transparent',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            fontFamily: 'Inter, sans-serif'
+          }}
         >
           {t('attendance.dailyAttendance')}
         </button>
         <button
           onClick={() => handleViewModeChange('monthly')}
-          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-all ${viewMode === 'monthly' ? 'border-[#1E4D8C] text-[#1E4D8C]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          className={`px-6 py-3 text-sm font-bold border-b-3 transition-all ${viewMode === 'monthly' ? 'text-[#D4AF37]' : 'text-gray-500 hover:text-gray-700'}`}
+          style={{
+            borderBottom: viewMode === 'monthly' ? '3px solid #D4AF37' : '3px solid transparent',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            fontFamily: 'Inter, sans-serif'
+          }}
         >
           {t('attendance.monthlyView')}
         </button>
       </div>
 
-      {/* Header Section */}
+      {/* Date Scroller - Daily View Only */}
       {viewMode === 'daily' && (
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-[#1E4D8C] to-[#153a6b] rounded-xl shadow-lg shadow-blue-900/20">
-                <UserCheck size={24} className="text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800 tracking-tight">{t('attendance.title')}</h1>
-                <p className="text-sm text-gray-500">{t('attendance.subtitle')}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* Date Navigator */}
-            <div className="flex items-center bg-white rounded-xl border border-gray-200 shadow-sm">
-              <button
-                onClick={() => changeDate(-1)}
-                className="p-2 hover:bg-gray-50 rounded-l-xl transition-colors"
-              >
-                <ChevronLeft size={20} className="text-gray-600" />
-              </button>
-              <div className="px-4 py-2 flex items-center gap-2 border-x border-gray-100">
-                <span className="text-sm font-bold text-gray-700 min-w-[180px] text-center">
-                  {formatDate(selectedDate)}
-                </span>
-                {isToday && (
-                  <span className="px-2 py-0.5 bg-green-100 text-green-600 text-[10px] font-bold uppercase rounded-full">
-                    {t('common.today')}
+        <div className="flex items-center gap-4 py-4 overflow-x-auto transition-opacity duration-300" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', opacity: isChangingDate ? 0.5 : 1 }}>
+          <button
+            onClick={() => changeDate(-1)}
+            className="p-2 rounded-full transition-all hover:bg-gray-100"
+            style={{ color: '#2C2C2C' }}
+          >
+            <ChevronLeft size={20} />
+          </button>
+          
+          <div className="flex gap-3">
+            {Array.from({ length: 7 }, (_, i) => {
+              const date = new Date(selectedDate);
+              date.setDate(date.getDate() - 3 + i);
+              const isSelected = date.toDateString() === selectedDate.toDateString();
+              const isToday = date.toDateString() === new Date().toDateString();
+              
+              return (
+                <button
+                  key={i}
+                  onClick={() => handleDateChange(date.toISOString().split('T')[0])}
+                  className="flex flex-col items-center justify-center px-4 py-3 rounded-xl transition-all duration-300 hover:scale-105"
+                  style={{
+                    backgroundColor: isSelected ? '#D4AF37' : 'transparent',
+                    border: isSelected ? '2px solid #D4AF37' : '2px solid #E8E4DE',
+                    boxShadow: isSelected ? '0 4px 12px rgba(212, 175, 55, 0.3)' : 'none',
+                    minWidth: '60px',
+                    transform: isChangingDate ? 'scale(0.95)' : 'scale(1)'
+                  }}
+                >
+                  <span className="text-xs font-medium" style={{ 
+                    color: isSelected ? '#FFFFFF' : '#999',
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: '10px',
+                    letterSpacing: '0.05em'
+                  }}>
+                    {date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
                   </span>
-                )}
-              </div>
-              <button
-                onClick={() => changeDate(1)}
-                className="p-2 hover:bg-gray-50 rounded-r-xl transition-colors"
-              >
-                <ChevronRight size={20} className="text-gray-600" />
-              </button>
-            </div>
-
-            {/* Date Picker */}
-            <div className="flex items-center bg-white rounded-xl border border-gray-200 shadow-sm">
-              <input
-                type="date"
-                value={selectedDate.toISOString().split('T')[0]}
-                onChange={(e) => handleDateChange(e.target.value)}
-                className="px-3 py-2 text-sm text-gray-700 outline-none cursor-pointer"
-              />
-            </div>
-
-            <button
-              onClick={fetchStaffAndAttendance}
-              className="p-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors shadow-sm"
-            >
-              <RefreshCw size={18} className="text-gray-600" />
-            </button>
-
-            <button
-              onClick={saveAttendance}
-              disabled={saving}
-              className="flex items-center gap-2 px-4 py-2 bg-[#1E4D8C] text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-900/10 hover:bg-[#153a6b] transition-all active:scale-95 disabled:opacity-50"
-            >
-              <Save size={18} />
-              {t('common.save')}
-            </button>
+                  <span className="text-lg font-bold" style={{ 
+                    color: isSelected ? '#FFFFFF' : '#2C2C2C',
+                    fontFamily: 'Playfair Display, serif',
+                    fontSize: '18px'
+                  }}>
+                    {date.getDate()}
+                  </span>
+                  {isToday && (
+                    <span className="text-xs font-medium" style={{ 
+                      color: isSelected ? '#FFFFFF' : '#D4AF37',
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '9px'
+                    }}>
+                      Today
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
+
+          <button
+            onClick={() => changeDate(1)}
+            className="p-2 rounded-full transition-all hover:bg-gray-100"
+            style={{ color: '#2C2C2C' }}
+          >
+            <ChevronRight size={20} />
+          </button>
         </div>
       )}
 
-      {/* Monthly View Header */}
-      {viewMode === 'monthly' && (
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800 tracking-tight">{t('attendance.monthlyAttendance')}</h1>
-            <p className="text-sm text-gray-500">{t('attendance.monthlySubtitle')}</p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* Month Navigator */}
-            <div className="flex items-center bg-white rounded-xl border border-gray-200 shadow-sm">
-              <button
-                onClick={() => changeMonth(-1)}
-                className="p-2 hover:bg-gray-50 rounded-l-xl transition-colors"
-              >
-                <ChevronLeft size={20} className="text-gray-600" />
-              </button>
-              <div className="px-4 py-2 flex items-center gap-2 border-x border-gray-100">
-                <span className="text-sm font-bold text-gray-700 min-w-[180px] text-center">
-                  {formatMonthYear(currentMonth)}
-                </span>
-              </div>
-              <button
-                onClick={() => changeMonth(1)}
-                className="p-2 hover:bg-gray-50 rounded-r-xl transition-colors"
-              >
-                <ChevronRight size={20} className="text-gray-600" />
-              </button>
-            </div>
-
-            <button
-              onClick={fetchMonthlyAttendance}
-              className="p-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors shadow-sm"
-            >
-              <RefreshCw size={18} className="text-gray-600" />
-            </button>
-
-            <button
-              onClick={() => setShowDownloadModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#1E4D8C] text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-900/10 hover:bg-[#153a6b] transition-all active:scale-95"
-            >
-              <Download size={18} />
-              {t('attendance.downloadMonthlyAttendance')}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Filters & Search - Daily View */}
-      {viewMode === 'daily' && (
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('attendance.searchPlaceholder')}
-              className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-100 shadow-sm"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Filter size={18} className="text-gray-400" />
-            <select
-              value={filterRole}
-              onChange={(e) => setFilterRole(e.target.value)}
-              className="px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-100 shadow-sm cursor-pointer"
-            >
-              <option value="ALL">{t('attendance.allRoles')}</option>
-              {getUniqueRoles().map(role => (
-                <option key={role} value={role}>{role}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      )}
-
-      {/* Staff Filter - Monthly View */}
-      {viewMode === 'monthly' && (
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex items-center gap-2">
-            <Filter size={18} className="text-gray-500" />
-            <select
-              value={selectedStaffFilter}
-              onChange={(e) => setSelectedStaffFilter(e.target.value)}
-              className="px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-sm font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 shadow-sm cursor-pointer"
-            >
-              {[...staffList].sort((a, b) => a.name.localeCompare(b.name)).map(staff => (
-                <option key={staff.staff_id} value={staff.staff_id}>{staff.name}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      )}
-
+      <div className="space-y-6">
       {/* Daily View Content */}
       {viewMode === 'daily' && (
         <>
-          {/* Stats Overview - Inside Daily Attendance */}
+          {/* Stats Overview - Floating Tiles */}
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
             <StatPill
               label={t('attendance.present')}
@@ -924,101 +977,156 @@ const AttendancePage: React.FC = () => {
             />
           </div>
 
-          {/* Attendance Grid */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-              <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                <Users size={18} className="text-[#1E4D8C]" />
+          {/* Action Buttons */}
+          <div className="flex items-center justify-end gap-3">
+            <button
+              onClick={handleMarkAllPresent}
+              disabled={loading || saving}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all active:scale-95 disabled:opacity-50"
+              style={{
+                backgroundColor: '#FFFFFF',
+                color: '#2C2C2C',
+                border: '1px solid #E8E4DE',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                fontFamily: 'Inter, sans-serif'
+              }}
+            >
+              <UserCheck size={16} />
+              Mark All Present
+            </button>
+            <button
+              onClick={saveAttendance}
+              disabled={loading || saving}
+              className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-sm transition-all active:scale-95 disabled:opacity-50 relative overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, #D4AF37 0%, #B8962E 50%, #D4AF37 100%)',
+                backgroundSize: '200% 200%',
+                color: '#FFFFFF',
+                boxShadow: '0 8px 24px rgba(212, 175, 55, 0.4)',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                fontFamily: 'Inter, sans-serif',
+                animation: 'shimmer 3s ease-in-out infinite'
+              }}
+            >
+              <span className="relative z-10 flex items-center gap-2">
+                <Save size={16} />
+                {saving ? 'Saving...' : 'Save Attendance'}
+              </span>
+            </button>
+          </div>
+
+          {/* Add shimmer animation */}
+          <style>{`
+            @keyframes shimmer {
+              0%, 100% { background-position: 0% 50%; }
+              50% { background-position: 100% 50%; }
+            }
+          `}</style>
+
+          {/* Attendance Grid - Ghost Row Table */}
+          <div style={{
+            borderRadius: '16px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
+            border: '1px solid #E8E4DE',
+            background: '#FFFFFF',
+            overflow: 'hidden'
+          }}>
+            <div className="p-6 flex justify-between items-center" style={{ borderBottom: '1px solid #E8E4DE' }}>
+              <h3 className="flex items-center gap-2" style={{ 
+                fontFamily: 'Playfair Display, serif', 
+                fontSize: '20px', 
+                color: '#2C2C2C', 
+                letterSpacing: '-0.02em', 
+                fontWeight: '600' 
+              }}>
+                <Users size={20} style={{ color: '#D4AF37' }} />
                 {t('attendance.staffList')}
-                <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-bold rounded-full">
+                <span className="px-3 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: '#D4AF37', color: '#FFFFFF', letterSpacing: '0.05em' }}>
                   {getFilteredStaff().length}
                 </span>
               </h3>
-
-              {/* Quick Actions */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    const newAttendance = new Map(attendance);
-                    getFilteredStaff().forEach(staff => {
-                      if (!newAttendance.has(staff.staff_id) || newAttendance.get(staff.staff_id) === 'NOT_MARKED') {
-                        newAttendance.set(staff.staff_id, 'PRESENT');
-                      }
-                    });
-                    setAttendance(newAttendance);
-                    setHasUnsavedChanges(true);
-                  }}
-                  className="px-3 py-1.5 bg-green-50 text-green-600 rounded-lg text-xs font-bold hover:bg-green-100 transition-colors"
-                >
-                  {t('attendance.markAllPresent')}
-                </button>
-                <button
-                  onClick={() => {
-                    setAttendance(new Map());
-                    setHasUnsavedChanges(true);
-                  }}
-                  className="px-3 py-1.5 bg-gray-50 text-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 transition-colors"
-                >
-                  {t('attendance.clearAll')}
-                </button>
-              </div>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="text-left p-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('attendance.staff')}</th>
-                    <th className="text-left p-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('attendance.role')}</th>
-                    <th className="text-left p-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('attendance.email')}</th>
-                    <th className="text-left p-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('attendance.phone')}</th>
-                    <th className="text-center p-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('attendance.status')}</th>
+                  <tr style={{ borderBottom: '1px solid #E8E4DE' }}>
+                    <th className="text-left" style={{ fontSize: '11px', color: '#999', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Inter, sans-serif', fontWeight: '600', padding: '16px' }}>{t('attendance.staff')}</th>
+                    <th className="text-left" style={{ fontSize: '11px', color: '#999', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Inter, sans-serif', fontWeight: '600', padding: '16px' }}>{t('attendance.role')}</th>
+                    <th className="text-left" style={{ fontSize: '11px', color: '#999', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Inter, sans-serif', fontWeight: '600', padding: '16px' }}>{t('attendance.email')}</th>
+                    <th className="text-left" style={{ fontSize: '11px', color: '#999', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Inter, sans-serif', fontWeight: '600', padding: '16px' }}>{t('attendance.phone')}</th>
+                    <th className="text-center" style={{ fontSize: '11px', color: '#999', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Inter, sans-serif', fontWeight: '600', padding: '16px' }}>{t('attendance.status')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody>
                   {getFilteredStaff().length > 0 ? (
                     getFilteredStaff().map((staff) => {
                       const currentStatus = attendance.get(staff.staff_id) || 'NOT_MARKED';
 
                       return (
-                        <tr key={staff.staff_id} className="hover:bg-gray-50 transition-colors">
-                          <td className="p-4">
+                        <tr key={staff.staff_id} className="transition-all duration-300 hover:scale-[1.01] hover:shadow-lg" style={{ height: '72px', borderBottom: '1px solid #F7F5F2' }}>
+                          <td style={{ padding: '16px' }}>
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-sm font-bold text-[#1E4D8C] flex-shrink-0">
+                              <div className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-semibold flex-shrink-0" style={{ backgroundColor: 'var(--light-greige)', color: 'var(--deep-charcoal)', margin: '0', padding: '3px' }}>
                                 {staff.images && staff.images.length > 0 ? (
                                   <img
                                     src={staff.images[0]}
                                     alt={staff.name}
-                                    className="w-full h-full rounded-lg object-cover"
+                                    className="w-full h-full rounded-md object-cover"
+                                    style={{ objectFit: 'cover', display: 'block' }}
                                   />
                                 ) : (
-                                  staff.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+                                  <span className="text-sm font-semibold" style={{ color: 'var(--deep-charcoal)' }}>
+                                    {staff.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                                  </span>
                                 )}
                               </div>
-                              <span className="font-bold text-gray-800 text-sm">{staff.name}</span>
+                              <span className="typography-label" style={{ fontSize: '14px', color: 'var(--deep-charcoal)' }}>{staff.name}</span>
                             </div>
                           </td>
-                          <td className="p-4 text-sm text-gray-600">{staff.role}</td>
-                          <td className="p-4 text-sm text-gray-600">{staff.email}</td>
-                          <td className="p-4 text-sm text-gray-600">{staff.phone || '-'}</td>
-                          <td className="p-4">
-                            <div className="flex items-center gap-2 flex-wrap justify-center">
-                              {(['PRESENT', 'ABSENT', 'LATE', 'HALF_DAY'] as AttendanceStatus[]).map((status) => (
-                                <button
-                                  key={`${staff.staff_id}-${status}`}
-                                  onClick={() => markAttendance(staff.staff_id, status)}
-                                  className={`
-                                    flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all
-                                    ${currentStatus === status
-                                      ? getStatusColor(status)
-                                      : 'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-gray-100'
-                                    }
-                                  `}
-                                >
-                                  {getStatusIcon(status)}
-                                  {getStatusLabel(status)}
-                                </button>
-                              ))}
+                          <td className="typography-label-light" style={{ fontSize: '14px', padding: '16px' }}>{staff.role}</td>
+                          <td className="typography-label-light" style={{ fontSize: '14px', padding: '16px' }}>{staff.email}</td>
+                          <td className="typography-label-light" style={{ fontSize: '14px', padding: '16px' }}>{staff.phone || '-'}</td>
+                          <td style={{ padding: '16px' }}>
+                            <div className="flex items-center justify-center">
+                              <div className="flex items-center gap-1 p-1 rounded-xl" style={{ backgroundColor: '#F7F5F2', border: '1px solid #E8E4DE' }}>
+                                {(['PRESENT', 'ABSENT', 'LATE', 'HALF_DAY'] as AttendanceStatus[]).map((status) => {
+                                  const isSelected = currentStatus === status;
+                                  const statusColors: Record<string, { bg: string; icon: string }> = {
+                                    PRESENT: { bg: '#10b981', icon: '#FFFFFF' },
+                                    ABSENT: { bg: '#ef4444', icon: '#FFFFFF' },
+                                    LATE: { bg: '#f59e0b', icon: '#FFFFFF' },
+                                    HALF_DAY: { bg: '#8b5cf6', icon: '#FFFFFF' }
+                                  };
+                                  const colors = statusColors[status];
+                                  return (
+                                    <button
+                                      key={`${staff.staff_id}-${status}`}
+                                      onClick={() => markAttendance(staff.staff_id, status)}
+                                      className="flex items-center justify-center p-2 rounded-lg transition-all duration-200"
+                                      style={{
+                                        backgroundColor: isSelected ? colors.bg : 'transparent',
+                                        opacity: isSelected ? 1 : 0.5,
+                                        transform: isSelected ? 'scale(1.1)' : 'scale(1)'
+                                      }}
+                                      title={getStatusLabel(status)}
+                                    >
+                                      {isSelected ? (
+                                        <div style={{ color: colors.icon }}>
+                                          {getStatusIcon(status)}
+                                        </div>
+                                      ) : (
+                                        <div style={{ color: '#2C2C2C' }}>
+                                          {getStatusIcon(status)}
+                                        </div>
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </div>
                             </div>
                           </td>
                         </tr>
@@ -1037,20 +1145,54 @@ const AttendancePage: React.FC = () => {
               </table>
             </div>
           </div>
+
+          {/* Status Legend */}
+          <div className="flex items-center justify-center gap-6 pt-4" style={{ borderTop: '1px solid #F7F5F2' }}>
+            {(['PRESENT', 'ABSENT', 'LATE', 'HALF_DAY'] as AttendanceStatus[]).map((status) => {
+              const statusColors: Record<string, { bg: string; icon: string }> = {
+                PRESENT: { bg: '#10b981', icon: '#FFFFFF' },
+                ABSENT: { bg: '#ef4444', icon: '#FFFFFF' },
+                LATE: { bg: '#f59e0b', icon: '#FFFFFF' },
+                HALF_DAY: { bg: '#8b5cf6', icon: '#FFFFFF' }
+              };
+              const colors = statusColors[status];
+              return (
+                <div key={status} className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: colors.bg }}>
+                    <span style={{ color: colors.icon }}>
+                      {getStatusIcon(status)}
+                    </span>
+                  </div>
+                  <span className="text-xs font-medium" style={{ color: '#666', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                    {getStatusLabel(status)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </>
       )}
 
       {/* Monthly View Content */}
       {viewMode === 'monthly' && (
-        <MonthlyCalendarView
-          currentMonth={currentMonth}
-          monthlyAttendance={monthlyAttendance}
-          staffList={getFilteredStaffForMonthly()}
-          getStatusColor={getStatusColor}
-          getStatusIcon={getStatusIcon}
-          getStatusLabel={getStatusLabel}
-        />
+        <>
+          <MonthlyCalendarView
+            currentMonth={currentMonth}
+            monthlyAttendance={monthlyAttendance}
+            staffList={staffList}
+            getStatusColor={getStatusColor}
+            getStatusIcon={getStatusIcon}
+            getStatusLabel={getStatusLabel}
+            changeMonth={changeMonth}
+            selectedStaffFilter={selectedStaffFilter}
+            setSelectedStaffFilter={setSelectedStaffFilter}
+            fetchMonthlyAttendance={fetchMonthlyAttendance}
+            setShowDownloadModal={setShowDownloadModal}
+            formatMonthYear={formatMonthYear}
+          />
+        </>
       )}
+      </div>
     </div>
   );
 };
@@ -1064,6 +1206,12 @@ interface MonthlyCalendarViewProps {
   getStatusColor: (status: AttendanceStatus) => string;
   getStatusIcon: (status: AttendanceStatus) => React.ReactNode;
   getStatusLabel: (status: AttendanceStatus) => string;
+  changeMonth: (delta: number) => void;
+  selectedStaffFilter: string;
+  setSelectedStaffFilter: (value: string) => void;
+  fetchMonthlyAttendance: () => void;
+  setShowDownloadModal: (show: boolean) => void;
+  formatMonthYear: (date: Date) => string;
 }
 
 const MonthlyCalendarView: React.FC<MonthlyCalendarViewProps> = ({
@@ -1072,7 +1220,13 @@ const MonthlyCalendarView: React.FC<MonthlyCalendarViewProps> = ({
   staffList,
   getStatusColor,
   getStatusIcon,
-  getStatusLabel
+  getStatusLabel,
+  changeMonth,
+  selectedStaffFilter,
+  setSelectedStaffFilter,
+  fetchMonthlyAttendance,
+  setShowDownloadModal,
+  formatMonthYear
 }) => {
   const { t } = useTranslation();
   const getDaysInMonth = (date: Date) => {
@@ -1098,25 +1252,87 @@ const MonthlyCalendarView: React.FC<MonthlyCalendarViewProps> = ({
 
   const days = getDaysInMonth(currentMonth);
   const weekDays = [t('attendance.sunday'), t('attendance.monday'), t('attendance.tuesday'), t('attendance.wednesday'), t('attendance.thursday'), t('attendance.friday'), t('attendance.saturday')];
+  
+  // Filter staff list to only show selected staff in calendar
+  const filteredStaffList = staffList.filter(staff => staff.staff_id === selectedStaffFilter);
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="p-6 border-b border-gray-100">
-        <h3 className="font-bold text-gray-800 flex items-center gap-2">
-          <Calendar size={18} className="text-[#1E4D8C]" />
-          <h3>{t('attendance.attendanceCalendar')}</h3>
-          <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-bold rounded-full">
-            {staffList.length} {staffList.length === 1 ? t('attendance.staff') : t('attendance.staffMembers')}
-          </span>
-        </h3>
+    <div style={{
+      borderRadius: '12px',
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
+      border: '1px solid rgba(0, 0, 0, 0.06)',
+      background: 'linear-gradient(135deg, #FFFFFF 0%, #F7F5F2 100%)',
+      overflow: 'hidden'
+    }}>
+      <div className="p-5 flex items-center gap-4" style={{ borderBottom: '1px solid var(--ghost-row-line)' }}>
+        {/* Month Navigator */}
+        <div className="flex items-center rounded-xl" style={{ 
+          backgroundColor: 'var(--light-greige)', 
+          border: '1px solid var(--ghost-row-line)',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
+        }}>
+          <button
+            onClick={() => changeMonth(-1)}
+            className="p-2.5 hover:bg-gray-50 rounded-l-xl transition-colors"
+          >
+            <ChevronLeft size={20} style={{ color: 'var(--deep-charcoal)' }} />
+          </button>
+          <div className="px-5 py-2.5 flex items-center gap-2 border-x" style={{ borderColor: 'var(--ghost-row-line)' }}>
+            <span className="typography-label min-w-[180px] text-center font-bold" style={{ fontSize: '14px', color: 'var(--deep-charcoal)', letterSpacing: '0.02em' }}>
+              {formatMonthYear(currentMonth)}
+            </span>
+          </div>
+          <button
+            onClick={() => changeMonth(1)}
+            className="p-2.5 hover:bg-gray-50 rounded-r-xl transition-colors"
+          >
+            <ChevronRight size={20} style={{ color: 'var(--deep-charcoal)' }} />
+          </button>
+        </div>
+
+        {/* Staff Filter */}
+        <div className="flex items-center gap-2">
+          <Filter size={18} style={{ color: '#666' }} />
+          <select
+            value={selectedStaffFilter}
+            onChange={(e) => setSelectedStaffFilter(e.target.value)}
+            className="px-4 py-2.5 rounded-xl text-sm outline-none cursor-pointer typography-label font-semibold" style={{ fontSize: '14px', backgroundColor: 'var(--light-greige)', border: '1px solid var(--ghost-row-line)', color: 'var(--deep-charcoal)', letterSpacing: '0.01em' }}
+          >
+            {[...staffList].sort((a, b) => a.name.localeCompare(b.name)).map(staff => (
+              <option key={staff.staff_id} value={staff.staff_id}>{staff.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <button
+          onClick={fetchMonthlyAttendance}
+          className="p-2.5 rounded-xl hover:bg-gray-50 transition-colors" style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--ghost-row-line)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)' }}
+        >
+          <RefreshCw size={18} style={{ color: 'var(--deep-charcoal)' }} />
+        </button>
+
+        <button
+          onClick={() => setShowDownloadModal(true)}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95 ml-auto"
+          style={{
+            backgroundColor: 'var(--muted-gold)',
+            color: 'var(--deep-charcoal)',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08)',
+            letterSpacing: '0.03em',
+            textTransform: 'uppercase'
+          }}
+        >
+          <Download size={18} />
+          {t('attendance.downloadMonthlyAttendance')}
+        </button>
       </div>
 
-      <div className="p-6">
+      <div className="overflow-x-auto p-5">
         {/* Calendar Grid */}
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-3">
           {/* Week Day Headers */}
           {weekDays.map((day) => (
-            <div key={day} className="text-center text-xs font-bold text-gray-500 uppercase py-2">
+            <div key={day} className="text-center typography-label py-3 font-bold" style={{ fontSize: '11px', color: '#666', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
               {day}
             </div>
           ))}
@@ -1133,15 +1349,19 @@ const MonthlyCalendarView: React.FC<MonthlyCalendarViewProps> = ({
             return (
               <div
                 key={dateStr}
-                className="border border-gray-200 rounded-lg p-1.5 min-h-[70px] bg-gray-50 hover:bg-gray-100 transition-colors"
+                className="rounded-lg p-2 min-h-[75px] hover:shadow-md transition-all" style={{ 
+                  border: '1px solid var(--ghost-row-line)', 
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)'
+                }}
               >
-                <div className="text-xs font-bold text-gray-700 mb-1">
+                <div className="typography-label mb-2 font-bold" style={{ fontSize: '13px', color: 'var(--deep-charcoal)', letterSpacing: '0.01em' }}>
                   {day.getDate()}
                 </div>
 
                 {/* Staff Attendance for this day */}
                 <div className="space-y-0.5">
-                  {staffList.map((staff) => {
+                  {filteredStaffList.map((staff) => {
                     const status = dayAttendance.get(staff.staff_id) || 'NOT_MARKED';
                     return (
                       <div
@@ -1189,77 +1409,119 @@ interface StatPillProps {
 }
 
 const StatPill: React.FC<StatPillProps> = ({ label, value, total, color, icon: Icon }) => {
-  const colorClasses = {
+  const colorClasses: Record<string, {
+    bg: string;
+    iconBg: string;
+    iconColor: string;
+    labelColor: string;
+    valueColor: string;
+    accent: string;
+  }> = {
     green: {
-      bg: 'bg-white',
-      border: 'border-green-200',
-      iconBg: 'bg-green-100',
-      iconColor: 'text-green-600',
-      labelColor: 'text-gray-600',
-      valueColor: 'text-gray-900',
-      accent: 'text-green-600'
+      bg: '#FFFFFF',
+      iconBg: '#D4AF37',
+      iconColor: '#FFFFFF',
+      labelColor: '#666',
+      valueColor: '#2C2C2C',
+      accent: '#D4AF37'
     },
     red: {
-      bg: 'bg-white',
-      border: 'border-red-200',
-      iconBg: 'bg-red-100',
-      iconColor: 'text-red-600',
-      labelColor: 'text-gray-600',
-      valueColor: 'text-gray-900',
-      accent: 'text-red-600'
+      bg: '#FFFFFF',
+      iconBg: '#D4AF37',
+      iconColor: '#FFFFFF',
+      labelColor: '#666',
+      valueColor: '#2C2C2C',
+      accent: '#D4AF37'
     },
     orange: {
-      bg: 'bg-white',
-      border: 'border-orange-200',
-      iconBg: 'bg-orange-100',
-      iconColor: 'text-orange-600',
-      labelColor: 'text-gray-600',
-      valueColor: 'text-gray-900',
-      accent: 'text-orange-600'
+      bg: '#FFFFFF',
+      iconBg: '#D4AF37',
+      iconColor: '#FFFFFF',
+      labelColor: '#666',
+      valueColor: '#2C2C2C',
+      accent: '#D4AF37'
     },
     yellow: {
-      bg: 'bg-white',
-      border: 'border-yellow-200',
-      iconBg: 'bg-yellow-100',
-      iconColor: 'text-yellow-600',
-      labelColor: 'text-gray-600',
-      valueColor: 'text-gray-900',
-      accent: 'text-yellow-600'
+      bg: '#FFFFFF',
+      iconBg: '#D4AF37',
+      iconColor: '#FFFFFF',
+      labelColor: '#666',
+      valueColor: '#2C2C2C',
+      accent: '#D4AF37'
     },
     gray: {
-      bg: 'bg-white',
-      border: 'border-gray-200',
-      iconBg: 'bg-gray-100',
-      iconColor: 'text-gray-600',
-      labelColor: 'text-gray-600',
-      valueColor: 'text-gray-900',
-      accent: 'text-gray-600'
+      bg: '#FFFFFF',
+      iconBg: '#D4AF37',
+      iconColor: '#FFFFFF',
+      labelColor: '#666',
+      valueColor: '#2C2C2C',
+      accent: '#D4AF37'
     }
   };
 
   const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
   const styles = colorClasses[color];
+  const circumference = 2 * Math.PI * 24; // radius = 24
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
-    <div className={`${styles.bg} rounded-xl border ${styles.border} shadow-sm hover:shadow-md transition-shadow`}>
-      <div className="p-5">
-        <div className="flex items-center justify-between mb-3">
-          <div className={`p-2 rounded-lg ${styles.iconBg}`}>
-            <Icon size={18} className={styles.iconColor} />
-          </div>
-          <span className={`text-xs font-semibold uppercase tracking-wider ${styles.labelColor}`}>
-            {label}
-          </span>
+    <div style={{ 
+      backgroundColor: styles.bg, 
+      borderRadius: '16px', 
+      padding: '20px', 
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
+      border: '1px solid #E8E4DE',
+      position: 'relative'
+    }}>
+      <div className="flex items-center gap-3 mb-3">
+        <div style={{ 
+          backgroundColor: styles.iconBg, 
+          padding: '10px',
+          borderRadius: '10px',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+        }}>
+          <Icon size={18} style={{ color: styles.iconColor }} />
         </div>
-        <div className="flex items-end justify-between">
-          <div>
-            <span className={`text-3xl font-bold ${styles.valueColor}`}>{value}</span>
-            <span className={`text-sm font-medium ${styles.accent} ml-1`}>/{total}</span>
-          </div>
-          <div className={`text-sm font-semibold ${styles.accent}`}>
+        <span className="text-xs font-semibold uppercase tracking-wider" style={{ fontSize: '11px', color: styles.labelColor, letterSpacing: '0.05em' }}>
+          {label}
+        </span>
+      </div>
+      <div className="flex items-end justify-between">
+        <div>
+          <span style={{ fontSize: '28px', fontWeight: '700', letterSpacing: '-0.02em', color: styles.valueColor, fontFamily: 'Playfair Display, serif' }}>{value}</span>
+          <span className="text-sm font-bold ml-1" style={{ letterSpacing: '-0.01em', color: '#999' }}>/{total}</span>
+        </div>
+        <svg width="56" height="56" style={{ transform: 'rotate(-90deg)' }}>
+          <circle
+            cx="28"
+            cy="28"
+            r="24"
+            fill="none"
+            stroke="#F7F5F2"
+            strokeWidth="4"
+          />
+          <circle
+            cx="28"
+            cy="28"
+            r="24"
+            fill="none"
+            stroke={styles.accent}
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+          />
+          <text
+            x="28"
+            y="28"
+            textAnchor="middle"
+            dy="5"
+            style={{ fontSize: '12px', fontWeight: '600', fill: styles.valueColor, transform: 'rotate(90deg)', transformOrigin: 'center' }}
+          >
             {percentage}%
-          </div>
-        </div>
+          </text>
+        </svg>
       </div>
     </div>
   );

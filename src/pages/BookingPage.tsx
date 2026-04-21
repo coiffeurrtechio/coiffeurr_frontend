@@ -108,15 +108,15 @@ function BookingPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 pb-10">
+        <div className="min-h-screen pb-10" style={{ backgroundColor: 'var(--soft-ivory)' }}>
             <Loader isVisible={loading} />
 
-            <header className="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600 sticky top-0 z-30 shadow-lg">
+            <header className="sticky top-0 z-30 shadow-lg" style={{ background: 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)' }}>
                 <div className="max-w-2xl mx-auto px-6 h-16 flex items-center justify-between">
                     <button onClick={() => window.history.back()} className="p-3 bg-white/20 rounded-full text-white backdrop-blur-md hover:bg-white/30 active:scale-90 transition-all shadow-lg">
                         <ArrowLeft className="w-5 h-5" />
                     </button>
-                    <h1 className="text-xs font-black uppercase tracking-[0.2em] text-white">{t('bookings.appointmentHistory')}</h1>
+                    <h1 className="text-xs font-black uppercase tracking-[0.2em] text-white typography-display">{t('bookings.appointmentHistory')}</h1>
                     <div className="w-8" />
                 </div>
             </header>
@@ -129,7 +129,8 @@ function BookingPage() {
                             <select
                                 value={filterStatus}
                                 onChange={(e) => setFilterStatus(e.target.value)}
-                                className="appearance-none bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-2xl px-6 py-4 pr-12 text-base font-bold text-slate-700 outline-none focus:ring-2 focus:ring-slate-200 focus:border-slate-400 transition-all cursor-pointer shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 hover:-translate-y-0.5 w-full sm:w-52"
+                                className="appearance-none rounded-2xl px-6 py-4 pr-12 text-base font-bold outline-none transition-all cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5 w-full sm:w-52 typography-label-light"
+                                style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
                             >
                                 <option value="ALL">{t('bookings.allBookings')}</option>
                                 <option value="PENDING">{t('bookings.pending')}</option>
@@ -137,15 +138,16 @@ function BookingPage() {
                                 <option value="COMPLETED">{t('bookings.completed')}</option>
                                 <option value="CANCELLED">{t('bookings.cancelled')}</option>
                             </select>
-                            <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-transform duration-200" />
+                            <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-transform duration-200" style={{ color: '#666' }} />
                         </div>
                         <div className="relative">
                             <button
                                 onClick={() => dateInputRef.current?.showPicker?.()}
-                                className={`p-4 bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-2xl text-slate-700 outline-none focus:ring-2 focus:ring-slate-200 focus:border-slate-400 transition-all cursor-pointer shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 hover:-translate-y-0.5 ${selectedDate ? 'border-slate-400 ring-2 ring-slate-200' : ''}`}
+                                className={`p-4 rounded-2xl outline-none transition-all cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5 ${selectedDate ? 'ring-2' : ''}`}
+                                style={{ backgroundColor: 'var(--light-greige)', border: selectedDate ? '1px solid var(--muted-gold)' : '1px solid var(--light-greige)', boxShadow: 'var(--inset-shadow)' }}
                                 title={selectedDate || 'Filter by date'}
                             >
-                                <Calendar size={20} className={`transition-colors ${selectedDate ? 'text-slate-800' : 'text-slate-500'}`} />
+                                <Calendar size={20} className={`transition-colors`} style={{ color: selectedDate ? 'var(--deep-charcoal)' : '#666' }} />
                             </button>
                             <input
                                 ref={dateInputRef}
@@ -160,7 +162,8 @@ function BookingPage() {
                                         e.stopPropagation();
                                         setSelectedDate('');
                                     }}
-                                    className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-slate-700 to-slate-800 text-white rounded-full flex items-center justify-center text-[10px] font-bold shadow-lg hover:shadow-xl hover:from-slate-600 hover:to-slate-700 transition-all hover:scale-110"
+                                    className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow-lg hover:shadow-xl transition-all hover:scale-110"
+                                    style={{ background: 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)', color: 'white' }}
                                 >
                                     ×
                                 </button>
@@ -173,11 +176,17 @@ function BookingPage() {
                                 setShowUpcoming(!showUpcoming);
                                 setCurrentPage(1);
                             }}
-                            className={`px-6 py-4 border rounded-2xl outline-none transition-all cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2.5 ${showUpcoming ? 'bg-gradient-to-br from-slate-700 to-slate-800 border-slate-800 text-white shadow-slate-800/30 hover:shadow-slate-800/50' : 'bg-gradient-to-br from-white to-slate-50 border-slate-200 text-slate-600 shadow-slate-200/50 hover:shadow-slate-300/50'}`}
+                            className={`px-6 py-4 border rounded-2xl outline-none transition-all cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2.5 typography-label-light ${showUpcoming ? '' : ''}`}
+                            style={{
+                                background: showUpcoming ? 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)' : 'var(--light-greige)',
+                                borderColor: showUpcoming ? 'var(--muted-gold)' : 'var(--light-greige)',
+                                color: showUpcoming ? 'white' : 'var(--deep-charcoal)',
+                                boxShadow: showUpcoming ? '0 4px 20px rgba(212, 175, 55, 0.3)' : 'var(--inset-shadow)'
+                            }}
                             title="Show upcoming bookings"
                         >
-                            <Star size={18} className={showUpcoming ? 'text-white fill-white' : 'text-slate-500'} />
-                            <span className={`text-sm font-bold transition-colors ${showUpcoming ? 'text-white' : 'text-slate-600'}`}>Upcoming</span>
+                            <Star size={18} className={showUpcoming ? 'text-white fill-white' : ''} style={{ color: showUpcoming ? 'white' : '#666' }} />
+                            <span className={`text-sm font-bold transition-colors typography-label-light`}>Upcoming</span>
                         </button>
                     </div>
                 </div>
@@ -189,13 +198,11 @@ function BookingPage() {
                             .map((booking, index) => (
                                 <div
                                     key={booking.id || index}
-                                    // onClick={() => { setSelectedBooking(booking); setIsModalOpen(true); }}
                                     onClick={() => fetchBookingDetails(booking.id)}
-                                    className="bg-white rounded-xl border border-white/50 p-3 shadow-lg hover:-translate-y-1 hover:shadow-2xl hover:shadow-slate-300/30 transition-all duration-300 ease active:scale-[0.98] group cursor-pointer overflow-hidden backdrop-blur-sm"
+                                    className="floating-tile hover-lift p-3 transition-all duration-300 ease active:scale-[0.98] group cursor-pointer overflow-hidden"
                                 >
-                                    {/* ... rest of your mapping code remains exactly same ... */}
                                     <div className="flex gap-3">
-                                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 shrink-0 shadow-inner">
+                                        <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0" style={{ background: 'linear-gradient(135deg, var(--muted-gold) 0%, var(--deep-charcoal) 100%)' }}>
                                             <img
                                                 src={booking.serviceData?.imageUrl || 'https://via.placeholder.com/150'}
                                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 ease"
@@ -204,19 +211,19 @@ function BookingPage() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-start mb-0.5">
-                                                <h3 className="font-black text-slate-900 truncate pr-2 text-sm">{booking.serviceData?.serviceName}</h3>
-                                                <span className="font-black text-slate-800 whitespace-nowrap text-base">₹{booking.price}</span>
+                                                <h3 className="font-black truncate pr-2 text-sm typography-display" style={{ color: 'var(--deep-charcoal)' }}>{booking.serviceData?.serviceName}</h3>
+                                                <span className="font-black whitespace-nowrap text-base typography-number" style={{ color: 'var(--muted-gold)' }}>₹{booking.price}</span>
                                             </div>
-                                            <div className="flex items-center gap-2 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-                                                <span className="flex items-center gap-0.5"><Calendar size={10} className="text-slate-700" /> {booking.slot?.date}</span>
-                                                <span className="flex items-center gap-0.5"><Clock size={10} className="text-slate-700" /> {formatTo12Hour(booking.slot?.time)}</span>
+                                            <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-wider typography-label-light" style={{ color: '#666' }}>
+                                                <span className="flex items-center gap-0.5"><Calendar size={10} style={{ color: '#666' }} /> {booking.slot?.date}</span>
+                                                <span className="flex items-center gap-0.5"><Clock size={10} style={{ color: '#666' }} /> {formatTo12Hour(booking.slot?.time)}</span>
                                             </div>
                                             <div className="mt-1.5 flex items-center justify-between">
-                                                <Badge className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase border ${getStatusStyles(booking.status)} shadow-sm`}>
+                                                <Badge className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase border shadow-sm ${getStatusStyles(booking.status)}`}>
                                                     {booking.status}
                                                 </Badge>
-                                                <div className="p-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 group-hover:bg-white/20 group-hover:border-white/30 transition-all duration-300">
-                                                    <ChevronRight size={14} className="text-slate-400 group-hover:text-slate-700 transition-colors" />
+                                                <div className="p-1.5 rounded-full transition-all duration-300" style={{ backgroundColor: 'var(--light-greige)' }}>
+                                                    <ChevronRight size={14} className="transition-colors" style={{ color: '#666' }} />
                                                 </div>
                                             </div>
                                         </div>
@@ -224,7 +231,7 @@ function BookingPage() {
                                 </div>
                             ))
                     ) : (
-                        <div className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">{t('bookings.noRecordsFound')}</div>
+                        <div className="py-20 text-center font-bold uppercase tracking-widest text-xs typography-label-light" style={{ color: '#666' }}>{t('bookings.noRecordsFound')}</div>
                     )}
                 </div>
 
@@ -234,7 +241,8 @@ function BookingPage() {
                         <button
                             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                             disabled={currentPage === 1}
-                            className="p-4 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
+                            className="p-4 rounded-2xl typography-label-light disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                            style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
                         >
                             <ChevronDown size={20} className="rotate-90" />
                         </button>
@@ -243,11 +251,16 @@ function BookingPage() {
                                 <button
                                     key={page}
                                     onClick={() => setCurrentPage(page)}
-                                    className={`w-12 h-12 rounded-2xl font-bold text-sm transition-all ${
+                                    className={`w-12 h-12 rounded-2xl font-bold text-sm transition-all hover:-translate-y-0.5 shadow-lg hover:shadow-xl typography-label-light ${
                                         currentPage === page
-                                            ? 'bg-gradient-to-br from-slate-700 to-slate-800 text-white shadow-xl'
-                                            : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-lg hover:shadow-xl'
+                                            ? ''
+                                            : ''
                                     }`}
+                                    style={
+                                        currentPage === page
+                                            ? { background: 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)', color: 'white', boxShadow: '0 4px 20px rgba(212, 175, 55, 0.3)' }
+                                            : { backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }
+                                    }
                                 >
                                     {page}
                                 </button>
@@ -256,7 +269,8 @@ function BookingPage() {
                         <button
                             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                             disabled={currentPage === totalPages}
-                            className="p-4 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
+                            className="p-4 rounded-2xl typography-label-light disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                            style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
                         >
                             <ChevronDown size={20} className="-rotate-90" />
                         </button>
@@ -269,19 +283,19 @@ function BookingPage() {
             {isModalOpen && selectedBooking && (
                 <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
                     {/* Backdrop */}
-                    <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-md animate-in fade-in" onClick={() => setIsModalOpen(false)} />
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-md animate-in fade-in" onClick={() => setIsModalOpen(false)} />
 
                     {/* Content */}
-                    <div className="relative w-full max-w-lg bg-white rounded-t-[2rem] sm:rounded-[3rem] overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-y-auto no-scrollbar">
+                    <div className="relative w-full max-w-lg rounded-t-[2rem] sm:rounded-[3rem] overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-y-auto no-scrollbar floating-tile">
 
                         {/* Modal Header/Banner with Service Image */}
-                        <div className="relative h-56 sm:h-64 bg-gradient-to-br from-slate-200 to-slate-300">
+                        <div className="relative h-56 sm:h-64" style={{ background: 'linear-gradient(135deg, var(--muted-gold) 0%, var(--deep-charcoal) 100%)' }}>
                             <img
                                 src={selectedBooking.service?.imageUrl || selectedBooking.salon?.logoUrl}
                                 className="w-full h-full object-cover"
                                 alt="Service"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
+                            <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)' }} />
 
                             <button
                                 onClick={() => setIsModalOpen(false)}
@@ -295,11 +309,11 @@ function BookingPage() {
                                     <Badge className={`px-4 py-1.5 sm:px-5 sm:py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest shadow-2xl border-none ${getStatusStyles(selectedBooking.status)}`}>
                                         {selectedBooking.statusLabel || selectedBooking.status}
                                     </Badge>
-                                    <h2 className="text-xl sm:text-3xl font-black text-white tracking-tight mt-2 sm:mt-3">{selectedBooking.service?.name}</h2>
+                                    <h2 className="text-xl sm:text-3xl font-black text-white tracking-tight mt-2 sm:mt-3 typography-display">{selectedBooking.service?.name}</h2>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-2xl sm:text-4xl font-black text-white">₹{selectedBooking.price}</p>
-                                    <p className="text-[9px] sm:text-[10px] font-bold text-white/80 uppercase tracking-widest">{t('bookings.totalAmount')}</p>
+                                    <p className="text-2xl sm:text-4xl font-black text-white typography-number">₹{selectedBooking.price}</p>
+                                    <p className="text-[9px] sm:text-[10px] font-bold text-white/80 uppercase tracking-widest typography-label-light">{t('bookings.totalAmount')}</p>
                                 </div>
                             </div>
                         </div>
@@ -310,7 +324,7 @@ function BookingPage() {
                             {selectedBooking.service?.includedItems?.length > 0 && (
                                 <div className="flex flex-wrap gap-2">
                                     {selectedBooking.service.includedItems.map((item: string, idx: number) => (
-                                        <span key={idx} className="px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-slate-50 to-slate-100 text-slate-700 text-[9px] sm:text-[10px] font-black uppercase rounded-xl border border-slate-200 shadow-sm">
+                                        <span key={idx} className="px-3 py-1.5 sm:px-4 sm:py-2 text-[9px] sm:text-[10px] font-black uppercase rounded-xl border shadow-sm typography-label-light" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)', color: 'var(--deep-charcoal)' }}>
                                             ✓ {item}
                                         </span>
                                     ))}
@@ -319,18 +333,18 @@ function BookingPage() {
 
                             {/* Info Grid: Date, Time & Staff with Image */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                                <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border border-white/50 shadow-lg">
-                                    <p className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 sm:mb-4 flex items-center gap-2">
-                                        <Calendar size={14} className="sm:size-16 text-slate-700" /> {t('bookings.schedule')}
+                                <div className="p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border shadow-lg floating-tile" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)' }}>
+                                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-3 sm:mb-4 flex items-center gap-2 typography-label-light" style={{ color: '#666' }}>
+                                        <Calendar size={14} className="sm:size-16" style={{ color: '#666' }} /> {t('bookings.schedule')}
                                     </p>
-                                    <p className="text-sm sm:text-base font-black text-slate-900">{selectedBooking.slot?.date}</p>
-                                    <p className="text-xs sm:text-sm font-bold text-slate-600 mt-1">{formatTo12Hour(selectedBooking.slot?.time)}</p>
-                                    <p className="text-[9px] sm:text-[10px] font-bold text-slate-700 mt-2 uppercase tracking-wider">{selectedBooking.slot?.duration} {t('bookings.minutesSession')}</p>
+                                    <p className="text-sm sm:text-base font-black typography-display" style={{ color: 'var(--deep-charcoal)' }}>{selectedBooking.slot?.date}</p>
+                                    <p className="text-xs sm:text-sm font-bold mt-1 typography-label-light" style={{ color: '#666' }}>{formatTo12Hour(selectedBooking.slot?.time)}</p>
+                                    <p className="text-[9px] sm:text-[10px] font-bold mt-2 uppercase tracking-wider typography-label-light" style={{ color: '#666' }}>{selectedBooking.slot?.duration} {t('bookings.minutesSession')}</p>
                                 </div>
 
-                                <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border border-white/50 shadow-lg">
-                                    <p className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 sm:mb-4 flex items-center gap-2">
-                                        <User size={14} className="sm:size-16 text-slate-700" /> {t('bookings.specialist')}
+                                <div className="p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border shadow-lg floating-tile" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)' }}>
+                                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-3 sm:mb-4 flex items-center gap-2 typography-label-light" style={{ color: '#666' }}>
+                                        <User size={14} className="sm:size-16" style={{ color: '#666' }} /> {t('bookings.specialist')}
                                     </p>
                                     <div className="flex items-center gap-3 sm:gap-4">
                                         <img
@@ -339,10 +353,10 @@ function BookingPage() {
                                             alt="Staff"
                                         />
                                         <div className="flex-1">
-                                            <p className="text-sm sm:text-base font-black text-slate-900">{selectedBooking.staff?.name}</p>
+                                            <p className="text-sm sm:text-base font-black typography-display" style={{ color: 'var(--deep-charcoal)' }}>{selectedBooking.staff?.name}</p>
                                             <div className="flex items-center gap-1.5">
-                                                <Star size={10} className="sm:size-12 fill-orange-400 text-orange-400" />
-                                                <span className="text-[9px] sm:text-[10px] font-bold text-slate-600">{selectedBooking.staff?.rating?.average} ({selectedBooking.staff?.experienceYears}{t('bookings.yearsExp')})</span>
+                                                <Star size={10} className="sm:size-12" style={{ fill: 'var(--muted-gold)', color: 'var(--muted-gold)' }} />
+                                                <span className="text-[9px] sm:text-[10px] font-bold typography-label-light" style={{ color: '#666' }}>{selectedBooking.staff?.rating?.average} ({selectedBooking.staff?.experienceYears}{t('bookings.yearsExp')})</span>
                                             </div>
                                         </div>
                                     </div>
@@ -350,14 +364,14 @@ function BookingPage() {
                             </div>
 
                             {/* Salon Card with Logo */}
-                            <div className="p-4 sm:p-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2rem] sm:rounded-[2.5rem] text-white space-y-4 sm:space-y-5 shadow-2xl">
+                            <div className="p-4 sm:p-6 rounded-[2rem] sm:rounded-[2.5rem] text-white space-y-4 sm:space-y-5 shadow-2xl" style={{ background: 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)' }}>
                                 <div className="flex items-center gap-3 sm:gap-5 border-b border-white/10 pb-4 sm:pb-5">
                                     <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-2xl p-1.5 shrink-0 overflow-hidden shadow-lg">
                                         <img src={selectedBooking.salon?.logoUrl} className="w-full h-full object-contain" alt="Salon Logo" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-[8px] sm:text-[9px] font-black text-white/50 uppercase tracking-[0.2em]">{t('bookings.studio')}</p>
-                                        <h4 className="text-sm sm:text-base font-black tracking-tight truncate">{selectedBooking.salon?.name}</h4>
+                                        <p className="text-[8px] sm:text-[9px] font-black text-white/50 uppercase tracking-[0.2em] typography-label-light">{t('bookings.studio')}</p>
+                                        <h4 className="text-sm sm:text-base font-black tracking-tight truncate typography-display">{selectedBooking.salon?.name}</h4>
                                     </div>
                                     <a
                                         href={selectedBooking.salon?.directionsUrl}
@@ -370,37 +384,38 @@ function BookingPage() {
                                 </div>
                                 <div className="flex gap-3 sm:gap-4">
                                     <MapPin size={16} className="sm:size-18 text-slate-400 shrink-0" />
-                                    <p className="text-[10px] sm:text-[11px] font-medium leading-relaxed opacity-90">
+                                    <p className="text-[10px] sm:text-[11px] font-medium leading-relaxed opacity-90 typography-label-light">
                                         {selectedBooking.salon?.address?.street}, {selectedBooking.salon?.address?.city}, {selectedBooking.salon?.address?.state} - {selectedBooking.salon?.address?.pincode}
                                     </p>
                                 </div>
                             </div>
 
                             {/* Customer Row */}
-                            <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-5 rounded-[2rem] sm:rounded-[2.5rem] border border-white/50 flex items-center justify-between shadow-lg">
+                            <div className="p-4 sm:p-5 rounded-[2rem] sm:rounded-[2.5rem] border flex items-center justify-between shadow-lg floating-tile" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)' }}>
                                 <div className="flex items-center gap-3 sm:gap-4">
-                                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-white font-black text-base sm:text-lg shadow-lg shrink-0">
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center font-black text-base sm:text-lg shadow-lg shrink-0" style={{ background: 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)', color: 'white' }}>
                                         {selectedBooking.user?.name?.charAt(0)}
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-[8px] sm:text-[9px] font-black text-slate-500 uppercase tracking-widest">{t('bookings.bookedBy')}</p>
-                                        <p className="text-sm sm:text-base font-black text-slate-900 truncate">{selectedBooking.user?.name}</p>
+                                        <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest typography-label-light" style={{ color: '#666' }}>{t('bookings.bookedBy')}</p>
+                                        <p className="text-sm sm:text-base font-black truncate typography-display" style={{ color: 'var(--deep-charcoal)' }}>{selectedBooking.user?.name}</p>
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-end shrink-0 ml-2">
-                                    <p className="text-[8px] sm:text-[9px] font-black text-slate-500 uppercase tracking-widest">{t('bookings.contact')}</p>
-                                    <p className="text-xs sm:text-sm font-bold text-slate-700">{selectedBooking.user?.phone}</p>
+                                    <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest typography-label-light" style={{ color: '#666' }}>{t('bookings.contact')}</p>
+                                    <p className="text-xs sm:text-sm font-bold typography-label-light" style={{ color: '#666' }}>{selectedBooking.user?.phone}</p>
                                 </div>
                             </div>
 
                             {/* Footer Actions */}
                             <div className="pt-4 space-y-4">
-                                <p className="text-center text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+                                <p className="text-center text-[9px] font-bold uppercase tracking-[0.2em] typography-label-light" style={{ color: '#666' }}>
                                     Booking ID: {selectedBooking.bookingId}
                                 </p>
                                 <button
                                     onClick={() => setIsModalOpen(false)}
-                                    className="w-full py-5 bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:shadow-2xl active:scale-95 transition-all"
+                                    className="w-full py-5 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:shadow-2xl active:scale-95 transition-all typography-label-light"
+                                    style={{ background: 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)' }}
                                 >
                                     {t('bookings.closeDetails')}
                                 </button>

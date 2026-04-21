@@ -25,12 +25,12 @@ function SalonDashboard({ open, setOpen, collapsed }: SidebarProps) {
   const location = useLocation();
 
   const menuItems = [
-    { id: "profile", label: t('navigation.profile'), icon: Settings, path: "/dashboard/" },
+    { id: "analytics", label: t('navigation.analytics'), icon: BarChart3, path: "/dashboard/" },
     { id: "booking", label: t('navigation.bookings'), icon: Notebook, path: "/dashboard/booking" },
-    { id: "analytics", label: t('navigation.analytics'), icon: BarChart3, path: "/dashboard/analytics" },
     { id: "attendance", label: t('navigation.attendance'), icon: UserCheck, path: "/dashboard/attendance" },
     { id: "staff", label: t('navigation.staff'), icon: Users, path: "/dashboard/staff" },
     { id: "services", label: t('navigation.services'), icon: LayoutDashboard, path: "/dashboard/services" },
+    { id: "profile", label: "Command Center", icon: Settings, path: "/dashboard/profile" },
     { id: "settings", label: t('navigation.settings'), icon: Globe, path: "/dashboard/settings" },
   ];
 
@@ -96,7 +96,7 @@ function SalonDashboard({ open, setOpen, collapsed }: SidebarProps) {
                     w-full justify-center group py-6 rounded-xl transition-all duration-200 relative
                     ${collapsed ? "px-2" : "justify-between px-4"}
                     ${isActive
-                      ? 'bg-white/10 text-white shadow-lg'
+                      ? 'bg-white/10 text-white shadow-lg hover:bg-white/15'
                       : 'text-gray-400 hover:bg-white/5 hover:text-white'
                     }
                   `}

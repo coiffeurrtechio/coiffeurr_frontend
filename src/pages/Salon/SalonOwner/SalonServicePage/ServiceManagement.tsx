@@ -156,59 +156,63 @@ const ServiceManagement: React.FC = () => {
     };
 
     return (
-        <div className="p-4 md:p-6 space-y-6 bg-gradient-to-br from-slate-50 to-blue-50/30 min-h-screen animate-in fade-in duration-500">
+        <div className="min-h-screen p-6 animate-in fade-in duration-500" style={{ fontFamily: 'Inter, sans-serif', backgroundColor: 'var(--soft-ivory)' }}>
             <DashboardLoader isVisible={loading || submitting} />
 
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-in slide-in-from-top duration-500">
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">{t('services.title')}</h1>
-                    <p className="text-sm text-gray-500 mt-1">{t('services.manageServices')}</p>
+            {/* Main Stage Container */}
+            <div className="main-stage p-6 space-y-6">
+                {/* Fixed Header Strip */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4" style={{ borderBottom: '1px solid var(--light-greige)' }}>
+                    <div>
+                        <h1 className="font-semibold" style={{ fontFamily: 'Playfair Display, serif', fontSize: '24px', color: 'var(--deep-charcoal)' }}>{t('services.title')}</h1>
+                        <p className="typography-label-light" style={{ fontSize: '14px' }}>{t('services.manageServices')}</p>
+                    </div>
+                    <button onClick={() => { resetForm(); setIsModalOpen(true); }} className="w-full md:w-auto flex items-center justify-center gap-2 px-6 text-white rounded-2xl text-sm font-semibold transition-all duration-300" style={{ backgroundColor: 'var(--muted-gold)', height: '44px' }}>
+                        <Plus size={18} /> {t('services.addService')}
+                    </button>
                 </div>
-                <button onClick={() => { resetForm(); setIsModalOpen(true); }} className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#1E4D8C] to-[#2a5fa8] text-white rounded-2xl text-sm font-bold hover:shadow-lg hover:shadow-blue-500/25 hover:scale-105 transition-all duration-300">
-                    <Plus size={18} /> {t('services.addService')}
-                </button>
-            </div>
 
-            {/* Search Bar */}
-            <div className="relative w-full md:w-96 animate-in slide-in-from-top duration-500 delay-100">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <input 
-                    type="text" 
-                    placeholder={t('services.search')} 
-                    value={searchQuery} 
-                    onChange={(e) => setSearchQuery(e.target.value)} 
-                    className="w-full pl-12 pr-4 py-3 bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none shadow-sm transition-all" 
-                />
+                {/* Search Bar - Integrated in Header Strip */}
+                <div className="relative w-full md:w-96">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2" size={18} style={{ color: '#666' }} />
+                    <input 
+                        type="text" 
+                        placeholder={t('services.search')} 
+                        value={searchQuery} 
+                        onChange={(e) => setSearchQuery(e.target.value)} 
+                        className="w-full pl-12 pr-4 rounded-2xl text-sm outline-none transition-all typography-label-light" 
+                        style={{ height: '44px', backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
+                    />
+                </div>
             </div>
 
             {/* Service Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-in fade-in duration-500 delay-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-in fade-in duration-500 delay-200 mt-6">
                 {serviceList.filter(s => s.serviceName?.toLowerCase().includes(searchQuery.toLowerCase())).map((service) => (
                     <div 
                         key={service.service_id} 
-                        className="group bg-white/90 backdrop-blur-md rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100/60 hover:border-gray-200/60"
+                        className="floating-tile overflow-hidden hover-lift"
                     >
                         {/* Card Header with Image */}
-                        <div className="relative h-32 bg-gradient-to-br from-[#1E4D8C] to-[#3a7bc8] overflow-hidden">
+                        <div className="relative h-32 overflow-hidden" style={{ background: 'linear-gradient(135deg, var(--muted-gold) 0%, var(--deep-charcoal) 100%)' }}>
                             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0wIDQwaDQwVjBIMHY0MHptMjAgMjBWMjBIMHYyMGgyMHptMjAgMjBWMjBIMHYyMGgyMHoiIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvZz48L3N2Zz4=')] opacity-30"></div>
                             <div className="absolute bottom-3 left-4">
                                 <div className="w-24 h-24 rounded-xl bg-white shadow-lg overflow-hidden border-3 border-white">
                                     {service.imageUrl ? (
                                         <img src={service.imageUrl} className="w-full h-full object-cover" alt={service.serviceName} />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                                            <Scissors size={32} className="text-gray-400" />
+                                        <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: 'var(--light-greige)' }}>
+                                            <Scissors size={32} style={{ color: '#666' }} />
                                         </div>
                                     )}
                                 </div>
                             </div>
                             <div className="absolute top-3 right-3">
-                                <span className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider border-2 ${
+                                <span className={`px-3 py-1.5 rounded-full text-[9px] font-semibold uppercase tracking-wider border-2 ${
                                     service.active 
-                                        ? 'text-white bg-[#1E4D8C] border-[#1E4D8C]' 
-                                        : 'text-gray-600 bg-white border-gray-300'
-                                }`}>
+                                        ? 'text-white' 
+                                        : 'text-gray-600 bg-white'
+                                }`} style={service.active ? { backgroundColor: 'var(--sage-green)', borderColor: 'var(--sage-green)' } : { borderColor: 'var(--light-greige)' }}>
                                     {service.active ? t('services.active') : t('services.inactive')}
                                 </span>
                             </div>
@@ -217,34 +221,31 @@ const ServiceManagement: React.FC = () => {
                         {/* Card Body */}
                         <div className="pt-10 pb-4 px-4">
                             <div className="mb-3">
-                                <h3 className="text-base font-bold text-gray-800">{service.serviceName}</h3>
-                                <p className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5 font-medium">
+                                <h3 className="typography-label" style={{ fontSize: '16px', color: 'var(--deep-charcoal)' }}>{service.serviceName}</h3>
+                                <p className="typography-label-light flex items-center gap-1 mt-0.5" style={{ fontSize: '10px' }}>
                                     <Clock size={10} /> {service.durationMinutes} {t('services.mins')}
                                 </p>
                             </div>
 
                             {/* Price */}
                             <div className="mb-3">
-                                <span className="text-xl font-black text-[#1E4D8C]">₹{service.price}</span>
+                                <span className="typography-number" style={{ fontSize: '20px', color: 'var(--muted-gold)' }}>₹{service.price}</span>
                             </div>
 
                             {/* Linked Staff */}
                             <div className="mb-3">
-                                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Assigned Staff</p>
+                                <p className="typography-label-light uppercase tracking-wider mb-1.5" style={{ fontSize: '9px' }}>Assigned Staff</p>
                                 <div className="flex -space-x-2 overflow-hidden">
-                                    {service.staff_ids?.length > 0 ? (
-                                        service.staff_ids.slice(0, 3).map((id: string) => {
-                                            const s = allStaff.find(st => st.staff_id === id);
-                                            return (
-                                                <div key={id} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-100 overflow-hidden" title={s?.name}>
-                                                    <img src={s?.images?.[0] || '/placeholder.png'} className="h-full w-full object-cover" alt="" />
-                                                </div>
-                                            );
-                                        })
+                                    {service.staff?.length > 0 ? (
+                                        service.staff.slice(0, 3).map((s: any) => (
+                                            <div key={s.staff_id} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-100 overflow-hidden" title={s?.name}>
+                                                <img src={s?.image_url || '/placeholder.png'} className="h-full w-full object-cover" alt="" />
+                                            </div>
+                                        ))
                                     ) : <span className="text-[9px] text-gray-400 italic">{t('services.noStaffAssigned')}</span>}
-                                    {service.staff_ids?.length > 3 && (
-                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-50 text-[9px] font-bold text-gray-400 ring-2 ring-white">
-                                            +{service.staff_ids.length - 3}
+                                    {service.staff?.length > 3 && (
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-full typography-label-light ring-2 ring-white" style={{ backgroundColor: 'var(--light-greige)', fontSize: '9px' }}>
+                                            +{service.staff.length - 3}
                                         </div>
                                     )}
                                 </div>
@@ -253,7 +254,8 @@ const ServiceManagement: React.FC = () => {
                             {/* Action Button */}
                             <button 
                                 onClick={() => handleEditClick(service)}
-                                className="w-full py-2 px-3 bg-gradient-to-r from-gray-50 to-gray-100 hover:from-blue-50 hover:to-indigo-50 text-gray-700 hover:text-blue-700 rounded-lg text-[10px] font-semibold border border-gray-200 hover:border-blue-200 transition-all duration-300 flex items-center justify-center gap-1.5 group-hover:shadow-sm"
+                                className="w-full py-2 px-3 rounded-lg text-[10px] font-semibold border transition-all duration-300 flex items-center justify-center gap-1.5 group-hover:shadow-sm typography-label-light"
+                                style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)', color: 'var(--deep-charcoal)' }}
                             >
                                 <Edit2 size={12} />
                                 Edit Service
