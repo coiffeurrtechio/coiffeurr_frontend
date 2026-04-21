@@ -1,18 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import {
-    Plus,
-    Search,
-    Edit2,
-    User,
-    X,
-    Check,
-    Scissors,
-    Briefcase,
-    Star,
-    MessageSquare
-} from 'lucide-react';
-import { useApi } from '../../../../API/SalonsAPIs/ALLSalonAPI';
+import React, { useState, useEffect } from "react";
+import { Plus, Edit2, Trash2, X, Scissors, Check, MoreHorizontal, Save, Download, Mail, Calendar, Clock, Users, CheckCircle, XCircle, AlertCircle, AlertTriangle, ChevronLeft, ChevronRight, ChevronDown, Search, Filter, RefreshCw, UserCheck, ImageIcon, Briefcase, MessageSquare } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { motion } from "motion/react";
+import { useApi } from "../../../../API/SalonsAPIs/ALLSalonAPI";
 import { useSalonApi } from '../../../../API/Salon_Owner_API/SalonOwnerAPI';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLoader } from '../../../../components/ui_components/DashboardLoader';
@@ -529,27 +519,46 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 glass-overlay">
-            <div className="glass-modal w-full max-w-lg rounded-2xl overflow-hidden animate-md3-scale-in elevation-5">
-                <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
-                    <h3 className="text-lg font-bold text-gray-800">{title}</h3>
-                    <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600"><X size={20} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0a0a0a]/60 backdrop-blur-sm">
+            <motion.div 
+                className="bg-white/90 backdrop-blur-xl w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-white/20"
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+            >
+                <div className="p-6 border-b border-gray-100/50 flex justify-between items-center bg-gradient-to-r from-gray-50/80 to-white/80">
+                    <h3 className="text-lg font-bold text-gray-800" style={{ fontFamily: 'Playfair Display, serif' }}>{title}</h3>
+                    <motion.button 
+                        onClick={onClose} 
+                        className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100/50 transition-all duration-300"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                    >
+                        <X size={20} />
+                    </motion.button>
                 </div>
-                <form onSubmit={onSubmit} className="p-6 space-y-5 max-h-[80vh] overflow-y-auto custom-scrollbar">
+                <form onSubmit={onSubmit} className="p-6 space-y-5 max-h-[85vh] overflow-y-auto custom-scrollbar">
                     
                     {/* Photos Upload */}
                     <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('staff.staffPhotos')} {uploading && t('staff.uploading')}</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">{t('staff.staffPhotos')} {uploading && t('staff.uploading')}</label>
                         <div className="grid grid-cols-4 gap-2">
-                            <label className="aspect-square border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-all">
+                            <label className="aspect-square border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-all bg-white/60 backdrop-blur-sm">
                                 <Plus size={20} className="text-gray-400" />
                                 <input type="file" multiple className="hidden" accept="image/*" onChange={handleFileUpload} disabled={uploading} />
                             </label>
                             {formData.images.map((url: string, index: number) => (
-                                <div key={index} className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 group">
+                                <motion.div 
+                                    key={index} 
+                                    className="relative aspect-square rounded-2xl overflow-hidden group bg-white/60 backdrop-blur-sm border border-gray-200/50 shadow-sm"
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ duration: 0.2 }}
+                                >
                                     <img src={url} className="w-full h-full object-cover" />
                                     <button type="button" onClick={() => setFormData({ ...formData, images: formData.images.filter((_: any, i: number) => i !== index) })} className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><X size={10} /></button>
-                                </div>
+                                </motion.div>
                             ))}
                         </div>
                     </div>
@@ -557,11 +566,11 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('staff.fullName')}</label>
-                            <input required className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-300 focus:elevation-2 transition-all" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+                            <input required className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
                         </div>
                         <div className="space-y-1">
                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('staff.role')}</label>
-                            <input required className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-300 focus:elevation-2 transition-all" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })} />
+                            <input required className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })} />
                         </div>
                     </div>
 
@@ -570,26 +579,26 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
                             <Scissors size={12}/> {t('staff.assignedServices')}
                         </label>
-                        <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-1 border border-gray-50 rounded-xl">
+                        <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-1 custom-scrollbar">
                             {allServices.map((service) => {
                                 const isSelected = formData.services.includes(service.service_id);
                                 return (
-                                    <div 
+                                    <motion.div
                                         key={service.service_id}
                                         onClick={() => toggleService(service.service_id)}
-                                        className={`flex items-center gap-2 p-2 rounded-xl border cursor-pointer transition-all ${
-                                            isSelected ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-100 hover:bg-gray-50'
-                                        }`}
+                                        className={`flex items-center gap-2 p-2 rounded-xl border cursor-pointer transition-all shadow-sm ${isSelected ? 'bg-[#D4AF37]/10 border-[#D4AF37]/30 ring-1 ring-[#D4AF37]/20' : 'bg-white/60 backdrop-blur-sm border-gray-200/50 hover:bg-white/80'}`}
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
                                     >
-                                        <div className="w-8 h-8 rounded-lg bg-gray-100 overflow-hidden shrink-0">
+                                        <div className="w-8 h-8 rounded-lg bg-gray-200 overflow-hidden shrink-0 border border-white shadow-sm">
                                             {service.imageUrl && <img src={service.imageUrl} className="w-full h-full object-cover" />}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className={`text-[10px] font-bold truncate ${isSelected ? 'text-blue-600' : 'text-gray-700'}`}>{service.serviceName}</p>
+                                            <p className={`text-[10px] font-bold truncate ${isSelected ? 'text-[#D4AF37]' : 'text-gray-600'}`}>{service.serviceName}</p>
                                             <p className="text-[8px] text-gray-400">₹{service.price}</p>
                                         </div>
-                                        {isSelected && <Check size={12} className="text-blue-600" />}
-                                    </div>
+                                        {isSelected && <Check size={12} className="ml-auto text-[#D4AF37]" />}
+                                    </motion.div>
                                 );
                             })}
                         </div>
@@ -598,23 +607,23 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('staff.email')}</label>
-                            <input type="email" required className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-blue-300 focus:elevation-2 transition-all" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                            <input type="email" required className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
                         </div>
                         <div className="space-y-1">
                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('staff.phone')}</label>
-                            <input required className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-blue-300 focus:elevation-2 transition-all" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+                            <input required className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
                         </div>
                     </div>
 
                     <div className="space-y-1">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Instagram Handle</label>
-                        <input className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-300 focus:elevation-2 transition-all" placeholder="@username" value={formData.instagramHandle} onChange={e => setFormData({ ...formData, instagramHandle: e.target.value })} />
+                        <input className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder="@username" value={formData.instagramHandle} onChange={e => setFormData({ ...formData, instagramHandle: e.target.value })} />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Gender</label>
-                            <select className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none" value={formData.gender} onChange={e => setFormData({ ...formData, gender: e.target.value })}>
+                            <select className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" value={formData.gender} onChange={e => setFormData({ ...formData, gender: e.target.value })}>
                                 <option value="Male">Male</option>
                                 <option value="Female">Female</option>
                                 <option value="Other">Other</option>
@@ -628,7 +637,7 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
                                 type="number" 
                                 required 
                                 min="0"
-                                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm" 
+                                className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm appearance-none [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm"
                                 value={formData.experienceYears} 
                                 onChange={e => {
                                     const val = e.target.value;
@@ -643,12 +652,28 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
                     <div className="space-y-2">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Specialization Keywords</label>
                         <div className="flex gap-2">
-                            <input className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none" placeholder="Hit Enter to add" value={newSpec} onChange={e => setNewSpec(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSpec())} />
-                            <button type="button" onClick={addSpec} className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-100 transition-colors">Add</button>
+                            <input className="flex-1 px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder="Hit Enter to add" value={newSpec} onChange={e => setNewSpec(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSpec())} />
+                            <motion.button 
+                                type="button" 
+                                onClick={addSpec} 
+                                className="px-4 py-2 bg-[#D4AF37]/10 text-[#D4AF37] rounded-xl hover:bg-[#D4AF37]/20 transition-all shadow-sm text-xs font-bold"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                Add
+                            </motion.button>
                         </div>
-                        <div className="flex flex-wrap gap-1.5">
+                        <div className="flex flex-wrap gap-2">
                             {formData.expertise.map((item: string, i: number) => (
-                                <span key={i} className="flex items-center gap-1 px-2 py-1 bg-slate-800 text-white text-[10px] rounded-lg">{item} <X size={10} className="cursor-pointer" onClick={() => setFormData({...formData, expertise: formData.expertise.filter((_, idx) => idx !== i)})} /></span>
+                                <motion.span 
+                                    key={i} 
+                                    className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-[#D4AF37] to-[#C9A227] text-white rounded-full text-[10px] font-bold shadow-sm"
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    {item} <X size={10} className="cursor-pointer hover:text-white/70 transition-colors" onClick={() => setFormData({...formData, expertise: formData.expertise.filter((_, idx) => idx !== i)})} />
+                                </motion.span>
                             ))}
                         </div>
                     </div>
@@ -656,12 +681,28 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
                     <div className="space-y-2">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Languages</label>
                         <div className="flex gap-2">
-                            <input className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none" placeholder="Hit Enter to add" value={newLang} onChange={e => setNewLang(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addLang())} />
-                            <button type="button" onClick={addLang} className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-100 transition-colors">Add</button>
+                            <input className="flex-1 px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder="Hit Enter to add" value={newLang} onChange={e => setNewLang(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addLang())} />
+                            <motion.button 
+                                type="button" 
+                                onClick={addLang} 
+                                className="px-4 py-2 bg-[#D4AF37]/10 text-[#D4AF37] rounded-xl hover:bg-[#D4AF37]/20 transition-all shadow-sm text-xs font-bold"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                Add
+                            </motion.button>
                         </div>
-                        <div className="flex flex-wrap gap-1.5">
+                        <div className="flex flex-wrap gap-2">
                             {formData.languages.map((item: string, i: number) => (
-                                <span key={i} className="flex items-center gap-1 px-2 py-1 bg-slate-800 text-white text-[10px] rounded-lg">{item} <X size={10} className="cursor-pointer" onClick={() => setFormData({...formData, languages: formData.languages.filter((_, idx) => idx !== i)})} /></span>
+                                <motion.span 
+                                    key={i} 
+                                    className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-[#D4AF37] to-[#C9A227] text-white rounded-full text-[10px] font-bold shadow-sm"
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    {item} <X size={10} className="cursor-pointer hover:text-white/70 transition-colors" onClick={() => setFormData({...formData, languages: formData.languages.filter((_, idx) => idx !== i)})} />
+                                </motion.span>
                             ))}
                         </div>
                     </div>
@@ -669,12 +710,28 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
                     <div className="space-y-2">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Certifications</label>
                         <div className="flex gap-2">
-                            <input className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none" placeholder="Hit Enter to add" value={newCert} onChange={e => setNewCert(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addCert())} />
-                            <button type="button" onClick={addCert} className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-100 transition-colors">Add</button>
+                            <input className="flex-1 px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder="Hit Enter to add" value={newCert} onChange={e => setNewCert(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addCert())} />
+                            <motion.button 
+                                type="button" 
+                                onClick={addCert} 
+                                className="px-4 py-2 bg-[#D4AF37]/10 text-[#D4AF37] rounded-xl hover:bg-[#D4AF37]/20 transition-all shadow-sm text-xs font-bold"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                Add
+                            </motion.button>
                         </div>
-                        <div className="flex flex-wrap gap-1.5">
+                        <div className="flex flex-wrap gap-2">
                             {formData.certifications.map((item: string, i: number) => (
-                                <span key={i} className="flex items-center gap-1 px-2 py-1 bg-slate-800 text-white text-[10px] rounded-lg">{item} <X size={10} className="cursor-pointer" onClick={() => setFormData({...formData, certifications: formData.certifications.filter((_, idx) => idx !== i)})} /></span>
+                                <motion.span 
+                                    key={i} 
+                                    className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-[#D4AF37] to-[#C9A227] text-white rounded-full text-[10px] font-bold shadow-sm"
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    {item} <X size={10} className="cursor-pointer hover:text-white/70 transition-colors" onClick={() => setFormData({...formData, certifications: formData.certifications.filter((_, idx) => idx !== i)})} />
+                                </motion.span>
                             ))}
                         </div>
                     </div>
@@ -682,28 +739,55 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
                     <div className="space-y-2">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Specializations</label>
                         <div className="flex gap-2">
-                            <input className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none" placeholder="Hit Enter to add" value={newSpec2} onChange={e => setNewSpec2(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSpec2())} />
-                            <button type="button" onClick={addSpec2} className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-100 transition-colors">Add</button>
+                            <input className="flex-1 px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder="Hit Enter to add" value={newSpec2} onChange={e => setNewSpec2(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSpec2())} />
+                            <motion.button 
+                                type="button" 
+                                onClick={addSpec2} 
+                                className="px-4 py-2 bg-[#D4AF37]/10 text-[#D4AF37] rounded-xl hover:bg-[#D4AF37]/20 transition-all shadow-sm text-xs font-bold"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                Add
+                            </motion.button>
                         </div>
-                        <div className="flex flex-wrap gap-1.5">
+                        <div className="flex flex-wrap gap-2">
                             {formData.specializations.map((item: string, i: number) => (
-                                <span key={i} className="flex items-center gap-1 px-2 py-1 bg-slate-800 text-white text-[10px] rounded-lg">{item} <X size={10} className="cursor-pointer" onClick={() => setFormData({...formData, specializations: formData.specializations.filter((_, idx) => idx !== i)})} /></span>
+                                <motion.span 
+                                    key={i} 
+                                    className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-[#D4AF37] to-[#C9A227] text-white rounded-full text-[10px] font-bold shadow-sm"
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    {item} <X size={10} className="cursor-pointer hover:text-white/70 transition-colors" onClick={() => setFormData({...formData, specializations: formData.specializations.filter((_, idx) => idx !== i)})} />
+                                </motion.span>
                             ))}
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between bg-blue-50/50 p-4 rounded-xl border border-blue-100">
-                        <span className="text-[11px] font-bold text-blue-600 uppercase tracking-widest">Active Status</span>
-                        <button type="button" onClick={() => setFormData({ ...formData, active: !formData.active })} className={`w-12 h-6 rounded-full relative transition-colors ${formData.active ? 'bg-green-500' : 'bg-gray-300'}`}>
-                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${formData.active ? 'left-7' : 'left-1'}`} />
-                        </button>
+                    <div className="flex items-center justify-between bg-white/60 backdrop-blur-sm p-4 rounded-xl border border-gray-200/50 shadow-sm">
+                        <span className="text-[11px] font-bold text-gray-600 uppercase tracking-widest">Active Status</span>
+                        <motion.button 
+                            type="button" 
+                            onClick={() => setFormData({ ...formData, active: !formData.active })} 
+                            className={`w-12 h-6 rounded-full relative transition-colors shadow-sm ${formData.active ? 'bg-[#D4AF37]' : 'bg-gray-300'}`}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${formData.active ? 'left-7' : 'left-1'}`} />
+                        </motion.button>
                     </div>
 
-                    <button type="submit" disabled={submitting} className="w-full py-3.5 bg-[#1E4D8C] text-white rounded-xl font-bold elevation-3 hover:elevation-4 disabled:opacity-70 active:scale-[0.98] transition-all ripple-container">
+                    <motion.button 
+                        type="submit" 
+                        disabled={submitting} 
+                        className="w-full py-3.5 bg-gradient-to-r from-[#D4AF37] to-[#C9A227] text-white rounded-xl font-bold shadow-lg shadow-[#D4AF37]/20 disabled:opacity-70 transition-all"
+                        whileHover={{ scale: 1.02, boxShadow: '0 10px 30px -10px rgba(212, 175, 55, 0.4)' }}
+                        whileTap={{ scale: 0.98 }}
+                    >
                         {submitting ? t('staff.processing') : t('staff.saveStaff')}
-                    </button>
+                    </motion.button>
                 </form>
-            </div>
+            </motion.div>
         </div>
     );
 };

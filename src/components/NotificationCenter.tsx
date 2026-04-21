@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, X, Check, Clock } from 'lucide-react';
+import { X, Check, Clock } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useSalonApi } from '../API/Salon_Owner_API/SalonOwnerAPI';
 
 interface Notification {
@@ -122,7 +123,10 @@ const NotificationCenter: React.FC = () => {
       case 'BOOKING_RESCHEDULED':
         return <Clock className="w-4 h-4 text-orange-500" />;
       default:
-        return <Bell className="w-4 h-4 text-blue-500" />;
+        return <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2C10.3431 2 9 3.34315 9 5V6C6.23858 6 4 8.23858 4 11V15L2 17V18H22V17L20 15V11C20 8.23858 17.7614 6 15 6V5C15 3.34315 13.6569 2 12 2Z" />
+          <path d="M10 21C10 21.5523 10.4477 22 11 22H13C13.5523 22 14 21.5523 14 21" />
+        </svg>;
     }
   };
 
@@ -143,18 +147,56 @@ const NotificationCenter: React.FC = () => {
 
   return (
     <div className="relative">
-      {/* Bell Button */}
-      <button
+      {/* Custom Gold Bell Button */}
+      <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
+        className="relative p-2 rounded-xl transition-all"
+        whileHover={{ 
+          scale: 1.1,
+          rotate: [0, -5, 5, -5, 5, 0],
+          transition: { duration: 0.4 }
+        }}
+        style={{ color: '#D4AF37' }}
       >
-        <Bell className="w-6 h-6 text-gray-600" />
-        {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
-        )}
-      </button>
+        {/* Custom Minimalist Bell SVG in Polished Gold */}
+        <svg 
+          width="20" 
+          height="20" 
+          viewBox="0 0 24 24" 
+          fill="none" 
+          stroke="currentColor" 
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M12 2C10.3431 2 9 3.34315 9 5V6C6.23858 6 4 8.23858 4 11V15L2 17V18H22V17L20 15V11C20 8.23858 17.7614 6 15 6V5C15 3.34315 13.6569 2 12 2Z" />
+          <path d="M10 21C10 21.5523 10.4477 22 11 22H13C13.5523 22 14 21.5523 14 21" />
+        </svg>
+        
+        {/* Glowing Amber Dot for unread count */}
+        <AnimatePresence>
+          {unreadCount > 0 && (
+            <motion.span
+              className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full"
+              style={{ 
+                background: 'radial-gradient(circle, #FFB347, #FF8C00)',
+                boxShadow: '0 0 8px rgba(255, 179, 71, 0.8), 0 0 16px rgba(255, 140, 0, 0.4)'
+              }}
+              initial={{ scale: 0 }}
+              animate={{ 
+                scale: [1, 1.2, 1],
+                opacity: [1, 0.8, 1]
+              }}
+              exit={{ scale: 0 }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
+          )}
+        </AnimatePresence>
+      </motion.button>
 
       {/* Dropdown */}
       {isOpen && (
@@ -165,11 +207,11 @@ const NotificationCenter: React.FC = () => {
             onClick={() => setIsOpen(false)}
           />
 
-          {/* Notification Panel */}
-          <div className="absolute right-0 top-12 w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 max-h-[500px] flex flex-col">
+          {/* Notification Panel - Tech-Luxury Design */}
+          <div className="absolute right-0 top-12 w-96 bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/10 z-50 max-h-[500px] flex flex-col" style={{ boxShadow: "rgba(0,0,0,0.15) 0 8px 32px" }}>
             {/* Header */}
             <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="font-bold text-gray-800">Notifications</h3>
+              <h3 className="font-bold text-gray-800" style={{ fontFamily: "'Playfair Display', serif" }}>Notifications</h3>
               <div className="flex items-center gap-2">
                 {unreadCount > 0 && (
                   <button

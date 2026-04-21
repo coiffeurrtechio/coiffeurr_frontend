@@ -31,7 +31,7 @@ function SalonDashboard({ open, setOpen, collapsed }: SidebarProps) {
     { id: "attendance", label: t('navigation.attendance'), icon: UserCheck, path: "/dashboard/attendance" },
     { id: "staff", label: t('navigation.staff'), icon: Users, path: "/dashboard/staff" },
     { id: "services", label: t('navigation.services'), icon: LayoutDashboard, path: "/dashboard/services" },
-    { id: "profile", label: "Command Center", icon: Settings, path: "/dashboard/profile" },
+    { id: "profile", label: "My Salon", icon: Settings, path: "/dashboard/profile" },
     { id: "settings", label: t('navigation.settings'), icon: Globe, path: "/dashboard/settings" },
   ];
 

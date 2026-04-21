@@ -188,7 +188,7 @@ const BookingsPage: React.FC = () => {
           `/bookings/salon/${salonId}?${params.toString()}`,
           { headers: { "X-User-Id": userId } }
         );
-        if (res.data) {
+        if (res.data && Array.isArray(res.data)) {
           setBookings(res.data);
           // For now, estimate total pages based on returned items
           // If API returns fewer items than limit, we might be on last page
@@ -197,10 +197,13 @@ const BookingsPage: React.FC = () => {
           } else {
             setTotalPages(page + 1); // At least one more page exists
           }
+        } else {
+          setBookings([]);
         }
       });
     } catch (error) {
       console.error("Fetch bookings error:", error);
+      setBookings([]); // Ensure bookings is always an array even on error
     } finally {
       setLoading(false);
     }
@@ -265,7 +268,7 @@ const BookingsPage: React.FC = () => {
     }
   };
 
-  const sortedBookings = [...(bookings || [])].sort((a, b) => {
+  const sortedBookings = [...(Array.isArray(bookings) ? bookings : [])].sort((a, b) => {
     let aValue: any;
     let bValue: any;
 

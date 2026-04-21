@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Search,
   Filter,
   RefreshCw,
@@ -981,7 +982,7 @@ const AttendancePage: React.FC = () => {
               title="Mark All Present"
             >
               <UserCheck size={14} />
-              Mark All
+              Mark All Present
             </button>
             <button
               onClick={saveAttendance}
@@ -1055,7 +1056,6 @@ const AttendancePage: React.FC = () => {
                     <th className="text-left" style={{ fontSize: '11px', color: '#999', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Inter, sans-serif', fontWeight: '600', padding: '16px' }}>{t('attendance.role')}</th>
                     <th className="text-left" style={{ fontSize: '11px', color: '#999', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Inter, sans-serif', fontWeight: '600', padding: '16px' }}>{t('attendance.email')}</th>
                     <th className="text-left" style={{ fontSize: '11px', color: '#999', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Inter, sans-serif', fontWeight: '600', padding: '16px' }}>{t('attendance.phone')}</th>
-                    <th className="text-left" style={{ fontSize: '11px', color: '#999', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Inter, sans-serif', fontWeight: '600', padding: '16px' }}>Last Action</th>
                     <th className="text-center" style={{ fontSize: '11px', color: '#999', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Inter, sans-serif', fontWeight: '600', padding: '16px' }}>{t('attendance.status')}</th>
                   </tr>
                 </thead>
@@ -1088,13 +1088,6 @@ const AttendancePage: React.FC = () => {
                           <td className="typography-label-light" style={{ fontSize: '14px', padding: '16px' }}>{staff.role}</td>
                           <td className="typography-label-light" style={{ fontSize: '14px', padding: '16px' }}>{staff.email}</td>
                           <td className="typography-label-light" style={{ fontSize: '14px', padding: '16px' }}>{staff.phone || '-'}</td>
-                          <td className="typography-label-light" style={{ fontSize: '11px', padding: '16px', color: '#999', fontFamily: 'Inter, sans-serif' }}>
-                            {currentStatus !== 'NOT_MARKED' ? (
-                              <span style={{ color: '#D4AF37', fontWeight: '500' }}>
-                                Check-in: {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
-                              </span>
-                            ) : '-'}
-                          </td>
                           <td style={{ padding: '16px' }}>
                             <div className="flex items-center justify-center">
                               <div className="flex items-center" style={{ backgroundColor: '#F7F5F2', border: '1px solid #E8E4DE', borderRadius: '8px', padding: '2px' }}>
@@ -1113,7 +1106,7 @@ const AttendancePage: React.FC = () => {
                                     <div key={`${staff.staff_id}-${status}`} className="relative group">
                                       <button
                                         onClick={() => markAttendance(staff.staff_id, status)}
-                                        className="flex items-center justify-center p-1.5 transition-all duration-200"
+                                        className="flex items-center justify-center px-4 py-1 transition-all duration-200"
                                         style={{
                                           backgroundColor: isSelected ? colors.bg : 'transparent',
                                           opacity: isSelected ? 1 : 0.4,
@@ -1283,37 +1276,39 @@ const MonthlyCalendarView: React.FC<MonthlyCalendarViewProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={() => changeMonth(-1)}
-            className="p-1 rounded-full transition-all hover:bg-gray-100"
-            style={{ color: '#2C2C2C' }}
+            className="p-2 rounded-full transition-all hover:bg-gray-100"
+            style={{ color: '#2C2C2C', backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', boxShadow: 'var(--inset-shadow)' }}
           >
             <ChevronLeft size={16} />
           </button>
-          <div className="px-3 py-1.5 rounded-lg" style={{ backgroundColor: '#F7F5F2', border: '1px solid #E8E4DE' }}>
-            <span className="font-bold" style={{ fontSize: '13px', color: '#2C2C2C', letterSpacing: '0.02em', fontFamily: 'Inter, sans-serif' }}>
+          <div className="px-4 py-2 rounded-2xl" style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', boxShadow: 'var(--inset-shadow)' }}>
+            <span className="font-bold typography-label-light" style={{ fontSize: '13px', color: 'var(--deep-charcoal)', letterSpacing: '0.02em', fontFamily: 'Inter, sans-serif' }}>
               {formatMonthYear(currentMonth)}
             </span>
           </div>
           <button
             onClick={() => changeMonth(1)}
-            className="p-1 rounded-full transition-all hover:bg-gray-100"
-            style={{ color: '#2C2C2C' }}
+            className="p-2 rounded-full transition-all hover:bg-gray-100"
+            style={{ color: '#2C2C2C', backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', boxShadow: 'var(--inset-shadow)' }}
           >
             <ChevronRight size={16} />
           </button>
         </div>
 
         {/* Staff Filter */}
-        <div className="flex items-center gap-2">
-          <Filter size={16} style={{ color: '#666' }} />
+        <div className="relative min-w-[180px]">
+          <Filter size={16} className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: '#666' }} />
           <select
             value={selectedStaffFilter}
             onChange={(e) => setSelectedStaffFilter(e.target.value)}
-            className="px-3 py-1.5 rounded-lg text-xs outline-none cursor-pointer font-semibold" style={{ fontSize: '12px', backgroundColor: '#F7F5F2', border: '1px solid #E8E4DE', color: '#2C2C2C', letterSpacing: '0.01em', fontFamily: 'Inter, sans-serif' }}
+            className="w-full pl-12 pr-10 rounded-2xl text-sm font-semibold outline-none cursor-pointer appearance-none transition-all typography-label-light"
+            style={{ height: '44px', backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
           >
             {[...staffList].sort((a, b) => a.name.localeCompare(b.name)).map(staff => (
               <option key={staff.staff_id} value={staff.staff_id}>{staff.name}</option>
             ))}
           </select>
+          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" size={14} style={{ color: '#666' }} />
         </div>
 
         <button
@@ -1336,7 +1331,7 @@ const MonthlyCalendarView: React.FC<MonthlyCalendarViewProps> = ({
           }}
         >
           <Download size={14} />
-          {t('attendance.download')}
+          {t('attendance.downloadMonthlyAttendance')}
         </button>
       </div>
 
