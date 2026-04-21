@@ -9,6 +9,7 @@ import {
   UserCheck,
   Globe
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { Button } from "../../../components/ui_components/button";
 import SponserFooter from "../../../components/Sponser_Footer";
 import { useTranslation } from "react-i18next";
@@ -67,7 +68,34 @@ function SalonDashboard({ open, setOpen, collapsed }: SidebarProps) {
             </div>
             {!collapsed && (
               <div className="flex flex-col">
-                <h1 className="font-black text-xl tracking-tight text-white">Coiffeurr</h1>
+                <motion.h1 
+                  className="font-black text-xl tracking-tight"
+                  style={{
+                    background: 'linear-gradient(90deg, #D4AF37 0%, #F5E6A3 25%, #D4AF37 50%, #C9A227 75%, #D4AF37 100%)',
+                    backgroundSize: '200% auto',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    willChange: 'transform, background-position'
+                  }}
+                  animate={{
+                    fontWeight: [500, 700, 500],
+                    backgroundPosition: ['0% center', '100% center', '0% center']
+                  }}
+                  transition={{
+                    fontWeight: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
+                    backgroundPosition: { duration: 4, repeat: Infinity, ease: 'linear' }
+                  }}
+                  whileHover={{
+                    backgroundPosition: ['0% center', '100% center', '0% center'],
+                    letterSpacing: '1px'
+                  }}
+                  whileHoverTransition={{
+                    backgroundPosition: { duration: 2, repeat: Infinity, ease: 'linear' }
+                  }}
+                >
+                  Coiffeurr
+                </motion.h1>
                 <p className="text-xs text-gray-400">Salon Management</p>
               </div>
             )}

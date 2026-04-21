@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import routes, { type AppRoute } from "./AllRoutes";
 import AuthRouter from "../utils/Auth/AuthRouter";
 import React from "react";
@@ -23,6 +23,14 @@ const renderRoutes = (routeList: AppRoute[]) =>
     );
   });
 
-const Router: React.FC = () => <Routes>{renderRoutes(routes)}</Routes>;
+const Router: React.FC = () => {
+  const location = useLocation();
+
+  return (
+    <Routes location={location} key={location.pathname}>
+      {renderRoutes(routes)}
+    </Routes>
+  );
+};
 
 export default Router;

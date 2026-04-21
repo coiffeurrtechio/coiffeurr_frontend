@@ -114,7 +114,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
         duration: 3000,
       });
 
-      if (result?.user?.role === "OWNER") navigate("/dashboard");
+      if (result?.user?.role === "OWNER") {
+        sessionStorage.setItem('fromLogin', 'true');
+        navigate("/dashboard");
+      }
       else navigate("/");
 
     } catch (error: any) {

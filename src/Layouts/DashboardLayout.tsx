@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Menu, ChevronLeft, ChevronRight, LogOut, Power, AlertCircle } from "lucide-react";
+import { motion } from "framer-motion";
 import SalonDashboard from "../pages/Salon/SalonOwner/SalonDashboard";
 import NotificationCenter from "../components/NotificationCenter";
+import WelcomeLoader from "../components/WelcomeLoader/WelcomeLoader";
 import { useDispatch } from "react-redux";
 import { logoutUser } from "../API/APIs";
 import { useApi } from "../API/SalonsAPIs/ALLSalonAPI";
@@ -15,9 +17,20 @@ const DashboardLayout: React.FC = () => {
   const [showVisibilityConfirm, setShowVisibilityConfirm] = useState(false);
   const [salonData, setSalonData] = useState<any>(null);
   const [isTogglingVisibility, setIsTogglingVisibility] = useState(false);
+  const [showWelcomeLoader, setShowWelcomeLoader] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { apiCustomerPut } = useApi();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Check if user is coming from login page
+    const fromLogin = sessionStorage.getItem('fromLogin');
+    if (fromLogin === 'true') {
+      setShowWelcomeLoader(true);
+      sessionStorage.removeItem('fromLogin');
+    }
+  }, []);
 
   useEffect(() => {
     const fetchSalonData = async () => {
@@ -68,10 +81,18 @@ const DashboardLayout: React.FC = () => {
     navigate("/login");
   };
 
+  const handleWelcomeComplete = () => {
+    setShowWelcomeLoader(false);
+  };
+
   return (
-    <div className="flex h-screen w-full bg-[#F4F7FE] overflow-hidden">
-      {/* 1. STATIONARY SIDEBAR */}
-      <SalonDashboard open={open} setOpen={setOpen} collapsed={sidebarCollapsed} />
+    <>
+      {/* Welcome Loader - Shows after login before Analytics page */}
+      {showWelcomeLoader && <WelcomeLoader onComplete={handleWelcomeComplete} />}
+
+      <div className="flex h-screen w-full bg-[#F4F7FE] overflow-hidden">
+        {/* 1. STATIONARY SIDEBAR */}
+        <SalonDashboard open={open} setOpen={setOpen} collapsed={sidebarCollapsed} />
 
       {/* 2. GHOST SPACER (Desktop only) */}
       <div className={`hidden md:block flex-shrink-0 transition-all duration-300 ${sidebarCollapsed ? 'w-20' : 'w-64'}`} />
@@ -157,32 +178,41 @@ const DashboardLayout: React.FC = () => {
 
       {/* LOGOUT CONFIRMATION MODAL */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in duration-200">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-red-100 rounded-full">
-                <LogOut size={24} className="text-red-600" />
+        <div className="fixed inset-0 bg-black/40 z-[100] flex items-center justify-center p-4" style={{ backdropFilter: 'blur(20px)' }}>
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="bg-white/95 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl max-w-md w-full p-8 text-center"
+            style={{ boxShadow: "rgba(0,0,0,0.15) 0 8px 32px" }}
+          >
+            <div className="flex flex-col items-center gap-4 mb-6">
+              <div className="p-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full" style={{ boxShadow: "0 0 20px rgba(212, 175, 55, 0.2)" }}>
+                <Power size={28} className="text-[#D4AF37]" />
               </div>
-              <h3 className="text-xl font-bold text-gray-800">Confirm Logout</h3>
+              <h3 className="text-2xl font-black text-[#1a1a1a] tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+                Logging Out?
+              </h3>
             </div>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to logout? You'll need to sign in again to access your dashboard.
+            <p className="text-gray-600 mb-8 text-sm leading-relaxed">
+              Are you sure you want to end your current session?
             </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowLogoutConfirm(false)}
-                className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
-              >
-                Cancel
-              </button>
+            <div className="flex flex-col gap-3">
               <button
                 onClick={handleLogout}
-                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors"
+                className="w-full px-6 py-4 bg-[#1a1a1a] text-white rounded-2xl font-bold text-sm shadow-lg transition-all hover:scale-1.02 hover:shadow-[0_0_30px_rgba(26,26,26,0.4)] active:scale-0.98"
               >
                 Logout
               </button>
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="w-full px-6 py-3 text-gray-500 font-semibold text-sm hover:text-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
 
@@ -219,6 +249,7 @@ const DashboardLayout: React.FC = () => {
       )}
 
     </div>
+    </>
   );
 };
 
