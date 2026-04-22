@@ -303,7 +303,7 @@ const HomePage: React.FC = () => {
                     </span>
                   ))}
                 </h1>
-                <p className={`text-xs sm:text-sm text-blue-200 ${showUI ? 'ui-fade-in' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>Where your signature style is authored.</p>
+                <p className={`text-xs sm:text-sm text-blue-200 ${showUI ? 'ui-fade-in' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>{t('home.tagline') || 'Where your signature style is authored.'}</p>
               </div>
 
               <div className={`flex justify-center ${showUI ? 'ui-fade-in' : 'opacity-0'}`} style={{ animationDelay: '0.3s', width: '90%', margin: '0 auto' }}>
@@ -314,7 +314,7 @@ const HomePage: React.FC = () => {
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <Search className="w-5 h-5 text-white" />
-                    <span className="text-white font-bold text-sm sm:text-base">Discover your next transformation</span>
+                    <span className="text-white font-bold text-sm sm:text-base">{t('home.discoverTransformation') || 'Discover your next transformation'}</span>
                   </div>
                   <div className="flex gap-2">
                     <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2.5 flex items-center border border-white/20 font-bold text-xs text-white/70">{t('home.tapToSearch')}</div>
@@ -334,7 +334,7 @@ const HomePage: React.FC = () => {
             <div className="flex items-center justify-between px-1 mb-4">
               <div>
                 <h2 className="text-gray-900 text-lg sm:text-xl font-black tracking-tight" style={{ fontFamily: 'Playfair Display, serif' }}>{t('home.topArtistsNearYou')}</h2>
-                <p className="text-[10px] text-gray-400 font-bold tracking-wider mt-1">Precision in every snip. Luxury in every touch.</p>
+                <p className="text-[10px] text-gray-400 font-bold tracking-wider mt-1">{t('home.precisionLuxury') || 'Precision in every snip. Luxury in every touch.'}</p>
               </div>
               {/* <button onClick={() => navigate('/all-experts')} className="text-[#1E4D8C] bg-blue-50 p-2 rounded-full active:scale-90 transition-transform"><ChevronRight size={20} /></button> */}
             </div>
@@ -354,7 +354,7 @@ const HomePage: React.FC = () => {
                       />
                       {/* Social Proof Badge - Top Right */}
                       {index < 3 && (
-                        <div className="absolute top-0 right-0 z-20 bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap trending-pulse">Trending</div>
+                        <div className="absolute top-0 right-0 z-20 bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap trending-pulse">{t('home.trending') || 'Trending'}</div>
                       )}
                       {/* Rating Badge - Top Left */}
                       <div className="absolute top-0 left-0 z-20 bg-white px-2 py-0.5 rounded-md shadow-md border border-gray-100 flex items-center gap-1">
@@ -365,7 +365,7 @@ const HomePage: React.FC = () => {
                   <div className="text-center w-full flex flex-col" style={{ minHeight: '100px' }}>
                     <div style={{ minHeight: '50px' }}>
                       <h4 className="font-black text-gray-900 text-sm capitalize truncate leading-tight" style={{ fontFamily: 'Playfair Display, serif' }}>{member.name}</h4>
-                      <p className="text-[10px] text-gray-500 font-medium truncate">{member.specialty || 'Stylist'}</p>
+                      <p className="text-[10px] text-gray-500 font-medium truncate">{member.specialty || t('home.stylist')}</p>
                     </div>
                     <div className="flex flex-col items-center gap-1 mt-2">
                       <div className="flex items-center gap-1 text-[9px] font-black text-emerald-600 bg-emerald-50 py-1 px-2 rounded-lg"><Award size={10} /><span>{member.experience_years}{t('home.yExp')}</span></div>
@@ -420,7 +420,7 @@ const HomePage: React.FC = () => {
                           <img src={salon.logoUrl || "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=400"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={salon.salonName} />
                           {/* Social Proof Badge for Salons */}
                           {index < 2 && (
-                            <div className="absolute top-3 left-3 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-white text-[9px] font-black px-2.5 py-1 rounded-xl shadow-md">Most Booked</div>
+                            <div className="absolute top-3 left-3 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-white text-[9px] font-black px-2.5 py-1 rounded-xl shadow-md">{t('home.mostBooked') || 'Most Booked'}</div>
                           )}
                           {salon.distance && (
                             <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md text-gray-600 px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-sm border border-gray-200">

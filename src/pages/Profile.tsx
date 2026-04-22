@@ -244,7 +244,7 @@ export default function Profile() {
             <div className="absolute bottom-1 right-1 w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full border-4 border-white shadow-lg" />
           </div>
           <p className="mt-24 text-[10px] font-bold text-gray-400 tracking-[2px] text-center">
-            Welcome Back
+            {t('profile.welcomeBack') || 'Welcome Back'}
           </p>
           <h2 className="mt-1 text-3xl font-semibold text-gray-900 tracking-tight text-center whitespace-nowrap" style={{ fontFamily: "'Playfair Display', serif" }}>
             {user?.name || usercontactdetails?.name || t('profile.user')}
@@ -257,7 +257,7 @@ export default function Profile() {
         <div className="mt-8 bg-gradient-to-br from-white/95 to-slate-50/95 rounded-[2rem] shadow-xl border border-white/20 overflow-hidden divide-y divide-slate-100 backdrop-blur-[15px]">
           <MenuItem label={t('profile.myBookings')} icon={<Calendar className="text-slate-800" />} onClick={() => navigate("/bookings")} />
           <MenuItem label={t('profile.wishlist')} icon={<Heart className="text-red-500" />} onClick={() => navigate("/wishlist")} />
-          <MenuItem label="Language" icon={<Globe className="text-slate-800" />} onClick={() => setShowLanguageModal(true)} />
+          <MenuItem label={t('settings.language') || 'Language'} icon={<Globe className="text-slate-800" />} onClick={() => setShowLanguageModal(true)} />
           {user?.role === "OWNER" && <MenuItem label={t('profile.salonDashboard')} icon={<LayoutDashboard className="text-slate-800" />} onClick={() => navigate("/dashboard")} />}
         </div>
 
@@ -270,7 +270,7 @@ export default function Profile() {
               <div className="p-2 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl text-slate-800 shadow-sm">
                 <User size={18} />
               </div>
-              <span className="text-sm font-bold text-slate-700">User Details</span>
+              <span className="text-sm font-bold text-slate-700">{t('profile.userDetails') || 'User Details'}</span>
             </div>
             <ChevronDown size={18} className={`text-slate-400 transition-transform ${isUserDetailsExpanded ? 'rotate-180' : ''}`} />
           </button>
@@ -405,7 +405,7 @@ export default function Profile() {
                         onClick={() => setIsAddressExpanded(!isAddressExpanded)}
                         className="mt-2 text-[10px] font-black text-slate-600 hover:text-slate-800 transition-colors"
                       >
-                        {isAddressExpanded ? 'See Less' : 'See More'}
+                        {isAddressExpanded ? (t('profile.seeLess') || 'See Less') : (t('profile.seeMore') || 'See More')}
                       </button>
                     </div>
                   </div>
@@ -423,9 +423,9 @@ export default function Profile() {
               <Gift className="text-gray-500" size={18} />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-black text-gray-900 tracking-tight">Share the Style</h3>
+              <h3 className="text-lg font-black text-gray-900 tracking-tight">{t('profile.shareStyle') || 'Share the Style'}</h3>
               <p className="mt-1 text-sm font-medium text-gray-500 leading-relaxed">
-                Good style is meant to be shared.
+                {t('profile.goodStyleShared') || 'Good style is meant to be shared.'}
               </p>
             </div>
           </div>
@@ -440,7 +440,7 @@ export default function Profile() {
             <button
               onClick={() => {
                 navigator.clipboard.writeText('https://coiffeurr.com');
-                showToast('Copied', 'success');
+                showToast(t('profile.copied') || 'Copied', 'success');
               }}
               className="w-[35px] h-[35px] flex items-center justify-center border border-black/10 rounded-full bg-gray-50 hover:bg-gray-100 transition-all duration-300"
             >
@@ -485,20 +485,20 @@ export default function Profile() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[9px] font-black text-gray-400 ml-1">Gender</label>
+                  <label className="text-[9px] font-black text-gray-400 ml-1">{t('profile.gender') || 'Gender'}</label>
                   <select
                     value={editForm.gender}
                     onChange={(e) => setEditForm(prev => ({ ...prev, gender: e.target.value }))}
                     className="w-full h-10 mt-1 px-3 bg-gray-50 rounded-xl font-bold text-xs outline-none focus:ring-2 focus:ring-slate-100 transition-all"
                   >
-                    <option value="">Select</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
+                    <option value="">{t('profile.select') || 'Select'}</option>
+                    <option value="male">{t('profile.male') || 'Male'}</option>
+                    <option value="female">{t('profile.female') || 'Female'}</option>
+                    <option value="other">{t('profile.other') || 'Other'}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-[9px] font-black text-gray-400 ml-1">Date of Birth</label>
+                  <label className="text-[9px] font-black text-gray-400 ml-1">{t('profile.dateOfBirth') || 'Date of Birth'}</label>
                   <input
                     type="date"
                     value={editForm.dob ? editForm.dob.split('T')[0] : ''}
@@ -507,17 +507,17 @@ export default function Profile() {
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="text-[9px] font-black text-gray-400 ml-1">Marital Status</label>
+                  <label className="text-[9px] font-black text-gray-400 ml-1">{t('profile.maritalStatus') || 'Marital Status'}</label>
                   <select
                     value={editForm.marital_status}
                     onChange={(e) => setEditForm(prev => ({ ...prev, marital_status: e.target.value }))}
                     className="w-full h-10 mt-1 px-3 bg-gray-50 rounded-xl font-bold text-xs outline-none focus:ring-2 focus:ring-slate-100 transition-all"
                   >
-                    <option value="">Select</option>
-                    <option value="single">Single</option>
-                    <option value="married">Married</option>
-                    <option value="divorced">Divorced</option>
-                    <option value="widowed">Widowed</option>
+                    <option value="">{t('profile.select') || 'Select'}</option>
+                    <option value="single">{t('profile.single') || 'Single'}</option>
+                    <option value="married">{t('profile.married') || 'Married'}</option>
+                    <option value="divorced">{t('profile.divorced') || 'Divorced'}</option>
+                    <option value="widowed">{t('profile.widowed') || 'Widowed'}</option>
                   </select>
                 </div>
               </div>

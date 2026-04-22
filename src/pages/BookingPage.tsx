@@ -367,7 +367,7 @@ function BookingPage() {
                             <div className="p-4 sm:p-6 rounded-[2rem] sm:rounded-[2.5rem] text-white space-y-4 sm:space-y-5 shadow-2xl" style={{ background: 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)' }}>
                                 <div className="flex items-center gap-3 sm:gap-5 border-b border-white/10 pb-4 sm:pb-5">
                                     <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-2xl p-1.5 shrink-0 overflow-hidden shadow-lg">
-                                        <img src={selectedBooking.salon?.logoUrl} className="w-full h-full object-contain" alt="Salon Logo" />
+                                        <img src={selectedBooking.salon?.logoUrl} className="w-full h-full object-contain" alt={t('booking.salonLogo') || 'Salon Logo'} />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-[8px] sm:text-[9px] font-black text-white/50 tracking-[0.2em] typography-label-light">{t('bookings.studio')}</p>

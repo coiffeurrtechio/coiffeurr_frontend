@@ -101,7 +101,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                   }`}
                   style={{ fontFamily: "'JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', monospace" }}
                 >
-                  {isSalonOnline ? 'SYSTEM LIVE' : 'OFFLINE'}
+                  {isSalonOnline ? t('dashboard.systemLive') : t('dashboard.offline')}
                 </span>
               </div>
             </motion.button>
@@ -233,7 +233,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                     <path d="M18.4 6.6C19.2 7.4 19.8 8.4 20.2 9.5C20.6 10.6 20.8 11.8 20.8 13C20.8 14.2 20.6 15.4 20.2 16.5C19.8 17.6 19.2 18.6 18.4 19.4C17.6 20.2 16.6 20.8 15.5 21.2C14.4 21.6 13.2 21.8 12 21.8C10.8 21.8 9.6 21.6 8.5 21.2C7.4 20.8 6.4 20.2 5.6 19.4C4.8 18.6 4.2 17.6 3.8 16.5C3.4 15.4 3.2 14.2 3.2 13C3.2 11.8 3.4 10.6 3.8 9.5C4.2 8.4 4.8 7.4 5.6 6.6" />
                   </svg>
                   <span className="text-[10px] font-bold uppercase tracking-wider hidden sm:block" style={{ color: '#DC2626' }}>
-                    Exit
+                    {t('dashboard.exit')}
                   </span>
                 </motion.button>
               </div>

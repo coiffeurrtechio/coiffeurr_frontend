@@ -879,7 +879,7 @@ const AttendancePage: React.FC = () => {
             fontFamily: 'Inter, sans-serif'
           }}
         >
-          Daily Attendance
+          {t('attendance.dailyAttendance') || 'Daily Attendance'}
         </button>
         <button
           onClick={() => handleViewModeChange('monthly')}
@@ -890,7 +890,7 @@ const AttendancePage: React.FC = () => {
             fontFamily: 'Inter, sans-serif'
           }}
         >
-          Monthly View
+          {t('attendance.monthlyView') || 'Monthly View'}
         </button>
       </div>
 
@@ -979,10 +979,10 @@ const AttendancePage: React.FC = () => {
                 textTransform: 'uppercase',
                 fontFamily: 'Inter, sans-serif'
               }}
-              title="Mark All Present"
+              title={t('attendance.markAllPresent') || 'Mark All Present'}
             >
               <UserCheck size={14} />
-              Mark All Present
+              {t('attendance.markAllPresent') || 'Mark All Present'}
             </button>
             <button
               onClick={saveAttendance}
@@ -998,11 +998,11 @@ const AttendancePage: React.FC = () => {
                 textTransform: 'uppercase',
                 fontFamily: 'Inter, sans-serif'
               }}
-              title="Save Attendance"
+              title={t('attendance.saveAttendance') || 'Save Attendance'}
             >
               <span className="relative z-10 flex items-center gap-1">
                 <Check size={14} />
-                Save
+                {t('attendance.save') || 'Save'}
               </span>
             </button>
           </div>

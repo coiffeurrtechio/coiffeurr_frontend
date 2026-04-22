@@ -51,9 +51,9 @@ const DashBoardBusiness: React.FC = () => {
   ];
 
   const topServices = [
-    { name: 'Haircut & Styling', bookings: 145, revenue: '₹43,500', growth: 12 },
-    { name: 'Bridal Makeup', bookings: 12, revenue: '₹60,000', growth: 24 },
-    { name: 'Facial Therapy', bookings: 88, revenue: '₹22,000', growth: -5 },
+    { name: t('business.haircutStyling') || 'Haircut & Styling', bookings: 145, revenue: '₹43,500', growth: 12 },
+    { name: t('business.bridalMakeup') || 'Bridal Makeup', bookings: 12, revenue: '₹60,000', growth: 24 },
+    { name: t('business.facialTherapy') || 'Facial Therapy', bookings: 88, revenue: '₹22,000', growth: -5 },
   ];
 
   return (

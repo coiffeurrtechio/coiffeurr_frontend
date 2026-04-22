@@ -83,7 +83,7 @@ const SettingsPage: React.FC = () => {
               <Globe size={24} style={{ color: '#D4AF37' }} />
             </div>
             <h3 className="text-lg font-semibold" style={{ fontFamily: 'Cinzel, serif', letterSpacing: '0.1em' }}>
-              Localization
+              {t('settings.localization')}
             </h3>
           </div>
           
@@ -130,13 +130,13 @@ const SettingsPage: React.FC = () => {
               <Bell size={24} style={{ color: '#D4AF37' }} />
             </div>
             <h3 className="text-lg font-semibold" style={{ fontFamily: 'Cinzel, serif', letterSpacing: '0.1em' }}>
-              Notifications
+              {t('settings.notifications')}
             </h3>
           </div>
           
           <div className="flex items-center justify-between">
             <span className="text-sm" style={{ color: '#666' }}>
-              Enable push notifications
+              {t('settings.enablePushNotifications')}
             </span>
             {/* iOS-style Premium Switch */}
             <button
@@ -244,11 +244,11 @@ const SettingsPage: React.FC = () => {
                 <Globe size={24} style={{ color: '#D4AF37' }} />
               </div>
               <h3 className="text-xl font-bold" style={{ fontFamily: 'Cinzel, serif', color: '#2C2C2C' }}>
-                Change Language
+                {t('settings.confirmLanguageChange')}
               </h3>
             </div>
             <p className="text-sm mb-6" style={{ color: '#666', fontFamily: 'Inter, sans-serif' }}>
-              {i18n.language === 'hi' ? 'क्या आप भाषा बदलना चाहते हैं?' : i18n.language === 'mr' ? 'भाषा बदलायचे आहे का?' : 'Are you sure you want to change the language?'}
+              {t('settings.confirmLanguageMessage', { language: languages.find(l => l.code === pendingLanguage)?.name })}
             </p>
             <p className="text-sm mb-6" style={{ color: '#D4AF37', fontFamily: 'Inter, sans-serif', fontWeight: '500' }}>
               {languages.find(l => l.code === pendingLanguage)?.name}
@@ -264,7 +264,7 @@ const SettingsPage: React.FC = () => {
                   fontFamily: 'Inter, sans-serif'
                 }}
               >
-                {i18n.language === 'hi' ? 'रद्द करें' : i18n.language === 'mr' ? 'रद्द करा' : 'Cancel'}
+                {t('settings.cancel')}
               </button>
               <button
                 onClick={confirmLanguageChange}
@@ -276,7 +276,7 @@ const SettingsPage: React.FC = () => {
                   fontFamily: 'Inter, sans-serif'
                 }}
               >
-                {i18n.language === 'hi' ? 'पुष्टि करें' : i18n.language === 'mr' ? 'पुष्टी करा' : 'Confirm'}
+                {t('settings.confirm')}
               </button>
             </div>
           </div>

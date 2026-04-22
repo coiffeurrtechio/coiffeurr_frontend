@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 
 const NoSalonsFound = ({ currentCity = "your area" }) => {
   const { t } = useTranslation();
+  const displayCity = currentCity === "your area" ? t('noSalonsFound.yourArea') || "your area" : currentCity;
   const navigate = useNavigate();
 
   return (
@@ -30,7 +31,7 @@ const NoSalonsFound = ({ currentCity = "your area" }) => {
       {/* --- TEXT CONTENT --- */}
       <div className="max-w-md space-y-4">
         <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-          {t('noSalonsFound.title', { city: currentCity })}
+          {t('noSalonsFound.title', { city: displayCity })}
         </h1>
         <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
           {t('noSalonsFound.message')}

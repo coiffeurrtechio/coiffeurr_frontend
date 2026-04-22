@@ -148,10 +148,10 @@ const CustomerRegistration: React.FC = () => {
       const url = res?.data?.data?.urls?.[0] || res?.data?.urls?.[0];
       if (url) {
         setFormData(prev => ({ ...prev, image_url: url }));
-        setNotification({ type: 'success', message: 'Photo Uploaded!' });
+        setNotification({ type: 'success', message: t('auth.photoUploaded') || 'Photo Uploaded!' });
       }
     } catch (error) {
-      setNotification({ type: 'error', message: 'Upload Failed' });
+      setNotification({ type: 'error', message: t('auth.uploadFailed') || 'Upload Failed' });
     } finally {
       setIsUploading(false);
     }

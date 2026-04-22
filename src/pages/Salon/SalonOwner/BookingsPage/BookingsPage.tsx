@@ -415,8 +415,8 @@ const BookingsPage: React.FC = () => {
 
       <div className="flex justify-between items-center px-2">
         <div>
-          <h1 className="font-semibold typography-display" style={{ color: 'var(--deep-charcoal)', fontSize: '24px', letterSpacing: '0.05em' }}>Command Deck</h1>
-          <p className="text-[10px] font-normal tracking-[0.2em] typography-label-light" style={{ color: '#666' }}>Real-time flow of salon artistry</p>
+          <h1 className="font-semibold typography-display" style={{ color: 'var(--deep-charcoal)', fontSize: '24px', letterSpacing: '0.05em' }}>{t('booking.commandDeck') || 'Command Deck'}</h1>
+          <p className="text-[10px] font-normal tracking-[0.2em] typography-label-light" style={{ color: '#666' }}>{t('booking.realtimeFlow') || 'Real-time flow of salon artistry'}</p>
         </div>
         <div className="flex items-center gap-3">
           <button onClick={handleResetFilters} className="p-2 transition-colors flex items-center gap-2 text-[10px] font-black uppercase typography-label-light" style={{ color: '#666' }}>
@@ -504,7 +504,7 @@ const BookingsPage: React.FC = () => {
             style={{ height: '44px', backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
           >
             <Filter size={14} style={{ color: 'var(--muted-gold)' }} />
-            {showAdvancedFilters ? 'Less' : 'More'}
+            {showAdvancedFilters ? (t('booking.less') || 'Less') : (t('booking.more') || 'More')}
             <ChevronDown size={14} style={{ color: '#666', transform: showAdvancedFilters ? 'rotate(180deg)' : '', transition: 'transform 0.3s' }} />
           </button>
         </div>
@@ -615,10 +615,10 @@ const BookingsPage: React.FC = () => {
                     {t('booking.schedule')} {sortField === 'slot.date' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }} onClick={() => handleSort('userData.username')}>
-                    Customer {sortField === 'userData.username' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    {t('booking.customer')} {sortField === 'userData.username' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-center typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }}>
-                    Customer No
+                    {t('booking.customerNo')}
                   </th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }} onClick={() => handleSort('staffData.name')}>
                     {t('booking.specialist')} {sortField === 'staffData.name' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -627,7 +627,7 @@ const BookingsPage: React.FC = () => {
                     {t('booking.serviceRendered')} {sortField === 'serviceData.serviceName' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-center cursor-pointer hover:text-gray-600 transition-colors typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }} onClick={() => handleSort('status')}>
-                    Status {sortField === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    {t('booking.status')} {sortField === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
                 </tr>
               </thead>
