@@ -96,14 +96,12 @@ function SalonDashboard({ open, setOpen, collapsed }: SidebarProps) {
                 >
                   Coiffeurr
                 </motion.h1>
-                <p className="text-xs text-gray-400">Salon Management</p>
               </div>
             )}
           </div>
 
           {/* NAVIGATION SECTION */}
           <nav className="flex-1 p-4 space-y-2 mt-4">
-            {!collapsed && <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-4 ml-2">{t('navigation.mainMenu')}</p>}
             {menuItems.map((item) => {
               const Icon = item.icon;
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, ChevronRight, ChevronLeft, Check, AlertTriangle, Power, X, ArrowLeft, Loader2, Globe, Instagram, Facebook, MapPin, Share2, Clock, Calendar, Award, TrendingUp, Users, Mail, Phone, Edit3, UserCircle, ShieldCheck, Trash2, Plus, Camera, Image as ImageIcon, CalendarDays, AlignLeft, Navigation, MapPinned, LocateFixed, Scissors, Sparkles, Zap } from 'lucide-react';
+import { Star, ChevronRight, ChevronLeft, ChevronDown, Check, AlertTriangle, Power, X, ArrowLeft, Loader2, Globe, Instagram, Facebook, MapPin, Share2, Clock, Calendar, Award, TrendingUp, Users, Mail, Phone, Edit3, UserCircle, ShieldCheck, Trash2, Plus, Camera, Image as ImageIcon, CalendarDays, AlignLeft, Navigation, MapPinned, LocateFixed, Scissors, Sparkles, Zap } from 'lucide-react';
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import { useApi } from '../../../../API/SalonsAPIs/ALLSalonAPI';
@@ -263,6 +263,7 @@ const DashboardProfile: React.FC = () => {
   const [reviewsTotalPages, setReviewsTotalPages] = useState(1);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [reviewsSortBy, setReviewsSortBy] = useState('latest');
+  const [hasScrolled, setHasScrolled] = useState(false);
   const reviewsPerPage = 10;
 
   const toggleReviewExpansion = (reviewIndex: number) => {
@@ -590,7 +591,7 @@ const DashboardProfile: React.FC = () => {
 
         {/* FLOATING GLASS BRAND CARD - Unified Logo & Name */}
         <motion.div
-          className="relative -mt-12 px-6 mb-3"
+          className="relative -mt-6 px-6 mb-3"
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
@@ -953,6 +954,32 @@ const DashboardProfile: React.FC = () => {
                     </div>
                   </div>
                 </div>
+                
+                {/* Star Rating Distribution */}
+                <div className="mt-4 w-full space-y-1">
+                  {[5, 4, 3, 2, 1].map((star) => {
+                    const count = ratingDistribution?.[star] || 0;
+                    const total = Object.values(ratingDistribution || {}).reduce((sum: number, val: number) => sum + val, 0) || 1;
+                    const percentage = (count / total) * 100;
+                    return (
+                      <div key={star} className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 w-12 flex-shrink-0">
+                          <Star size={10} className="text-[#D4AF37] fill-[#D4AF37]" />
+                          <span className="text-[9px] font-semibold text-gray-600">{star}</span>
+                        </div>
+                        <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${percentage}%` }}
+                            transition={{ duration: 0.5 }}
+                            className="h-full bg-gradient-to-r from-[#D4AF37] to-[#C9A227]"
+                          />
+                        </div>
+                        <span className="text-[9px] font-semibold text-gray-600 w-6 text-right flex-shrink-0">{count}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
               
               {/* Vertical Separator */}
@@ -963,13 +990,15 @@ const DashboardProfile: React.FC = () => {
                 <div className="flex items-center gap-4 mb-4">
                   <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest" style={{ fontFamily: "'Playfair Display', serif" }}>User Reviews</h4>
                   {reviews && reviews.length > 0 && (
-                    <button
+                    <motion.button
                       onClick={() => setIsReviewsModalOpen(true)}
-                      className="text-[10px] font-bold text-[#D4AF37] hover:underline cursor-pointer flex items-center gap-1 transition-all"
+                      className="text-[10px] font-bold text-[#D4AF37] border border-[#D4AF37] px-3 py-1.5 rounded-lg flex items-center gap-1 transition-all hover:bg-[#D4AF37]/5"
                       style={{ fontFamily: "'Inter', sans-serif" }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                     >
                       Show All Reviews <ChevronRight size={12} className="text-[#D4AF37]" />
-                    </button>
+                    </motion.button>
                   )}
                 </div>
                 
@@ -1252,9 +1281,19 @@ const DashboardProfile: React.FC = () => {
                   </motion.button>
                 </div>
               </div>
-              <div className="p-6 overflow-y-auto max-h-[70vh] relative">
-                {/* Fade indicator at bottom */}
-                <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white/90 to-transparent pointer-events-none" />
+              <div 
+                className="p-6 overflow-y-auto max-h-[70vh] relative custom-scrollbar mt-2"
+                style={{
+                  maskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)',
+                  WebkitMaskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)'
+                }}
+                onScroll={(e) => {
+                  const target = e.target as HTMLElement;
+                  if (target.scrollTop > 10) {
+                    setHasScrolled(true);
+                  }
+                }}
+              >
                 {reviewsLoading ? (
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin" />
@@ -1264,7 +1303,11 @@ const DashboardProfile: React.FC = () => {
                     <div className="space-y-4">
                       {allReviews.length > 0 ? (
                         allReviews.map((review: any, idx: number) => (
-                          <div key={review.id || idx} className={`bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-gray-200/50 ${idx === 0 ? 'mt-2' : ''}`}>
+                          <motion.div 
+                            key={review.id || idx} 
+                            className={`bg-white/95 rounded-2xl p-4 border border-white/10 hover:bg-white/5 transition-colors ${idx === 0 ? 'mt-2' : ''}`}
+                            whileHover={{ scale: 1.01 }}
+                          >
                             <div className="flex items-center gap-3 mb-3">
                               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#D4AF37]/20 to-[#C9A227]/20 flex items-center justify-center flex-shrink-0">
                                 <span className="text-sm font-bold text-[#D4AF37]">
@@ -1272,7 +1315,10 @@ const DashboardProfile: React.FC = () => {
                                 </span>
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-bold text-gray-900 truncate">{review.userName || 'Anonymous'}</p>
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm font-bold text-gray-900 truncate">{review.userName || 'Anonymous'}</p>
+                                  <Check size={12} className="text-[#D4AF37] flex-shrink-0" />
+                                </div>
                                 <div className="flex items-center gap-1">
                                   {[...Array(5)].map((_, i) => (
                                     <Star
@@ -1288,11 +1334,11 @@ const DashboardProfile: React.FC = () => {
                               </p>
                             </div>
                             <p className="text-sm text-gray-700 leading-relaxed">{review.text || review.reviewText || 'No review text'}</p>
-                          </div>
+                          </motion.div>
                         ))
                       ) : (
                         <div className="text-center py-12">
-                          <p className="text-gray-500">No reviews found</p>
+                          <p className="text-gray-400 italic" style={{ fontFamily: "'Playfair Display', serif" }}>Your artistry hasn't been captured in words yet.</p>
                         </div>
                       )}
                     </div>
@@ -1322,6 +1368,25 @@ const DashboardProfile: React.FC = () => {
                       </div>
                     )}
                   </>
+                )}
+                {/* Pulsing scroll indicator */}
+                {!hasScrolled && allReviews.length > 5 && (
+                  <motion.div
+                    className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <motion.div
+                      animate={{ y: [0, -8, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      <div className="flex flex-col">
+                        <ChevronDown size={16} className="text-[#D4AF37]" />
+                        <ChevronDown size={16} className="text-[#D4AF37] -mt-2" />
+                      </div>
+                    </motion.div>
+                  </motion.div>
                 )}
               </div>
             </motion.div>
