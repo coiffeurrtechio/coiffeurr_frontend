@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   User, ArrowRight, Smartphone, Loader2, Lock,
   CheckCircle2, AlertCircle, ShieldCheck, Camera,
-  CalendarDays, VenusAndMars, Eye, EyeOff, Info
+  CalendarDays, VenusAndMars, Eye, EyeOff, Info, Mail
 } from 'lucide-react';
 import { Button } from '../components/ui_components/button';
 import Config from '../configs/config';
@@ -32,6 +32,7 @@ const CustomerRegistration: React.FC = () => {
   const [formData, setFormData] = useState({
     username: '',
     phone: '',
+    email: '',
     password: '',
     otp: '',
     gender: 'male',
@@ -100,6 +101,38 @@ const CustomerRegistration: React.FC = () => {
     }
   };
 
+  const handleNext = async () => {
+    if (formData.phone.length < 10) {
+      setErrors({ phone: t('auth.invalidCredentials') });
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const payload = { email: null, phone: formData.phone, username: "NewUser" };
+      const response = await fetch(`${Config.API_AUTH_URL}/signup/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const resData = await response.json();
+      if (!response.ok) {
+        if (resData?.detail === "Phone already registered") {
+          setErrors({ phone: "Phone already registered" });
+          setNotification({ type: 'error', message: "Phone already registered. Please login instead." });
+        } else {
+          throw new Error(resData?.detail || t('auth.signupFailed'));
+        }
+        return;
+      }
+      setNotification({ type: 'success', message: `OTP sent to ${formData.phone}!` });
+      setStep(2);
+    } catch (err: any) {
+      setNotification({ type: 'error', message: err.message });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -139,7 +172,7 @@ const CustomerRegistration: React.FC = () => {
 
     setIsLoading(true);
     const finalPayload = {
-      email: "",
+      email: formData.email || "",
       otp: formData.otp,
       phone: formData.phone,
       username: formData.username,
@@ -263,8 +296,8 @@ const CustomerRegistration: React.FC = () => {
                   />
                 </div>
               </div>
-              <Button onClick={handleSendOTP} disabled={isLoading || formData.phone.length < 10} className={`w-full h-14 shimmer-button text-white font-extrabold rounded-2xl staggered-2 focus-ring ${isLoading ? 'loading-state' : ''}`}>
-                {isLoading ? <Loader2 className="animate-spin" /> : t('auth.getVerificationCode')}
+              <Button onClick={handleNext} disabled={isLoading || formData.phone.length < 10} className="w-full h-14 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30">
+                {isLoading ? <Loader2 className="animate-spin" /> : 'Next'}
               </Button>
             </div>
           ) : (
@@ -323,6 +356,21 @@ const CustomerRegistration: React.FC = () => {
                     onChange={handleChange}
                     placeholder={t('auth.fullName')}
                     className={`w-full h-12 pl-18 pr-4 dark-input text-sm font-bold outline-none transition-all duration-300 ${errors.username ? "error" : ""}`}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2 staggered-3">
+                <label className="dark-label ml-1">Email (Optional)</label>
+                <div className="relative input-wrapper">
+                  <Mail className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon" size={18} />
+                  <input
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="name@example.com"
+                    className="w-full h-12 pl-18 pr-4 dark-input text-sm font-bold outline-none transition-all duration-300"
                   />
                 </div>
               </div>
@@ -406,7 +454,7 @@ const CustomerRegistration: React.FC = () => {
                 {isLoading ? <Loader2 className="animate-spin" /> : t('auth.completeSignup')}
                 {!isLoading && <ArrowRight size={18} />}
               </Button>
-              <button type="button" onClick={() => setStep(1)} className="w-full text-[10px] font-black text-white/50 hover:text-white py-2 transition-colors text-button">{t('auth.backToMobile')}</button>
+              <button type="button" onClick={() => setStep(1)} className="w-full text-[10px] font-black text-white/50 hover:text-white hover:bg-white/10 py-2 px-4 rounded-full transition-colors text-button">Back</button>
               
               <div className="w-full h-px bg-white/10 my-4" />
             </div>

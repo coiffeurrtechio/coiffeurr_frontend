@@ -13,7 +13,7 @@ export default function ForgotPassword() {
   const navigate = useNavigate();
   
   // --- States ---
-  const [step, setStep] = useState(1); // 1: Email, 2: OTP & New Password
+  const [step, setStep] = useState(1); // 1: Email, 2: OTP & New Password, 3: Success
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -37,10 +37,30 @@ export default function ForgotPassword() {
     confirmPassword: ""
   });
 
+  const [passwordValidation, setPasswordValidation] = useState({
+    minLength: false,
+    hasUpperCase: false,
+    hasNumber: false,
+    hasSpecialChar: false
+  });
+
   // --- Helpers ---
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
+  };
+
+  const validatePassword = (password: string) => {
+    setPasswordValidation({
+      minLength: password.length >= 8,
+      hasUpperCase: /[A-Z]/.test(password),
+      hasNumber: /[0-9]/.test(password),
+      hasSpecialChar: /[^A-Za-z0-9]/.test(password)
+    });
+  };
+
+  const isPasswordValid = () => {
+    return Object.values(passwordValidation).every(v => v);
   };
 
   // Step 1: Request OTP
@@ -74,6 +94,10 @@ export default function ForgotPassword() {
       return showToast(t('auth.passwordMismatch'), "error");
     }
     
+    if (!isPasswordValid()) {
+      return showToast("Please meet all password requirements", "error");
+    }
+    
     setLoading(true);
     try {
       const response = await fetch(`${Config.API_AUTH_URL}/forgot-password/reset`, {
@@ -87,8 +111,7 @@ export default function ForgotPassword() {
       });
 
       if (response.ok) {
-        showToast(t('auth.passwordResetSuccess'));
-        setTimeout(() => navigate("/login"), 1500);
+        setStep(3);
       } else {
         showToast(t('auth.invalidOTP'), "error");
       }
@@ -119,22 +142,24 @@ export default function ForgotPassword() {
             <img src="/Coiffeurr_Logo.png" alt="Coiffeurr" className="w-10 h-10 object-contain" />
           </div>
 
-          <div className="text-center mb-4">
-            <h1 
-              className="text-2xl font-bold text-white tracking-tight letter-reveal"
-              style={{ fontFamily: 'Playfair Display, serif' }}
-            >
-              {step === 1 ? t('auth.forgotPassword') : t('auth.verifyAccount')}
-            </h1>
-            <p className="punch-line text-[9px] letter-reveal tracking-widest" style={{ animationDelay: '0.2s' }}>
-              Reclaim your style.
-            </p>
-            <p className="text-white/60 text-[10px] mt-1 font-medium letter-reveal" style={{ animationDelay: '0.3s' }}>
-              {step === 1 
-                ? t('auth.enterEmail') 
-                : t('auth.codeSent', { email: formData.email })}
-            </p>
-          </div>
+          {step !== 3 && (
+            <div className="text-center mb-4">
+              <h1 
+                className="text-2xl font-bold text-white tracking-tight letter-reveal"
+                style={{ fontFamily: 'Playfair Display, serif' }}
+              >
+                {step === 1 ? t('auth.forgotPassword') : t('auth.verifyAccount')}
+              </h1>
+              <p className="punch-line text-[9px] letter-reveal tracking-widest" style={{ animationDelay: '0.2s' }}>
+                Reclaim your style.
+              </p>
+              <p className="text-white/60 text-[10px] mt-1 font-medium letter-reveal" style={{ animationDelay: '0.3s' }}>
+                {step === 1 
+                  ? t('auth.enterEmail') 
+                  : t('auth.codeSent', { email: formData.email })}
+              </p>
+            </div>
+          )}
 
         {/* --- STEP 1: EMAIL --- */}
         {step === 1 && (
@@ -188,7 +213,10 @@ export default function ForgotPassword() {
                   required
                   type={showNewPassword ? "text" : "password"}
                   value={formData.newPassword}
-                  onChange={(e) => setFormData({...formData, newPassword: e.target.value})}
+                  onChange={(e) => {
+                    setFormData({...formData, newPassword: e.target.value});
+                    validatePassword(e.target.value);
+                  }}
                   placeholder="••••••••"
                   className="w-full h-12 pl-12 pr-12 dark-input font-bold text-sm outline-none transition-all duration-300 focus:ring-2 focus:ring-[#D4AF37]/50"
                 />
@@ -199,6 +227,25 @@ export default function ForgotPassword() {
                 >
                   {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
+              </div>
+              {/* Password Requirements */}
+              <div className="space-y-1 mt-2 px-1">
+                <div className={`flex items-center gap-2 text-[10px] font-medium ${passwordValidation.minLength ? 'text-emerald-400' : 'text-white/50'}`}>
+                  {passwordValidation.minLength ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
+                  <span>At least 8 characters</span>
+                </div>
+                <div className={`flex items-center gap-2 text-[10px] font-medium ${passwordValidation.hasUpperCase ? 'text-emerald-400' : 'text-white/50'}`}>
+                  {passwordValidation.hasUpperCase ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
+                  <span>At least one uppercase letter</span>
+                </div>
+                <div className={`flex items-center gap-2 text-[10px] font-medium ${passwordValidation.hasNumber ? 'text-emerald-400' : 'text-white/50'}`}>
+                  {passwordValidation.hasNumber ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
+                  <span>At least one number</span>
+                </div>
+                <div className={`flex items-center gap-2 text-[10px] font-medium ${passwordValidation.hasSpecialChar ? 'text-emerald-400' : 'text-white/50'}`}>
+                  {passwordValidation.hasSpecialChar ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
+                  <span>At least one special character</span>
+                </div>
               </div>
             </div>
 
@@ -232,6 +279,27 @@ export default function ForgotPassword() {
               {t('auth.resendCode')}
             </button>
           </form>
+        )}
+
+        {/* --- STEP 3: SUCCESS --- */}
+        {step === 3 && (
+          <div className="slide-in-right text-center py-8">
+            <div className="w-20 h-20 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-[#D4AF37]/30 animate-bounce">
+              <CheckCircle2 size={40} className="text-black" />
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-3 letter-reveal" style={{ fontFamily: 'Playfair Display, serif' }}>
+              All set!
+            </h2>
+            <p className="text-white/80 text-sm font-medium mb-8 letter-reveal" style={{ animationDelay: '0.2s' }}>
+              Now remember it… or we'll meet again 👀
+            </p>
+            <Button 
+              onClick={() => navigate("/login")}
+              className="w-full h-11 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl tracking-widest hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30"
+            >
+              Go to Login
+            </Button>
+          </div>
         )}
         </div>
       </div>
