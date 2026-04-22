@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   MapPinOff, 
   Search, 
@@ -10,6 +11,8 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 const NoSalonsFound = ({ currentCity = "your area" }) => {
+  const { t } = useTranslation();
+  const displayCity = currentCity === "your area" ? t('noSalonsFound.yourArea') || "your area" : currentCity;
   const navigate = useNavigate();
 
   return (
@@ -28,10 +31,10 @@ const NoSalonsFound = ({ currentCity = "your area" }) => {
       {/* --- TEXT CONTENT --- */}
       <div className="max-w-md space-y-4">
         <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-          No Salons Found in {currentCity}
+          {t('noSalonsFound.title', { city: displayCity })}
         </h1>
         <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-          We couldn't find any partners nearby. We're expanding fast, but we haven't reached this neighborhood just yet!
+          {t('noSalonsFound.message')}
         </p>
       </div>
 
@@ -41,8 +44,8 @@ const NoSalonsFound = ({ currentCity = "your area" }) => {
       {/* --- FOOTER NOTIFICATION --- */}
       <div className="mt-12 py-3 px-6 bg-slate-900 dark:bg-white rounded-full flex items-center gap-3">
         <span className="flex h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
-        <span className="text-[10px] font-black text-white dark:text-slate-900 uppercase tracking-widest">
-          Coming Soon to your city
+        <span className="text-[10px] font-black text-white dark:text-slate-900 tracking-widest">
+          {t('noSalonsFound.comingSoon')}
         </span>
       </div>
     </div>

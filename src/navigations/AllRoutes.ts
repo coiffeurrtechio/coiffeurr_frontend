@@ -26,8 +26,10 @@ import UserWishlist from "../pages/UserWishlist";
 import StaffDetailPage from "../pages/Salon/StaffDetailPage";
 import AnalyticsPage from "../pages/Salon/SalonOwner/DashBoardPages.tsx/AnalyticsPage";
 import AttendancePage from "../pages/Salon/SalonOwner/DashBoardPages.tsx/AttendancePage";
+import SettingsPage from "../pages/Salon/SalonOwner/DashBoardPages.tsx/SettingsPage";
 import ForgotPassword from "../pages/ForgotPassword";
 import UniversalVerification from "../pages/UniversalVerification";
+import SalonReviewsPage from "../pages/Salon/SalonReviewsPage";
 
 
 export interface AppRoute {
@@ -63,6 +65,7 @@ const routes: AppRoute[] = [
       { key: 20, path: "/wishlist", Element: UserWishlist, isProtected: true },
       { key: 21, path: "/salon/:salonId/staff/:staffId", Element: StaffDetailPage, isProtected: true },
       { key: 22, path: "/verify", Element: UniversalVerification, isProtected: true },
+      { key: 23, path: "/salon/:salonId/reviews", Element: SalonReviewsPage, isProtected: false },
 
     ],
   },
@@ -109,10 +112,11 @@ const routes: AppRoute[] = [
       // { key: 25, path: "data", Element: WorkInProgress, isProtected: true },
       { key: 26, path: "staff", Element: StaffManagement, isProtected: true },
       { key: 27, path: "services", Element: ServiceManagement, isProtected: true },
-      { key: 28, path: "", Element: DashboardProfile, isProtected: true },
+      { key: 28, path: "", Element: AnalyticsPage, isProtected: true },
       { key: 29, path: "booking", Element: BookingsPage, isProtected: true },
-      { key: 30, path: "analytics", Element: AnalyticsPage, isProtected: true },
+      { key: 30, path: "profile", Element: DashboardProfile, isProtected: true },
       { key: 31, path: "attendance", Element: AttendancePage, isProtected: true },
+      { key: 32, path: "settings", Element: SettingsPage, isProtected: true },
 
       // { key: 26, path: "salonowner", Element: SalonOwnerHomePage, isProtected: true },
     ],

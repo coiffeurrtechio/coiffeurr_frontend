@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
-  Star, MapPin, Clock, Heart, Check, Calendar, Phone, X,
-  ArrowLeft, Share2, ShieldCheck, Sparkles, ChevronRight, User as UserIcon, Loader2
+  Star, Clock, Heart, Check, X,
+  ArrowLeft, Loader2, Calendar, User
 } from "lucide-react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 
@@ -15,12 +15,11 @@ import { BookingRequestSuccess } from "../../components/Loaders/BookingRequestSu
 // API & Interfaces
 import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI";
 import { usersalonApi } from "../../API/SalonsAPIs/UserSalonAPI";
-import type { salonSlots } from "../../Interfaces/SaloInterface";
 
 const SalonService: React.FC = () => {
   const navigate = useNavigate();
   const { salonId, serviceId } = useParams();
-  const { apiRequest, apiCustomerpiPost, apiCustomerpiPostReq } = useApi();
+  const { apiRequest, apiCustomerpiPost } = useApi();
   const { userapiPost } = usersalonApi();
 
   const location = useLocation();
@@ -33,14 +32,9 @@ const SalonService: React.FC = () => {
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const [salonservicedata, setsalonservicedata] = useState<any>(service);
-  const [salonserviceslotsdata, setsalonserviceslotsdata] = useState<salonSlots[]>([]);
-  const [selectedslottime, setselectedslottime] = useState<string>("");
-
-  // --- STAFF SELECTION STATE ---
-  const [selectedStaffId, setSelectedStaffId] = useState<string>("");
+  const [availableSlots, setAvailableSlots] = useState<any[]>([]);
 
   // Reviews State
-  const [reviews, setReviews] = useState<any[]>([]);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isReviewSubmitting, setIsReviewSubmitting] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
@@ -54,58 +48,56 @@ const SalonService: React.FC = () => {
   const parsedUser = authState ? JSON.parse(authState) : null;
   const isloggedin = parsedUser?.isAuthenticated;
 
-  // --- Logic for Next 7 Days ---
-  const nextSevenDays = [...Array(7)].map((_, i) => {
+  // --- Logic for Next 10 Days ---
+  const nextTenDays = [...Array(10)].map((_, i) => {
     const date = new Date();
     date.setDate(date.getDate() + i);
     return date.toISOString().split('T')[0];
   });
 
-  const [selectedDate, setSelectedDate] = useState<string>(nextSevenDays[0]);
+  // --- MAIN PAGE SELECTION STATE ---
+  const [mainPageSelectedStaffId, setMainPageSelectedStaffId] = useState<string>("");
+  const [mainPageSelectedDate, setMainPageSelectedDate] = useState<string>(nextTenDays[0]);
+  const [mainPageSelectedTime, setMainPageSelectedTime] = useState<string>("");
+  const [mainPageSelectedSlotTime, setMainPageSelectedSlotTime] = useState<string>("");
 
   useEffect(() => {
     fetchService();
-    // fetchReviews();
   }, []);
 
+  // Fetch available slots when date changes
   useEffect(() => {
-    if (isEditModalOpen && selectedDate) {
-      fetchServiceSlots(selectedDate);
+    if (mainPageSelectedDate) {
+      fetchAvailableSlots(mainPageSelectedDate);
     }
-  }, [selectedDate, isEditModalOpen]);
+  }, [mainPageSelectedDate]);
 
-  // Auto-select staff if only one is available
-  useEffect(() => {
-    if (salonservicedata?.staff?.length === 1) {
-      setSelectedStaffId(salonservicedata.staff[0].staff_id);
+  const fetchAvailableSlots = async (date: string) => {
+    try {
+      const res = await apiRequest(`/salons/${salonId}/slots?date=${date}&service_id=${serviceId}`);
+      if (res?.data?.slots) {
+        setAvailableSlots(res.data.slots);
+      } else {
+        setAvailableSlots([]);
+      }
+    } catch (error) {
+      setAvailableSlots([]);
     }
-  }, [salonservicedata]);
+  };
+
+  // Format time from "10:00" to "10:00 AM"
+  const formatTimeTo12Hour = (timeString: string) => {
+    const [hour, minute] = timeString.split(':').map(Number);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const h = hour % 12 || 12;
+    return minute === 0 ? `${h} ${ampm}` : `${h}:${minute.toString().padStart(2, "0")} ${ampm}`;
+  };
 
   const fetchService = async () => {
     try {
       const res = await apiRequest(`/salons/${salonId}/services/${serviceId}`);
       if (res.data) setsalonservicedata(res.data);
     } catch (error) { console.error(error); }
-  };
-
-  // const fetchReviews = async () => {
-  //   try {
-  //     const res = await apiRequest<any>(`/reviews/reviews/service/${serviceId}?page=1&limit=20`);
-  //     if (res.data) setReviews(res.data);
-  //   } catch (error) { console.error("Reviews fetch error:", error); }
-  // };
-
-  const fetchServiceSlots = async (dateParam: string) => {
-    try {
-      const res = await apiRequest<any>(`/salons/${salonId}/slots?date=${dateParam}&service_id=${serviceId}`);
-      if (res.data && res.data.slots) {
-        setsalonserviceslotsdata(res.data.slots);
-      } else {
-        setsalonserviceslotsdata([]);
-      }
-    } catch (error) {
-      setsalonserviceslotsdata([]);
-    }
   };
 
   const handlePostReview = async () => {
@@ -129,7 +121,6 @@ const SalonService: React.FC = () => {
       if (res.data) {
         setReviewData({ ...reviewData, reviewText: "", rating: 5 });
         setIsReviewModalOpen(false);
-        fetchReviews();
       }
     } catch (error: any) {
       setReviewError(error.response?.data?.detail || "Review failed.");
@@ -138,18 +129,11 @@ const SalonService: React.FC = () => {
     }
   };
 
-  const formatTo12Hour = (timeString: string) => {
-    const [hour, minute] = timeString.split(":").map(Number);
-    const ampm = hour >= 12 ? "PM" : "AM";
-    const h = hour % 12 || 12;
-    return minute === 0 ? `${h} ${ampm}` : `${h}:${minute.toString().padStart(2, "0")} ${ampm}`;
-  };
-
   const BookAppointment = async (e?: React.MouseEvent<HTMLButtonElement>) => {
     e?.preventDefault();
     if (!isloggedin) { navigate("/login"); return; }
 
-    if (!selectedDate || !selectedslottime || !selectedStaffId) {
+    if (!mainPageSelectedDate || !mainPageSelectedSlotTime || !mainPageSelectedStaffId) {
       alert("Please select a Stylist, Date and Time slot.");
       return;
     }
@@ -162,9 +146,9 @@ const SalonService: React.FC = () => {
       const userIdString = String(userid || "");
       const salonIdString = String(salonId || "");
       const serviceIdString = String(salonservicedata?.service_id || serviceId || "");
-      const staffIdString = String(selectedStaffId || "");
-      const dateString = String(selectedDate || "");
-      const timeString = String(selectedslottime || "");
+      const staffIdString = String(mainPageSelectedStaffId || "");
+      const dateString = String(mainPageSelectedDate || "");
+      const timeString = String(mainPageSelectedSlotTime || "");
       const priceNumber = Number(salonservicedata?.price || 0) || 0;
 
       // Ensure no undefined/null values in request body
@@ -292,68 +276,136 @@ const SalonService: React.FC = () => {
         </section>
 
         {/* --- Right Content Section --- */}
-        <section className="px-6 py-12 lg:px-20 lg:py-32 overflow-y-auto">
+        <section className="px-6 py-12 lg:px-10 lg:py-32 overflow-y-auto">
           <div className="max-w-xl mx-auto space-y-12">
 
             <div className="space-y-6">
-              <h1 className="text-4xl lg:text-6xl font-light tracking-tight text-balance leading-tight">
+              <h1 className="text-5xl lg:text-7xl font-light tracking-tight text-balance leading-tight" style={{ fontFamily: 'Playfair Display, serif' }}>
                 {salonservicedata?.serviceName || "Luxury Experience"}
               </h1>
-              <div className="flex items-center gap-6 text-sm">
-                <div className="flex items-center gap-1.5 font-medium">
-                  <div className="text-3xl font-light text-slate-900">₹{salonservicedata?.price}</div>
-                  {/* <Star className="w-4 h-4 fill-slate-900 text-slate-900" /> */}
-                  {/* <span>{salonservicedata?.rating?.average}</span> */}
-                  {/* <span className="text-slate-400 font-light">({reviews.length} Reviews)</span> */}
+              <div className="flex items-center gap-4 text-sm bg-slate-50 border border-slate-100 rounded-full px-6 py-3 inline-flex">
+                <span className="text-2xl font-light text-slate-900 self-center" style={{ fontFamily: 'Playfair Display, serif' }}>₹{salonservicedata?.price}</span>
+                <div className="h-4 w-px bg-slate-300" />
+                <div className="flex items-center gap-2 text-slate-600 font-bold uppercase text-[10px] tracking-widest">
+                  <Clock className="w-3 h-3" />
+                  <span>{salonservicedata?.durationMinutes} MINS</span>
                 </div>
-                <div className="h-4 w-px bg-slate-200" />
-                <div className="flex items-center gap-2 text-slate-500 font-bold uppercase text-[10px] tracking-widest">
-                  <Clock className="w-4 h-4" />
-                  <span>{salonservicedata?.durationMinutes} Minutes</span>
-                </div>
+                <div className="h-4 w-px bg-slate-300" />
+                <span className="text-slate-600 font-bold uppercase text-[10px] tracking-widest">PREMIUM QUALITY</span>
               </div>
-              {/* <div className="text-3xl font-light text-slate-900">₹{salonservicedata?.price}</div> */}
             </div>
 
             <hr className="border-slate-100" />
 
-            {/* --- Description --- */}
-            <div className="space-y-4">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">The Experience</h3>
-              <p className="text-lg text-slate-600 font-light leading-relaxed">
-                {salonservicedata?.description || "Experience top-tier grooming tailored to your style."}
-              </p>
-            </div>
-
             {/* --- NEW: Staff Display on Main Page --- */}
             <div className="space-y-6">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Meet the Professionals</h3>
-              <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2">
-                {salonservicedata?.staff?.map((person: any) => (
-                  <div
-                    key={person.staff_id}
-                    className="flex flex-col items-center min-w-[100px] space-y-3 group cursor-default"
-                    onClick={() => navigate(`/salon/${salonId}/staff/${person?.staff_id}`)}
-                  >
-                    <div className="relative">
-                      <img
-                        src={person.image_url || "/placeholder-user.png"}
-                        alt={person.name}
-                        className="w-20 h-20 rounded-full object-cover ring-1 ring-slate-100 group-hover:ring-slate-900 transition-all duration-300"
-                      />
-                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-white px-2 py-0.5 rounded-full shadow-sm border border-slate-50 flex items-center gap-1">
-                        <Star size={8} className="fill-slate-900 text-slate-900" />
-                        <span className="text-[9px] font-black">{person.rating?.average || "5.0"}</span>
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#888888]">1. Choose Your Professional</h3>
+              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2 relative after:absolute after:right-0 after:top-0 after:bottom-4 after:w-8 after:bg-gradient-to-l after:from-white after:to-transparent">
+                {salonservicedata?.staff?.map((person: any, index: number) => {
+                  const isSelected = mainPageSelectedStaffId === person.staff_id;
+                  return (
+                    <div
+                      key={person.staff_id}
+                      className={`relative flex flex-col items-center min-w-[140px] p-4 bg-white border rounded-2xl shadow-sm transition-all duration-300 cursor-pointer group animate-in slide-in-from-bottom-4 fade-in duration-500
+                        ${isSelected 
+                          ? "border-[#D4AF37] ring-2 ring-[#D4AF37]/50 shadow-lg scale-105 shadow-[#D4AF37]/20" 
+                          : "border-slate-100 hover:border-slate-200 hover:shadow-lg"}`}
+                      style={{ animationDelay: `${index * 100}ms` }}
+                      onClick={() => setMainPageSelectedStaffId(person.staff_id)}
+                    >
+                      {isSelected && (
+                        <div className="absolute top-3 right-3 w-6 h-6 bg-[#D4AF37] rounded-full flex items-center justify-center shadow-lg z-10">
+                          <Check className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                      <div className="relative mb-3">
+                        <img
+                          src={person.image_url || "/placeholder-user.png"}
+                          alt={person.name}
+                          className="w-24 h-28 object-cover rounded-xl ring-1 ring-slate-100 transition-all duration-300"
+                        />
                       </div>
-                    </div>
-                    <div className="text-center">
-                      <h4 className="text-[11px] font-bold text-slate-900 uppercase tracking-tighter truncate w-24">
+                      <h4 className="text-sm font-bold text-slate-900 text-center capitalize mb-1" style={{ fontFamily: 'Playfair Display, serif' }}>
                         {person.name}
                       </h4>
-                      <p className="text-[9px] text-slate-400 font-medium uppercase tracking-widest">Stylist</p>
+                      {!isSelected && (
+                        <div className="flex items-center gap-1">
+                          <Star size={10} className="fill-orange-400 text-orange-400" />
+                          <span className="text-[10px] font-bold text-slate-600">{person.rating?.average || "5.0"}</span>
+                        </div>
+                      )}
                     </div>
+                  );
+                })}
+              </div>
+              {mainPageSelectedStaffId && (
+                <div className="text-center py-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <p className="text-sm text-slate-600 italic font-light" style={{ fontFamily: 'Playfair Display, serif' }}>
+                    You've chosen {salonservicedata?.staff?.find((s: any) => s.staff_id === mainPageSelectedStaffId)?.name}'s expertise
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* --- Date Selection on Main Page --- */}
+            <div className="space-y-6">
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#888888]">2. Choose Your Date</h3>
+              <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2">
+                {nextTenDays.map((dateStr, index) => {
+                  const date = new Date(dateStr);
+                  const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                  const dayNumber = date.getDate();
+                  const isSelected = mainPageSelectedDate === dateStr;
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => setMainPageSelectedDate(dateStr)}
+                      className={`flex flex-col items-center justify-center min-w-[70px] h-20 transition-all border rounded-xl
+                        ${isSelected 
+                          ? "bg-[#1a1a1a] border-[#1a1a1a] text-[#D4AF37] shadow-lg scale-105" 
+                          : "bg-white/60 backdrop-blur-sm border-slate-200 text-slate-600 hover:border-slate-300 hover:shadow-md"}`}
+                    >
+                      <span className="text-[10px] font-bold uppercase tracking-wider">{dayName}</span>
+                      <span className="text-2xl font-light">{dayNumber}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* --- Time Selection on Main Page --- */}
+            <div className="space-y-6">
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#888888]">3. Choose Your Time</h3>
+              <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2">
+                {availableSlots.length > 0 ? (
+                  availableSlots.map((slot: any, index: number) => {
+                    const isAvailable = slot?.availableCapacity > 0;
+                    const formattedTime = formatTimeTo12Hour(slot.time);
+                    const isSelected = mainPageSelectedTime === formattedTime;
+                    return (
+                      <button
+                        key={index}
+                        disabled={!isAvailable}
+                        onClick={() => {
+                          setMainPageSelectedTime(formattedTime);
+                          setMainPageSelectedSlotTime(slot.time);
+                        }}
+                        className={`px-4 py-2 lg:px-6 lg:py-3 text-[10px] lg:text-xs font-bold uppercase tracking-wider rounded-full transition-all duration-300 whitespace-nowrap
+                          ${!isAvailable 
+                            ? "opacity-20 cursor-not-allowed bg-slate-100 text-slate-400" 
+                            : isSelected 
+                              ? "bg-slate-900 text-white shadow-lg scale-105" 
+                              : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                      >
+                        {formattedTime}
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="w-full text-center py-8 text-slate-400 text-sm italic">
+                    Select a date to see available time slots
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -372,121 +424,115 @@ const SalonService: React.FC = () => {
               </div>
             )}
 
-            <div className="pt-8">
-              <Button onClick={() => setisEditModalOpen(true)} className="w-full h-16 bg-slate-900 text-white rounded-none hover:bg-slate-800 text-xs font-bold uppercase tracking-[0.3em]">
-                Reserve Appointment
-              </Button>
+            <div className="pt-8 pb-32">
+              {/* --- Description (THE EXPERIENCE) - Moved to bottom --- */}
+              <div className="space-y-2 pt-8 border-t border-slate-100">
+                <h3 className="text-[8px] font-bold uppercase tracking-[0.3em] text-slate-400">The Experience</h3>
+                <p className="text-xs text-slate-500 font-light leading-relaxed italic" style={{ fontFamily: 'Playfair Display, serif' }}>
+                  A signature session tailored to your unique aesthetic.
+                </p>
+              </div>
             </div>
+
+            {/* --- Scroll Indicator --- */}
+            {(!mainPageSelectedStaffId || !mainPageSelectedDate || !mainPageSelectedSlotTime) && (
+              <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 animate-bounce">
+                <div className="flex flex-col items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Scroll to continue</span>
+                  <div className="w-6 h-10 border-2 border-slate-300 rounded-full flex justify-center pt-2">
+                    <div className="w-1 h-2 bg-slate-400 rounded-full animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            )}
 
           </div>
         </section>
       </div>
 
-      {/* --- BOOKING MODAL (Staff + Date + Time) --- */}
+      {/* --- BOOKING MODAL (Confirmation Only) --- */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-end lg:items-center justify-center p-0 lg:p-6">
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setisEditModalOpen(false)} />
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setisEditModalOpen(false)} />
           <BookingLoader isVisible={bookingrequestsend} salonName={salonservicedata?.salonName} />
 
-          <Card className="relative w-full max-w-2xl bg-white rounded-t-[2.5rem] lg:rounded-none border-none shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-500">
-            <CardHeader className="p-8 border-b border-slate-50 flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-xl font-light tracking-tight text-gray-900">Finalize Booking</CardTitle>
-                <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-black">Professional Stylists & Slots</p>
+          <Card className="relative w-full max-w-lg bg-white/95 backdrop-blur-xl rounded-t-[2.5rem] lg:rounded-[2rem] border-none shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-500">
+            <CardHeader className="p-8 pb-6 border-b border-slate-100">
+              <div className="flex flex-col items-center text-center space-y-2">
+                <div className="w-16 h-16 bg-[#D4AF37]/10 rounded-full flex items-center justify-center mb-2">
+                  <Calendar className="w-8 h-8 text-[#D4AF37]" />
+                </div>
+                <CardTitle className="text-3xl font-light tracking-tight text-slate-900" style={{ fontFamily: 'Playfair Display, serif' }}>
+                  Confirm Booking
+                </CardTitle>
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#888888]">
+                  Review your appointment details
+                </p>
               </div>
-              <button onClick={() => setisEditModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-full transition-colors"><X className="w-5 h-5" /></button>
             </CardHeader>
 
-            <CardContent className="p-8 space-y-8 max-h-[75vh] overflow-y-auto custom-scrollbar">
+            <CardContent className="p-8 space-y-6">
 
-              {/* 1. STAFF SELECTION */}
+              {/* BOOKING SUMMARY */}
               <div className="space-y-4">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1E4D8C]">1. Select Professional</h3>
-                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                  {salonservicedata?.staff?.map((person: any) => (
-                    <button
-                      key={person.staff_id}
-                      onClick={() => setSelectedStaffId(person.staff_id)}
-                      className={`flex flex-col items-center min-w-[120px] p-4 transition-all border rounded-2xl
-                        ${selectedStaffId === person.staff_id
-                          ? "bg-blue-50 border-[#1E4D8C] ring-1 ring-[#1E4D8C] shadow-md"
-                          : "bg-white border-slate-100 hover:border-slate-200"}`}
-                    >
-                      <div className="relative mb-3">
-                        <img
-                          src={person.image_url || "/placeholder-user.png"}
-                          alt={person.name}
-                          className="w-16 h-16 rounded-full object-cover ring-2 ring-white shadow-sm"
-                        />
-                        {selectedStaffId === person.staff_id && (
-                          <div className="absolute -top-1 -right-1 bg-[#1E4D8C] text-white rounded-full p-1 shadow-lg animate-in zoom-in">
-                            <Check size={10} />
-                          </div>
-                        )}
-                      </div>
-                      <span className="text-xs font-black text-gray-800 truncate w-full text-center capitalize">{person.name}</span>
-                      <div className="flex items-center gap-1 mt-1 opacity-70">
-                        <Star size={8} className="fill-orange-400 text-orange-400" />
-                        <span className="text-[9px] font-bold">{person.rating?.average || "5.0"}</span>
-                      </div>
-                    </button>
-                  ))}
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 p-6 rounded-2xl border border-slate-200 space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-[#D4AF37]/10 rounded-full flex items-center justify-center shrink-0">
+                      <User className="w-5 h-5 text-[#D4AF37]" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400">Professional</p>
+                      <p className="text-sm font-bold text-slate-900" style={{ fontFamily: 'Playfair Display, serif' }}>
+                        {salonservicedata?.staff?.find((s: any) => s.staff_id === mainPageSelectedStaffId)?.name}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-[#D4AF37]/10 rounded-full flex items-center justify-center shrink-0">
+                      <Calendar className="w-5 h-5 text-[#D4AF37]" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400">Date</p>
+                      <p className="text-sm font-bold text-slate-900">
+                        {new Date(mainPageSelectedDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-[#D4AF37]/10 rounded-full flex items-center justify-center shrink-0">
+                      <Clock className="w-5 h-5 text-[#D4AF37]" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400">Time</p>
+                      <p className="text-sm font-bold text-slate-900">{mainPageSelectedTime}</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              {/* 2. DATE PICKER */}
-              <div className="space-y-4">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1E4D8C]">2. Pick a Date</h3>
-                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                  {nextSevenDays.map((dateStr, index) => (
-                    <button
-                      key={index}
-                      onClick={() => { setSelectedDate(dateStr); setselectedslottime(""); }}
-                      className={`flex flex-col items-center justify-center min-w-[75px] h-20 transition-all border rounded-xl
-                        ${selectedDate === dateStr ? "bg-slate-900 border-slate-900 text-white shadow-lg" : "bg-white border-slate-100 text-slate-400 hover:border-slate-300"}`}
-                    >
-                      <span className="text-[9px] uppercase font-black tracking-tighter mb-1">
-                        {new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' })}
-                      </span>
-                      <span className="text-lg font-light tracking-tighter">{new Date(dateStr).getDate()}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 3. TIME SLOTS */}
-              <div className="space-y-4">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1E4D8C]">3. Choose Time</h3>
-                <div className="grid grid-cols-3 gap-3 pb-4">
-                  {salonserviceslotsdata.length > 0 ? (
-                    salonserviceslotsdata.map((slot: any, index) => {
-                      const isAvailable = slot?.availableCapacity > 0;
-                      const isSelected = selectedslottime === slot.time;
-                      return (
-                        <button
-                          key={index}
-                          disabled={!isAvailable}
-                          onClick={() => setselectedslottime(slot.time)}
-                          className={`py-4 text-[10px] font-black uppercase tracking-widest transition-all border rounded-xl
-                            ${!isAvailable ? "opacity-20 cursor-not-allowed bg-slate-50 border-transparent" :
-                              isSelected ? "bg-[#1E4D8C] border-[#1E4D8C] text-white shadow-md" : "bg-slate-50 border-transparent text-slate-500 hover:bg-slate-100"}`}
-                        >
-                          {formatTo12Hour(slot.time)}
-                        </button>
-                      );
-                    })
-                  ) : <div className="col-span-full py-8 text-center text-slate-300 text-sm italic">No slots available for this date.</div>}
+                <div className="bg-[#1a1a1a] p-6 rounded-2xl flex items-center justify-between">
+                  <div>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Total Amount</p>
+                    <p className="text-2xl font-light text-white" style={{ fontFamily: 'Playfair Display, serif' }}>₹{salonservicedata?.price}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-[#D4AF37]/20 rounded-full flex items-center justify-center">
+                    <Check className="w-6 h-6 text-[#D4AF37]" />
+                  </div>
                 </div>
               </div>
 
               <Button
                 type="button"
-                disabled={!selectedslottime || !selectedStaffId}
                 onClick={BookAppointment}
-                className="w-full h-16 bg-slate-900 text-white rounded-2xl disabled:opacity-20 text-xs font-bold uppercase tracking-[0.2em] shadow-xl transition-all active:scale-95"
+                className="w-full h-16 bg-slate-900 text-white rounded-2xl text-xs font-bold uppercase tracking-[0.3em] shadow-xl transition-all active:scale-95 hover:shadow-[0_0_30px_rgba(212,175,55,0.3)]"
               >
                 Confirm Appointment
               </Button>
+
+              <p className="text-center text-[10px] text-slate-400 italic" style={{ fontFamily: 'Playfair Display, serif' }}>
+                A signature session tailored to your unique aesthetic.
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -534,6 +580,42 @@ const SalonService: React.FC = () => {
       )}
 
       <BookingRequestSuccess isVisible={bookingrequestsuccess} salonName={salonservicedata?.salonName || ""} />
+
+      {/* --- STICKY FOOTER WITH BOOKING SUMMARY --- */}
+      {(mainPageSelectedStaffId || mainPageSelectedDate || mainPageSelectedSlotTime) && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-[15px] border-t border-slate-200/50 shadow-2xl animate-in slide-in-from-bottom duration-300">
+          <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div className="flex-1">
+              {mainPageSelectedStaffId && mainPageSelectedDate && mainPageSelectedSlotTime ? (
+                <>
+                  <p className="text-sm font-bold text-slate-900 italic" style={{ fontFamily: 'Playfair Display, serif' }}>
+                    Reserve {salonservicedata?.staff?.find((s: any) => s.staff_id === mainPageSelectedStaffId)?.name} for {mainPageSelectedTime}
+                  </p>
+                  <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">
+                    {new Date(mainPageSelectedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} • Total: ₹{salonservicedata?.price}
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-slate-500 font-medium">
+                  {!mainPageSelectedStaffId ? "Choose your professional" : !mainPageSelectedDate ? "Choose your date" : "Choose your time"}
+                </p>
+              )}
+            </div>
+            <Button 
+              onClick={() => setisEditModalOpen(true)} 
+              disabled={!mainPageSelectedStaffId || !mainPageSelectedDate || !mainPageSelectedSlotTime}
+              className={`ml-4 px-8 h-12 transition-all duration-500 text-xs font-bold uppercase tracking-[0.3em]
+                ${!mainPageSelectedStaffId || !mainPageSelectedDate || !mainPageSelectedSlotTime
+                  ? "bg-transparent border-2 border-slate-300 text-slate-400 hover:border-slate-400 hover:text-slate-500"
+                  : "bg-slate-900 text-white border-slate-900 hover:shadow-[0_0_30px_rgba(212,175,55,0.3)]"}`}
+            >
+              {!mainPageSelectedStaffId || !mainPageSelectedDate || !mainPageSelectedSlotTime 
+                ? "Complete" 
+                : "CONFIRM"}
+            </Button>
+          </div>
+        </div>
+      )}
     </main>
   );
 };

@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { useTranslation } from 'react-i18next';
 import {
-    ArrowLeft, Calendar, Clock, MapPin, ChevronRight,
+    ArrowLeft, Calendar, Clock, MapPin, ChevronRight, ChevronLeft,
     Star, X, Receipt, User as UserIcon, Scissors, Info,
     ChevronDown,
     User,
@@ -13,6 +14,7 @@ import { usersalonApi } from "../API/SalonsAPIs/UserSalonAPI";
 import { useToast } from "../components/Toast";
 
 function BookingPage() {
+    const { t } = useTranslation();
     const { userapiRequest } = usersalonApi();
     const [filterStatus, setFilterStatus] = useState('ALL');
     const [bookingdata, setBookingData] = useState<any[]>([]);
@@ -21,10 +23,20 @@ function BookingPage() {
     // Modal State
     const [selectedBooking, setSelectedBooking] = useState<any>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const itemsPerPage = 10;
+    // Date Filter State
+    const [selectedDate, setSelectedDate] = useState<string>('');
+    const [showCalendar, setShowCalendar] = useState(false);
+    const [currentMonth, setCurrentMonth] = useState(new Date());
+    // Upcoming Bookings State
+    const [showUpcoming, setShowUpcoming] = useState(false);
 
     useEffect(() => {
         fetchAppointmentBookings();
-    }, []);
+    }, [currentPage, selectedDate, showUpcoming]);
 
     const fetchAppointmentBookings = async () => {
         try {
@@ -33,8 +45,19 @@ function BookingPage() {
             const parsedAuth = authData ? JSON.parse(authData) : null;
             const userid = parsedAuth?.user?.user?.id || parsedAuth?.user?.id;
 
-            const res = await userapiRequest<any[]>(`/bookings/user/${userid}`);
-            if (res?.data) setBookingData(res.data);
+            let url = `/bookings/user/${userid}?page=${currentPage}&limit=${itemsPerPage}`;
+            if (selectedDate) {
+                url += `&date=${selectedDate}`;
+            }
+            if (showUpcoming) {
+                url += `&upcoming=true`;
+            }
+
+            const res = await userapiRequest<any>(url);
+            if (res?.data) {
+                setBookingData(res.data.bookings || []);
+                setTotalPages(res.data.pagination?.totalPages || 1);
+            }
         } catch (error) {
             console.error("Error fetching user bookings:", error);
         } finally {
@@ -55,13 +78,13 @@ function BookingPage() {
             } else {
                 showToast({
                     type: 'error',
-                    title: 'Error',
-                    message: res.error || 'Failed to fetch details'
+                    title: t('bookings.error'),
+                    message: res.error || t('bookings.failedToFetchDetails')
                 });
             }
         } catch (error) {
             console.error("Detail fetch error:", error);
-            showToast({ type: 'error', title: 'Network Error', message: 'Could not connect to server' });
+            showToast({ type: 'error', title: t('bookings.networkError'), message: t('bookings.couldNotConnect') });
         } finally {
             setloading(false);
         }
@@ -78,90 +101,252 @@ function BookingPage() {
 
     const getStatusStyles = (status: string) => {
         switch (status?.toUpperCase()) {
-            case 'COMPLETED': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-            case 'PENDING': return 'bg-amber-50 text-amber-600 border-amber-100';
-            case 'CANCELLED': return 'bg-red-50 text-red-600 border-red-100';
-            default: return 'bg-blue-50 text-[#1E4D8C] border-blue-100';
+            case 'COMPLETED': return 'bg-green-100 text-green-700 border-green-200';
+            case 'PENDING': return 'bg-amber-100 text-amber-700 border-amber-200';
+            case 'CANCELLED': return 'bg-red-100 text-red-700 border-red-200';
+            default: return 'bg-slate-100 text-slate-700 border-slate-200';
         }
     };
 
+    const getDaysInMonth = (date: Date) => {
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const daysInMonth = lastDay.getDate();
+        const startingDayOfWeek = firstDay.getDay();
+        return { daysInMonth, startingDayOfWeek };
+    };
+
+    const handleDateSelect = (day: number) => {
+        const year = currentMonth.getFullYear();
+        const month = String(currentMonth.getMonth() + 1).padStart(2, '0');
+        const dayStr = String(day).padStart(2, '0');
+        setSelectedDate(`${year}-${month}-${dayStr}`);
+        setShowCalendar(false);
+    };
+
+    const handleMonthChange = (direction: 'prev' | 'next') => {
+        setCurrentMonth(prev => {
+            const newDate = new Date(prev);
+            if (direction === 'prev') {
+                newDate.setMonth(newDate.getMonth() - 1);
+            } else {
+                newDate.setMonth(newDate.getMonth() + 1);
+            }
+            return newDate;
+        });
+    };
+
     return (
-        <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-10">
+        <div className="min-h-screen pb-10 bg-gradient-to-br from-slate-50 via-slate-50 to-slate-50">
             <Loader isVisible={loading} />
 
-            <header className="bg-white border-b border-slate-100 sticky top-0 z-30">
+            <header className="sticky top-0 z-30 shadow-lg" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
                 <div className="max-w-2xl mx-auto px-6 h-16 flex items-center justify-between">
-                    <button onClick={() => window.history.back()} className="p-2 -ml-2 hover:bg-slate-50 rounded-full transition-colors">
-                        <ArrowLeft className="w-5 h-5 text-slate-600" />
+                    <button onClick={() => window.history.back()} className="p-3 bg-white/20 rounded-full text-white backdrop-blur-md hover:bg-white/30 active:scale-90 transition-all shadow-lg">
+                        <ArrowLeft className="w-5 h-5" />
                     </button>
-                    <h1 className="text-xs font-black uppercase tracking-[0.2em] text-slate-800">Appointment History</h1>
-                    <div className="w-5" />
+                    <h1 className="text-xs font-black tracking-[0.2em] text-white typography-display">{t('bookings.appointmentHistory')}</h1>
+                    <div className="w-8" />
                 </div>
             </header>
 
             <main className="max-w-2xl mx-auto px-4 py-8">
                 {/* Status Summary */}
-                <div className="mb-6 flex justify-between items-center px-1">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Filter Bookings</label>
-                    <div className="relative">
-                        <select
-                            value={filterStatus}
-                            onChange={(e) => setFilterStatus(e.target.value)}
-                            className="appearance-none bg-white border border-slate-100 rounded-xl px-4 py-2 pr-10 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer shadow-sm"
+                <div className="mb-8 flex flex-col gap-5 px-2">
+                    <div className="flex items-center gap-4 w-full sm:w-auto">
+                        <div className="relative w-full sm:w-auto">
+                            <select
+                                value={filterStatus}
+                                onChange={(e) => setFilterStatus(e.target.value)}
+                                className="appearance-none rounded-2xl px-6 py-4 pr-12 text-base font-bold outline-none transition-all cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5 w-full sm:w-52 typography-label-light"
+                                style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
+                            >
+                                <option value="ALL">{t('bookings.allBookings')}</option>
+                                <option value="PENDING">{t('bookings.pending')}</option>
+                                <option value="CONFIRMED">{t('bookings.confirmed')}</option>
+                                <option value="COMPLETED">{t('bookings.completed')}</option>
+                                <option value="CANCELLED">{t('bookings.cancelled')}</option>
+                            </select>
+                            <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-transform duration-200" style={{ color: '#666' }} />
+                        </div>
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowCalendar(!showCalendar)}
+                                className={`p-4 rounded-2xl outline-none transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 cursor-pointer ${selectedDate ? 'ring-2' : ''}`}
+                                style={{ backgroundColor: 'var(--light-greige)', border: selectedDate ? '1px solid var(--muted-gold)' : '1px solid var(--light-greige)', boxShadow: 'var(--inset-shadow)' }}
+                                title={selectedDate || 'Filter by date'}
+                            >
+                                <Calendar size={20} className={`transition-colors`} style={{ color: selectedDate ? 'var(--deep-charcoal)' : '#666' }} />
+                            </button>
+                            {selectedDate && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedDate('');
+                                    }}
+                                    className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow-lg hover:shadow-xl transition-all hover:scale-110"
+                                    style={{ background: 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)', color: 'white' }}
+                                >
+                                    ×
+                                </button>
+                            )}
+                            {showCalendar && (
+                                <div className="absolute top-full left-0 mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-gray-200 p-4 w-72 animate-in fade-in zoom-in-95 duration-200">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <button onClick={() => handleMonthChange('prev')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                            <ChevronLeft size={20} />
+                                        </button>
+                                        <span className="font-bold text-sm" style={{ color: 'var(--deep-charcoal)' }}>
+                                            {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                                        </span>
+                                        <button onClick={() => handleMonthChange('next')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                            <ChevronRight size={20} />
+                                        </button>
+                                    </div>
+                                    <div className="grid grid-cols-7 gap-1 mb-2">
+                                        {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
+                                            <div key={day} className="text-center text-xs font-bold text-gray-500 py-1">{day}</div>
+                                        ))}
+                                    </div>
+                                    <div className="grid grid-cols-7 gap-1">
+                                        {(() => {
+                                            const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentMonth);
+                                            const days = [];
+                                            for (let i = 0; i < startingDayOfWeek; i++) {
+                                                days.push(<div key={`empty-${i}`} className="p-2" />);
+                                            }
+                                            for (let day = 1; day <= daysInMonth; day++) {
+                                                const isSelected = selectedDate === `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                                                days.push(
+                                                    <button
+                                                        key={day}
+                                                        onClick={() => handleDateSelect(day)}
+                                                        className={`p-2 rounded-lg text-sm font-bold transition-all hover:scale-105 ${
+                                                            isSelected 
+                                                                ? 'text-white' 
+                                                                : 'hover:bg-gray-100'
+                                                        }`}
+                                                        style={isSelected ? { background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' } : { color: 'var(--deep-charcoal)' }}
+                                                    >
+                                                        {day}
+                                                    </button>
+                                                );
+                                            }
+                                            return days;
+                                        })()}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => {
+                                setShowUpcoming(!showUpcoming);
+                                setCurrentPage(1);
+                            }}
+                            className={`px-6 py-4 border rounded-2xl outline-none transition-all cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2.5 typography-label-light`}
+                            style={{
+                                background: 'var(--light-greige)',
+                                borderColor: showUpcoming ? 'var(--muted-gold)' : 'var(--light-greige)',
+                                color: 'var(--deep-charcoal)',
+                                boxShadow: showUpcoming ? '0 4px 20px rgba(212, 175, 55, 0.3)' : 'var(--inset-shadow)'
+                            }}
+                            title="Show upcoming bookings"
                         >
-                            <option value="ALL">All Bookings</option>
-                            <option value="PENDING">Pending</option>
-                            <option value="CONFIRMED">Confirmed</option>
-                            <option value="COMPLETED">Completed</option>
-                            <option value="CANCELLED">Cancelled</option>
-                        </select>
-                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                            <Star size={18} className={showUpcoming ? 'fill-[#D4AF37]' : ''} style={{ color: showUpcoming ? '#D4AF37' : '#666' }} />
+                            <span className={`text-sm font-bold transition-colors typography-label-light`}>Upcoming</span>
+                        </button>
                     </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-2">
                     {bookingdata.length > 0 ? (
                         bookingdata
-                            .filter(b => filterStatus === 'ALL' || b.status === filterStatus) // Filter logic
+                            .filter(b => filterStatus === 'ALL' || b.status === filterStatus)
                             .map((booking, index) => (
                                 <div
                                     key={booking.id || index}
-                                    // onClick={() => { setSelectedBooking(booking); setIsModalOpen(true); }}
                                     onClick={() => fetchBookingDetails(booking.id)}
-                                    className="bg-white rounded-3xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-all active:scale-[0.98] group cursor-pointer overflow-hidden"
+                                    className="floating-tile hover-lift p-3 transition-all duration-300 ease active:scale-[0.98] group cursor-pointer overflow-hidden"
                                 >
-                                    {/* ... rest of your mapping code remains exactly same ... */}
-                                    <div className="flex gap-4">
-                                        <div className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 shrink-0">
+                                    <div className="flex gap-3">
+                                        <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0" style={{ background: 'linear-gradient(135deg, var(--muted-gold) 0%, var(--deep-charcoal) 100%)' }}>
                                             <img
                                                 src={booking.serviceData?.imageUrl || 'https://via.placeholder.com/150'}
-                                                className="w-full h-full object-cover"
+                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 ease"
                                                 alt="service"
                                             />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex justify-between items-start mb-1">
-                                                <h3 className="font-black text-slate-800 truncate pr-2">{booking.serviceData?.serviceName}</h3>
-                                                <span className="font-black text-[#1E4D8C] whitespace-nowrap">₹{booking.price}</span>
+                                            <div className="flex justify-between items-start mb-0.5">
+                                                <h3 className="font-black truncate pr-2 text-sm typography-display" style={{ color: 'var(--deep-charcoal)' }}>{booking.serviceData?.serviceName}</h3>
+                                                <span className="font-black whitespace-nowrap text-base typography-number" style={{ color: 'var(--muted-gold)' }}>₹{booking.price}</span>
                                             </div>
-                                            <div className="flex items-center gap-3 text-[11px] font-bold text-slate-400 uppercase tracking-tighter">
-                                                <span className="flex items-center gap-1"><Calendar size={12} /> {booking.slot?.date}</span>
-                                                <span className="flex items-center gap-1"><Clock size={12} /> {formatTo12Hour(booking.slot?.time)}</span>
+                                            <div className="flex items-center gap-2 text-[9px] font-bold tracking-wider typography-label-light" style={{ color: '#666' }}>
+                                                <span className="flex items-center gap-0.5"><Calendar size={10} style={{ color: '#666' }} /> {booking.slot?.date}</span>
+                                                <span className="flex items-center gap-0.5"><Clock size={10} style={{ color: '#666' }} /> {formatTo12Hour(booking.slot?.time)}</span>
                                             </div>
-                                            <div className="mt-3 flex items-center justify-between">
-                                                <Badge className={`text-[9px] font-black px-3 py-1 rounded-full uppercase border ${getStatusStyles(booking.status)}`}>
+                                            <div className="mt-1.5 flex items-center justify-between">
+                                                <Badge className={`text-[8px] font-black px-2 py-0.5 rounded-full border shadow-sm ${getStatusStyles(booking.status)}`}>
                                                     {booking.status}
                                                 </Badge>
-                                                <ChevronRight size={16} className="text-slate-300 group-hover:text-[#1E4D8C] group-hover:translate-x-1 transition-all" />
+                                                <div className="p-1.5 rounded-full transition-all duration-300" style={{ backgroundColor: 'var(--light-greige)' }}>
+                                                    <ChevronRight size={14} className="transition-colors" style={{ color: '#666' }} />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             ))
                     ) : (
-                        <div className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">No Records Found</div>
+                        <div className="py-20 text-center font-bold tracking-widest text-xs typography-label-light" style={{ color: '#666' }}>{t('bookings.noRecordsFound')}</div>
                     )}
                 </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                    <div className="mt-10 flex justify-center items-center gap-3">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                            className="p-4 rounded-2xl typography-label-light disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                            style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
+                        >
+                            <ChevronDown size={20} className="rotate-90" />
+                        </button>
+                        <div className="flex gap-2">
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                <button
+                                    key={page}
+                                    onClick={() => setCurrentPage(page)}
+                                    className={`w-12 h-12 rounded-2xl font-bold text-sm transition-all hover:-translate-y-0.5 shadow-lg hover:shadow-xl typography-label-light ${
+                                        currentPage === page
+                                            ? ''
+                                            : ''
+                                    }`}
+                                    style={
+                                        currentPage === page
+                                            ? { background: 'var(--deep-charcoal)', color: 'white', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)' }
+                                            : { backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }
+                                    }
+                                >
+                                    {page}
+                                </button>
+                            ))}
+                        </div>
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            disabled={currentPage === totalPages}
+                            className="p-4 rounded-2xl typography-label-light disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                            style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
+                        >
+                            <ChevronDown size={20} className="-rotate-90" />
+                        </button>
+                    </div>
+                )}
             </main>
 
             {/* --- BOOKING DETAIL MODAL --- */}
@@ -169,58 +354,48 @@ function BookingPage() {
             {isModalOpen && selectedBooking && (
                 <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
                     {/* Backdrop */}
-                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in" onClick={() => setIsModalOpen(false)} />
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-md animate-in fade-in" onClick={() => setIsModalOpen(false)} />
 
                     {/* Content */}
-                    <div className="relative w-full max-w-lg bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-y-auto no-scrollbar">
+                    <div className="relative w-full max-w-lg rounded-t-[2rem] sm:rounded-[3rem] overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-y-auto no-scrollbar floating-tile">
 
                         {/* Modal Header/Banner with Service Image */}
-                        <div className="relative h-56 bg-slate-200">
+                        <div className="relative h-56 sm:h-64" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
                             <img
                                 src={selectedBooking.service?.imageUrl || selectedBooking.salon?.logoUrl}
                                 className="w-full h-full object-cover"
                                 alt="Service"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                            <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)' }} />
 
                             <button
                                 onClick={() => setIsModalOpen(false)}
-                                className="absolute top-6 right-6 p-2 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/40 transition-all z-20"
+                                className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2.5 sm:p-3 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/30 active:scale-90 transition-all z-20 shadow-xl"
                             >
-                                <X size={20} />
+                                <X size={20} className="sm:size-[22px]" />
                             </button>
 
-                            <div className="absolute bottom-6 left-8 right-8 z-10 flex justify-between items-end">
-                                <div>
-                                    <Badge className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl border-none ${getStatusStyles(selectedBooking.status)}`}>
+                            <div className="absolute bottom-6 left-5 right-5 sm:bottom-8 sm:left-8 sm:right-8 z-10 flex flex-col sm:flex-row justify-between items-end gap-3">
+                                <div className="flex-1">
+                                    <Badge className={`px-4 py-1.5 sm:px-5 sm:py-2 rounded-full text-[9px] sm:text-[10px] font-black tracking-widest shadow-2xl border-none ${getStatusStyles(selectedBooking.status)}`}>
                                         {selectedBooking.statusLabel || selectedBooking.status}
                                     </Badge>
-                                    <h2 className="text-2xl font-black text-white tracking-tight mt-2">{selectedBooking.service?.name}</h2>
+                                    <h2 className="text-xl sm:text-3xl font-black text-white tracking-tight mt-2 sm:mt-3 typography-display">{selectedBooking.service?.name}</h2>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-3xl font-black text-white">₹{selectedBooking.price}</p>
-                                    <p className="text-[10px] font-bold text-white/70 uppercase">Total Amount</p>
+                                    <p className="text-2xl sm:text-4xl font-black typography-number px-4 py-2 rounded-xl border-2 border-white bg-white" style={{ color: 'var(--deep-charcoal)' }}>₹{selectedBooking.price}</p>
+                                    <p className="text-[9px] sm:text-[10px] font-bold text-white/80 tracking-widest typography-label-light">{t('bookings.totalAmount')}</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="p-8 space-y-6">
-
-                            {/* Validity Alert */}
-                            {selectedBooking.status === "PENDING" && (
-                                <div className="bg-amber-50 border border-amber-100 p-3 rounded-2xl flex items-center gap-3">
-                                    <Clock size={16} className="text-amber-600" />
-                                    <p className="text-[10px] font-bold text-amber-800 uppercase tracking-tight">
-                                        Expires on: {new Date(selectedBooking.validTill).toLocaleString()}
-                                    </p>
-                                </div>
-                            )}
+                        <div className="p-5 sm:p-8 space-y-6 sm:space-y-8">
 
                             {/* Included Items Tags */}
                             {selectedBooking.service?.includedItems?.length > 0 && (
                                 <div className="flex flex-wrap gap-2">
                                     {selectedBooking.service.includedItems.map((item: string, idx: number) => (
-                                        <span key={idx} className="px-3 py-1 bg-blue-50 text-[#1E4D8C] text-[9px] font-black uppercase rounded-lg border border-blue-100">
+                                        <span key={idx} className="px-3 py-1.5 sm:px-4 sm:py-2 text-[9px] sm:text-[10px] font-black rounded-xl border shadow-sm typography-label-light" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)', color: 'var(--deep-charcoal)' }}>
                                             ✓ {item}
                                         </span>
                                     ))}
@@ -228,91 +403,88 @@ function BookingPage() {
                             )}
 
                             {/* Info Grid: Date, Time & Staff with Image */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                        <Calendar size={14} className="text-[#1E4D8C]" /> Schedule
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                                <div className="p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border shadow-lg floating-tile" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)' }}>
+                                    <p className="text-[9px] sm:text-[10px] font-black tracking-widest mb-3 sm:mb-4 flex items-center gap-2 typography-label-light" style={{ color: '#666' }}>
+                                        <Calendar size={10} className="sm:size-12" style={{ color: '#666' }} /> {t('bookings.schedule')}
                                     </p>
-                                    <p className="text-sm font-black text-slate-800">{selectedBooking.slot?.date}</p>
-                                    <p className="text-xs font-bold text-slate-500 mt-0.5">{formatTo12Hour(selectedBooking.slot?.time)}</p>
-                                    <p className="text-[10px] font-bold text-[#1E4D8C] mt-1 uppercase tracking-tighter">{selectedBooking.slot?.duration} Minutes Session</p>
+                                    <p className="text-sm sm:text-base font-black typography-display" style={{ color: 'var(--deep-charcoal)' }}>{selectedBooking.slot?.date}</p>
+                                    <p className="text-xs sm:text-sm font-bold mt-1 typography-label-light" style={{ color: '#666' }}>{formatTo12Hour(selectedBooking.slot?.time)}</p>
+                                    <p className="text-[9px] sm:text-[10px] font-bold mt-2 tracking-wider typography-label-light" style={{ color: '#666' }}>{selectedBooking.slot?.duration} {t('bookings.minutesSession')}</p>
                                 </div>
 
-                                <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                        <User size={14} className="text-[#1E4D8C]" /> Specialist
+                                <div className="p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border shadow-lg floating-tile" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)' }}>
+                                    <p className="text-[9px] sm:text-[10px] font-black tracking-widest mb-3 sm:mb-4 flex items-center gap-2 typography-label-light" style={{ color: '#666' }}>
+                                        <User size={10} className="sm:size-12" style={{ color: '#666' }} /> {t('bookings.specialist')}
                                     </p>
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-3 sm:gap-4">
                                         <img
                                             src={selectedBooking.staff?.imageUrl}
-                                            className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+                                            className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border-3 border-white shadow-lg"
                                             alt="Staff"
                                         />
-                                        <div>
-                                            <p className="text-sm font-black text-slate-800">{selectedBooking.staff?.name}</p>
-                                            <div className="flex items-center gap-1">
-                                                <Star size={10} className="fill-orange-400 text-orange-400" />
-                                                <span className="text-[10px] font-bold text-slate-500">{selectedBooking.staff?.rating?.average} ({selectedBooking.staff?.experienceYears}y exp)</span>
-                                            </div>
+                                        <div className="flex-1">
+                                            <p className="text-sm sm:text-base font-black typography-display" style={{ color: 'var(--deep-charcoal)' }}>{selectedBooking.staff?.name}</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Salon Card with Logo */}
-                            <div className="p-5 bg-slate-900 rounded-[2.5rem] text-white space-y-4 shadow-xl">
-                                <div className="flex items-center gap-4 border-b border-white/10 pb-4">
-                                    <div className="w-12 h-12 bg-white rounded-2xl p-1 shrink-0 overflow-hidden">
-                                        <img src={selectedBooking.salon?.logoUrl} className="w-full h-full object-contain" alt="Salon Logo" />
+                            <div className="p-4 sm:p-6 rounded-[2rem] sm:rounded-[2.5rem] text-white space-y-5 sm:space-y-6 shadow-2xl" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
+                                <div className="flex items-center gap-3 sm:gap-5 border-b border-white/10 pb-5 sm:pb-6">
+                                    <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-2xl p-1.5 shrink-0 overflow-hidden shadow-lg">
+                                        <img src={selectedBooking.salon?.logoUrl} className="w-full h-full object-contain" alt={t('booking.salonLogo') || 'Salon Logo'} />
                                     </div>
-                                    <div className="flex-1">
-                                        <p className="text-[9px] font-black text-white/50 uppercase tracking-[0.2em]">Studio</p>
-                                        <h4 className="text-sm font-black tracking-tight">{selectedBooking.salon?.name}</h4>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[8px] sm:text-[9px] font-black text-white/50 tracking-[0.2em] typography-label-light">{t('bookings.studio')}</p>
+                                        <h4 className="text-sm sm:text-base font-black tracking-tight truncate typography-display">{selectedBooking.salon?.name}</h4>
                                     </div>
                                     <a
                                         href={selectedBooking.salon?.directionsUrl}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="p-3 bg-white/10 hover:bg-white/20 rounded-2xl transition-all"
+                                        className="p-3 sm:p-4 bg-white/10 hover:bg-white/20 rounded-2xl transition-all active:scale-95 shrink-0"
                                     >
-                                        <Navigation size={18} className="text-white" />
+                                        <Navigation size={8} className="sm:size-10 text-white" />
                                     </a>
                                 </div>
-                                <div className="flex gap-3">
-                                    <MapPin size={16} className="text-blue-400 shrink-0" />
-                                    <p className="text-[11px] font-medium leading-relaxed opacity-80">
+                                <div className="flex gap-3 sm:gap-4">
+                                    <MapPin size={6} className="sm:size-8 text-slate-400 shrink-0" />
+                                    <p className="text-[10px] sm:text-[11px] font-medium leading-relaxed opacity-90 typography-label-light">
                                         {selectedBooking.salon?.address?.street}, {selectedBooking.salon?.address?.city}, {selectedBooking.salon?.address?.state} - {selectedBooking.salon?.address?.pincode}
                                     </p>
                                 </div>
                             </div>
 
                             {/* Customer Row */}
-                            <div className="bg-slate-50 p-4 rounded-[2rem] border border-slate-100 flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-2xl bg-blue-100 flex items-center justify-center text-[#1E4D8C] font-black text-xs">
+                            <div className="p-3 sm:p-4 rounded-[1.5rem] sm:rounded-[2rem] border flex items-center justify-between shadow-lg floating-tile" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)' }}>
+                                <div className="flex items-center gap-2 sm:gap-3">
+                                    <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-black text-xs sm:text-sm shadow-lg shrink-0" style={{ backgroundColor: 'var(--deep-charcoal)', color: 'white' }}>
                                         {selectedBooking.user?.name?.charAt(0)}
                                     </div>
-                                    <div>
-                                        <p className="text-[9px] font-black text-slate-400 uppercase">Booked By</p>
-                                        <p className="text-sm font-black text-slate-800">{selectedBooking.user?.name}</p>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-[8px] sm:text-[9px] font-black tracking-widest typography-label-light" style={{ color: '#666' }}>{t('bookings.bookedBy')}</p>
+                                        <p className="text-xs sm:text-sm font-black truncate typography-display" style={{ color: 'var(--deep-charcoal)' }}>{selectedBooking.user?.name}</p>
                                     </div>
                                 </div>
-                                <div className="flex flex-col items-end">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase">Contact</p>
-                                    <p className="text-xs font-bold text-slate-700">{selectedBooking.user?.phone}</p>
+                                <div className="flex flex-col items-end shrink-0 ml-2">
+                                    <p className="text-[8px] sm:text-[9px] font-black tracking-widest typography-label-light" style={{ color: '#666' }}>{t('bookings.contact')}</p>
+                                    <p className="text-xs sm:text-sm font-bold typography-label-light" style={{ color: '#666' }}>{selectedBooking.user?.phone}</p>
                                 </div>
                             </div>
 
                             {/* Footer Actions */}
-                            <div className="pt-2 space-y-3">
-                                <p className="text-center text-[9px] font-bold text-slate-300 uppercase tracking-[0.2em]">
-                                    Transaction ID: {selectedBooking.referenceId}
+                            <div className="pt-4 space-y-4">
+                                <p className="text-center text-[9px] font-bold tracking-[0.2em] typography-label-light" style={{ color: '#666' }}>
+                                    Booking ID: {selectedBooking.bookingId}
                                 </p>
                                 <button
                                     onClick={() => setIsModalOpen(false)}
-                                    className="w-full py-4 bg-[#1E4D8C] text-white rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-blue-900/20 active:scale-95 transition-all"
+                                    className="w-full py-5 text-white rounded-[2rem] font-black text-xs tracking-[0.2em] shadow-xl hover:shadow-2xl active:scale-95 transition-all typography-label-light"
+                                    style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}
                                 >
-                                    Close Details
+                                    {t('bookings.closeDetails')}
                                 </button>
                             </div>
                         </div>

@@ -1,0 +1,508 @@
+/* Glassmorphism Effects */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.glass-dark {
+  background: rgba(30, 30, 30, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-overlay {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Unified Glass Card - Design System */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  box-shadow: var(--ambient-glow);
+}
+
+/* Salon Owner Model - Floating Tile */
+.floating-tile {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--light-greige);
+  border-radius: 16px;
+  box-shadow: var(--floating-tile-shadow);
+}
+
+/* Salon Owner Model - Main Stage Container */
+.main-stage {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--muted-gold);
+  border-radius: 24px;
+  box-shadow: var(--floating-tile-shadow);
+}
+
+/* Salon Owner Model - Ghost Row Table */
+.ghost-row-table tr {
+  height: 64px;
+  border-bottom: 1px solid var(--ghost-row-line);
+}
+
+.ghost-row-table tr:last-child {
+  border-bottom: none;
+}
+
+.ghost-row-table th,
+.ghost-row-table td {
+  border: none;
+  padding: 0 24px;
+}
+
+/* Salon Owner Model - Typography */
+.typography-number {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+  color: var(--deep-charcoal);
+}
+
+.typography-label {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--deep-charcoal);
+}
+
+.typography-label-light {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: #666;
+}
+
+.glass-modal {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* Material Design 3 Elevation System */
+.elevation-1 {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.12);
+}
+
+.elevation-2 {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.18), 0 4px 8px rgba(0, 0, 0, 0.14);
+}
+
+.elevation-3 {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.10);
+}
+
+.elevation-4 {
+  box-shadow: 0 15px 25px rgba(0, 0, 0, 0.15), 0 5px 10px rgba(0, 0, 0, 0.05);
+}
+
+.elevation-5 {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* Google Material Design 3 Animations */
+@keyframes md3-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes md3-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes md3-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes md3-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes md3-bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes md3-shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes md3-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes md3-ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.animate-md3-fade-in {
+  animation: md3-fade-in 0.4s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.animate-md3-scale-in {
+  animation: md3-scale-in 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.animate-md3-slide-up {
+  animation: md3-slide-up 0.4s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.animate-md3-slide-in-right {
+  animation: md3-slide-in-right 0.4s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.animate-md3-bounce-in {
+  animation: md3-bounce-in 0.5s cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Staggered animation delays */
+.animate-delay-100 {
+  animation-delay: 100ms;
+}
+
+.animate-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animate-delay-300 {
+  animation-delay: 300ms;
+}
+
+.animate-delay-400 {
+  animation-delay: 400ms;
+}
+
+.animate-delay-500 {
+  animation-delay: 500ms;
+}
+
+/* Ripple effect container */
+.ripple-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(0);
+  animation: md3-ripple 0.6s linear;
+  pointer-events: none;
+}
+
+/* Hover lift effect */
+.hover-lift {
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Card entrance animation */
+.card-enter {
+  animation: md3-fade-in 0.5s cubic-bezier(0.2, 0, 0, 1) forwards;
+  opacity: 0;
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  transition-duration: 200ms;
+}
+
+/* Disable transitions on load */
+.no-transition * {
+  transition: none !important;
+}
+
+/* Luxury Welcome Header Animation */
+@keyframes welcome-fade-in {
+  0% {
+    opacity: 0;
+    letter-spacing: 0.1em;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    letter-spacing: normal;
+    transform: translateY(0);
+  }
+}
+
+.welcome-animate {
+  animation: welcome-fade-in 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  opacity: 0;
+}
+
+/* Staggered Card Animation */
+@keyframes card-slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-stagger-animate {
+  animation: card-slide-up 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  opacity: 0;
+}
+
+/* Artist Image Hover Effects */
+.artist-image-container {
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.artist-image-container:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+}
+
+/* Salon Card Hover Effects */
+.salon-card {
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.salon-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.salon-card:hover .book-now-button {
+  background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+}
+
+/* Trending Badge Pulse Animation */
+@keyframes subtle-pulse {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.trending-pulse {
+  animation: subtle-pulse 3s ease-in-out infinite;
+}
+
+/* Smooth Luxury Transitions */
+.luxury-transition {
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Shimmer Animation for Skeleton Screens */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Bounce Animation for Artist Cards */
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.artist-bounce {
+  animation: bounce-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+/* Slide Up Animation for Salon Cards */
+@keyframes slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.salon-slide-up {
+  animation: slide-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+/* Blur Reveal Animation */
+@keyframes blur-reveal {
+  0% {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+.blur-reveal {
+  animation: blur-reveal 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+/* Haptic Expansion Animation */
+@keyframes haptic-expand {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.haptic-expand {
+  animation: haptic-expand 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+/* Letter-by-Letter Reveal Animation */
+@keyframes letter-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.letter-reveal {
+  animation: letter-reveal 0.8s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+/* Header Slide Up Animation */
+@keyframes header-slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.header-slide-up {
+  animation: header-slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* UI Fade In Animation */
+@keyframes ui-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ui-fade-in {
+  animation: ui-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}

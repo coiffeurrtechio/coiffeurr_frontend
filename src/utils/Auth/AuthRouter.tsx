@@ -14,7 +14,7 @@ const AuthRouter: React.FC<AuthRouterProps> = ({ element, allowedRoles }) => {
 
   console.log("userRole = ",userRole);
   console.log("allowedRoles = ",allowedRoles);
-  console.log("allowedRoles && !allowedRoles.includes(userRole) = ",allowedRoles && !allowedRoles.includes(userRole));
+  console.log("allowedRoles && !allowedRoles.includes(userRole) = ",allowedRoles ? !allowedRoles.includes(userRole) : false);
   
   // 🔒 If not logged in
   // if (!isAuthenticated) {

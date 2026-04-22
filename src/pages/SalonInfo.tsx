@@ -1,6 +1,7 @@
 import { Button } from "../components/ui_components/button"
 import { Card, CardContent } from "../components/ui_components/card"
 import { ServiceCard } from "../components/service_card"
+import { useTranslation } from 'react-i18next';
 import {
     Scissors,
     Sparkles,
@@ -38,6 +39,7 @@ import { Link } from "react-router-dom";
 
 
 export default function SalonInfo() {
+    const { t } = useTranslation();
     const [active, setActive] = useState("salon");
 const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedType, setSelectedType] = useState<string>("all");
@@ -79,7 +81,8 @@ const [searchTerm, setSearchTerm] = useState<string>("");
 
   // ------------------ FILTER LOGIC ------------------
 
-  const salonTypes = ["all", "Unisex", "Women Only", "Men Only"];
+  const { t } = useTranslation();
+  const salonTypes = ["all", t('salonInfo.unisex') || "Unisex", t('salonInfo.womenOnly') || "Women Only", t('salonInfo.menOnly') || "Men Only"];
 
   const filteredSalons = salons.filter((salon) => {
     const matchesSearch =
@@ -108,43 +111,43 @@ const [searchTerm, setSearchTerm] = useState<string>("");
 
     const services = [
         {
-            title: "Premium Haircut & Styling",
-            description: "Expert cuts and styling for all hair types with premium products",
+            title: t('salonInfo.premiumHaircut') || "Premium Haircut & Styling",
+            description: t('salonInfo.haircutDesc') || "Expert cuts and styling for all hair types with premium products",
             price: "$85",
             duration: "60 min",
             icon: <Scissors className="w-6 h-6 text-accent-foreground" />,
         },
         {
-            title: "Luxury Manicure",
-            description: "Complete nail care with gel polish and cuticle treatment",
+            title: t('salonInfo.luxuryManicure') || "Luxury Manicure",
+            description: t('salonInfo.manicureDesc') || "Complete nail care with gel polish and cuticle treatment",
             price: "$45",
             duration: "45 min",
             icon: <Sparkles className="w-6 h-6 text-accent-foreground" />,
         },
         {
-            title: "Signature Pedicure",
-            description: "Relaxing foot treatment with massage and premium polish",
+            title: t('salonInfo.signaturePedicure') || "Signature Pedicure",
+            description: t('salonInfo.pedicureDesc') || "Relaxing foot treatment with massage and premium polish",
             price: "$55",
             duration: "60 min",
             icon: <Heart className="w-6 h-6 text-accent-foreground" />,
         },
         {
-            title: "Rejuvenating Facial",
-            description: "Deep cleansing facial with personalized skincare treatment",
+            title: t('salonInfo.rejuvenatingFacial') || "Rejuvenating Facial",
+            description: t('salonInfo.facialDesc') || "Deep cleansing facial with personalized skincare treatment",
             price: "$95",
             duration: "75 min",
             icon: <Star className="w-6 h-6 text-accent-foreground" />,
         },
         {
-            title: "Hair Coloring",
-            description: "Professional color services from highlights to full color",
+            title: t('salonInfo.hairColoring') || "Hair Coloring",
+            description: t('salonInfo.coloringDesc') || "Professional color services from highlights to full color",
             price: "$120",
             duration: "120 min",
             icon: <Sparkles className="w-6 h-6 text-accent-foreground" />,
         },
         {
-            title: "Bridal Package",
-            description: "Complete bridal beauty package for your special day",
+            title: t('salonInfo.bridalPackage') || "Bridal Package",
+            description: t('salonInfo.bridalDesc') || "Complete bridal beauty package for your special day",
             price: "$250",
             duration: "180 min",
             icon: <Heart className="w-6 h-6 text-accent-foreground" />,
@@ -153,20 +156,20 @@ const [searchTerm, setSearchTerm] = useState<string>("");
 
     const artists = [
         {
-            name: "Sofia Martinez",
-            specialty: "Hair Styling & Color",
+            name: t('salonInfo.artist1Name') || "Sofia Martinez",
+            specialty: t('salonInfo.artist1Specialty') || "Hair Styling & Color",
             experience: "8 years",
             image: "/professional-female-hairstylist.jpg",
         },
         {
-            name: "Emma Chen",
-            specialty: "Nail Art & Manicure",
+            name: t('salonInfo.artist2Name') || "Emma Chen",
+            specialty: t('salonInfo.artist2Specialty') || "Nail Art & Manicure",
             experience: "6 years",
             image: "/facial_service.jpg",
         },
         {
-            name: "Isabella Rodriguez",
-            specialty: "Skincare & Facials",
+            name: t('salonInfo.artist3Name') || "Isabella Rodriguez",
+            specialty: t('salonInfo.artist3Specialty') || "Skincare & Facials",
             experience: "10 years",
             image: "/professional-esthetician.jpg",
         },
@@ -196,7 +199,7 @@ const [searchTerm, setSearchTerm] = useState<string>("");
                         <CardContent className="p-6 text-center">
                             <h3 className="font-semibold text-lg mb-2">{artist.name}</h3>
                             <p className="text-muted-foreground text-sm mb-1">{artist.specialty}</p>
-                            <p className="text-xs text-muted-foreground">{artist.experience} experience</p>
+                            <p className="text-xs text-muted-foreground">{artist.experience} {t('salonInfo.experience')}</p>
                         </CardContent>
                     </Card>
                 ))}
@@ -271,7 +274,7 @@ const [searchTerm, setSearchTerm] = useState<string>("");
                                                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
                                                         <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                                                         <span>{salon.rating}</span>
-                                                        <span>({salon.reviews} reviews)</span>
+                                                        <span>({salon.reviews} {t('salons.reviews')})</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -296,7 +299,7 @@ const [searchTerm, setSearchTerm] = useState<string>("");
                                                 <span className="text-muted-foreground">
                                                     {formatTime(salon.openingTime)} - {formatTime(salon.closingTime)}
                                                 </span>
-                                                <span className="text-xs text-green-600">• Open Now</span>
+                                                <span className="text-xs text-green-600">• {t('salonInfo.openNow')}</span>
                                             </div>
                                             <div className="flex items-center gap-2 text-sm">
                                                 <Phone className="h-4 w-4 text-muted-foreground" />
@@ -312,19 +315,19 @@ const [searchTerm, setSearchTerm] = useState<string>("");
                                             ))}
                                             {(salon.salonServices?.length ?? 0) > 3 && (
                                                 <Badge variant="outline" className="text-xs">
-                                                    +{(salon.salonServices?.length ?? 0) - 3} more
+                                                    +{(salon.salonServices?.length ?? 0) - 3} {t('salonInfo.more')}
                                                 </Badge>
                                             )}
                                         </div>
 
                                         <div className="flex items-center justify-between">
                                             {salon.priceRange && <div className="text-sm">
-                                                <span className="text-muted-foreground">Price range: </span>
+                                                <span className="text-muted-foreground">{t('salonInfo.priceRange')}</span>
                                                 <span className="font-medium">{salon.priceRange}</span>
                                             </div>}
                                             <Link to={`/salons/${salon.id}`}>
                                                 <Button size="sm" className="group">
-                                                    View Details
+                                                    {t('salonInfo.viewDetails')}
                                                     <ArrowRight className="ml-1 h-3 w-3 group-hover:translate-x-1 transition-transform" />
                                                 </Button>
                                             </Link>
@@ -338,8 +341,8 @@ const [searchTerm, setSearchTerm] = useState<string>("");
                             <div className="text-center py-12">
                                 <div className="text-muted-foreground mb-4">
                                     <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                                    <p className="text-lg">No salons found matching your criteria</p>
-                                    <p className="text-sm">Try adjusting your search or filter options</p>
+                                    <p className="text-lg">{t('salonInfo.noSalonsFoundCriteria')}</p>
+                                    <p className="text-sm">{t('salonInfo.tryAdjustingSearch')}</p>
                                 </div>
                             </div>
                         )}

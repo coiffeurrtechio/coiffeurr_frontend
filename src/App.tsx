@@ -5,6 +5,8 @@ import Config from "./configs/config";
 import { login } from "./utils/Storage/slice/authSlice";
 import { useNavigate } from "react-router-dom";
 import { ToastProvider } from "./components/Toast";
+import ParticleSystem from "./components/ParticleSystem";
+import './i18n/config';
 
 const App = () => {
   const THIRTY_MINUTES = 30 * 60 * 1000;
@@ -76,6 +78,7 @@ const App = () => {
 
   return (
     <ToastProvider>
+      <ParticleSystem />
       <Router />
       
     </ToastProvider>

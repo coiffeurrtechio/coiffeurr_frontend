@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   ShieldCheck, Mail, Smartphone, ArrowRight, 
@@ -9,6 +10,7 @@ import Config from '../configs/config';
 import { useToast } from '../components/Toast';
 
 const UniversalVerification: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { showToast } = useToast();
@@ -49,11 +51,11 @@ const UniversalVerification: React.FC = () => {
   const handleSendOTP = async () => {
     // Validation based on the active condition
     if (shouldVerifyEmail && !formData.email) {
-      showToast({ type: 'error', title: 'Email Required', message: 'Please enter your email.' });
+      showToast({ type: 'error', title: t('verification.emailRequired'), message: t('verification.pleaseEnterEmail') });
       return;
     }
     if (shouldVerifyPhone && !formData.phone) {
-      showToast({ type: 'error', title: 'Phone Required', message: 'Please enter your phone number.' });
+      showToast({ type: 'error', title: t('verification.phoneRequired'), message: t('verification.pleaseEnterPhone') });
       return;
     }
 
@@ -70,13 +72,13 @@ const UniversalVerification: React.FC = () => {
       });
 
       const resData = await response.json();
-      if (!response.ok) throw new Error(resData?.detail || "Failed to send OTP");
+      if (!response.ok) throw new Error(resData?.detail || t('verification.failedToSendOTP'));
       
-      showToast({ type: 'success', title: 'Code Sent', message: 'Check your device.' });
+      showToast({ type: 'success', title: t('verification.codeSent'), message: t('verification.checkYourDevice') });
       setStep(2);
       setTimer(30);
     } catch (err: any) {
-      showToast({ type: 'error', title: 'Error', message: err.message });
+      showToast({ type: 'error', title: t('verification.error'), message: err.message });
     } finally {
       setLoading(false);
     }
@@ -84,7 +86,7 @@ const UniversalVerification: React.FC = () => {
 
   const handleVerifyAndComplete = async () => {
     if (formData.otp.length < 4) {
-      showToast({ type: 'error', title: 'Invalid OTP', message: 'Enter the code.' });
+      showToast({ type: 'error', title: t('verification.invalidOTP'), message: t('verification.enterCode') });
       return;
     }
 
@@ -100,7 +102,7 @@ const UniversalVerification: React.FC = () => {
         }),
       });
 
-      if (!verifyResponse.ok) throw new Error('Invalid OTP.');
+      if (!verifyResponse.ok) throw new Error(t('verification.invalidOTP'));
 
       const updateResponse = await fetch(`${Config.API_AUTH_URL}/update-profile`, {
         method: 'PATCH',
@@ -115,9 +117,9 @@ const UniversalVerification: React.FC = () => {
         }),
       });
 
-      if (!updateResponse.ok) throw new Error('Profile update failed.');
+      if (!updateResponse.ok) throw new Error(t('verification.profileUpdateFailed'));
 
-      showToast({ type: 'success', title: 'Success!', message: 'Profile updated.' });
+      showToast({ type: 'success', title: t('verification.success'), message: t('verification.profileUpdated') });
       
       const updatedAuth = { ...authData };
       if (shouldVerifyEmail) updatedAuth.user.user.email = formData.email;
@@ -126,22 +128,22 @@ const UniversalVerification: React.FC = () => {
 
       navigate('/profile');
     } catch (err: any) {
-      showToast({ type: 'error', title: 'Update Failed', message: err.message });
+      showToast({ type: 'error', title: t('verification.updateFailed'), message: err.message });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F7FE] flex items-center justify-center p-4 font-sans">
-      <div className="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden relative">
+    <div className="min-h-screen bg-[#F5F5F0] flex items-center justify-center p-4 font-sans">
+      <div className="w-full max-w-md bg-white border border-gray-200 rounded-[2.5rem] shadow-sm overflow-hidden relative" style={{ boxShadow: "rgba(0,0,0,0.03) 0 1px 3px" }}>
         <div className="p-8 relative z-10">
           <header className="text-center mb-10">
-            <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <ShieldCheck className="text-[#1E4D8C]" size={32} />
+            <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <ShieldCheck className="text-[#D4AF37]" size={32} />
             </div>
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase">
-              {step === 1 ? 'Link Account' : 'Verify Details'}
+            <h1 className="text-2xl font-black text-[#1a1a1a] tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+              {step === 1 ? t('verification.linkAccount') : t('verification.verifyDetails')}
             </h1>
           </header>
 
@@ -152,7 +154,7 @@ const UniversalVerification: React.FC = () => {
                 {/* User types Email ONLY if shouldVerifyEmail is true */}
                 {shouldVerifyEmail && (
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
+                    <label className="text-[10px] font-black text-[#4b5563] tracking-widest ml-1">{t('verification.emailAddress')}</label>
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                       <input 
@@ -160,8 +162,8 @@ const UniversalVerification: React.FC = () => {
                         type="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        placeholder="Enter your email"
-                        className="w-full h-14 pl-12 pr-4 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-blue-50 transition-all"
+                        placeholder={t('verification.enterYourEmail')}
+                        className="w-full h-14 pl-12 pr-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-[#1a1a1a] outline-none focus:ring-4 focus:ring-[#D4AF37]/50 transition-all"
                       />
                     </div>
                   </div>
@@ -170,7 +172,7 @@ const UniversalVerification: React.FC = () => {
                 {/* User types Phone ONLY if shouldVerifyPhone is true */}
                 {shouldVerifyPhone && (
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Phone Number</label>
+                    <label className="text-[10px] font-black text-[#4b5563] tracking-widest ml-1">{t('verification.phoneNumber')}</label>
                     <div className="relative">
                       <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                       <input 
@@ -178,8 +180,8 @@ const UniversalVerification: React.FC = () => {
                         type="tel"
                         value={formData.phone}
                         onChange={handleInputChange}
-                        placeholder="+91 98765..."
-                        className="w-full h-14 pl-12 pr-4 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-blue-50 transition-all"
+                        placeholder={t('verification.phonePlaceholder')}
+                        className="w-full h-14 pl-12 pr-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-[#1a1a1a] outline-none focus:ring-4 focus:ring-[#D4AF37]/50 transition-all"
                       />
                     </div>
                   </div>
@@ -191,47 +193,49 @@ const UniversalVerification: React.FC = () => {
                   className="w-full"
                   icon={<ArrowRight size={18}/>}
                 >
-                  Send OTP
+                  {t('verification.sendOTP')}
                 </Button>
               </div>
             ) : (
               /* OTP Step Remains the Same */
               <div className="space-y-6">
-                <div className="flex justify-between items-center bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                <div className="flex justify-between items-center bg-gray-50 p-4 rounded-2xl border border-gray-200">
                   <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-blue-400 uppercase">Sending to</span>
-                    <span className="text-xs font-bold text-[#1E4D8C]">
+                    <span className="text-[9px] font-black text-[#4b5563]">{t('verification.sendingTo')}</span>
+                    <span className="text-xs font-bold text-[#1a1a1a]">
                         {shouldVerifyEmail ? formData.email : formData.phone}
                     </span>
                   </div>
-                  <button onClick={() => setStep(1)} className="p-2 text-[#1E4D8C] hover:bg-white rounded-xl transition-all">
+                  <button onClick={() => setStep(1)} className="p-2 text-[#D4AF37] hover:bg-gray-100 rounded-xl transition-all">
                     <Edit3 size={16} />
                   </button>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center block">Enter 6-Digit OTP</label>
+                  <label className="text-[10px] font-black text-[#4b5563] tracking-widest text-center block">{t('verification.enter6DigitOTP')}</label>
                   <input 
                     name="otp"
-                    type="text"
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     maxLength={6}
                     value={formData.otp}
                     onChange={handleInputChange}
-                    placeholder="••••••"
-                    className="w-full h-16 bg-gray-50 border-none rounded-2xl text-center text-3xl font-black tracking-[0.3em] outline-none focus:ring-4 focus:ring-blue-100 transition-all"
+                    placeholder={t('verification.otpPlaceholder')}
+                    className="w-full h-16 bg-gray-50 border border-gray-200 rounded-2xl text-center text-3xl font-black tracking-[0.3em] text-[#1a1a1a] outline-none focus:ring-4 focus:ring-[#D4AF37]/50 transition-all"
                   />
                 </div>
 
                 <Button onClick={handleVerifyAndComplete} isLoading={loading} className="w-full">
-                  Confirm & Update
+                  {t('verification.confirmAndUpdate')}
                 </Button>
 
                 <div className="text-center">
                   {timer > 0 ? (
-                    <p className="text-[10px] font-bold text-gray-400 uppercase">Resend in {timer}s</p>
+                    <p className="text-[10px] font-bold text-[#4b5563]">{t('verification.resendIn', { timer })}</p>
                   ) : (
-                    <button onClick={handleSendOTP} className="text-[10px] font-black text-[#1E4D8C] uppercase tracking-widest flex items-center gap-2 mx-auto">
-                      <RefreshCcw size={12} /> Resend Code
+                    <button onClick={handleSendOTP} className="text-[10px] font-black text-[#D4AF37] tracking-widest flex items-center gap-2 mx-auto">
+                      <RefreshCcw size={12} /> {t('verification.resendCode')}
                     </button>
                   )}
                 </div>

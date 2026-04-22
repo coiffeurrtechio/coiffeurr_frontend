@@ -17,7 +17,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       devOptions: {
-        enabled: true 
+        enabled: true
       },
       manifest: {
         name: 'Coiffure App',
@@ -47,6 +47,13 @@ export default defineConfig({
       }
     })
   ],
+  server: {
+    port: 3001,
+    strictPort: true,
+    allowedHosts: [
+      '1e4e-2405-201-d035-1107-3d64-cbd3-cb9b-dd5a.ngrok-free.app'
+    ]
+  },
   build: {
     outDir: 'dist',
     // Helpful for debugging PWA builds
