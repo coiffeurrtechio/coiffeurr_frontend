@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, X, Clock, Search, Filter, MapPin, Check, Star } from 'lucide-react';
+import { ArrowLeft, X, Clock, Search, Filter, MapPin, Check, Star, ChevronUp, ChevronDown, Command } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '../components/ui_components/button';
 import { useApi } from '../API/SalonsAPIs/ALLSalonAPI';
-// import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI"; // Ensure this path is correct
+import Fuse from 'fuse.js';
+import { normalizeSearchQuery, getMatchingServices } from '../utils/semanticSearchMapping';
 
 function SearchPage() {
   const { t } = useTranslation();
@@ -20,7 +21,12 @@ function SearchPage() {
 
   const [searchQuery, setSearchQuery] = useState(urlSearchQuery || "");
   const [salons, setSalons] = useState<any[]>([]);
+  const [quickResults, setQuickResults] = useState<any[]>([]);
   const [fetchSalonAPI, setFetchSalonAPI] = useState(false);
+  const [isQuickLoading, setIsQuickLoading] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -29,7 +35,67 @@ function SearchPage() {
     limit: urllimit || "10"
   });
 
-  // --- 1. The API Execution Logic ---
+  // Trending search tags
+  const trendingTags = ["Haircut", "Beard Trim", "Facial", "Spa", "Hair Color", "Keratin", "Manicure", "Pedicure", "Waxing", "Bridal", "Massage", "Near Me", "Top Rated"];
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  // Get user location on mount
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+        }
+      );
+    }
+  }, []);
+
+  // --- 1. Quick Search for Instant Results ---
+  const executeQuickSearch = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setQuickResults([]);
+      setShowResults(false);
+      return;
+    }
+    setIsQuickLoading(true);
+    setShowResults(true);
+    try {
+      const normalizedQuery = normalizeSearchQuery(query);
+      const apiParams = new URLSearchParams();
+      if (normalizedQuery?.trim()) apiParams.append("query", normalizedQuery);
+      if (tempFilters.city?.trim()) apiParams.append("city", tempFilters.city.trim());
+      apiParams.append("limit", "5"); // Get top 5 results instantly
+      if (userLocation) {
+        apiParams.append("user_latitude", userLocation.latitude.toString());
+        apiParams.append("user_longitude", userLocation.longitude.toString());
+        apiParams.append("max_distance_km", "30");
+      }
+
+      const res = await apiRequest<any[]>(`/salons/super_search?${apiParams.toString()}`);
+      if (res.data) {
+        // Apply fuzzy search with Fuse.js
+        const fuse = new Fuse(res.data, {
+          keys: ['salonName', 'services'],
+          threshold: 0.3,
+          ignoreLocation: true,
+        });
+        const fuzzyResults = fuse.search(normalizedQuery);
+        setQuickResults(fuzzyResults.map(r => r.item));
+      }
+    } catch (err) {
+      console.error("Quick search failed:", err);
+    } finally {
+      setIsQuickLoading(false);
+    }
+  }, [apiRequest, tempFilters.city, userLocation]);
+
+  // --- 2. Full Search for View More ---
   const executeSearch = useCallback(async (name: string, city: string, limit: string) => {
     if (!name.trim()) {
       setSalons([]);
@@ -37,21 +103,70 @@ function SearchPage() {
     }
     setFetchSalonAPI(true);
     try {
+      const normalizedQuery = normalizeSearchQuery(name);
       const apiParams = new URLSearchParams();
       if (city?.trim()) apiParams.append("city", city.trim());
-      if (name?.trim()) apiParams.append("query", name.trim());
+      if (normalizedQuery?.trim()) apiParams.append("query", normalizedQuery);
       if (limit) apiParams.append("limit", limit);
+      if (userLocation) {
+        apiParams.append("user_latitude", userLocation.latitude.toString());
+        apiParams.append("user_longitude", userLocation.longitude.toString());
+        apiParams.append("max_distance_km", "30");
+      }
 
-      const res = await apiRequest<any[]>(`/salons/search?${apiParams.toString()}`);
-      if (res.data) setSalons(res.data);
+      const res = await apiRequest<any[]>(`/salons/super_search?${apiParams.toString()}`);
+      if (res.data) {
+        // Apply fuzzy search with Fuse.js
+        const fuse = new Fuse(res.data, {
+          keys: ['salonName', 'services'],
+          threshold: 0.3,
+          ignoreLocation: true,
+        });
+        const fuzzyResults = fuse.search(normalizedQuery);
+        setSalons(fuzzyResults.map(r => r.item));
+      }
     } catch (err) {
       console.error("Search failed:", err);
     } finally {
       setFetchSalonAPI(false);
     }
-  }, [apiRequest]);
+  }, [apiRequest, userLocation]);
 
-  // --- 2. Debounce Implementation ---
+  // --- 3. Keyboard Navigation Handler ---
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!showResults || quickResults.length === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedIndex(prev => (prev + 1) % quickResults.length);
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedIndex(prev => (prev - 1 + quickResults.length) % quickResults.length);
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (quickResults[selectedIndex]) {
+          handleSalonSelect(quickResults[selectedIndex]);
+        }
+        break;
+      case 'Escape':
+        setShowResults(false);
+        break;
+    }
+  }, [showResults, quickResults, selectedIndex]);
+
+  // --- 4. Debounced Quick Search ---
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      executeQuickSearch(searchQuery);
+    }, 300); // 300ms for instant results
+
+    return () => clearTimeout(handler);
+  }, [searchQuery, executeQuickSearch]);
+
+  // --- 5. Debounce Implementation for Full Search ---
   useEffect(() => {
     const handler = setTimeout(() => {
       executeSearch(searchQuery, tempFilters.city, tempFilters.limit);
@@ -63,6 +178,7 @@ function SearchPage() {
   const handlechangevalue = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
+    setSelectedIndex(0); // Reset selected index
 
     // Clear the existing timer if the user is still typing
     if (searchTimeoutRef.current) {
@@ -73,6 +189,17 @@ function SearchPage() {
     searchTimeoutRef.current = setTimeout(() => {
       executeSearch(value, tempFilters.city, tempFilters.limit);
     }, 400);
+  };
+
+  const handleTagClick = (tag: string) => {
+    setSearchQuery(tag);
+    setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+    executeSearch(tag, tempFilters.city, tempFilters.limit);
+  };
+
+  const handleViewMore = () => {
+    setShowResults(false);
+    executeSearch(searchQuery, tempFilters.city, tempFilters.limit);
   };
 
   useEffect(() => {
@@ -126,24 +253,101 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
         <div className="flex-1 relative">
           {/* The Form handles the "Enter" key automatically */}
           <form onSubmit={handleSearchSubmit}>
-            <input
-              ref={searchInputRef}
-              type="text"
-              placeholder={t('search.searchForSalons')}
-              className="w-full bg-white/95 backdrop-blur-md rounded-xl px-4 py-3 outline-none text-sm font-medium focus:ring-2 focus:ring-gray-200 transition-all text-gray-800 placeholder-gray-400 border border-gray-200 shadow-sm"
-              value={searchQuery}
-              onChange={handlechangevalue}
-            />
+            <div className="relative">
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder={t('search.searchForSalons')}
+                className="w-full bg-white/95 backdrop-blur-md rounded-xl px-4 py-3 outline-none text-sm font-medium transition-all text-gray-800 placeholder-gray-400 border-2 shadow-sm"
+                style={{
+                  borderColor: showResults ? 'rgba(30, 77, 140, 0.6)' : 'rgba(0, 0, 0, 0.1)',
+                  boxShadow: showResults ? '0 0 0 3px rgba(30, 77, 140, 0.2), 0 0 20px rgba(30, 77, 140, 0.15)' : '0 4px 6px rgba(0, 0, 0, 0.1)'
+                }}
+                value={searchQuery}
+                onChange={handlechangevalue}
+                onKeyDown={handleKeyDown}
+              />
+              {searchQuery && (
+                <X
+                  className="absolute right-3 top-3 w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600 transition-colors"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSalons([]);
+                    setQuickResults([]);
+                    setShowResults(false);
+                  }}
+                />
+              )}
+            </div>
           </form>
 
-          {searchQuery && (
-            <X
-              className="absolute right-3 top-3 w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600"
-              onClick={() => {
-                setSearchQuery("");
-                setSalons([]);
-              }}
-            />
+          {/* Instant Results Dropdown */}
+          {showResults && (
+            <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+              {isQuickLoading ? (
+                <div className="p-4 space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center gap-4 p-3">
+                      <div className="w-12 h-12 rounded-xl bg-gray-200 animate-pulse" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
+                        <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : quickResults.length > 0 ? (
+                <>
+                  <div className="p-2">
+                    {quickResults.slice(0, 5).map((salon, index) => (
+                      <div
+                        key={salon.id}
+                        onClick={() => handleSalonSelect(salon)}
+                        className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${
+                          index === selectedIndex ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-400' : 'hover:bg-gray-50 border-2 border-transparent'
+                        }`}
+                      >
+                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
+                          <img
+                            src={salon.logoUrl || "/placeholder.png"}
+                            alt={salon.salonName}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-sm font-black text-gray-800 tracking-tight">
+                            {salon.salonName}
+                          </h4>
+                          <p className="text-[10px] text-gray-400 font-bold italic">
+                            {salon.address?.city}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1 bg-orange-50 px-2 py-1 rounded-lg">
+                          <Star size={10} className="fill-orange-400 text-orange-400" />
+                          <span className="text-[10px] font-black text-orange-700">{salon.rating?.average}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={handleViewMore}
+                    className="w-full py-3 text-xs font-black text-center tracking-widest transition-colors hover:bg-gray-50 text-blue-600"
+                  >
+                    VIEW MORE RESULTS
+                  </button>
+                  <div className="px-4 py-2 bg-gray-50 border-t border-gray-100">
+                    <p className="text-[9px] text-gray-400 text-center tracking-wider">
+                      <span className="font-bold">↑↓</span> Navigate · <span className="font-bold">Enter</span> Select · <span className="font-bold">Esc</span> Close
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <div className="p-8 text-center">
+                  <Search className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+                  <p className="text-xs font-bold text-gray-400 tracking-widest">No results found</p>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
@@ -199,10 +403,16 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
         )}
 
         {/* Empty State / Recent Searches */}
-        {!searchQuery && (
+        {!searchQuery && !showResults && (
           <div className="py-10 text-center">
             <Search className="w-12 h-12 text-gray-200 mx-auto mb-4" />
             <p className="text-xs font-bold text-gray-400 tracking-widest">{t('search.typeToDiscover')}</p>
+            <div className="mt-4 flex items-center justify-center gap-2 text-[9px] text-gray-300">
+              <Command size={12} />
+              <span className="tracking-wider">Press</span>
+              <span className="font-bold bg-gray-100 px-2 py-1 rounded">K</span>
+              <span className="tracking-wider">for quick search</span>
+            </div>
           </div>
         )}
       </div>

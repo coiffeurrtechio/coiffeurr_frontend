@@ -15,6 +15,9 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
+  // Trending search tags
+  const trendingTags = ["Haircut", "Facial", "Spa", "Beard Trim", "Hair Color"];
+
   // Get user location on mount
   useEffect(() => {
     if (navigator.geolocation) {
@@ -52,7 +55,7 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
         params.append('max_distance_km', '30');
       }
 
-      const response = await fetch(`${Config.API_Customers}/salons/search?${params}`);
+      const response = await fetch(`${Config.API_Customers}/salons/super_search?${params}`);
       const data = await response.json();
       setSearchResults(data || []);
     } catch (error) {
@@ -110,6 +113,22 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
 
       {/* Search Results */}
       <div className="flex-1 overflow-y-auto p-4">
+        {/* Trending Search Tags */}
+        <div className="mb-4">
+          <p className="text-[10px] font-black text-gray-400 tracking-widest mb-3">TRENDING SEARCHES</p>
+          <div className="flex flex-wrap gap-2">
+            {trendingTags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => setSearchQuery(tag)}
+                className="px-3 py-1.5 rounded-full text-[10px] font-black bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all"
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {isLoading ? (
           <div className="text-center py-12">
             <div className="w-8 h-8 border-2 border-gray-300 border-t-[#D4AF37] rounded-full animate-spin mx-auto mb-4" />

@@ -328,56 +328,55 @@ const HomePage: React.FC = () => {
           </div>
         </header>
 
-        {/* --- TOP STYLISTS SECTION --- */}
-        {isDataLoaded && staff.length > 0 && (
-          <div className={`mt-20 sm:mt-24 mb-10 px-4 sm:px-8 max-w-7xl ${showUI ? 'ui-fade-in' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
-            <div className="flex items-center justify-between px-1 mb-4">
-              <div>
-                <h2 className="text-gray-900 text-lg sm:text-xl font-black tracking-tight" style={{ fontFamily: 'Playfair Display, serif' }}>{t('home.topArtistsNearYou')}</h2>
-                <p className="text-[10px] text-gray-400 font-bold tracking-wider mt-1">{t('home.precisionLuxury') || 'Precision in every snip. Luxury in every touch.'}</p>
+        <main className="max-w-7xl mx-auto px-4 sm:px-8 relative z-10">
+          {/* --- TOP STYLISTS SECTION --- */}
+          {isDataLoaded && staff.length > 0 && (
+            <div className={`mt-20 sm:mt-24 mb-10 ${showUI ? 'ui-fade-in' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
+              <div className="flex items-center justify-between px-1 mb-4">
+                <div>
+                  <h2 className="text-gray-900 text-lg sm:text-xl font-black tracking-tight" style={{ fontFamily: 'Playfair Display, serif' }}>{t('home.topArtistsNearYou')}</h2>
+                  <p className="text-[10px] text-gray-400 font-bold tracking-wider mt-1">{t('home.precisionLuxury') || 'Precision in every snip. Luxury in every touch.'}</p>
+                </div>
+                {/* <button onClick={() => navigate('/all-experts')} className="text-[#1E4D8C] bg-blue-50 p-2 rounded-full active:scale-90 transition-transform"><ChevronRight size={20} /></button> */}
               </div>
-              {/* <button onClick={() => navigate('/all-experts')} className="text-[#1E4D8C] bg-blue-50 p-2 rounded-full active:scale-90 transition-transform"><ChevronRight size={20} /></button> */}
-            </div>
-            <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 scroll-snap-x scroll-snap-type-x-mandatory">
-              {staff.map((member, index) => (
-                <div key={member.staff_id} onClick={() => navigate(`salon/${member.salon_id}/staff/${member.staff_id}`)} className="flex-shrink-0 w-32 sm:w-36 flex flex-col items-center group cursor-pointer artist-bounce scroll-snap-center active:scale-[0.97] transition-transform duration-100" style={{ animationDelay: `${index * 0.1}s` }}>
-                  <div className="relative mb-3">
-                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full p-1 artist-image-container" style={{ border: '2px solid #D4AF37' }}>
-                      <img 
-                        key={`${member.staff_id}-${currentImageIndices[member.staff_id] || 0}`}
-                        src={member.images?.[currentImageIndices[member.staff_id] || 0] || "/placeholder-user.png"} 
-                        alt={member.name} 
-                        className="w-full h-full rounded-full object-cover shadow-inner"
-                        style={{ 
-                          animation: 'fadeIn 0.5s ease-in-out'
-                        }}
-                      />
-                      {/* Social Proof Badge - Top Right */}
-                      {index < 3 && (
-                        <div className="absolute top-0 right-0 z-20 bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap trending-pulse">{t('home.trending') || 'Trending'}</div>
-                      )}
-                      {/* Rating Badge - Top Left */}
-                      <div className="absolute top-0 left-0 z-20 bg-white px-2 py-0.5 rounded-md shadow-md border border-gray-100 flex items-center gap-1">
-                        <Star size={10} className="fill-yellow-400 text-yellow-400" /><span className="text-[10px] font-black text-gray-700">{member.rating?.average?.toFixed(1)}</span>
+              <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 scroll-snap-x scroll-snap-type-x-mandatory">
+                {staff.map((member, index) => (
+                  <div key={member.staff_id} onClick={() => navigate(`salon/${member.salon_id}/staff/${member.staff_id}`)} className="flex-shrink-0 w-32 sm:w-36 flex flex-col items-center group cursor-pointer artist-bounce scroll-snap-center active:scale-[0.97] transition-transform duration-100" style={{ animationDelay: `${index * 0.1}s` }}>
+                    <div className="relative mb-3">
+                      <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full p-1 artist-image-container" style={{ border: '2px solid #D4AF37' }}>
+                        <img
+                          key={`${member.staff_id}-${currentImageIndices[member.staff_id] || 0}`}
+                          src={member.images?.[currentImageIndices[member.staff_id] || 0] || "/placeholder-user.png"}
+                          alt={member.name}
+                          className="w-full h-full rounded-full object-cover shadow-inner"
+                          style={{
+                            animation: 'fadeIn 0.5s ease-in-out'
+                          }}
+                        />
+                        {/* Social Proof Badge - Top Right */}
+                        {index < 3 && (
+                          <div className="absolute top-0 right-0 z-20 bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap trending-pulse">{t('home.trending') || 'Trending'}</div>
+                        )}
+                        {/* Rating Badge - Top Left */}
+                        <div className="absolute top-0 left-0 z-20 bg-white px-2 py-0.5 rounded-md shadow-md border border-gray-100 flex items-center gap-1">
+                          <Star size={10} className="fill-yellow-400 text-yellow-400" /><span className="text-[10px] font-black text-gray-700">{member.rating?.average?.toFixed(1)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-center w-full flex flex-col" style={{ minHeight: '100px' }}>
+                      <div style={{ minHeight: '50px' }}>
+                        <h4 className="font-black text-gray-900 text-sm capitalize truncate leading-tight" style={{ fontFamily: 'Playfair Display, serif' }}>{member.name}</h4>
+                        <p className="text-[10px] text-gray-500 font-medium truncate">{member.specialty || t('home.stylist')}</p>
+                      </div>
+                      <div className="flex flex-col items-center gap-1 mt-2">
+                        <div className="flex items-center gap-1 text-[9px] font-black text-emerald-600 bg-emerald-50 py-1 px-2 rounded-lg"><Award size={10} /><span>{member.experience_years}{t('home.yExp')}</span></div>
                       </div>
                     </div>
                   </div>
-                  <div className="text-center w-full flex flex-col" style={{ minHeight: '100px' }}>
-                    <div style={{ minHeight: '50px' }}>
-                      <h4 className="font-black text-gray-900 text-sm capitalize truncate leading-tight" style={{ fontFamily: 'Playfair Display, serif' }}>{member.name}</h4>
-                      <p className="text-[10px] text-gray-500 font-medium truncate">{member.specialty || t('home.stylist')}</p>
-                    </div>
-                    <div className="flex flex-col items-center gap-1 mt-2">
-                      <div className="flex items-center gap-1 text-[9px] font-black text-emerald-600 bg-emerald-50 py-1 px-2 rounded-lg"><Award size={10} /><span>{member.experience_years}{t('home.yExp')}</span></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-
-        <main className="max-w-7xl mx-auto px-4 sm:px-8 relative z-10">
+          )}
           <div className={`${staff.length > 0 ? 'mt-4' : 'mt-20 sm:mt-24'} mb-4`}>
             <h2 className="text-gray-800 text-lg sm:text-xl font-black tracking-tight mb-6" style={{ fontFamily: 'Playfair Display, serif' }}>{t('home.recommendedForYou')}</h2>
 

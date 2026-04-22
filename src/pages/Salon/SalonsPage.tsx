@@ -52,7 +52,7 @@ export default function SalonsPage(): JSX.Element {
       if (name?.trim()) apiParams.append("query", name.trim());
       if (limit) apiParams.append("limit", limit.toString());
 
-      const res = await apiRequest<any[]>(`/salons/search?${apiParams.toString()}`);
+      const res = await apiRequest<any[]>(`/salons/super_search?${apiParams.toString()}`);
       if (res.data) setSalons(res.data);
     } catch (err) {
       console.error("Search failed:", err);
@@ -90,7 +90,7 @@ export default function SalonsPage(): JSX.Element {
       setIsFilterModalOpen(false);
 
       // This navigation triggers the useEffect above
-      const res = await apiRequest<any[]>(`/salons/search?${searchString.toString()}`);
+      const res = await apiRequest<any[]>(`/salons/super_search?${searchString.toString()}`);
       if (res.data) setSalons(res.data);
     } catch (err) {
       console.error("Search failed:", err);
