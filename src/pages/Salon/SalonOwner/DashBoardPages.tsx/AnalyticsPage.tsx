@@ -179,7 +179,7 @@ const processReviewData = (reviews: any[]) => {
   });
 
   // Calculate average rating per day
-  return sortedDates.map((dateKey) => {
+  const processedData = sortedDates.map((dateKey) => {
     const dayReviews = groupedByDate[dateKey];
     const avgRating = dayReviews.reduce((sum, r) => sum + r.rating, 0) / dayReviews.length;
     
@@ -198,6 +198,20 @@ const processReviewData = (reviews: any[]) => {
       sentiment
     };
   });
+
+  // Add dotColor property based on first rating comparison
+  if (processedData.length > 0) {
+    const firstRating = processedData[0].rating;
+    processedData.forEach((item, index) => {
+      if (index === 0) {
+        item.dotColor = '#10b981'; // First point always green
+      } else {
+        item.dotColor = item.rating >= firstRating ? '#10b981' : '#ef4444'; // Green if >= first, red if < first
+      }
+    });
+  }
+
+  return processedData;
 };
 
 const AnalyticsPage: React.FC = () => {
@@ -547,7 +561,7 @@ const AnalyticsPage: React.FC = () => {
               background: 'linear-gradient(135deg, #FFFFFF 0%, #F7F5F2 100%)',
               padding: '24px'
             }}>
-              <h3 className="typography-label mb-6 flex items-center gap-2" style={{ fontSize: '16px', color: '#D4AF37', letterSpacing: '0.03em', fontWeight: '700', textTransform: 'uppercase', fontFamily: 'Playfair Display, serif' }}>
+              <h3 className="typography-label mb-6 flex items-center gap-2" style={{ fontSize: '16px', color: '#D4AF37', letterSpacing: '0.03em', fontWeight: '700', fontFamily: 'Playfair Display, serif' }}>
                 <PieChart size={18} style={{ color: '#D4AF37' }} />
                 {t('analytics.bookingStatusDistribution')}
               </h3>
@@ -609,7 +623,7 @@ const AnalyticsPage: React.FC = () => {
                 <InsightCard
                   icon={CalendarDays}
                   title={t('analytics.pendingActions')}
-                  value={dashboardData.pendingCount.toString()}
+                  value={(dashboardData.pendingCount ?? 0).toString()}
                   subtext={t('analytics.bookingsAwaitingConfirmation')}
                 />
               </div>
@@ -627,7 +641,7 @@ const AnalyticsPage: React.FC = () => {
           }}>
             <div className="flex flex-col gap-4 mb-6">
               <div className="flex items-center justify-between">
-                <h3 className="typography-label flex items-center gap-2" style={{ fontSize: '16px', color: '#D4AF37', letterSpacing: '0.03em', fontWeight: '700', textTransform: 'uppercase', fontFamily: 'Playfair Display, serif' }}>
+                <h3 className="typography-label flex items-center gap-2" style={{ fontSize: '16px', color: '#D4AF37', letterSpacing: '0.03em', fontWeight: '700', fontFamily: 'Playfair Display, serif' }}>
                   <TrendingUp size={18} style={{ color: '#D4AF37' }} />
                   Salon Stars Tracker
                 </h3>
@@ -693,6 +707,9 @@ const AnalyticsPage: React.FC = () => {
                         const data = payload[0].payload;
                         return (
                           <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', borderRadius: '12px', padding: '16px', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)', border: '1px solid rgba(212, 175, 55, 0.3)' }}>
+                            <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+                              <span style={{ fontWeight: '600' }}>{data.day}</span>
+                            </div>
                             <div className="flex items-center gap-2 mb-2">
                               <Star size={14} style={{ color: '#D4AF37', fill: '#D4AF37' }} />
                               <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#1a1a1a' }}>{data.rating.toFixed(1)}⭐</span>
@@ -712,24 +729,10 @@ const AnalyticsPage: React.FC = () => {
                   <Line 
                     type="monotone" 
                     dataKey="rating" 
-                    stroke="#D4AF37" 
+                    stroke="#1a1a1a" 
                     strokeWidth={3}
-                    filter="url(#goldGlow)"
-                    dot={(entry, index) => {
-                      const prevRating = index > 0 ? ratingData[index - 1].rating : entry.rating;
-                      const isUp = entry.rating >= prevRating;
-                      const color = isUp ? '#10b981' : '#ef4444';
-                      return (
-                        <circle
-                          key={`dot-${index}`}
-                          r={5}
-                          fill={color}
-                          stroke="#fff"
-                          strokeWidth={2}
-                        />
-                      );
-                    }}
-                    activeDot={{ r: 6, fill: '#D4AF37', stroke: '#fff', strokeWidth: 2 }}
+                    dot={true}
+                    activeDot={{ r: 8, fill: '#1a1a1a', stroke: '#fff', strokeWidth: 2 }}
                     isAnimationActive={false}
                   />
                 </LineChart>

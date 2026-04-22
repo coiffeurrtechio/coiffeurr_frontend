@@ -279,7 +279,7 @@ const HomePage: React.FC = () => {
                   )}
                 </div>
               ) : (
-                <button onClick={() => navigate("/login")} className="text-[10px] font-bold uppercase tracking-[0.2em] px-5 py-2.5 bg-white text-[#1E4D8C] rounded-full hover:bg-opacity-90 transition-all shadow-sm">{t('home.login')}</button>
+                <button onClick={() => navigate("/login")} className="text-[10px] font-bold tracking-[0.2em] px-5 py-2.5 bg-white text-[#1E4D8C] rounded-full hover:bg-opacity-90 transition-all shadow-sm">{t('home.login')}</button>
               )}
             </div>
 
@@ -327,7 +327,7 @@ const HomePage: React.FC = () => {
             <div className="flex items-center justify-between px-1 mb-4">
               <div>
                 <h2 className="text-gray-900 text-lg sm:text-xl font-black tracking-tight" style={{ fontFamily: 'Playfair Display, serif' }}>{t('home.topArtistsNearYou')}</h2>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1">Precision in every snip. Luxury in every touch.</p>
+                <p className="text-[10px] text-gray-400 font-bold tracking-wider mt-1">Precision in every snip. Luxury in every touch.</p>
               </div>
               {/* <button onClick={() => navigate('/all-experts')} className="text-[#1E4D8C] bg-blue-50 p-2 rounded-full active:scale-90 transition-transform"><ChevronRight size={20} /></button> */}
             </div>
@@ -417,7 +417,7 @@ const HomePage: React.FC = () => {
                           )}
                           {salon.distance && (
                             <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md text-gray-600 px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-sm border border-gray-200">
-                              <MapPin className="w-3 h-3" /><span className="text-[9px] font-bold uppercase tracking-[0.05em]">{displayDistance}</span>
+                              <MapPin className="w-3 h-3" /><span className="text-[9px] font-bold tracking-[0.05em]">{displayDistance}</span>
                             </div>
                           )}
                           <div className="absolute top-3 right-3 bg-white/95 backdrop-blur px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-sm"><Star size={12} className="fill-orange-400 text-orange-400" /><span className="text-xs font-black">{salon.rating?.average || "5.0"}</span></div>

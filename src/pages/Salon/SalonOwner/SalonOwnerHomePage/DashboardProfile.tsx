@@ -291,12 +291,12 @@ const DashboardProfile: React.FC = () => {
       }
       
       const res = await apiRequest<any>(
-        `/reviews/reviews/SALON/${salonId}?page=${page}&limit=${reviewsPerPage}${sortParam}`
+        `/reviews/SALON/${salonId}?page=${page}&limit=${reviewsPerPage}${sortParam}`
       );
       if (res.data) {
         setAllReviews(res.data);
         // Calculate total pages based on review summary
-        const summary = await apiRequest<any>(`/reviews/reviews/SALON/${salonId}/summary`);
+        const summary = await apiRequest<any>(`/reviews/SALON/${salonId}/summary`);
         if (summary.data) {
           const totalReviews = summary.data.totalReviews || 0;
           setReviewsTotalPages(Math.ceil(totalReviews / reviewsPerPage));
@@ -420,7 +420,7 @@ const DashboardProfile: React.FC = () => {
         } else {
           // If no reviewSummary in salon API, fetch reviews separately
           try {
-            const reviewsRes = await apiRequest<any>(`/reviews/salons/${salonId}/reviews`);
+            const reviewsRes = await apiRequest<any>(`/salons/${salonId}/reviews`);
             if (reviewsRes.data) {
               const reviewSummary = reviewsRes.data.reviewSummary;
               if (reviewSummary?.recentReviews) {
@@ -1252,7 +1252,9 @@ const DashboardProfile: React.FC = () => {
                   </motion.button>
                 </div>
               </div>
-              <div className="p-6 overflow-y-auto max-h-[70vh]">
+              <div className="p-6 overflow-y-auto max-h-[70vh] relative">
+                {/* Fade indicator at bottom */}
+                <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white/90 to-transparent pointer-events-none" />
                 {reviewsLoading ? (
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin" />
@@ -1262,7 +1264,7 @@ const DashboardProfile: React.FC = () => {
                     <div className="space-y-4">
                       {allReviews.length > 0 ? (
                         allReviews.map((review: any, idx: number) => (
-                          <div key={review.id || idx} className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-gray-200/50">
+                          <div key={review.id || idx} className={`bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-gray-200/50 ${idx === 0 ? 'mt-2' : ''}`}>
                             <div className="flex items-center gap-3 mb-3">
                               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#D4AF37]/20 to-[#C9A227]/20 flex items-center justify-center flex-shrink-0">
                                 <span className="text-sm font-bold text-[#D4AF37]">

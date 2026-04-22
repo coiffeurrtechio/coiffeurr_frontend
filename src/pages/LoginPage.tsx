@@ -184,13 +184,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
               >
                 <button
                   onClick={() => setLoginMethod('phone')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${loginMethod === 'phone' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40'}`}
+                  className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-xl text-[9px] font-black tracking-widest transition-all ${loginMethod === 'phone' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40'}`}
                 >
                   <Smartphone size={12} /> {t('common.phone')}
                 </button>
                 <button
                   onClick={() => setLoginMethod('email')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${loginMethod === 'email' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40'}`}
+                  className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-xl text-[9px] font-black tracking-widest transition-all ${loginMethod === 'email' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40'}`}
                 >
                   <Mail size={12} /> {t('common.email')}
                 </button>

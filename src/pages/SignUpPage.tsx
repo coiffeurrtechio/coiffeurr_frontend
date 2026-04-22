@@ -242,7 +242,7 @@ const CustomerRegistration: React.FC = () => {
             <p className="punch-line letter-reveal" style={{ animationDelay: '0.2s' }}>
               Your journey to excellence begins here.
             </p>
-            <p className="text-xs text-white/60 font-bold uppercase tracking-widest mt-2 letter-reveal" style={{ animationDelay: '0.3s' }}>
+            <p className="text-xs text-white/60 font-bold tracking-widest mt-2 letter-reveal" style={{ animationDelay: '0.3s' }}>
               {t('auth.stepOf', { current: step, total: 2 })}
             </p>
           </header>
@@ -291,7 +291,7 @@ const CustomerRegistration: React.FC = () => {
                   </button>
                   <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
                 </div>
-                <p className="mt-2 text-[9px] font-black text-white/50 uppercase tracking-widest">{t('auth.addPhoto')}</p>
+                <p className="mt-2 text-[9px] font-black text-white/50 tracking-widest">{t('auth.addPhoto')}</p>
               </div>
 
               <div className="bg-white/5 p-4 rounded-3xl border border-white/10 mb-2 staggered-2">
@@ -384,7 +384,7 @@ const CustomerRegistration: React.FC = () => {
                       <Info size={12} className="text-red-400 mt-0.5 shrink-0" />
                       <div className="flex flex-wrap gap-x-3 gap-y-1">
                         {passwordIssues.map((issue, idx) => (
-                          <span key={idx} className="text-[9px] font-bold text-red-400 uppercase tracking-tight">• {issue}</span>
+                          <span key={idx} className="text-[9px] font-bold text-red-400 tracking-tight">• {issue}</span>
                         ))}
                       </div>
                     </div>
@@ -395,7 +395,7 @@ const CustomerRegistration: React.FC = () => {
                 {formData.password.length >= 8 && passwordIssues.length === 0 && (
                   <div className="flex items-center gap-2 ml-1 animate-in fade-in">
                     <CheckCircle2 size={12} className="text-emerald-400" />
-                    <span className="text-[9px] font-bold text-emerald-400 uppercase">{t('auth.strongPassword')}</span>
+                    <span className="text-[9px] font-bold text-emerald-400">{t('auth.strongPassword')}</span>
                   </div>
                 )}
               </div>
@@ -406,7 +406,7 @@ const CustomerRegistration: React.FC = () => {
                 {isLoading ? <Loader2 className="animate-spin" /> : t('auth.completeSignup')}
                 {!isLoading && <ArrowRight size={18} />}
               </Button>
-              <button type="button" onClick={() => setStep(1)} className="w-full text-[10px] font-black uppercase text-white/50 hover:text-white py-2 transition-colors text-button">{t('auth.backToMobile')}</button>
+              <button type="button" onClick={() => setStep(1)} className="w-full text-[10px] font-black text-white/50 hover:text-white py-2 transition-colors text-button">{t('auth.backToMobile')}</button>
               
               <div className="w-full h-px bg-white/10 my-4" />
             </div>

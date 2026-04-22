@@ -152,7 +152,7 @@ export default function SalonsPage(): JSX.Element {
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">{t('salons.city')}</label>
+                <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1">{t('salons.city')}</label>
                 <div className="relative">
                   <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                   <input
@@ -166,7 +166,7 @@ export default function SalonsPage(): JSX.Element {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">{t('salons.salonName')}</label>
+                <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1">{t('salons.salonName')}</label>
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                   <input
@@ -180,7 +180,7 @@ export default function SalonsPage(): JSX.Element {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">{t('salons.limitResults')}</label>
+                <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1">{t('salons.limitResults')}</label>
                 <div className="grid grid-cols-3 gap-3">
                   {[10, 20, 50].map((num) => (
                     <button
@@ -229,13 +229,13 @@ export default function SalonsPage(): JSX.Element {
                   {/* <div className="absolute top-5 right-5">
                     <div className="bg-white/10 backdrop-blur-md border border-white/20 px-3 py-1 rounded-full flex items-center gap-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-                      <span className="text-white text-[9px] font-black uppercase tracking-tighter">Live</span>
+                      <span className="text-white text-[9px] font-black tracking-tighter">Live</span>
                     </div>
                   </div> */}
 
                   {/* Bottom Left: Quick Identity */}
                   <div className="absolute bottom-6 left-6 right-6">
-                    <h3 className="text-white font-black text-2xl tracking-tighter uppercase leading-none truncate">
+                    <h3 className="text-white font-black text-2xl tracking-tighter leading-none truncate">
                       {salon.salonName}
                     </h3>
                     <div className="flex items-center gap-2 mt-2">
@@ -243,7 +243,7 @@ export default function SalonsPage(): JSX.Element {
                         <Star className="w-3 h-3 fill-white text-white" />
                         <span className="text-[10px] font-black text-white">{salon.rating?.average?.toFixed(1)}</span>
                       </div>}
-                      {salon.rating?.reviewsCount && <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest">{salon.rating?.reviewsCount || 0} {t('salons.reviews')}</span>}
+                      {salon.rating?.reviewsCount && <span className="text-[10px] font-bold text-white/60 tracking-widest">{salon.rating?.reviewsCount || 0} {t('salons.reviews')}</span>}
                     </div>
                   </div>
                 </div>
@@ -257,7 +257,7 @@ export default function SalonsPage(): JSX.Element {
                     <div className="flex items-center justify-between py-2 border-b border-slate-50">
                       <div className="flex items-center gap-2">
                         <MapPin size={12} className="text-slate-400" />
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t('salons.region')}</span>
+                        <span className="text-[9px] font-black text-slate-400 tracking-widest">{t('salons.region')}</span>
                       </div>
                       <span className="text-xs font-bold text-slate-800">{salon.address?.city}</span>
                     </div>
@@ -266,7 +266,7 @@ export default function SalonsPage(): JSX.Element {
                     <div className="flex items-center justify-between py-2 border-b border-slate-50">
                       <div className="flex items-center gap-2">
                         <AlignLeft size={12} className="text-slate-400" />
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t('salons.address')}</span>
+                        <span className="text-[9px] font-black text-slate-400 tracking-widest">{t('salons.address')}</span>
                       </div>
                       <span className="text-xs font-bold text-slate-600 truncate max-w-[160px] italic">{salon.address?.street}</span>
                     </div>
@@ -275,7 +275,7 @@ export default function SalonsPage(): JSX.Element {
                     <div className="flex items-center justify-between py-2">
                       <div className="flex items-center gap-2">
                         <Navigation size={12} className="text-slate-400" />
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t('salons.postCode')}</span>
+                        <span className="text-[9px] font-black text-slate-400 tracking-widest">{t('salons.postCode')}</span>
                       </div>
                       <code className="text-[11px] font-black text-[#1E4D8C] bg-blue-50 px-2 py-0.5 rounded-md tracking-widest">
                         {salon.address?.pincode}
@@ -286,7 +286,7 @@ export default function SalonsPage(): JSX.Element {
                   {/* --- 3. CTA BLOCK (BOTTOM) --- */}
                   <div className="mt-8 flex items-center gap-3">
                     <Button
-                      className="flex-[3] bg-slate-900 hover:bg-[#1E4D8C] text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] h-14 shadow-xl transition-all active:scale-[0.98]"
+                      className="flex-[3] bg-slate-900 hover:bg-[#1E4D8C] text-white rounded-2xl font-black text-[10px] tracking-[0.2em] h-14 shadow-xl transition-all active:scale-[0.98]"
                     >
                       {t('salons.enterStudio')}
                     </Button>
@@ -305,8 +305,8 @@ export default function SalonsPage(): JSX.Element {
             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
               <Search className="text-slate-200" size={32} />
             </div>
-            <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">{t('salons.nullResults')}</h2>
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-2">{t('salons.checkFilters')}</p>
+            <h2 className="text-xl font-black text-slate-900 tracking-tighter">{t('salons.nullResults')}</h2>
+            <p className="text-slate-400 text-xs font-bold tracking-widest mt-2">{t('salons.checkFilters')}</p>
           </div>
         )}
       </section>

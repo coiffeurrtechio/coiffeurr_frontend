@@ -47,7 +47,7 @@ export default function StaffDetailPage() {
 
     const fetchReviews = async () => {
         try {
-            const res = await apiRequest<any>(`/reviews/reviews/STAFF/${staffId}?page=1&limit=20`);
+            const res = await apiRequest<any>(`/reviews/STAFF/${staffId}?page=1&limit=20`);
             if (res.data) setReviews(res.data);
 
         } catch (error) {

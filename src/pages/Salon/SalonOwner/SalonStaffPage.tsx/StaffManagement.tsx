@@ -206,7 +206,7 @@ const StaffManagement: React.FC = () => {
         setIsReviewsModalOpen(true);
         setLoadingReviews(true);
         try {
-            const res = await apiRequest<any>(`/reviews/reviews/STAFF/${staff.staff_id}?page=1&limit=20`);
+            const res = await apiRequest<any>(`/reviews/STAFF/${staff.staff_id}?page=1&limit=20`);
             if (res.data) setStaffReviews(res.data);
         } catch (error) {
             console.error("Error fetching reviews:", error);

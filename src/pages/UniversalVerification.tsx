@@ -142,7 +142,7 @@ const UniversalVerification: React.FC = () => {
             <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <ShieldCheck className="text-[#D4AF37]" size={32} />
             </div>
-            <h1 className="text-2xl font-black text-[#1a1a1a] tracking-tight uppercase" style={{ fontFamily: "'Playfair Display', serif" }}>
+            <h1 className="text-2xl font-black text-[#1a1a1a] tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               {step === 1 ? t('verification.linkAccount') : t('verification.verifyDetails')}
             </h1>
           </header>
@@ -154,7 +154,7 @@ const UniversalVerification: React.FC = () => {
                 {/* User types Email ONLY if shouldVerifyEmail is true */}
                 {shouldVerifyEmail && (
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-[#4b5563] uppercase tracking-widest ml-1">{t('verification.emailAddress')}</label>
+                    <label className="text-[10px] font-black text-[#4b5563] tracking-widest ml-1">{t('verification.emailAddress')}</label>
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                       <input 
@@ -172,7 +172,7 @@ const UniversalVerification: React.FC = () => {
                 {/* User types Phone ONLY if shouldVerifyPhone is true */}
                 {shouldVerifyPhone && (
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-[#4b5563] uppercase tracking-widest ml-1">{t('verification.phoneNumber')}</label>
+                    <label className="text-[10px] font-black text-[#4b5563] tracking-widest ml-1">{t('verification.phoneNumber')}</label>
                     <div className="relative">
                       <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                       <input 
@@ -201,7 +201,7 @@ const UniversalVerification: React.FC = () => {
               <div className="space-y-6">
                 <div className="flex justify-between items-center bg-gray-50 p-4 rounded-2xl border border-gray-200">
                   <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-[#4b5563] uppercase">{t('verification.sendingTo')}</span>
+                    <span className="text-[9px] font-black text-[#4b5563]">{t('verification.sendingTo')}</span>
                     <span className="text-xs font-bold text-[#1a1a1a]">
                         {shouldVerifyEmail ? formData.email : formData.phone}
                     </span>
@@ -212,7 +212,7 @@ const UniversalVerification: React.FC = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-[#4b5563] uppercase tracking-widest text-center block">{t('verification.enter6DigitOTP')}</label>
+                  <label className="text-[10px] font-black text-[#4b5563] tracking-widest text-center block">{t('verification.enter6DigitOTP')}</label>
                   <input 
                     name="otp"
                     type="tel"
@@ -232,9 +232,9 @@ const UniversalVerification: React.FC = () => {
 
                 <div className="text-center">
                   {timer > 0 ? (
-                    <p className="text-[10px] font-bold text-[#4b5563] uppercase">{t('verification.resendIn', { timer })}</p>
+                    <p className="text-[10px] font-bold text-[#4b5563]">{t('verification.resendIn', { timer })}</p>
                   ) : (
-                    <button onClick={handleSendOTP} className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest flex items-center gap-2 mx-auto">
+                    <button onClick={handleSendOTP} className="text-[10px] font-black text-[#D4AF37] tracking-widest flex items-center gap-2 mx-auto">
                       <RefreshCcw size={12} /> {t('verification.resendCode')}
                     </button>
                   )}

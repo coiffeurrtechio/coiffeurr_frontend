@@ -43,7 +43,7 @@ const NoSalonsFound = ({ currentCity = "your area" }) => {
       {/* --- FOOTER NOTIFICATION --- */}
       <div className="mt-12 py-3 px-6 bg-slate-900 dark:bg-white rounded-full flex items-center gap-3">
         <span className="flex h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
-        <span className="text-[10px] font-black text-white dark:text-slate-900 uppercase tracking-widest">
+        <span className="text-[10px] font-black text-white dark:text-slate-900 tracking-widest">
           {t('noSalonsFound.comingSoon')}
         </span>
       </div>

@@ -88,7 +88,7 @@ export default function UserWishlist() {
           <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-full transition-all">
             <ArrowLeft className="w-5 h-5 text-slate-700" />
           </button>
-          <h1 className="text-sm font-bold uppercase tracking-widest text-slate-800">{t('wishlist.myWishlist')}</h1>
+          <h1 className="text-sm font-bold tracking-widest text-slate-800">{t('wishlist.myWishlist')}</h1>
         </div>
       </nav>
 
@@ -122,7 +122,7 @@ export default function UserWishlist() {
                     </button>
                   </div>
 
-                  <Badge className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-md text-white border-none text-[10px] uppercase tracking-tighter">
+                  <Badge className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-md text-white border-none text-[10px] tracking-tighter">
                     {salon.salonType || t('wishlist.studio')}
                   </Badge>
                 </div>
@@ -140,13 +140,13 @@ export default function UserWishlist() {
 
                   <div className="flex items-start gap-1.5 text-slate-400 mb-6">
                     <MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                    <p className="text-[11px] leading-relaxed line-clamp-2 uppercase tracking-tighter font-medium">
+                    <p className="text-[11px] leading-relaxed line-clamp-2 tracking-tighter font-medium">
                       {salon.address?.street}, {salon.address?.city}
                     </p>
                   </div>
 
                   <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-                    <span className="text-[10px] font-bold text-[#1E4D8C] uppercase tracking-widest">
+                    <span className="text-[10px] font-bold text-[#1E4D8C] tracking-widest">
                       {t('wishlist.viewDetails')}
                     </span>
                     <div className="w-6 h-6 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center">
@@ -165,7 +165,7 @@ export default function UserWishlist() {
             <p className="text-slate-400 font-light text-lg">{t('wishlist.wishlistEmpty')}</p>
             <button
               onClick={() => navigate("/")}
-              className="text-xs font-bold uppercase tracking-widest text-[#1E4D8C] border-b border-[#1E4D8C] pb-1"
+              className="text-xs font-bold tracking-widest text-[#1E4D8C] border-b border-[#1E4D8C] pb-1"
             >
               {t('wishlist.exploreSalons')}
             </button>

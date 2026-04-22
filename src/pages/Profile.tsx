@@ -243,7 +243,7 @@ export default function Profile() {
             </div>
             <div className="absolute bottom-1 right-1 w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full border-4 border-white shadow-lg" />
           </div>
-          <p className="mt-24 text-[10px] font-bold uppercase text-gray-400 tracking-[2px] text-center">
+          <p className="mt-24 text-[10px] font-bold text-gray-400 tracking-[2px] text-center">
             Welcome Back
           </p>
           <h2 className="mt-1 text-3xl font-semibold text-gray-900 tracking-tight text-center whitespace-nowrap" style={{ fontFamily: "'Playfair Display', serif" }}>
@@ -279,7 +279,7 @@ export default function Profile() {
             <div className="mt-4 bg-gradient-to-br from-white/95 to-slate-50/95 rounded-3xl p-6 shadow-xl border border-white/20 space-y-4 animate-in slide-in-from-top duration-200 backdrop-blur-[15px]">
               <button
                 onClick={() => setIsEditModalOpen(true)}
-                className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg hover:shadow-2xl active:scale-95 transition-all"
+                className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-2xl font-black tracking-widest shadow-lg hover:shadow-2xl active:scale-95 transition-all"
               >
                 <Edit3 size={16} /> {t('profile.updateInfo')}
               </button>
@@ -290,7 +290,7 @@ export default function Profile() {
                       <Phone size={18} />
                     </div>
                     <div className="flex-1">
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-tight">{t('profile.phone')}</span>
+                      <span className="text-[10px] font-black text-slate-500 tracking-tight">{t('profile.phone')}</span>
                       <p className="mt-2 text-sm font-bold text-slate-900">{usercontactdetails.phone}</p>
                     </div>
                   </div>
@@ -312,7 +312,7 @@ export default function Profile() {
                       <Mail size={18} />
                     </div>
                     <div className="flex-1">
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-tight">{t('profile.email')}</span>
+                      <span className="text-[10px] font-black text-slate-500 tracking-tight">{t('profile.email')}</span>
                       <p className="mt-2 text-sm font-bold text-slate-900">{usercontactdetails.email}</p>
                     </div>
                   </div>
@@ -333,7 +333,7 @@ export default function Profile() {
                       <Calendar size={18} />
                     </div>
                     <div className="flex-1">
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-tight">Date of Birth</span>
+                      <span className="text-[10px] font-black text-slate-500 tracking-tight">Date of Birth</span>
                       <p className="mt-2 text-sm font-bold text-slate-900">{new Date(usercontactdetails.dob).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                     </div>
                   </div>
@@ -347,7 +347,7 @@ export default function Profile() {
                       <User size={18} />
                     </div>
                     <div className="flex-1">
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-tight">Gender</span>
+                      <span className="text-[10px] font-black text-slate-500 tracking-tight">Gender</span>
                       <p className="mt-2 text-sm font-bold text-slate-900 capitalize">{usercontactdetails.gender}</p>
                     </div>
                   </div>
@@ -361,7 +361,7 @@ export default function Profile() {
                       <Heart size={18} />
                     </div>
                     <div className="flex-1">
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-tight">Anniversary</span>
+                      <span className="text-[10px] font-black text-slate-500 tracking-tight">Anniversary</span>
                       <p className="mt-2 text-sm font-bold text-slate-900">{new Date(usercontactdetails.anniversary).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                     </div>
                   </div>
@@ -375,7 +375,7 @@ export default function Profile() {
                       <User size={18} />
                     </div>
                     <div className="flex-1">
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-tight">Marital Status</span>
+                      <span className="text-[10px] font-black text-slate-500 tracking-tight">Marital Status</span>
                       <p className="mt-2 text-sm font-bold text-slate-900 capitalize">{usercontactdetails.marital_status}</p>
                     </div>
                   </div>
@@ -389,7 +389,7 @@ export default function Profile() {
                       <MapPin size={18} />
                     </div>
                     <div className="flex-1">
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-tight">{t('profile.address')}</span>
+                      <span className="text-[10px] font-black text-slate-500 tracking-tight">{t('profile.address')}</span>
                       <div className="mt-2 space-y-1">
                         <p className="text-sm font-bold text-slate-900">{usercontactdetails.address.house_no}</p>
                         <p className="text-sm font-bold text-slate-800">{usercontactdetails.address.street}</p>
@@ -403,7 +403,7 @@ export default function Profile() {
                       </div>
                       <button
                         onClick={() => setIsAddressExpanded(!isAddressExpanded)}
-                        className="mt-2 text-[10px] font-black uppercase text-slate-600 hover:text-slate-800 transition-colors"
+                        className="mt-2 text-[10px] font-black text-slate-600 hover:text-slate-800 transition-colors"
                       >
                         {isAddressExpanded ? 'See Less' : 'See More'}
                       </button>
@@ -459,7 +459,7 @@ export default function Profile() {
           <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-md" onClick={() => setIsEditModalOpen(false)} />
           <div className="relative w-full max-w-lg bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 animate-in slide-in-from-bottom shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar">
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-black text-gray-900 tracking-tight uppercase">{t('profile.updateProfile')}</h2>
+              <h2 className="text-2xl font-black text-gray-900 tracking-tight">{t('profile.updateProfile')}</h2>
               <button onClick={() => setIsEditModalOpen(false)} className="p-3 bg-gray-100 rounded-full hover:bg-gray-200 transition-all hover:scale-105 active:scale-95"><X size={20} /></button>
             </div>
 
@@ -485,7 +485,7 @@ export default function Profile() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[9px] font-black uppercase text-gray-400 ml-1">Gender</label>
+                  <label className="text-[9px] font-black text-gray-400 ml-1">Gender</label>
                   <select
                     value={editForm.gender}
                     onChange={(e) => setEditForm(prev => ({ ...prev, gender: e.target.value }))}
@@ -498,7 +498,7 @@ export default function Profile() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase text-gray-400 ml-1">Date of Birth</label>
+                  <label className="text-[9px] font-black text-gray-400 ml-1">Date of Birth</label>
                   <input
                     type="date"
                     value={editForm.dob ? editForm.dob.split('T')[0] : ''}
@@ -507,7 +507,7 @@ export default function Profile() {
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="text-[9px] font-black uppercase text-gray-400 ml-1">Marital Status</label>
+                  <label className="text-[9px] font-black text-gray-400 ml-1">Marital Status</label>
                   <select
                     value={editForm.marital_status}
                     onChange={(e) => setEditForm(prev => ({ ...prev, marital_status: e.target.value }))}
@@ -523,8 +523,8 @@ export default function Profile() {
               </div>
 
               <div className="flex items-center justify-between px-1">
-                <h3 className="text-[11px] font-black uppercase text-slate-500 tracking-widest">{t('profile.addressDetails')}</h3>
-                <button onClick={handleAutoDetectLocation} disabled={isLocating} className="text-[11px] font-black uppercase text-slate-700 flex items-center gap-1.5 hover:text-slate-800 transition-colors">
+                <h3 className="text-[11px] font-black text-slate-500 tracking-widest">{t('profile.addressDetails')}</h3>
+                <button onClick={handleAutoDetectLocation} disabled={isLocating} className="text-[11px] font-black text-slate-700 flex items-center gap-1.5 hover:text-slate-800 transition-colors">
                   {isLocating ? <Loader2 size={12} className="animate-spin" /> : <LocateFixed size={12} />}
                   {t('profile.autoDetect')}
                 </button>
@@ -540,7 +540,7 @@ export default function Profile() {
                 <EditInput label={t('profile.pincode')} value={editForm.address.pincode} onChange={(v: any) => handleAddressChange('pincode', v)} />
               </div>
 
-              <Button onClick={handleUpdateProfile} disabled={loading || isUploading} className="w-full h-14 bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:shadow-2xl active:scale-95 transition-all">
+              <Button onClick={handleUpdateProfile} disabled={loading || isUploading} className="w-full h-14 bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-2xl font-black tracking-widest shadow-xl hover:shadow-2xl active:scale-95 transition-all">
                 {loading ? <Loader2 className="animate-spin" /> : t('profile.saveChanges')}
               </Button>
             </div>
@@ -560,7 +560,7 @@ const ContactItem = ({ icon, label, value }: any) => (
   <div className="flex items-center gap-4">
     <div className="p-2 bg-gray-50 rounded-xl text-slate-700">{icon}</div>
     <div className="flex flex-col">
-      <span className="text-[10px] font-black text-gray-400 uppercase tracking-tight">{label}</span>
+      <span className="text-[10px] font-black text-gray-400 tracking-tight">{label}</span>
       <span className="text-sm font-bold text-gray-700">{value}</span>
     </div>
   </div>
@@ -568,7 +568,7 @@ const ContactItem = ({ icon, label, value }: any) => (
 
 const EditInput = ({ label, value, onChange, icon }: any) => (
   <div className="space-y-1">
-    <label className="text-[9px] font-black uppercase text-gray-400 ml-1">{label}</label>
+    <label className="text-[9px] font-black text-gray-400 ml-1">{label}</label>
     <div className="relative">
       {icon && <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-700 opacity-60">{icon}</div>}
       <input type="text" value={value || ""} onChange={(e) => onChange(e.target.value)} className={`w-full h-10 ${icon ? 'pl-9' : 'px-3'} bg-gray-50 rounded-xl font-bold text-xs outline-none focus:ring-2 focus:ring-slate-100 transition-all`} />
@@ -592,7 +592,7 @@ const AddContactPlaceholder = ({ icon, label, onClick }: any) => {
     <button onClick={onClick} className="w-full flex items-center gap-4 p-3 rounded-2xl border-2 border-dashed border-gray-100 hover:border-slate-200 transition-all text-left">
       <div className="p-2 bg-gray-50 rounded-xl text-gray-400">{icon}</div>
       <div className="flex flex-col flex-1">
-        <span className="text-[10px] font-black text-gray-400 uppercase tracking-tight">{label}</span>
+        <span className="text-[10px] font-black text-gray-400 tracking-tight">{label}</span>
         <span className="text-sm font-bold text-slate-700 flex items-center gap-1">{t('profile.add')} {label} <Plus size={14} /></span>
       </div>
     </button>

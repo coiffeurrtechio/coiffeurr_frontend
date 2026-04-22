@@ -116,7 +116,7 @@ function BookingPage() {
                     <button onClick={() => window.history.back()} className="p-3 bg-white/20 rounded-full text-white backdrop-blur-md hover:bg-white/30 active:scale-90 transition-all shadow-lg">
                         <ArrowLeft className="w-5 h-5" />
                     </button>
-                    <h1 className="text-xs font-black uppercase tracking-[0.2em] text-white typography-display">{t('bookings.appointmentHistory')}</h1>
+                    <h1 className="text-xs font-black tracking-[0.2em] text-white typography-display">{t('bookings.appointmentHistory')}</h1>
                     <div className="w-8" />
                 </div>
             </header>
@@ -214,12 +214,12 @@ function BookingPage() {
                                                 <h3 className="font-black truncate pr-2 text-sm typography-display" style={{ color: 'var(--deep-charcoal)' }}>{booking.serviceData?.serviceName}</h3>
                                                 <span className="font-black whitespace-nowrap text-base typography-number" style={{ color: 'var(--muted-gold)' }}>₹{booking.price}</span>
                                             </div>
-                                            <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-wider typography-label-light" style={{ color: '#666' }}>
+                                            <div className="flex items-center gap-2 text-[9px] font-bold tracking-wider typography-label-light" style={{ color: '#666' }}>
                                                 <span className="flex items-center gap-0.5"><Calendar size={10} style={{ color: '#666' }} /> {booking.slot?.date}</span>
                                                 <span className="flex items-center gap-0.5"><Clock size={10} style={{ color: '#666' }} /> {formatTo12Hour(booking.slot?.time)}</span>
                                             </div>
                                             <div className="mt-1.5 flex items-center justify-between">
-                                                <Badge className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase border shadow-sm ${getStatusStyles(booking.status)}`}>
+                                                <Badge className={`text-[8px] font-black px-2 py-0.5 rounded-full border shadow-sm ${getStatusStyles(booking.status)}`}>
                                                     {booking.status}
                                                 </Badge>
                                                 <div className="p-1.5 rounded-full transition-all duration-300" style={{ backgroundColor: 'var(--light-greige)' }}>
@@ -231,7 +231,7 @@ function BookingPage() {
                                 </div>
                             ))
                     ) : (
-                        <div className="py-20 text-center font-bold uppercase tracking-widest text-xs typography-label-light" style={{ color: '#666' }}>{t('bookings.noRecordsFound')}</div>
+                        <div className="py-20 text-center font-bold tracking-widest text-xs typography-label-light" style={{ color: '#666' }}>{t('bookings.noRecordsFound')}</div>
                     )}
                 </div>
 
@@ -306,14 +306,14 @@ function BookingPage() {
 
                             <div className="absolute bottom-6 left-5 right-5 sm:bottom-8 sm:left-8 sm:right-8 z-10 flex flex-col sm:flex-row justify-between items-end gap-3">
                                 <div className="flex-1">
-                                    <Badge className={`px-4 py-1.5 sm:px-5 sm:py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest shadow-2xl border-none ${getStatusStyles(selectedBooking.status)}`}>
+                                    <Badge className={`px-4 py-1.5 sm:px-5 sm:py-2 rounded-full text-[9px] sm:text-[10px] font-black tracking-widest shadow-2xl border-none ${getStatusStyles(selectedBooking.status)}`}>
                                         {selectedBooking.statusLabel || selectedBooking.status}
                                     </Badge>
                                     <h2 className="text-xl sm:text-3xl font-black text-white tracking-tight mt-2 sm:mt-3 typography-display">{selectedBooking.service?.name}</h2>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-2xl sm:text-4xl font-black text-white typography-number">₹{selectedBooking.price}</p>
-                                    <p className="text-[9px] sm:text-[10px] font-bold text-white/80 uppercase tracking-widest typography-label-light">{t('bookings.totalAmount')}</p>
+                                    <p className="text-[9px] sm:text-[10px] font-bold text-white/80 tracking-widest typography-label-light">{t('bookings.totalAmount')}</p>
                                 </div>
                             </div>
                         </div>
@@ -324,7 +324,7 @@ function BookingPage() {
                             {selectedBooking.service?.includedItems?.length > 0 && (
                                 <div className="flex flex-wrap gap-2">
                                     {selectedBooking.service.includedItems.map((item: string, idx: number) => (
-                                        <span key={idx} className="px-3 py-1.5 sm:px-4 sm:py-2 text-[9px] sm:text-[10px] font-black uppercase rounded-xl border shadow-sm typography-label-light" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)', color: 'var(--deep-charcoal)' }}>
+                                        <span key={idx} className="px-3 py-1.5 sm:px-4 sm:py-2 text-[9px] sm:text-[10px] font-black rounded-xl border shadow-sm typography-label-light" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)', color: 'var(--deep-charcoal)' }}>
                                             ✓ {item}
                                         </span>
                                     ))}
@@ -334,16 +334,16 @@ function BookingPage() {
                             {/* Info Grid: Date, Time & Staff with Image */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                                 <div className="p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border shadow-lg floating-tile" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)' }}>
-                                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-3 sm:mb-4 flex items-center gap-2 typography-label-light" style={{ color: '#666' }}>
+                                    <p className="text-[9px] sm:text-[10px] font-black tracking-widest mb-3 sm:mb-4 flex items-center gap-2 typography-label-light" style={{ color: '#666' }}>
                                         <Calendar size={14} className="sm:size-16" style={{ color: '#666' }} /> {t('bookings.schedule')}
                                     </p>
                                     <p className="text-sm sm:text-base font-black typography-display" style={{ color: 'var(--deep-charcoal)' }}>{selectedBooking.slot?.date}</p>
                                     <p className="text-xs sm:text-sm font-bold mt-1 typography-label-light" style={{ color: '#666' }}>{formatTo12Hour(selectedBooking.slot?.time)}</p>
-                                    <p className="text-[9px] sm:text-[10px] font-bold mt-2 uppercase tracking-wider typography-label-light" style={{ color: '#666' }}>{selectedBooking.slot?.duration} {t('bookings.minutesSession')}</p>
+                                    <p className="text-[9px] sm:text-[10px] font-bold mt-2 tracking-wider typography-label-light" style={{ color: '#666' }}>{selectedBooking.slot?.duration} {t('bookings.minutesSession')}</p>
                                 </div>
 
                                 <div className="p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border shadow-lg floating-tile" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)' }}>
-                                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-3 sm:mb-4 flex items-center gap-2 typography-label-light" style={{ color: '#666' }}>
+                                    <p className="text-[9px] sm:text-[10px] font-black tracking-widest mb-3 sm:mb-4 flex items-center gap-2 typography-label-light" style={{ color: '#666' }}>
                                         <User size={14} className="sm:size-16" style={{ color: '#666' }} /> {t('bookings.specialist')}
                                     </p>
                                     <div className="flex items-center gap-3 sm:gap-4">
@@ -370,7 +370,7 @@ function BookingPage() {
                                         <img src={selectedBooking.salon?.logoUrl} className="w-full h-full object-contain" alt="Salon Logo" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-[8px] sm:text-[9px] font-black text-white/50 uppercase tracking-[0.2em] typography-label-light">{t('bookings.studio')}</p>
+                                        <p className="text-[8px] sm:text-[9px] font-black text-white/50 tracking-[0.2em] typography-label-light">{t('bookings.studio')}</p>
                                         <h4 className="text-sm sm:text-base font-black tracking-tight truncate typography-display">{selectedBooking.salon?.name}</h4>
                                     </div>
                                     <a
@@ -397,24 +397,24 @@ function BookingPage() {
                                         {selectedBooking.user?.name?.charAt(0)}
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest typography-label-light" style={{ color: '#666' }}>{t('bookings.bookedBy')}</p>
+                                        <p className="text-[8px] sm:text-[9px] font-black tracking-widest typography-label-light" style={{ color: '#666' }}>{t('bookings.bookedBy')}</p>
                                         <p className="text-sm sm:text-base font-black truncate typography-display" style={{ color: 'var(--deep-charcoal)' }}>{selectedBooking.user?.name}</p>
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-end shrink-0 ml-2">
-                                    <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest typography-label-light" style={{ color: '#666' }}>{t('bookings.contact')}</p>
+                                    <p className="text-[8px] sm:text-[9px] font-black tracking-widest typography-label-light" style={{ color: '#666' }}>{t('bookings.contact')}</p>
                                     <p className="text-xs sm:text-sm font-bold typography-label-light" style={{ color: '#666' }}>{selectedBooking.user?.phone}</p>
                                 </div>
                             </div>
 
                             {/* Footer Actions */}
                             <div className="pt-4 space-y-4">
-                                <p className="text-center text-[9px] font-bold uppercase tracking-[0.2em] typography-label-light" style={{ color: '#666' }}>
+                                <p className="text-center text-[9px] font-bold tracking-[0.2em] typography-label-light" style={{ color: '#666' }}>
                                     Booking ID: {selectedBooking.bookingId}
                                 </p>
                                 <button
                                     onClick={() => setIsModalOpen(false)}
-                                    className="w-full py-5 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:shadow-2xl active:scale-95 transition-all typography-label-light"
+                                    className="w-full py-5 text-white rounded-[2rem] font-black text-xs tracking-[0.2em] shadow-xl hover:shadow-2xl active:scale-95 transition-all typography-label-light"
                                     style={{ background: 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)' }}
                                 >
                                     {t('bookings.closeDetails')}

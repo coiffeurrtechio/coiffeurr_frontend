@@ -167,7 +167,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
 
         {!fetchSalonAPI && salons.length > 0 && searchQuery && (
           <div className="space-y-4">
-            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t('search.salonsFound')}</h3>
+            <h3 className="text-[10px] font-black text-gray-400 tracking-widest ml-1">{t('search.salonsFound')}</h3>
             {salons.map((salon) => (
               <div
                 key={salon.id}
@@ -182,7 +182,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
                   />
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-sm font-black text-gray-800 uppercase tracking-tight">
+                  <h4 className="text-sm font-black text-gray-800 tracking-tight">
                     {salon.salonName}
                   </h4>
                   <p className="text-[10px] text-gray-400 font-bold italic">
@@ -202,7 +202,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
         {!searchQuery && (
           <div className="py-10 text-center">
             <Search className="w-12 h-12 text-gray-100 mx-auto mb-4" />
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t('search.typeToDiscover')}</p>
+            <p className="text-xs font-bold text-gray-400 tracking-widest">{t('search.typeToDiscover')}</p>
           </div>
         )}
       </div>
@@ -221,7 +221,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{t('search.location')}</label>
+                <label className="text-[10px] font-black text-gray-400 tracking-widest">{t('search.location')}</label>
                 <div className="relative">
                   <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                   <input
@@ -235,7 +235,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{t('search.limit')}</label>
+                <label className="text-[10px] font-black text-gray-400 tracking-widest">{t('search.limit')}</label>
                 <div className="grid grid-cols-3 gap-3">
                   {["10", "20", "50"].map((num) => (
                     <button
@@ -252,7 +252,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
 
               <Button
                 onClick={() => setIsFilterModalOpen(false)}
-                className="w-full h-14 bg-[#1E4D8C] text-white rounded-2xl font-black text-sm uppercase tracking-widest mt-4 shadow-xl"
+                className="w-full h-14 bg-[#1E4D8C] text-white rounded-2xl font-black text-sm tracking-widest mt-4 shadow-xl"
               >
                 {t('search.savePreferences')}
               </Button>

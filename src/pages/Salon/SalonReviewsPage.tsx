@@ -64,7 +64,7 @@ const SalonReviewsPage = () => {
     try {
       setLoading(true);
       const res = await apiRequest<SalonReviewResponse>(
-        `/reviews/salons/${salonId}/reviews?page=${currentPage}&limit=${reviewsPerPage}`
+        `/salons/${salonId}/reviews?page=${currentPage}&limit=${reviewsPerPage}`
       );
       if (res.data) {
         setSalonData(res.data.salonData);
@@ -200,7 +200,7 @@ const SalonReviewsPage = () => {
 
         {/* Reviews List */}
         <div className="space-y-4">
-          <h2 className="text-lg font-bold text-gray-900 mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <h2 className="text-lg font-bold text-gray-900 mb-6" style={{ fontFamily: "'Playfair Display', serif" }}>
             All Reviews
           </h2>
 

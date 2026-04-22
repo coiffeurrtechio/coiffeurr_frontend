@@ -126,7 +126,7 @@ export default function ForgotPassword() {
             >
               {step === 1 ? t('auth.forgotPassword') : t('auth.verifyAccount')}
             </h1>
-            <p className="punch-line text-[9px] letter-reveal uppercase tracking-widest" style={{ animationDelay: '0.2s' }}>
+            <p className="punch-line text-[9px] letter-reveal tracking-widest" style={{ animationDelay: '0.2s' }}>
               Reclaim your style.
             </p>
             <p className="text-white/60 text-[10px] mt-1 font-medium letter-reveal" style={{ animationDelay: '0.3s' }}>
@@ -154,7 +154,7 @@ export default function ForgotPassword() {
               </div>
             </div>
 
-            <Button disabled={loading} className={`w-full h-11 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl uppercase tracking-widest staggered-4 hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}>
+            <Button disabled={loading} className={`w-full h-11 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl tracking-widest staggered-4 hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}>
               {loading ? <Loader2 className="animate-spin" /> : t('auth.sendOTP')}
             </Button>
           </form>
@@ -224,11 +224,11 @@ export default function ForgotPassword() {
               </div>
             </div>
 
-            <Button disabled={loading} className={`w-full h-11 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl uppercase tracking-widest staggered-6 hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}>
+            <Button disabled={loading} className={`w-full h-11 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl tracking-widest staggered-6 hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}>
               {loading ? <Loader2 className="animate-spin" /> : t('auth.resetAndLogin')}
             </Button>
             
-            <button type="button" className="text-center text-[9px] font-bold text-[#D4AF37] hover:text-[#FFD700] uppercase tracking-widest cursor-pointer transition-colors text-button focus-ring w-full py-2" onClick={() => setStep(1)}>
+            <button type="button" className="text-center text-[9px] font-bold text-[#D4AF37] hover:text-[#FFD700] tracking-widest cursor-pointer transition-colors text-button focus-ring w-full py-2" onClick={() => setStep(1)}>
               {t('auth.resendCode')}
             </button>
           </form>
