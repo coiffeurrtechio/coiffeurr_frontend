@@ -1,6 +1,8 @@
 import { Heart, Sparkles } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 function Sponser_Footer({ collapsed }: { collapsed: boolean }) {
+    const { t } = useTranslation();
     return (
         <footer className="px-4 py-6 flex items-center justify-center border-t border-gray-100 bg-transparent">
             <div className="flex flex-col items-center justify-center gap-4 w-full max-w-md">
@@ -11,7 +13,7 @@ function Sponser_Footer({ collapsed }: { collapsed: boolean }) {
                         <div className="flex items-center gap-2">
                             <Sparkles size={12} className="text-[#D4AF37]" />
                             <p className="text-[10px] font-bold text-[#4b5563] uppercase tracking-[0.3em] text-center" style={{ fontFamily: "Playfair Display, serif" }}>
-                                Supported by
+                                {t('footer.supportedBy')}
                             </p>
                             <Sparkles size={12} className="text-[#D4AF37]" />
                         </div>
@@ -37,14 +39,14 @@ function Sponser_Footer({ collapsed }: { collapsed: boolean }) {
                             <span className="px-2 py-0.5 rounded-full border border-gray-200/30">v1.0</span>
                             <span>•</span>
                             <span className="flex items-center gap-1">
-                                Made in India
+                                {t('footer.madeInIndia')}
                                 <Heart size={8} className="text-red-500 fill-red-500/20" aria-label="Heart" />
                             </span>
                             <span>•</span>
                             <span>© {new Date().getFullYear()} Coiffeurr</span>
                         </div>
                         <p className="mt-2 text-[8px] text-[#4b5563]/60 italic tracking-wide" style={{ fontFamily: "Playfair Display, serif" }}>
-                            Bridging the gap between traditional artistry and modern luxury.
+                            {t('footer.tagline')}
                         </p>
                     </div>
                 )}

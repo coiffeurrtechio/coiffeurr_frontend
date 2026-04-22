@@ -49,7 +49,41 @@
     "warning": "चेतावणी",
     "info": "माहिती",
     "email": "ईमेल",
-    "phone": "फोन"
+    "phone": "फोन",
+    "systemShutdown": "सिस्टम बंद?",
+    "endSessionConfirm": "तुम्हाला खात्री आहे की तुम्ही तुमचे वर्तमान सत्र संपवू इच्छिता?",
+    "powerDown": "बंद करा",
+    "deactivateSalonListing": "सॅलून लिस्टिंग निष्क्रिय करा?",
+    "activateSalonListing": "सॅलून लिस्टिंग सक्रिय करा?",
+    "deactivateConfirm": "हे तुमचे सॅलून ग्राहकांपासून लपवेल आणि नवीन बुकिंग थांबवेल.",
+    "activateConfirm": "हे तुमचे सॅलून ग्राहकांसाठी दृश्यमान करेल आणि नवीन बुकिंगची परवानगी देईल.",
+    "deactivateListing": "लिस्टिंग निष्क्रिय करा",
+    "activateListing": "लिस्टिंग सक्रिय करा",
+    "processing": "प्रक्रिया सुरू आहे...",
+    "notifications": "सूचना",
+    "noNotifications": "कोणत्याही सूचना नाहीत",
+    "markAllRead": "सर्व वाचले म्हणून चिन्हांकित करा",
+    "clear": "साफ करा",
+    "identity": "ओळख",
+    "operationalHours": "ऑपरेशनल तास",
+    "expertise": "विशेषज्ञता",
+    "socialMedia": "सोशल मीडिया",
+    "location": "स्थान",
+    "allReviews": "सर्व समीक्षा",
+    "stylistProfile": "स्टाइलिस्ट प्रोफाइल",
+    "masterArtisan": "मास्टर आर्टिसन",
+    "rating": "रेटिंग",
+    "yearsExp": "वर्षांचा अनुभव",
+    "follow": "फॉलो करा",
+    "specialties": "विशेषता",
+    "visualArchive": "व्हिज्युअल आर्काइव्ह",
+    "verifiedCredentials": "सत्यापित क्रेडेंशियल्स",
+    "truthsAbout": "बद्दल सत्य",
+    "noReviewsYet": "अजून कोणतीही समीक्षा नाही. आपला अनुभव सामायिक करणारे पहिले व्हा!",
+    "exit": "बाहेर",
+    "systemLive": "सिस्टम लाइव्ह",
+    "offline": "ऑफलाइन",
+    "switchOnToListing": "लिस्टिंग उपलब्ध करण्यासाठी चालू करा"
   },
   "footer": {
     "hairColoring": "केस रंगणे",
@@ -63,7 +97,10 @@
     "services": "सेवा",
     "artists": "कलाकार",
     "salons": "सेलून",
-    "contactSupport": "सपोर्टशी संपर्क साधा"
+    "contactSupport": "संपर्क सहायता",
+    "supportedBy": "समर्थन द्वारे",
+    "madeInIndia": "भारतात बनवले",
+    "tagline": "पारंपरिक कला आणि आधुनिक विलास यांच्या दरम्यानची तफावत कमी करणे."
   },
   "settings": {
     "title": "कॉन्फिगरेशन हब",
@@ -128,6 +165,7 @@
     "markAllPresentTooltip": "सर्वांना उपस्थित चिन्हांकित करा",
     "saveAttendance": "उपस्थिती जतन करा",
     "saveAttendanceTooltip": "उपस्थिती जतन करा",
+    "save": "जतन करा",
     "clearAll": "सर्व साफ करा",
     "staff": "स्टाफ",
     "role": "भूमिका",
@@ -207,7 +245,10 @@
     "staffMember": "स्टाफ सदस्य",
     "rating": "रेटिंग",
     "appointments": "अपॉइंटमेंट",
-    "totalSales": "एकूण विक्री"
+    "totalSales": "एकूण विक्री",
+    "haircutStyling": "हेअरकट आणि स्टायलिंग",
+    "bridalMakeup": "वधू मेकअप",
+    "facialTherapy": "फेशियल थेरपी"
   },
   "services": {
     "title": "सेवा",
@@ -237,7 +278,8 @@
     "benefitPlaceholder": "उदा. हेअरवॉश",
     "activeStatus": "सक्रिय स्थिती",
     "processing": "प्रक्रिया सुरू...",
-    "saveService": "सेवा जतन करा"
+    "saveService": "सेवा जतन करा",
+    "add": "जोडा"
   },
   "staff": {
     "allStaff": "सर्व स्टाफ",
@@ -269,7 +311,19 @@
     "hitEnterToAdd": "जोडण्यासाठी Enter दाबा",
     "activeStatus": "सक्रिय स्थिती",
     "processing": "प्रक्रिया सुरू...",
-    "saveStaff": "स्टाफ जतन करा"
+    "saveStaff": "स्टाफ जतन करा",
+    "teamMembers": "टीम सदस्य",
+    "manageStaff": "तुमच्या सॅलून स्टाफ आणि त्यांच्या सेवांचे व्यवस्थापन करा",
+    "instagramHandle": "इंस्टाग्राम हॅंडल",
+    "instagramPlaceholder": "@username",
+    "facebookHandle": "फेसबुक हॅंडल",
+    "facebookPlaceholder": "@username",
+    "otherLinks": "इतर लिंक",
+    "otherLinksPlaceholder": "https://...",
+    "languages": "भाषा",
+    "certifications": "प्रमाणपत्रे",
+    "specializations": "विशेषज्ञता",
+    "add": "जोडा"
   },
   "home": {
     "locating": "लोकेशन शोधत आहे...",
@@ -285,7 +339,13 @@
     "recommendedForYou": "तुमच्यासाठी शिफारस केलेले",
     "bookNow": "आता बुक करा",
     "nearby": "जवळ",
-    "yExp": "Y अनुभव"
+    "yExp": "Y अनुभव",
+    "tagline": "जिथे तुमची स्वाक्षरी शैली लिहिली जाते.",
+    "discoverTransformation": "तुमचा पुढचा बदल शोधा",
+    "precisionLuxury": "प्रत्येक कटमध्ये अचूकता. प्रत्येक स्पर्शात विलासिता.",
+    "trending": "लोकप्रिय",
+    "stylist": "स्टायलिस्ट",
+    "mostBooked": "सर्वाधिक बुक केलेले"
   },
   "search": {
     "searchForSalons": "सॅलून शोधा...",
@@ -300,7 +360,8 @@
   "noSalonsFound": {
     "title": "{{city}} मध्ये कोणतेही सॅलून सापडले नाहीत",
     "message": "आम्हाला जवळ कोणतेही पार्टनर सापडले नाहीत. आम्ही वेगाने विस्तार करत आहोत, परंतु आम्ही अजूनही या शेजारीपर्यंत पोहोचलो नाहीत!",
-    "comingSoon": "तुमच्या शहरात लवकर येत आहे"
+    "comingSoon": "तुमच्या शहरात लवकर येत आहे",
+    "yourArea": "तुमचा क्षेत्र"
   },
   "notFound": {
     "title": "पेज सापडला नाही",
@@ -336,7 +397,31 @@
     "state": "राज्य",
     "pincode": "पिनकोड",
     "saveChanges": "बदल जतन करा",
-    "add": "जोडा"
+    "add": "जोडा",
+    "title": "प्रोफाइल",
+    "editProfile": "प्रोफाइल संपादित करा",
+    "personalInfo": "वैयक्तिक माहिती",
+    "contactInfo": "संपर्क माहिती",
+    "changePassword": "पासवर्ड बदला",
+    "profileUpdateFailed": "प्रोफाइल अपडेट अयशस्वी",
+    "welcomeBack": "परत आल्याचे स्वागत आहे",
+    "userDetails": "वापरकर्ता तपशील",
+    "shareStyle": "शैली सामायिक करा",
+    "goodStyleShared": "चांगली शैली सामायिक करण्यासाठी आहे.",
+    "copied": "कॉपी केले",
+    "gender": "लिंग",
+    "select": "निवडा",
+    "male": "पुरुष",
+    "female": "महिला",
+    "other": "इतर",
+    "dateOfBirth": "जन्म तारीख",
+    "maritalStatus": "वैवाहिक स्थिती",
+    "single": "अविवाहित",
+    "married": "विवाहित",
+    "divorced": "घटस्थ",
+    "widowed": "विधवा/विधुर",
+    "seeLess": "कमी पहा",
+    "seeMore": "अधिक पहा"
   },
   "salons": {
     "searchSalons": "सॅलून शोधा...",
@@ -399,7 +484,28 @@
     "priceRange": "किंमत श्रेणी: ",
     "viewDetails": "तपशील पहा",
     "noSalonsFoundCriteria": "तुमच्या मानदंडांशी जुळणारे कोणतेही सॅलून सापडले नाहीत",
-    "tryAdjustingSearch": "आपला शोध किंवा फिल्टर पर्याय समायोजित करण्याचा प्रयत्न करा"
+    "tryAdjustingSearch": "आपला शोध किंवा फिल्टर पर्याय समायोजित करण्याचा प्रयत्न करा",
+    "unisex": "युनिसेक्स",
+    "womenOnly": "केवळ महिला",
+    "menOnly": "केवळ पुरुष",
+    "premiumHaircut": "प्रीमियम हेअरकट आणि स्टायलिंग",
+    "haircutDesc": "सर्व केस प्रकारांसाठी प्रीमियम उत्पादांसह तज्ञ कट आणि स्टायलिंग",
+    "luxuryManicure": "लक्झरी मॅनिक्योर",
+    "manicureDesc": "जेल पॉलिश आणि क्युटिकल उपचारासह पूर्ण नेल केअर",
+    "signaturePedicure": "सिग्नेचर पेडिक्योर",
+    "pedicureDesc": "मसाज आणि प्रीमियम पॉलिशसह आरामदायक पाय उपचार",
+    "rejuvenatingFacial": "पुनर्जीवन फेशियल",
+    "facialDesc": "वैयक्तिक स्किनकेअर उपचारासह खोल सफाई फेशियल",
+    "hairColoring": "केस रंगणे",
+    "coloringDesc": "हायलाइट्सपासून पूर्ण रंगापर्यंत व्यावसायिक रंग सेवा",
+    "bridalPackage": "वधू पॅकेज",
+    "bridalDesc": "तुमच्या विशेष दिवसासाठी पूर्ण वधू सौंदर्य पॅकेज",
+    "artist1Name": "सोफिया मार्टिनेझ",
+    "artist1Specialty": "हेअर स्टायलिंग आणि रंग",
+    "artist2Name": "एमा चेन",
+    "artist2Specialty": "नेल आर्ट आणि मॅनिक्योर",
+    "artist3Name": "इझाबेला रोड्रिगेझ",
+    "artist3Specialty": "स्किनकेअर आणि फेशियल्स"
   },
   "verification": {
     "emailRequired": "ईमेल आवश्यक",
@@ -501,7 +607,9 @@
     "passwordResetSuccess": "पासवर्ड रीसेट यशस्वी!",
     "invalidOTP": "अवैध OTP किंवा कालबाह्य",
     "resetFailed": "रीसेट अयशस्वी",
-    "sendOTP": "OTP पाठवा"
+    "sendOTP": "OTP पाठवा",
+    "photoUploaded": "फोटो अपलोड झाले!",
+    "uploadFailed": "अपलोड अयशस्वी"
   },
   "salon": {
     "title": "सॅलून",
@@ -528,6 +636,8 @@
   "booking": {
     "title": "कमांड डेक",
     "subtitle": "सेलून कलेचा वास्तविक वेळ प्रवाह",
+    "commandDeck": "कमांड डेक",
+    "realtimeFlow": "सेलून कलेचा वास्तविक वेळ प्रवाह",
     "bookAppointment": "बुकिंग करा",
     "selectService": "सेवा निवडा",
     "selectStaff": "स्टाफ निवडा",
@@ -570,6 +680,10 @@
     "schedule": "वेळापत्रक",
     "serviceRendered": "प्रदान केलेली सेवा",
     "price": "किंमत",
+    "customer": "ग्राहक",
+    "customerNo": "ग्राहक क्र.",
+    "more": "अधिक",
+    "less": "कमी",
     "noBookingsFound": "फिल्टरशी जुळणारी कोणतीही बुकिंग सापडली नाही.",
     "pageOf": "पृष्ठ {{current}} / {{total}}",
     "bookingDetail": "बुकिंग तपशील",
@@ -597,7 +711,8 @@
     "rescheduled": "पुनर्निर्धारित",
     "original": "मूळ",
     "reason": "कारण",
-    "modified": "सुधारित"
+    "modified": "सुधारित",
+    "salonLogo": "सॅलून लोगो"
   },
   "analytics": {
     "title": "विश्लेषण",
@@ -660,15 +775,5 @@
     "role": "भूमिका",
     "utilization": "वापर",
     "rating": "रेटिंग"
-  },
-  "profile": {
-    "title": "प्रोफाइल",
-    "editProfile": "प्रोफाइल संपादित करा",
-    "personalInfo": "वैयक्तिक माहिती",
-    "contactInfo": "संपर्क माहिती",
-    "changePassword": "पासवर्ड बदला",
-    "saveChanges": "बदल जतन करा",
-    "profileUpdated": "प्रोफाइल अपडेट झाले!",
-    "profileUpdateFailed": "प्रोफाइल अपडेट अयशस्वी"
   }
 }

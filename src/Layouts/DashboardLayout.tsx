@@ -9,8 +9,10 @@ import { useDispatch } from "react-redux";
 import { logoutUser } from "../API/APIs";
 import { useApi } from "../API/SalonsAPIs/ALLSalonAPI";
 import Config from "../configs/config";
+import { useTranslation } from 'react-i18next';
 
 const DashboardLayout: React.FC = () => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -176,13 +178,13 @@ const DashboardLayout: React.FC = () => {
                       }`}
                       style={{ fontFamily: "'JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', monospace" }}
                     >
-                      {!salonData.isBlocked ? 'SYSTEM LIVE' : 'OFFLINE'}
+                      {!salonData.isBlocked ? t('common.systemLive') : t('common.offline')}
                     </span>
                   </div>
                 </motion.button>
                 {salonData.isBlocked && (
                   <p className="text-[9px] text-gray-500 font-medium text-center" style={{ maxWidth: '180px' }}>
-                    Switch on to make listing available
+                    {t('common.switchOnToListing')}
                   </p>
                 )}
               </div>
@@ -240,7 +242,7 @@ const DashboardLayout: React.FC = () => {
                   <path d="M18.4 6.6C19.2 7.4 19.8 8.4 20.2 9.5C20.6 10.6 20.8 11.8 20.8 13C20.8 14.2 20.6 15.4 20.2 16.5C19.8 17.6 19.2 18.6 18.4 19.4C17.6 20.2 16.6 20.8 15.5 21.2C14.4 21.6 13.2 21.8 12 21.8C10.8 21.8 9.6 21.6 8.5 21.2C7.4 20.8 6.4 20.2 5.6 19.4C4.8 18.6 4.2 17.6 3.8 16.5C3.4 15.4 3.2 14.2 3.2 13C3.2 11.8 3.4 10.6 3.8 9.5C4.2 8.4 4.8 7.4 5.6 6.6" />
                 </svg>
                 <span className="text-[10px] font-bold uppercase tracking-wider hidden sm:block" style={{ color: '#DC2626' }}>
-                  Exit
+                  {t('common.exit')}
                 </span>
               </motion.button>
             </div>
@@ -300,24 +302,24 @@ const DashboardLayout: React.FC = () => {
                 </svg>
               </div>
               <h3 className="text-2xl font-black text-[#1a1a1a] tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-                System Shutdown?
+                {t('common.systemShutdown')}
               </h3>
             </div>
             <p className="text-gray-600 mb-8 text-sm leading-relaxed">
-              Are you sure you want to end your current session?
+              {t('common.endSessionConfirm')}
             </p>
             <div className="flex flex-col gap-3">
               <button
                 onClick={handleLogout}
                 className="w-full px-6 py-4 bg-[#1a1a1a] text-white rounded-2xl font-bold text-sm shadow-lg transition-all hover:scale-1.02 hover:shadow-[0_0_30px_rgba(26,26,26,0.4)] active:scale-0.98"
               >
-                Power Down
+                {t('common.powerDown')}
               </button>
               <button
                 onClick={() => setShowLogoutConfirm(false)}
                 className="w-full px-6 py-3 text-gray-500 font-semibold text-sm hover:text-gray-700 transition-colors"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
           </motion.div>
@@ -358,13 +360,13 @@ const DashboardLayout: React.FC = () => {
                 </svg>
               </div>
               <h3 className="text-2xl font-black text-[#1a1a1a] tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-                {salonData?.isBlocked ? 'Activate Salon Listing?' : 'Deactivate Salon Listing?'}
+                {salonData?.isBlocked ? t('common.activateSalonListing') : t('common.deactivateSalonListing')}
               </h3>
             </div>
             <p className="text-gray-600 mb-8 text-sm leading-relaxed">
               {salonData?.isBlocked 
-                ? 'This will make your salon visible to customers and allow new bookings.' 
-                : 'This will hide your salon from customers and pause new bookings.'}
+                ? t('common.activateConfirm')
+                : t('common.deactivateConfirm')}
             </p>
             <div className="flex flex-col gap-3">
               <button
@@ -376,13 +378,13 @@ const DashboardLayout: React.FC = () => {
                     : 'bg-orange-600 hover:bg-orange-700 hover:shadow-[0_0_30px_rgba(249,115,22,0.4)]'
                 }`}
               >
-                {isTogglingVisibility ? 'Processing...' : (salonData?.isBlocked ? 'Activate Listing' : 'Deactivate Listing')}
+                {isTogglingVisibility ? t('common.processing') : (salonData?.isBlocked ? t('common.activateListing') : t('common.deactivateListing'))}
               </button>
               <button
                 onClick={() => setShowVisibilityConfirm(false)}
                 className="w-full px-6 py-3 text-gray-500 font-semibold text-sm hover:text-gray-700 transition-colors"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
           </motion.div>

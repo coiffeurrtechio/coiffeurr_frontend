@@ -483,7 +483,7 @@ const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, all
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Benefits or products used</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('services.includedBenefits')}</label>
                         <div className="flex gap-2">
                             <input className="flex-1 px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder={t('services.benefitPlaceholder')} value={newItem} onChange={e => setNewItem(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addInclude())} />
                             <motion.button 
@@ -493,7 +493,7 @@ const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, all
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                             >
-                                Add
+                                {t('services.add')}
                             </motion.button>
                         </div>
                         <div className="flex flex-wrap gap-2">

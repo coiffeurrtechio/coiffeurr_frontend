@@ -864,8 +864,8 @@ const AttendancePage: React.FC = () => {
 
       {/* Header */}
       <div className="flex flex-col gap-1 pb-4" style={{ borderBottom: '1px solid var(--ghost-row-line)' }}>
-        <h1 className="font-semibold typography-display" style={{ color: 'var(--deep-charcoal)', fontSize: '24px', letterSpacing: '0.05em', fontFamily: 'Playfair Display, serif' }}>Floor Status</h1>
-        <p className="text-sm font-normal tracking-[0.2em] typography-label-light" style={{ color: '#666' }}>Monitoring the rhythm of your elite crew</p>
+        <h1 className="font-semibold typography-display" style={{ color: 'var(--deep-charcoal)', fontSize: '24px', letterSpacing: '0.05em', fontFamily: 'Playfair Display, serif' }}>{t('attendance.title')}</h1>
+        <p className="text-sm font-normal tracking-[0.2em] typography-label-light" style={{ color: '#666' }}>{t('attendance.subtitle')}</p>
       </div>
 
       {/* View Tabs */}

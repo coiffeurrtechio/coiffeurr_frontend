@@ -49,7 +49,41 @@
     "warning": "चेतावनी",
     "info": "जानकारी",
     "email": "ईमेल",
-    "phone": "फोन"
+    "phone": "फोन",
+    "systemShutdown": "सिस्टम बंद?",
+    "endSessionConfirm": "क्या आप वाकई अपना वर्तमान सत्र समाप्त करना चाहते हैं?",
+    "powerDown": "बंद करें",
+    "deactivateSalonListing": "सैलून लिस्टिंग निष्क्रिय करें?",
+    "activateSalonListing": "सैलून लिस्टिंग सक्रिय करें?",
+    "deactivateConfirm": "यह आपके सैलून को ग्राहकों से छुपाएगा और नई बुकिंग रोक देगा।",
+    "activateConfirm": "यह आपके सैलून को ग्राहकों के लिए दृश्यमान बनाएगा और नई बुकिंग की अनुमति देगा।",
+    "deactivateListing": "लिस्टिंग निष्क्रिय करें",
+    "activateListing": "लिस्टिंग सक्रिय करें",
+    "processing": "प्रसंस्करण हो रहा है...",
+    "notifications": "सूचनाएं",
+    "noNotifications": "कोई सूचना नहीं",
+    "markAllRead": "सभी पढ़े हुए चिह्नित करें",
+    "clear": "साफ़ करें",
+    "identity": "पहचान",
+    "operationalHours": "ऑपरेशनल घंटे",
+    "expertise": "विशेषज्ञता",
+    "socialMedia": "सोशल मीडिया",
+    "location": "स्थान",
+    "allReviews": "सभी समीक्षाएं",
+    "stylistProfile": "स्टाइलिस्ट प्रोफाइल",
+    "masterArtisan": "मास्टर आर्टिसन",
+    "rating": "रेटिंग",
+    "yearsExp": "वर्ष का अनुभव",
+    "follow": "फॉलो करें",
+    "specialties": "विशेषताएं",
+    "visualArchive": "विजुअल आर्काइव",
+    "verifiedCredentials": "सत्यापित क्रेडेंशियल्स",
+    "truthsAbout": "के बारे में सच्चाई",
+    "noReviewsYet": "अभी तक कोई समीक्षा नहीं। अपना अनुभव साझा करने वाले पहले बनें!",
+    "exit": "बाहर",
+    "systemLive": "सिस्टम लाइव",
+    "offline": "ऑफ़लाइन",
+    "switchOnToListing": "लिस्टिंग उपलब्ध कराने के लिए चालू करें"
   },
   "footer": {
     "hairColoring": "बाल रंगना",
@@ -63,7 +97,10 @@
     "services": "सेवाएं",
     "artists": "कलाकार",
     "salons": "सैलून",
-    "contactSupport": "सहायता से संपर्क करें"
+    "contactSupport": "सहायता से संपर्क करें",
+    "supportedBy": "समर्थित द्वारा",
+    "madeInIndia": "भारत में निर्मित",
+    "tagline": "पारंपरिक कला और आधुनिक विलास के बीच की खाई को पाटना।"
   },
   "settings": {
     "title": "कॉन्फ़िगरेशन हब",
@@ -128,6 +165,7 @@
     "markAllPresentTooltip": "सभी को उपस्थित चिह्नित करें",
     "saveAttendance": "उपस्थिति सहेजें",
     "saveAttendanceTooltip": "उपस्थिति सहेजें",
+    "save": "सहेजें",
     "clearAll": "सभी साफ़ करें",
     "staff": "स्टाफ",
     "role": "भूमिका",
@@ -207,7 +245,10 @@
     "staffMember": "स्टाफ सदस्य",
     "rating": "रेटिंग",
     "appointments": "अपॉइंटमेंट",
-    "totalSales": "कुल बिक्री"
+    "totalSales": "कुल बिक्री",
+    "haircutStyling": "हेयरकट और स्टाइलिंग",
+    "bridalMakeup": "दुल्हन मेकअप",
+    "facialTherapy": "फेशियल थेरेपी"
   },
   "services": {
     "title": "सेवाएं",
@@ -237,7 +278,8 @@
     "benefitPlaceholder": "उदा. हेयरवॉश",
     "activeStatus": "सक्रिय स्थिति",
     "processing": "प्रोसेसिंग...",
-    "saveService": "सेवा सहेजें"
+    "saveService": "सेवा सहेजें",
+    "add": "जोड़ें"
   },
   "staff": {
     "allStaff": "सभी स्टाफ",
@@ -269,7 +311,19 @@
     "hitEnterToAdd": "जोड़ने के लिए Enter दबाएं",
     "activeStatus": "सक्रिय स्थिति",
     "processing": "प्रोसेसिंग...",
-    "saveStaff": "स्टाफ सहेजें"
+    "saveStaff": "स्टाफ सहेजें",
+    "teamMembers": "टीम सदस्य",
+    "manageStaff": "अपने सैलून स्टाफ और उनकी सेवाओं का प्रबंधन करें",
+    "instagramHandle": "इंस्टाग्राम हैंडल",
+    "instagramPlaceholder": "@username",
+    "facebookHandle": "फेसबुक हैंडल",
+    "facebookPlaceholder": "@username",
+    "otherLinks": "अन्य लिंक",
+    "otherLinksPlaceholder": "https://...",
+    "languages": "भाषाएं",
+    "certifications": "प्रमाणपत्र",
+    "specializations": "विशेषज्ञताएं",
+    "add": "जोड़ें"
   },
   "home": {
     "locating": "लोकेट हो रहा है...",
@@ -285,7 +339,13 @@
     "recommendedForYou": "आपके लिए अनुशंसित",
     "bookNow": "अभी बुक करें",
     "nearby": "पास",
-    "yExp": "Y अनुभव"
+    "yExp": "Y अनुभव",
+    "tagline": "जहां आपकी हस्ताक्षर शैली लिखी जाती है।",
+    "discoverTransformation": "अपना अगला रूपांतरण खोजें",
+    "precisionLuxury": "हर कट में सटीकता। हर स्पर्श में विलासिता।",
+    "trending": "लोकप्रिय",
+    "stylist": "स्टाइलिस्ट",
+    "mostBooked": "सबसे ज्यादा बुक किया गया"
   },
   "search": {
     "searchForSalons": "सैलून खोजें...",
@@ -300,7 +360,8 @@
   "noSalonsFound": {
     "title": "{{city}} में कोई सैलून नहीं मिले",
     "message": "हमें पास में कोई पार्टनर नहीं मिले। हम तेजी से विस्तार कर रहे हैं, लेकिन हम अभी तक इस पड़ोस तक नहीं पहुंचे हैं!",
-    "comingSoon": "आपके शहर में जल्द आ रहा है"
+    "comingSoon": "आपके शहर में जल्द आ रहा है",
+    "yourArea": "आपका क्षेत्र"
   },
   "notFound": {
     "title": "पेज नहीं मिला",
@@ -336,7 +397,25 @@
     "state": "राज्य",
     "pincode": "पिनकोड",
     "saveChanges": "परिवर्तन सहेजें",
-    "add": "जोड़ें"
+    "add": "जोड़ें",
+    "welcomeBack": "वापसी पर स्वागत है",
+    "userDetails": "उपयोगकर्ता विवरण",
+    "shareStyle": "शैली साझा करें",
+    "goodStyleShared": "अच्छी शैली साझा करने के लिए बनी है।",
+    "copied": "कॉपी किया गया",
+    "gender": "लिंग",
+    "select": "चुनें",
+    "male": "पुरुष",
+    "female": "महिला",
+    "other": "अन्य",
+    "dateOfBirth": "जन्म तिथि",
+    "maritalStatus": "वैवाहिक स्थिति",
+    "single": "अविवाहित",
+    "married": "विवाहित",
+    "divorced": "तलाकशुदा",
+    "widowed": "विधवा/विधुर",
+    "seeLess": "कम देखें",
+    "seeMore": "अधिक देखें"
   },
   "salons": {
     "searchSalons": "सैलून खोजें...",
@@ -399,7 +478,28 @@
     "priceRange": "मूल्य सीमा: ",
     "viewDetails": "विवरण देखें",
     "noSalonsFoundCriteria": "आपकी मानदंडों से मेल खाते कोई सैलून नहीं मिले",
-    "tryAdjustingSearch": "अपनी खोज या फ़िल्टर विकल्प समायोजित करने का प्रयास करें"
+    "tryAdjustingSearch": "अपनी खोज या फ़िल्टर विकल्प समायोजित करने का प्रयास करें",
+    "unisex": "यूनिसेक्स",
+    "womenOnly": "केवल महिलाएं",
+    "menOnly": "केवल पुरुष",
+    "premiumHaircut": "प्रीमियम हेयरकट और स्टाइलिंग",
+    "haircutDesc": "सभी बाल प्रकारों के लिए प्रीमियम उत्पादों के साथ विशेषज्ञ कट और स्टाइलिंग",
+    "luxuryManicure": "लक्जरी मैनिक्योर",
+    "manicureDesc": "जेल पॉलिश और क्यूटिकल उपचार के साथ पूर्ण नेल केयर",
+    "signaturePedicure": "सिग्नेचर पेडिक्योर",
+    "pedicureDesc": "मालिश और प्रीमियम पॉलिश के साथ आरामदायक पैर उपचार",
+    "rejuvenatingFacial": "पुनर्जीवन फेशियल",
+    "facialDesc": "व्यक्तिगत स्किनकेयर उपचार के साथ गहरी सफाई फेशियल",
+    "hairColoring": "बाल रंगना",
+    "coloringDesc": "हाइलाइट्स से लेकर पूर्ण रंग तक पेशेवर रंग सेवाएं",
+    "bridalPackage": "दुल्हन पैकेज",
+    "bridalDesc": "आपके विशेष दिन के लिए पूर्ण दुल्हन सौंदर्य पैकेज",
+    "artist1Name": "सोफिया मार्टिनेज़",
+    "artist1Specialty": "हेयर स्टाइलिंग और रंग",
+    "artist2Name": "एमा चेन",
+    "artist2Specialty": "नेल आर्ट और मैनिक्योर",
+    "artist3Name": "इजाबेला रोड्रिगेज़",
+    "artist3Specialty": "स्किनकेयर और फेशियल्स"
   },
   "verification": {
     "emailRequired": "ईमेल आवश्यक",
@@ -501,7 +601,9 @@
     "passwordResetSuccess": "पासवर्ड रीसेट सफल!",
     "invalidOTP": "अमान्य OTP या समाप्त",
     "resetFailed": "रीसेट विफल",
-    "sendOTP": "OTP भेजें"
+    "sendOTP": "OTP भेजें",
+    "photoUploaded": "फोटो अपलोड हो गया!",
+    "uploadFailed": "अपलोड विफल"
   },
   "salon": {
     "title": "सैलून",
@@ -528,6 +630,8 @@
   "booking": {
     "title": "कमांड डेक",
     "subtitle": "सैलून कला का वास्तविक समय प्रवाह",
+    "commandDeck": "कमांड डेक",
+    "realtimeFlow": "सैलून कला का वास्तविक समय प्रवाह",
     "bookAppointment": "बुकिंग करें",
     "selectService": "सेवा चुनें",
     "selectStaff": "स्टाफ चुनें",
@@ -570,6 +674,10 @@
     "schedule": "अनुसूची",
     "serviceRendered": "प्रदान की गई सेवा",
     "price": "मूल्य",
+    "customer": "ग्राहक",
+    "customerNo": "ग्राहक नं.",
+    "more": "अधिक",
+    "less": "कम",
     "noBookingsFound": "फ़िल्टर से मेल खाने वाली कोई बुकिंग नहीं मिली।",
     "pageOf": "पृष्ठ {{current}} / {{total}}",
     "bookingDetail": "बुकिंग विवरण",
@@ -597,7 +705,8 @@
     "rescheduled": "पुनर्निर्धारित",
     "original": "मूल",
     "reason": "कारण",
-    "modified": "संशोधित"
+    "modified": "संशोधित",
+    "salonLogo": "सैलून लोगो"
   },
   "analytics": {
     "title": "विश्लेषण",

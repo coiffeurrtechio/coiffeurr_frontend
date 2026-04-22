@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Check, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSalonApi } from '../API/Salon_Owner_API/SalonOwnerAPI';
+import { useTranslation } from 'react-i18next';
 
 interface Notification {
   id: string;
@@ -20,6 +21,7 @@ interface NotificationListResponse {
 }
 
 const NotificationCenter: React.FC = () => {
+  const { t } = useTranslation();
   const { apiSalonRequest, apiSalonPost } = useSalonApi();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -211,14 +213,14 @@ const NotificationCenter: React.FC = () => {
           <div className="absolute right-0 top-12 w-96 bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/10 z-50 max-h-[500px] flex flex-col" style={{ boxShadow: "rgba(0,0,0,0.15) 0 8px 32px" }}>
             {/* Header */}
             <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="font-bold text-gray-800" style={{ fontFamily: "'Playfair Display', serif" }}>Notifications</h3>
+              <h3 className="font-bold text-gray-800" style={{ fontFamily: "'Playfair Display', serif" }}>{t('common.notifications')}</h3>
               <div className="flex items-center gap-2">
                 {unreadCount > 0 && (
                   <button
                     onClick={() => markAsRead()}
                     className="text-xs text-blue-600 hover:text-blue-700 font-bold"
                   >
-                    Mark all read
+                    {t('common.markAllRead')}
                   </button>
                 )}
                 <button
@@ -234,11 +236,11 @@ const NotificationCenter: React.FC = () => {
             <div className="flex-1 overflow-y-auto">
               {loading ? (
                 <div className="p-8 text-center text-gray-400 text-sm">
-                  Loading...
+                  {t('common.loading')}
                 </div>
               ) : notifications.length === 0 ? (
                 <div className="p-8 text-center text-gray-400 text-sm">
-                  No notifications
+                  {t('common.noNotifications')}
                 </div>
               ) : (
                 <div className="divide-y divide-gray-50">
@@ -287,7 +289,7 @@ const NotificationCenter: React.FC = () => {
                 onClick={clearNotifications}
                 className="w-full flex items-center justify-center gap-2 text-xs text-gray-500 hover:text-gray-700 py-2 hover:bg-gray-50 rounded-xl transition-colors"
               >
-                Clear
+                {t('common.clear')}
               </button>
             </div>
           </div>

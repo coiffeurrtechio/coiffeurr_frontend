@@ -8,6 +8,7 @@ import { Pagination, Autoplay } from "swiper/modules";
 import { Loader } from "../../components/ui_components/Loader";
 import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI";
 import { usersalonApi } from "../../API/SalonsAPIs/UserSalonAPI";
+import { useTranslation } from 'react-i18next';
 
 // Styles
 // @ts-ignore - Swiper CSS imports
@@ -16,6 +17,7 @@ import "swiper/css";
 import "swiper/css/pagination";
 
 export default function StaffDetailPage() {
+    const { t } = useTranslation();
     const { salonId, staffId } = useParams();
     const navigate = useNavigate();
     const [staff, setStaff] = useState<any>(null);
@@ -194,7 +196,7 @@ export default function StaffDetailPage() {
                     <button onClick={() => navigate(-1)} className="p-2 -ml-2 hover:bg-slate-50 rounded-full transition-all">
                         <ArrowLeft className="w-5 h-5" />
                     </button>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">Stylist Profile</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">{t('common.stylistProfile')}</span>
                     <div className="w-10" />
                 </div>
             </nav>
@@ -224,7 +226,7 @@ export default function StaffDetailPage() {
 
                     {/* --- Glassmorphic MASTER ARTISAN Badge --- */}
                     <div className="absolute bottom-8 left-6 bg-white/10 backdrop-blur-md border border-white/30 px-6 py-3 rounded-2xl">
-                        <span className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-[0.3em]">Master Artisan</span>
+                        <span className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-[0.3em]">{t('common.masterArtisan')}</span>
                     </div>
 
                     {/* --- Glassmorphism Header Card --- */}
@@ -277,11 +279,11 @@ export default function StaffDetailPage() {
                                             <Star className="w-5 h-5 fill-[#D4AF37] text-[#D4AF37]" />
                                             <span className="text-[#D4AF37]">{staff.rating?.average}</span>
                                         </div>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Rating</p>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{t('common.rating')}</p>
                                     </div>
                                     <div className="text-center">
                                         <div className="text-xl font-black text-gray-900">{staff.experienceYears}+</div>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Years Exp</p>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{t('common.yearsExp')}</p>
                                     </div>
                                     {staff?.instagramHandle && (
                                         <a
@@ -291,7 +293,7 @@ export default function StaffDetailPage() {
                                             className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 text-white rounded-full hover:opacity-90 transition-opacity"
                                         >
                                             <Instagram className="w-4 h-4" />
-                                            <span className="text-[10px] font-bold uppercase tracking-wider">Follow</span>
+                                            <span className="text-[10px] font-bold uppercase tracking-wider">{t('common.follow')}</span>
                                         </a>
                                     )}
                                 </div>
@@ -381,7 +383,7 @@ export default function StaffDetailPage() {
                         <section className="space-y-8">
                             {staff?.expertise && staff.expertise.length > 0 && (
                                 <div className="space-y-4">
-                                    <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] border-b border-slate-100 pb-2">Specialties</h3>
+                                    <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] border-b border-slate-100 pb-2">{t('common.specialties')}</h3>
                                     <div className="flex flex-wrap gap-3">
                                         {staff.expertise.map((exp: string, i: number) => (
                                             <span
@@ -398,7 +400,7 @@ export default function StaffDetailPage() {
                             {/* The Visual Archive */}
                             {(staff?.instagramHandle || staff?.facebookHandle) && (
                                 <div className="pt-6">
-                                    <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">The Visual Archive</h4>
+                                    <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">{t('common.visualArchive')}</h4>
                                     <div className="flex gap-3">
                                         {staff?.instagramHandle && (
                                             <a
@@ -429,7 +431,7 @@ export default function StaffDetailPage() {
                             {/* Credentials */}
                             {staff.metadata?.certifications && staff.metadata.certifications.length > 0 && (
                                 <div className="space-y-4">
-                                    <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] border-b border-slate-100 pb-2">Verified Credentials</h3>
+                                    <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] border-b border-slate-100 pb-2">{t('common.verifiedCredentials')}</h3>
                                     <ul className="space-y-3">
                                         {staff.metadata.certifications.map((cert: string, i: number) => (
                                             <li key={i} className="flex items-start gap-3 text-sm text-slate-700 font-bold">
@@ -445,7 +447,7 @@ export default function StaffDetailPage() {
                         {/* Reviews Section */}
                         <section className="space-y-10 pt-10 border-t border-slate-100">
                             <div className="space-y-1">
-                                <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Truths about {staff.name.split(' ')[0]}</h3>
+                                <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">{t('common.truthsAbout')} {staff.name.split(' ')[0]}</h3>
                                 <p className="text-[8px] font-normal text-slate-400 uppercase tracking-[0.2em]">{reviews.length} Verified Reviews</p>
                             </div>
 
@@ -481,7 +483,7 @@ export default function StaffDetailPage() {
                                     ))
                                 ) : (
                                     <div className="py-12 text-center border-2 border-dashed border-slate-50 rounded-3xl">
-                                        <p className="text-xs text-slate-400 font-bold italic">No reviews yet. Be the first to share your experience!</p>
+                                        <p className="text-xs text-slate-400 font-bold italic">{t('common.noReviewsYet')}</p>
                                     </div>
                                 )}
                             </div>
@@ -600,7 +602,7 @@ export default function StaffDetailPage() {
                     <div className="bg-white/90 backdrop-blur-xl w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden">
                         <div className="p-6 border-b border-gray-100/50 flex justify-between items-center bg-gradient-to-r from-gray-50/80 to-white/80">
                             <div>
-                                <h3 className="text-xl font-black text-[#1a1a1a]" style={{ fontFamily: "'Playfair Display', serif" }}>All Reviews</h3>
+                                <h3 className="text-xl font-black text-[#1a1a1a]" style={{ fontFamily: "'Playfair Display', serif" }}>{t('common.allReviews')}</h3>
                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Page {reviewsCurrentPage} of {reviewsTotalPages}</p>
                             </div>
                             <div className="flex items-center gap-3">

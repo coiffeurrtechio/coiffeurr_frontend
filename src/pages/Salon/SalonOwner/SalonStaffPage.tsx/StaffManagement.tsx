@@ -225,8 +225,8 @@ const StaffManagement: React.FC = () => {
                 {/* Fixed Header Strip */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4" style={{ borderBottom: '1px solid var(--light-greige)' }}>
                     <div>
-                        <h1 className="font-semibold" style={{ fontFamily: 'Playfair Display, serif', fontSize: '24px', color: 'var(--deep-charcoal)' }}>Team Members</h1>
-                        <p className="typography-label-light" style={{ fontSize: '14px' }}>Manage your salon staff and their services</p>
+                        <h1 className="font-semibold" style={{ fontFamily: 'Playfair Display, serif', fontSize: '24px', color: 'var(--deep-charcoal)' }}>{t('staff.teamMembers')}</h1>
+                        <p className="typography-label-light" style={{ fontSize: '14px' }}>{t('staff.manageStaff')}</p>
                     </div>
                     <button onClick={() => { resetForm(); setIsModalOpen(true); }} className="w-full md:w-auto flex items-center justify-center gap-2 px-6 text-white rounded-2xl text-sm font-semibold transition-all duration-300" style={{ backgroundColor: 'var(--muted-gold)', height: '44px' }}>
                     <Plus size={18} /> {t('staff.addStaff')}
@@ -685,32 +685,32 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Instagram Handle</label>
-                        <input className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder="@username" value={formData.instagramHandle} onChange={e => setFormData({ ...formData, instagramHandle: e.target.value })} />
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('staff.instagramHandle')}</label>
+                        <input className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder={t('staff.instagramPlaceholder')} value={formData.instagramHandle} onChange={e => setFormData({ ...formData, instagramHandle: e.target.value })} />
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Facebook Handle</label>
-                        <input className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder="@username" value={formData.facebookHandle} onChange={e => setFormData({ ...formData, facebookHandle: e.target.value })} />
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('staff.facebookHandle')}</label>
+                        <input className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder={t('staff.facebookPlaceholder')} value={formData.facebookHandle} onChange={e => setFormData({ ...formData, facebookHandle: e.target.value })} />
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Other Links</label>
-                        <input className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder="https://..." value={formData.otherLinks} onChange={e => setFormData({ ...formData, otherLinks: e.target.value })} />
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('staff.otherLinks')}</label>
+                        <input className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder={t('staff.otherLinksPlaceholder')} value={formData.otherLinks} onChange={e => setFormData({ ...formData, otherLinks: e.target.value })} />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Gender</label>
+                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('staff.gender')}</label>
                             <select className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" value={formData.gender} onChange={e => setFormData({ ...formData, gender: e.target.value })}>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Other">Other</option>
+                                <option value="Male">{t('staff.male')}</option>
+                                <option value="Female">{t('staff.female')}</option>
+                                <option value="Other">{t('staff.other')}</option>
                             </select>
                         </div>
                         <div className="space-y-1">
                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                                Experience (Years)
+                                {t('staff.expYears')}
                             </label>
                             <input 
                                 type="number" 
@@ -729,9 +729,9 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Specialization Keywords</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('staff.specializationKeywords')}</label>
                         <div className="flex gap-2">
-                            <input className="flex-1 px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder="Hit Enter to add" value={newSpec} onChange={e => setNewSpec(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSpec())} />
+                            <input className="flex-1 px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder={t('staff.hitEnterToAdd')} value={newSpec} onChange={e => setNewSpec(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSpec())} />
                             <motion.button 
                                 type="button" 
                                 onClick={addSpec} 
@@ -739,7 +739,7 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                             >
-                                Add
+                                {t('staff.add')}
                             </motion.button>
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -758,9 +758,9 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Languages</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('staff.languages')}</label>
                         <div className="flex gap-2">
-                            <input className="flex-1 px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder="Hit Enter to add" value={newLang} onChange={e => setNewLang(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addLang())} />
+                            <input className="flex-1 px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder={t('staff.hitEnterToAdd')} value={newLang} onChange={e => setNewLang(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addLang())} />
                             <motion.button 
                                 type="button" 
                                 onClick={addLang} 
@@ -768,7 +768,7 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                             >
-                                Add
+                                {t('staff.add')}
                             </motion.button>
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -787,9 +787,9 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Certifications</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('staff.certifications')}</label>
                         <div className="flex gap-2">
-                            <input className="flex-1 px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder="Hit Enter to add" value={newCert} onChange={e => setNewCert(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addCert())} />
+                            <input className="flex-1 px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder={t('staff.hitEnterToAdd')} value={newCert} onChange={e => setNewCert(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addCert())} />
                             <motion.button 
                                 type="button" 
                                 onClick={addCert} 
@@ -797,7 +797,7 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                             >
-                                Add
+                                {t('staff.add')}
                             </motion.button>
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -816,9 +816,9 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Specializations</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('staff.specializations')}</label>
                         <div className="flex gap-2">
-                            <input className="flex-1 px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder="Hit Enter to add" value={newSpec2} onChange={e => setNewSpec2(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSpec2())} />
+                            <input className="flex-1 px-4 py-2 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all shadow-sm" placeholder={t('staff.hitEnterToAdd')} value={newSpec2} onChange={e => setNewSpec2(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSpec2())} />
                             <motion.button 
                                 type="button" 
                                 onClick={addSpec2} 
@@ -826,7 +826,7 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                             >
-                                Add
+                                {t('staff.add')}
                             </motion.button>
                         </div>
                         <div className="flex flex-wrap gap-2">

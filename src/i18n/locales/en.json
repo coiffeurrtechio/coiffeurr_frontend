@@ -49,7 +49,41 @@
     "warning": "Warning",
     "info": "Info",
     "email": "Email",
-    "phone": "Phone"
+    "phone": "Phone",
+    "systemShutdown": "System Shutdown?",
+    "endSessionConfirm": "Are you sure you want to end your current session?",
+    "powerDown": "Power Down",
+    "deactivateSalonListing": "Deactivate Salon Listing?",
+    "activateSalonListing": "Activate Salon Listing?",
+    "deactivateConfirm": "This will hide your salon from customers and pause new bookings.",
+    "activateConfirm": "This will make your salon visible to customers and allow new bookings.",
+    "deactivateListing": "Deactivate Listing",
+    "activateListing": "Activate Listing",
+    "processing": "Processing...",
+    "notifications": "Notifications",
+    "noNotifications": "No notifications",
+    "markAllRead": "Mark all read",
+    "clear": "Clear",
+    "identity": "Identity",
+    "operationalHours": "Operational Hours",
+    "expertise": "Expertise",
+    "socialMedia": "Social Media",
+    "location": "Location",
+    "allReviews": "All Reviews",
+    "stylistProfile": "Stylist Profile",
+    "masterArtisan": "Master Artisan",
+    "rating": "Rating",
+    "yearsExp": "Years Exp",
+    "follow": "Follow",
+    "specialties": "Specialties",
+    "visualArchive": "The Visual Archive",
+    "verifiedCredentials": "Verified Credentials",
+    "truthsAbout": "Truths about",
+    "noReviewsYet": "No reviews yet. Be the first to share your experience!",
+    "exit": "Exit",
+    "systemLive": "SYSTEM LIVE",
+    "offline": "OFFLINE",
+    "switchOnToListing": "Switch on to make listing available"
   },
   "footer": {
     "hairColoring": "Hair Coloring",
@@ -63,7 +97,10 @@
     "services": "Services",
     "artists": "Artists",
     "salons": "Salons",
-    "contactSupport": "Contact Support"
+    "contactSupport": "Contact Support",
+    "supportedBy": "Supported by",
+    "madeInIndia": "Made in India",
+    "tagline": "Bridging the gap between traditional artistry and modern luxury."
   },
   "settings": {
     "title": "Configuration Hub",
@@ -128,6 +165,7 @@
     "markAllPresentTooltip": "Mark All Present",
     "saveAttendance": "Save Attendance",
     "saveAttendanceTooltip": "Save Attendance",
+    "save": "Save",
     "clearAll": "Clear All",
     "staff": "Staff",
     "role": "Role",
@@ -207,7 +245,10 @@
     "staffMember": "Staff Member",
     "rating": "Rating",
     "appointments": "Appointments",
-    "totalSales": "Total Sales"
+    "totalSales": "Total Sales",
+    "haircutStyling": "Haircut & Styling",
+    "bridalMakeup": "Bridal Makeup",
+    "facialTherapy": "Facial Therapy"
   },
   "services": {
     "title": "Services",
@@ -237,7 +278,8 @@
     "benefitPlaceholder": "e.g. Hairwash",
     "activeStatus": "Active Status",
     "processing": "Processing...",
-    "saveService": "Save Service"
+    "saveService": "Save Service",
+    "add": "Add"
   },
   "staff": {
     "allStaff": "All Staff",
@@ -269,7 +311,19 @@
     "hitEnterToAdd": "Hit Enter to add",
     "activeStatus": "Active Status",
     "processing": "Processing...",
-    "saveStaff": "Save Staff"
+    "saveStaff": "Save Staff",
+    "teamMembers": "Team Members",
+    "manageStaff": "Manage your salon staff and their services",
+    "instagramHandle": "Instagram Handle",
+    "instagramPlaceholder": "@username",
+    "facebookHandle": "Facebook Handle",
+    "facebookPlaceholder": "@username",
+    "otherLinks": "Other Links",
+    "otherLinksPlaceholder": "https://...",
+    "languages": "Languages",
+    "certifications": "Certifications",
+    "specializations": "Specializations",
+    "add": "Add"
   },
   "home": {
     "locating": "Locating...",
@@ -285,7 +339,13 @@
     "recommendedForYou": "Recommended for You",
     "bookNow": "Book Now",
     "nearby": "Nearby",
-    "yExp": "Y EXP"
+    "yExp": "Y EXP",
+    "tagline": "Where your signature style is authored.",
+    "discoverTransformation": "Discover your next transformation",
+    "precisionLuxury": "Precision in every snip. Luxury in every touch.",
+    "trending": "Trending",
+    "stylist": "Stylist",
+    "mostBooked": "Most Booked"
   },
   "search": {
     "searchForSalons": "Search for salons...",
@@ -300,7 +360,8 @@
   "noSalonsFound": {
     "title": "No Salons Found in {{city}}",
     "message": "We couldn't find any partners nearby. We're expanding fast, but we haven't reached this neighborhood just yet!",
-    "comingSoon": "Coming Soon to your city"
+    "comingSoon": "Coming Soon to your city",
+    "yourArea": "your area"
   },
   "notFound": {
     "title": "Page Not Found",
@@ -336,7 +397,25 @@
     "state": "State",
     "pincode": "Pincode",
     "saveChanges": "Save Changes",
-    "add": "Add"
+    "add": "Add",
+    "welcomeBack": "Welcome Back",
+    "userDetails": "User Details",
+    "shareStyle": "Share the Style",
+    "goodStyleShared": "Good style is meant to be shared.",
+    "copied": "Copied",
+    "gender": "Gender",
+    "select": "Select",
+    "male": "Male",
+    "female": "Female",
+    "other": "Other",
+    "dateOfBirth": "Date of Birth",
+    "maritalStatus": "Marital Status",
+    "single": "Single",
+    "married": "Married",
+    "divorced": "Divorced",
+    "widowed": "Widowed",
+    "seeLess": "See Less",
+    "seeMore": "See More"
   },
   "salons": {
     "searchSalons": "Search salons...",
@@ -399,7 +478,28 @@
     "priceRange": "Price range: ",
     "viewDetails": "View Details",
     "noSalonsFoundCriteria": "No salons found matching your criteria",
-    "tryAdjustingSearch": "Try adjusting your search or filter options"
+    "tryAdjustingSearch": "Try adjusting your search or filter options",
+    "unisex": "Unisex",
+    "womenOnly": "Women Only",
+    "menOnly": "Men Only",
+    "premiumHaircut": "Premium Haircut & Styling",
+    "haircutDesc": "Expert cuts and styling for all hair types with premium products",
+    "luxuryManicure": "Luxury Manicure",
+    "manicureDesc": "Complete nail care with gel polish and cuticle treatment",
+    "signaturePedicure": "Signature Pedicure",
+    "pedicureDesc": "Relaxing foot treatment with massage and premium polish",
+    "rejuvenatingFacial": "Rejuvenating Facial",
+    "facialDesc": "Deep cleansing facial with personalized skincare treatment",
+    "hairColoring": "Hair Coloring",
+    "coloringDesc": "Professional color services from highlights to full color",
+    "bridalPackage": "Bridal Package",
+    "bridalDesc": "Complete bridal beauty package for your special day",
+    "artist1Name": "Sofia Martinez",
+    "artist1Specialty": "Hair Styling & Color",
+    "artist2Name": "Emma Chen",
+    "artist2Specialty": "Nail Art & Manicure",
+    "artist3Name": "Isabella Rodriguez",
+    "artist3Specialty": "Skincare & Facials"
   },
   "verification": {
     "emailRequired": "Email Required",
@@ -501,7 +601,9 @@
     "passwordResetSuccess": "Password reset successful!",
     "invalidOTP": "Invalid OTP or expired",
     "resetFailed": "Reset failed",
-    "sendOTP": "Send OTP"
+    "sendOTP": "Send OTP",
+    "photoUploaded": "Photo Uploaded!",
+    "uploadFailed": "Upload Failed"
   },
   "salon": {
     "title": "Salon",
@@ -528,6 +630,8 @@
   "booking": {
     "title": "Command Deck",
     "subtitle": "Real-time flow of salon artistry",
+    "commandDeck": "Command Deck",
+    "realtimeFlow": "Real-time flow of salon artistry",
     "bookAppointment": "Book Appointment",
     "selectService": "Select Service",
     "selectStaff": "Select Staff",
@@ -570,6 +674,10 @@
     "schedule": "Schedule",
     "serviceRendered": "Service Rendered",
     "price": "Price",
+    "customer": "Customer",
+    "customerNo": "Customer No.",
+    "more": "More",
+    "less": "Less",
     "noBookingsFound": "No bookings found matching filters.",
     "pageOf": "Page {{current}} / {{total}}",
     "bookingDetail": "Booking Detail",
@@ -597,7 +705,8 @@
     "rescheduled": "Rescheduled",
     "original": "Original",
     "reason": "Reason",
-    "modified": "Modified"
+    "modified": "Modified",
+    "salonLogo": "Salon Logo"
   },
   "analytics": {
     "title": "Analytics",
