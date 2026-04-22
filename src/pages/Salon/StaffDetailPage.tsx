@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-    ArrowLeft, Star, Scissors, X, Loader2, Award, Instagram, Clock
+    ArrowLeft, Star, Scissors, X, Loader2, Award, Instagram, Clock, Facebook, ChevronRight
 } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
@@ -25,6 +25,13 @@ export default function StaffDetailPage() {
 
     // Reviews State
     const [reviews, setReviews] = useState<any[]>([]);
+    const [isReviewsModalOpen, setIsReviewsModalOpen] = useState(false);
+    const [allReviews, setAllReviews] = useState<any[]>([]);
+    const [reviewsCurrentPage, setReviewsCurrentPage] = useState(1);
+    const [reviewsTotalPages, setReviewsTotalPages] = useState(1);
+    const [reviewsLoading, setReviewsLoading] = useState(false);
+    const [reviewsSortBy, setReviewsSortBy] = useState('latest');
+    const reviewsPerPage = 10;
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
     const [isReviewSubmitting, setIsReviewSubmitting] = useState(false);
     const [reviewError, setReviewError] = useState<string | null>(null);
@@ -47,13 +54,69 @@ export default function StaffDetailPage() {
 
     const fetchReviews = async () => {
         try {
-            const res = await apiRequest<any>(`/reviews/STAFF/${staffId}?page=1&limit=20`);
+            const res = await apiRequest<any>(`/reviews/STAFF/${staffId}?page=1&limit=${reviewsPerPage}`);
             if (res.data) setReviews(res.data);
-
         } catch (error) {
             console.error("Staff reviews fetch error:", error);
         }
     };
+
+    const fetchPaginatedReviews = async (page: number = 1, sortBy: string = reviewsSortBy) => {
+        try {
+            setReviewsLoading(true);
+            let sortParam = '';
+            if (sortBy === 'latest') {
+                sortParam = '&sort=-createdAt';
+            } else if (sortBy === 'oldest') {
+                sortParam = '&sort=createdAt';
+            } else if (sortBy === 'highest') {
+                sortParam = '&sort=-rating';
+            } else if (sortBy === 'lowest') {
+                sortParam = '&sort=rating';
+            }
+            
+            const res = await apiRequest<any>(
+                `/reviews/STAFF/${staffId}?page=${page}&limit=${reviewsPerPage}${sortParam}`
+            );
+            if (res.data) {
+                setAllReviews(res.data);
+                // Calculate total pages based on review summary
+                const summary = await apiRequest<any>(`/reviews/STAFF/${staffId}/summary`);
+                if (summary.data) {
+                    const totalReviews = summary.data.totalReviews || 0;
+                    setReviewsTotalPages(Math.ceil(totalReviews / reviewsPerPage));
+                }
+            }
+        } catch (err) {
+            console.error('Error fetching paginated reviews:', err);
+        } finally {
+            setReviewsLoading(false);
+        }
+    };
+
+    const handleViewAllReviews = () => {
+        setIsReviewsModalOpen(true);
+    };
+
+    const handleReviewsPageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= reviewsTotalPages) {
+            setReviewsCurrentPage(newPage);
+            fetchPaginatedReviews(newPage, reviewsSortBy);
+        }
+    };
+
+    const handleSortChange = (newSort: string) => {
+        setReviewsSortBy(newSort);
+        setReviewsCurrentPage(1);
+        fetchPaginatedReviews(1, newSort);
+    };
+
+    useEffect(() => {
+        if (isReviewsModalOpen) {
+            fetchPaginatedReviews(1);
+            setReviewsCurrentPage(1);
+        }
+    }, [isReviewsModalOpen]);
 
     const fetchStaffDetails = async () => {
         setLoading(true);
@@ -177,19 +240,34 @@ export default function StaffDetailPage() {
                                         </span>
                                     </div>
                                     <h1 className="text-4xl md:text-6xl font-serif text-gray-900 leading-tight" style={{ fontFamily: 'Playfair Display, serif' }}>{staff.name}</h1>
-                                    {staff?.instagramHandle && (
-                                        <a
-                                            href={`https://instagram.com/${staff.instagramHandle.replace('@', '')}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-2 mt-2 group"
-                                        >
-                                            <Instagram className="w-3 h-3 text-slate-400" />
-                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] group-hover:text-[#D4AF37] group-hover:underline decoration-[#D4AF37] decoration-2 underline-offset-2 transition-all">
-                                                @{staff.instagramHandle.replace('@', '')}
-                                            </span>
-                                        </a>
-                                    )}
+                                    <div className="flex items-center gap-4 mt-2">
+                                        {staff?.instagramHandle && (
+                                            <a
+                                                href={`https://instagram.com/${staff.instagramHandle.replace('@', '')}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 group"
+                                            >
+                                                <Instagram className="w-3 h-3 text-slate-400" />
+                                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] group-hover:text-[#D4AF37] group-hover:underline decoration-[#D4AF37] decoration-2 underline-offset-2 transition-all">
+                                                    @{staff.instagramHandle.replace('@', '')}
+                                                </span>
+                                            </a>
+                                        )}
+                                        {staff?.facebookHandle && (
+                                            <a
+                                                href={`https://facebook.com/${staff.facebookHandle.replace('@', '')}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 group"
+                                            >
+                                                <Facebook className="w-3 h-3 text-slate-400" />
+                                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] group-hover:text-[#D4AF37] group-hover:underline decoration-[#D4AF37] decoration-2 underline-offset-2 transition-all">
+                                                    @{staff.facebookHandle.replace('@', '')}
+                                                </span>
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* --- Stats Row with Gold Stars --- */}
@@ -318,18 +396,33 @@ export default function StaffDetailPage() {
                             )}
 
                             {/* The Visual Archive */}
-                            {staff?.instagramHandle && (
+                            {(staff?.instagramHandle || staff?.facebookHandle) && (
                                 <div className="pt-6">
                                     <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">The Visual Archive</h4>
-                                    <a
-                                        href={`https://instagram.com/${staff.instagramHandle.replace('@', '')}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-2 px-6 py-2 border border-slate-300 text-slate-600 text-[10px] font-bold uppercase tracking-[0.2em] rounded-full hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all"
-                                    >
-                                        <Instagram className="w-3 h-3" />
-                                        View Portfolio
-                                    </a>
+                                    <div className="flex gap-3">
+                                        {staff?.instagramHandle && (
+                                            <a
+                                                href={`https://instagram.com/${staff.instagramHandle.replace('@', '')}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 px-6 py-2 border border-slate-300 text-slate-600 text-[10px] font-bold uppercase tracking-[0.2em] rounded-full hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all"
+                                            >
+                                                <Instagram className="w-3 h-3" />
+                                                Instagram
+                                            </a>
+                                        )}
+                                        {staff?.facebookHandle && (
+                                            <a
+                                                href={`https://facebook.com/${staff.facebookHandle.replace('@', '')}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 px-6 py-2 border border-slate-300 text-slate-600 text-[10px] font-bold uppercase tracking-[0.2em] rounded-full hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all"
+                                            >
+                                                <Facebook className="w-3 h-3" />
+                                                Facebook
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
                             )}
 
@@ -358,7 +451,7 @@ export default function StaffDetailPage() {
 
                             <div className="grid gap-8">
                                 {reviews.length > 0 ? (
-                                    reviews.map((rev, i) => (
+                                    reviews.slice(0, reviewsPerPage).map((rev, i) => (
                                         <div key={i} className="animate-in fade-in slide-in-from-bottom-2 relative">
                                             {/* Large Quote Mark Background */}
                                             <div className="absolute top-0 left-0 text-[60px] font-serif leading-none opacity-5 text-slate-900" style={{ fontFamily: 'Playfair Display, serif' }}>
@@ -392,6 +485,19 @@ export default function StaffDetailPage() {
                                     </div>
                                 )}
                             </div>
+
+                            {/* View All Reviews Button */}
+                            {reviews.length > 0 && (
+                                <div className="text-center pt-8">
+                                    <button
+                                        onClick={handleViewAllReviews}
+                                        className="inline-flex items-center gap-2 px-6 py-3 rounded-full border-2 border-slate-900 text-slate-900 text-[10px] font-black uppercase tracking-wider hover:bg-slate-900 hover:text-white transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/20"
+                                    >
+                                        View All Reviews
+                                        <ChevronRight size={14} />
+                                    </button>
+                                </div>
+                            )}
 
                             {isloggedin && (
                                 <div className="flex justify-center pt-8">
@@ -484,6 +590,106 @@ export default function StaffDetailPage() {
                                 "Share with the Community"
                             )}
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Reviews Modal (View All) */}
+            {isReviewsModalOpen && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-[#0a0a0a]/60 backdrop-blur-sm">
+                    <div className="bg-white/90 backdrop-blur-xl w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden">
+                        <div className="p-6 border-b border-gray-100/50 flex justify-between items-center bg-gradient-to-r from-gray-50/80 to-white/80">
+                            <div>
+                                <h3 className="text-xl font-black text-[#1a1a1a]" style={{ fontFamily: "'Playfair Display', serif" }}>All Reviews</h3>
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Page {reviewsCurrentPage} of {reviewsTotalPages}</p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <select
+                                    value={reviewsSortBy}
+                                    onChange={(e) => handleSortChange(e.target.value)}
+                                    className="text-xs font-semibold text-gray-700 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-[#D4AF37]/30"
+                                >
+                                    <option value="latest">Latest First</option>
+                                    <option value="oldest">Oldest First</option>
+                                    <option value="highest">Highest Rated</option>
+                                    <option value="lowest">Lowest Rated</option>
+                                </select>
+                                <button
+                                    onClick={() => setIsReviewsModalOpen(false)}
+                                    className="p-2 bg-white/60 backdrop-blur-sm rounded-xl border border-gray-200/50 hover:bg-white/80 transition-all"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+                        </div>
+                        <div className="p-6 overflow-y-auto max-h-[70vh] relative custom-scrollbar mt-2">
+                            {reviewsLoading ? (
+                                <div className="flex items-center justify-center py-12">
+                                    <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin" />
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="space-y-4">
+                                        {allReviews.length > 0 ? (
+                                            allReviews.map((review: any, idx: number) => (
+                                                <div key={review.id || idx} className="bg-white/95 rounded-2xl p-4 border border-white/10 hover:bg-white/5 transition-colors">
+                                                    <div className="flex items-center gap-3 mb-3">
+                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#D4AF37]/20 to-[#C9A227]/20 flex items-center justify-center flex-shrink-0">
+                                                            <span className="text-sm font-bold text-[#D4AF37]">
+                                                                {review.userName?.charAt(0).toUpperCase() || 'A'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center gap-2">
+                                                                <p className="text-sm font-bold text-gray-900 truncate">{review.userName || 'Anonymous'}</p>
+                                                            </div>
+                                                            <div className="flex items-center gap-1">
+                                                                {[...Array(5)].map((_, i) => (
+                                                                    <Star
+                                                                        key={i}
+                                                                        size={12}
+                                                                        className={i < review.rating ? "text-[#D4AF37] fill-[#D4AF37]" : "text-gray-300"}
+                                                                    />
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-xs text-gray-500 flex-shrink-0">
+                                                            {review.createdAt ? new Date(review.createdAt).toLocaleDateString() : ''}
+                                                        </p>
+                                                    </div>
+                                                    <p className="text-sm text-gray-700 leading-relaxed">{review.text || review.reviewText || 'No review text'}</p>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-12">
+                                                <p className="text-gray-400 italic" style={{ fontFamily: "'Playfair Display', serif" }}>No reviews yet.</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {reviewsTotalPages > 1 && (
+                                        <div className="flex items-center justify-center gap-4 mt-6 pt-4 border-t border-gray-200/50">
+                                            <button
+                                                onClick={() => handleReviewsPageChange(reviewsCurrentPage - 1)}
+                                                disabled={reviewsCurrentPage === 1}
+                                                className="p-2 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                            >
+                                                <ChevronRight size={20} className="text-gray-600 rotate-180" />
+                                            </button>
+                                            <span className="text-sm font-semibold text-gray-700">
+                                                Page {reviewsCurrentPage} of {reviewsTotalPages}
+                                            </span>
+                                            <button
+                                                onClick={() => handleReviewsPageChange(reviewsCurrentPage + 1)}
+                                                disabled={reviewsCurrentPage === reviewsTotalPages}
+                                                className="p-2 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                            >
+                                                <ChevronRight size={20} className="text-gray-600" />
+                                            </button>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

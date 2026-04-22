@@ -4,8 +4,12 @@ import {
   ArrowLeft, MapPin, Clock, Phone, Star, Heart,
   Mail, CheckCircle, X, Scissors, Loader2,
   Check,
-  Navigation
+  Navigation,
+  Instagram,
+  Facebook,
+  ChevronRight
 } from "lucide-react";
+import { usersalonApi } from "../../API/SalonsAPIs/UserSalonAPI";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay, EffectFade } from "swiper/modules";
 
@@ -22,11 +26,11 @@ import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
-import { usersalonApi } from "../../API/SalonsAPIs/UserSalonAPI";
 
 export default function SalonDetailPage() {
   const { salonId } = useParams<{ salonId: string }>();
-  const { apiRequest, apiCustomerpiPostReq } = useApi();
+  const { apiRequest } = useApi();
+  const { userapiRequest } = usersalonApi();
 
   const { userapiPost } = usersalonApi()
   const navigate = useNavigate();
@@ -39,6 +43,13 @@ export default function SalonDetailPage() {
 
   // Reviews State
   const [reviews, setReviews] = useState<any[]>([]);
+  const [isReviewsModalOpen, setIsReviewsModalOpen] = useState(false);
+  const [allReviews, setAllReviews] = useState<any[]>([]);
+  const [reviewsCurrentPage, setReviewsCurrentPage] = useState(1);
+  const [reviewsTotalPages, setReviewsTotalPages] = useState(1);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsSortBy, setReviewsSortBy] = useState('latest');
+  const reviewsPerPage = 10;
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isReviewSubmitting, setIsReviewSubmitting] = useState(false);
   const [reviewData, setReviewData] = useState({
@@ -66,17 +77,104 @@ export default function SalonDetailPage() {
   useEffect(() => {
     if (salonId) {
       fetchSalonById();
+      checkWishlistStatus();
     }
   }, [salonId]);
 
-  const fetchReviews = async () => {
+  const checkWishlistStatus = async () => {
+    const user = localStorage.getItem("authState");
+    const parsedUser = user ? JSON.parse(user) : null;
+    const userID = parsedUser?.user?.user?.id || parsedUser?.user?.id;
+
+    if (!userID || !salonId) return;
+
     try {
-      const res = await apiRequest<any>(`/reviews/SALON/${salonId}?page=1&limit=20`);
-      if (res.data) setReviews(res.data);
+      const res = await userapiRequest(`/wishlist/${userID}`);
+      if (res.data) {
+        const isInWishlist = res.data.some((item: any) => item.id === salonId || item.salonId === salonId);
+        setIsFavorite(isInWishlist);
+      } else {
+        setIsFavorite(false);
+      }
     } catch (error) {
-      console.error("Reviews fetch error:", error);
+      console.error("Error checking wishlist status:", error);
+      setIsFavorite(false);
     }
   };
+
+  const fetchReviews = async (page: number = 1) => {
+    try {
+      setReviewsLoading(true);
+      const res = await apiRequest<any>(`/reviews/SALON/${salonId}?page=${page}&limit=${reviewsPerPage}`);
+      if (res.data) {
+        setReviews(res.data);
+        // Calculate total pages based on the response
+        const totalReviews = res.data.length || 0; // Adjust based on actual API response
+        setReviewsTotalPages(Math.ceil(totalReviews / reviewsPerPage));
+      }
+    } catch (error) {
+      console.error("Reviews fetch error:", error);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  const fetchPaginatedReviews = async (page: number = 1, sortBy: string = reviewsSortBy) => {
+    try {
+      setReviewsLoading(true);
+      let sortParam = '';
+      if (sortBy === 'latest') {
+        sortParam = '&sort=-createdAt';
+      } else if (sortBy === 'oldest') {
+        sortParam = '&sort=createdAt';
+      } else if (sortBy === 'highest') {
+        sortParam = '&sort=-rating';
+      } else if (sortBy === 'lowest') {
+        sortParam = '&sort=rating';
+      }
+      
+      const res = await apiRequest<any>(
+        `/reviews/SALON/${salonId}?page=${page}&limit=${reviewsPerPage}${sortParam}`
+      );
+      if (res.data) {
+        setAllReviews(res.data);
+        // Calculate total pages based on review summary
+        const summary = await apiRequest<any>(`/reviews/SALON/${salonId}/summary`);
+        if (summary.data) {
+          const totalReviews = summary.data.totalReviews || 0;
+          setReviewsTotalPages(Math.ceil(totalReviews / reviewsPerPage));
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching paginated reviews:', err);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  const handleViewAllReviews = () => {
+    setIsReviewsModalOpen(true);
+  };
+
+  const handleReviewsPageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= reviewsTotalPages) {
+      setReviewsCurrentPage(newPage);
+      fetchPaginatedReviews(newPage, reviewsSortBy);
+    }
+  };
+
+  const handleSortChange = (newSort: string) => {
+    setReviewsSortBy(newSort);
+    setReviewsCurrentPage(1);
+    fetchPaginatedReviews(1, newSort);
+  };
+
+  useEffect(() => {
+    if (isReviewsModalOpen) {
+      fetchPaginatedReviews(1);
+      setReviewsCurrentPage(1);
+    }
+  }, [isReviewsModalOpen]);
 
   const handlePostReview = async () => {
     if (!reviewData.reviewText.trim()) return alert("Please write a review.");
@@ -180,21 +278,11 @@ export default function SalonDetailPage() {
     const userID = parsedUser?.user?.user?.id || parsedUser?.user?.id;
 
     try {
-      const res = await apiCustomerpiPostReq(`/wishlist/${userID}/${salonId}`);
-
+      const res = await userapiPost(`/wishlist/${userID}/${salonId}`);
 
       if (res?.error) {
         throw new Error(res.error);
       }
-
-      // Show the notification
-      setNotification({
-        message: "Added to wishlist",
-        type: 'success'
-      });
-
-      // Auto-hide after 3 seconds
-      setTimeout(() => setNotification(null), 3000);
     } catch (error) {
       setIsFavorite(prev => !prev);
     }
@@ -203,6 +291,22 @@ export default function SalonDetailPage() {
   if (!loading && !salon) return <div className="p-20 text-center font-light">Salon not found.</div>;
 
   const isOpen = checkIsOpen();
+
+  // Helper function to format social media URLs
+  const formatInstagramUrl = (value: string) => {
+    if (!value) return '';
+    if (value.startsWith('http://') || value.startsWith('https://')) return value;
+    // Remove @ if present and add Instagram URL
+    const username = value.replace('@', '');
+    return `https://instagram.com/${username}`;
+  };
+
+  const formatFacebookUrl = (value: string) => {
+    if (!value) return '';
+    if (value.startsWith('http://') || value.startsWith('https://')) return value;
+    // Add Facebook URL
+    return `https://facebook.com/${value}`;
+  };
 
 
 
@@ -250,8 +354,8 @@ export default function SalonDetailPage() {
           <div className="absolute -bottom-20 left-0 right-0 z-20 px-6">
             <div className="max-w-3xl mx-auto bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 p-8 md:p-12">
               <div className="text-center space-y-4">
-                <Badge className="bg-slate-900 text-white border-none text-[10px] tracking-widest px-4 py-1.5">{salon?.salonType}</Badge>
                 <h1 className="text-3xl md:text-5xl font-serif tracking-tight leading-tight text-slate-900">{salon?.salonName}</h1>
+                <Badge className="bg-slate-900 text-white border-none text-[10px] tracking-widest px-4 py-1.5">{salon?.salonType} Salon</Badge>
                 <div className="flex items-center justify-center gap-4 text-sm font-medium text-slate-600">
                   <span>{reviews?.length || "0"} Reviews</span>
                   <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
@@ -419,7 +523,7 @@ export default function SalonDetailPage() {
 
                   {reviews.length > 0 ? (
                     <div className="grid gap-10">
-                      {reviews.map((rev, i) => (
+                      {reviews.slice(0, reviewsPerPage).map((rev, i) => (
                         <div key={i} className="animate-in fade-in slide-in-from-bottom-2 relative mb-10">
                           {/* Large Quote Mark Background */}
                           <div className="absolute top-0 left-0 text-9xl text-slate-100 opacity-20 font-serif leading-none select-none">"</div>
@@ -454,6 +558,19 @@ export default function SalonDetailPage() {
                       ))}
                     </div>
                   ) : <div className="py-20 text-center"><Star className="w-8 h-8 text-slate-200 mx-auto mb-4" /><p className="text-sm text-slate-400 italic">No reviews yet. Share your experience!</p></div>}
+                  
+                  {/* View All Reviews Button */}
+                  {reviews.length > 0 && (
+                    <div className="text-center pt-8">
+                      <button
+                        onClick={handleViewAllReviews}
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-full border-2 border-slate-900 text-slate-900 text-[10px] font-black uppercase tracking-wider hover:bg-slate-900 hover:text-white transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/20"
+                      >
+                        View All Reviews
+                        <ChevronRight size={14} />
+                      </button>
+                    </div>
+                  )}
                   
                   {/* Signature Tagline */}
                   <div className="text-center pt-8 mt-8 border-t border-slate-100">
@@ -511,6 +628,39 @@ export default function SalonDetailPage() {
                     <p className="text-sm text-slate-800 font-medium">{salon?.primaryPhone}</p>
                   </div>
                 </div>
+
+                {/* Social Media */}
+                {(salon?.socialMedia?.instagram || salon?.socialMedia?.facebook) && (
+                  <div className="flex items-start gap-4">
+                    <div className="w-6 h-6 text-[#1E4D8C] shrink-0 mt-0.5 flex items-center justify-center">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex gap-3">
+                        {salon?.socialMedia?.instagram && (
+                          <a
+                            href={formatInstagramUrl(salon.socialMedia.instagram)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-[10px] font-black text-[#1E4D8C] uppercase tracking-wider hover:underline"
+                          >
+                            <Instagram size={12} /> Instagram
+                          </a>
+                        )}
+                        {salon?.socialMedia?.facebook && (
+                          <a
+                            href={formatFacebookUrl(salon.socialMedia.facebook)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-[10px] font-black text-[#1E4D8C] uppercase tracking-wider hover:underline"
+                          >
+                            <Facebook size={12} /> Facebook
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Desktop 3-Column Grid */}
@@ -560,6 +710,34 @@ export default function SalonDetailPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Social Media - Desktop */}
+              {(salon?.socialMedia?.instagram || salon?.socialMedia?.facebook) && (
+                <div className="hidden md:flex items-center justify-center gap-4 mt-8 pt-8 border-t border-slate-200">
+                  <div className="flex gap-4">
+                    {salon?.socialMedia?.instagram && (
+                      <a
+                        href={formatInstagramUrl(salon.socialMedia.instagram)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-[10px] font-black text-[#1E4D8C] uppercase tracking-wider hover:underline"
+                      >
+                        <Instagram size={14} /> Instagram
+                      </a>
+                    )}
+                    {salon?.socialMedia?.facebook && (
+                      <a
+                        href={formatFacebookUrl(salon.socialMedia.facebook)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-[10px] font-black text-[#1E4D8C] uppercase tracking-wider hover:underline"
+                      >
+                        <Facebook size={14} /> Facebook
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Ownership Section - Soft Bordered Card */}
               <div className="mt-10 pt-8 border-t border-slate-200">
@@ -679,6 +857,106 @@ export default function SalonDetailPage() {
                 "Share with the Community"
               )}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- Reviews Modal (View All) --- */}
+      {isReviewsModalOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-[#0a0a0a]/60 backdrop-blur-sm">
+          <div className="bg-white/90 backdrop-blur-xl w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden">
+            <div className="p-6 border-b border-gray-100/50 flex justify-between items-center bg-gradient-to-r from-gray-50/80 to-white/80">
+              <div>
+                <h3 className="text-xl font-black text-[#1a1a1a]" style={{ fontFamily: "'Playfair Display', serif" }}>All Reviews</h3>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Page {reviewsCurrentPage} of {reviewsTotalPages}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <select
+                  value={reviewsSortBy}
+                  onChange={(e) => handleSortChange(e.target.value)}
+                  className="text-xs font-semibold text-gray-700 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-[#D4AF37]/30"
+                >
+                  <option value="latest">Latest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="highest">Highest Rated</option>
+                  <option value="lowest">Lowest Rated</option>
+                </select>
+                <button
+                  onClick={() => setIsReviewsModalOpen(false)}
+                  className="p-2 bg-white/60 backdrop-blur-sm rounded-xl border border-gray-200/50 hover:bg-white/80 transition-all"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[70vh] relative custom-scrollbar mt-2">
+              {reviewsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin" />
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-4">
+                    {allReviews.length > 0 ? (
+                      allReviews.map((review: any, idx: number) => (
+                        <div key={review.id || idx} className="bg-white/95 rounded-2xl p-4 border border-white/10 hover:bg-white/5 transition-colors">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#D4AF37]/20 to-[#C9A227]/20 flex items-center justify-center flex-shrink-0">
+                              <span className="text-sm font-bold text-[#D4AF37]">
+                                {review.userName?.charAt(0).toUpperCase() || 'A'}
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-bold text-gray-900 truncate">{review.userName || 'Anonymous'}</p>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    size={12}
+                                    className={i < review.rating ? "text-[#D4AF37] fill-[#D4AF37]" : "text-gray-300"}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                            <p className="text-xs text-gray-500 flex-shrink-0">
+                              {review.createdAt ? new Date(review.createdAt).toLocaleDateString() : ''}
+                            </p>
+                          </div>
+                          <p className="text-sm text-gray-700 leading-relaxed">{review.text || review.reviewText || 'No review text'}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-12">
+                        <p className="text-gray-400 italic" style={{ fontFamily: "'Playfair Display', serif" }}>No reviews yet.</p>
+                      </div>
+                    )}
+                  </div>
+                  {reviewsTotalPages > 1 && (
+                    <div className="flex items-center justify-center gap-4 mt-6 pt-4 border-t border-gray-200/50">
+                      <button
+                        onClick={() => handleReviewsPageChange(reviewsCurrentPage - 1)}
+                        disabled={reviewsCurrentPage === 1}
+                        className="p-2 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <ChevronRight size={20} className="text-gray-600 rotate-180" />
+                      </button>
+                      <span className="text-sm font-semibold text-gray-700">
+                        Page {reviewsCurrentPage} of {reviewsTotalPages}
+                      </span>
+                      <button
+                        onClick={() => handleReviewsPageChange(reviewsCurrentPage + 1)}
+                        disabled={reviewsCurrentPage === reviewsTotalPages}
+                        className="p-2 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <ChevronRight size={20} className="text-gray-600" />
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}

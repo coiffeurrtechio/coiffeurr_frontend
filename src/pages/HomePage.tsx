@@ -30,6 +30,7 @@ const HomePage: React.FC = () => {
   const [showHeader, setShowHeader] = useState<boolean>(false);
   const [showUI, setShowUI] = useState<boolean>(false);
   const [userImageUrl, setUserImageUrl] = useState<string>("");
+  const [showOverlay, setShowOverlay] = useState<boolean>(false);
 
   const loadingPhrases = [
     'Preparing your experience...',
@@ -48,16 +49,22 @@ const HomePage: React.FC = () => {
 
   // Animation sequence
   useEffect(() => {
-    // Start letter reveal animation after GrandEntranceOverlay completes (2.2s)
+    const fromLogin = sessionStorage.getItem('fromLogin');
+    if (fromLogin === 'true') {
+      setShowOverlay(true);
+      sessionStorage.removeItem('fromLogin');
+    }
+
+    // Start letter reveal animation after GrandEntranceOverlay completes (3.4s)
     const headerTimer = setTimeout(() => {
       setShowHeader(true);
-    }, 2200);
-    
+    }, showOverlay ? 3400 : 0);
+
     // After letter reveal completes (8 letters * 0.1s + 0.5s = 1.3s), show UI
-    // Total delay: 2.2s + 1.3s = 3.5s
+    // Total delay: 3.4s + 1.3s = 4.7s
     const uiTimer = setTimeout(() => {
       setShowUI(true);
-    }, 3500);
+    }, showOverlay ? 4700 : 0);
 
     return () => {
       clearTimeout(headerTimer);
@@ -244,7 +251,7 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen font-sans pb-2 sm:pb-2 relative overflow-x-hidden" style={{ fontFamily: 'Inter, sans-serif' }}>
-      <GrandEntranceOverlay onComplete={() => {}} />
+      {showOverlay && <GrandEntranceOverlay onComplete={() => {}} />}
       <div className={`fixed inset-0 opacity-[0.04] pointer-events-none transition-all duration-300 ${isSearchOverlayOpen ? 'blur-sm' : ''}`} style={{ backgroundImage: `url('/Background.jpeg')`, backgroundSize: '400px', zIndex: isSearchOverlayOpen ? 40 : -1 }} />
 
       <div className="relative z-10">
@@ -427,6 +434,9 @@ const HomePage: React.FC = () => {
                             <div className="flex justify-between items-start mb-1">
                               <h3 className="font-black text-base sm:text-lg text-gray-800 pr-2" style={{ fontFamily: 'Playfair Display, serif' }}>{salon.salonName}</h3>
                               {salon.priceRange && <span className="shrink-0 text-[11px] sm:text-xs font-bold text-[#D4AF37] bg-gradient-to-r from-amber-50 to-yellow-50 px-3 py-1.5 rounded-xl border border-[#D4AF37]/20 shadow-sm">₹{salon.priceRange}</span>}
+                            </div>
+                            <div className="flex items-center gap-2 mb-2">
+                              {salon.salonType && <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded-md uppercase tracking-wider">{salon.salonType}</span>}
                             </div>
                             <div className="flex flex-col gap-1">
                               <p className="text-xs text-gray-400 flex items-center gap-1 font-bold"><MapPin size={12} className="text-[#0f172a]" /><span className="truncate">{salon.address?.city}</span></p>

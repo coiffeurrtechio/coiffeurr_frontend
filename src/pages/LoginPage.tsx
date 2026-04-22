@@ -107,18 +107,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
         localStorage.setItem('selectedLanguage', 'en');
       }
 
-      showToast({
-        type: "success",
-        title: t('auth.loginSuccess'),
-        message: t('auth.loginSuccess'),
-        duration: 3000,
-      });
-
       if (result?.user?.role === "OWNER") {
         sessionStorage.setItem('fromLogin', 'true');
         navigate("/dashboard");
       }
-      else navigate("/");
+      else {
+        sessionStorage.setItem('fromLogin', 'true');
+        navigate("/");
+      }
 
     } catch (error: any) {
       showToast({

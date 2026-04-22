@@ -239,7 +239,7 @@ export default function Profile() {
         <div className="relative -mt-20 bg-gradient-to-br from-white/95 to-slate-50/95 rounded-[2.5rem] shadow-2xl p-8 text-center border border-white/20 backdrop-blur-[15px]">
           <div className="absolute -top-16 left-1/2 -translate-x-1/2">
             <div className="w-36 h-36 sm:w-40 sm:h-40 rounded-full border-4 border-white shadow-2xl overflow-hidden bg-gradient-to-br from-orange-100 to-orange-200 relative">
-              {usercontactdetails.image_url ? <img src={usercontactdetails?.image_url} alt="Profile" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-200 text-orange-600 text-5xl font-black">{user.name?.charAt(0)}</div>}
+              {usercontactdetails.image_url ? <img src={usercontactdetails?.image_url} alt="Profile" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-200 text-orange-600 text-5xl font-black">{user?.name?.charAt(0) || usercontactdetails?.name?.charAt(0) || 'U'}</div>}
             </div>
             <div className="absolute bottom-1 right-1 w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full border-4 border-white shadow-lg" />
           </div>
@@ -247,7 +247,7 @@ export default function Profile() {
             Welcome Back
           </p>
           <h2 className="mt-1 text-3xl font-semibold text-gray-900 tracking-tight text-center whitespace-nowrap" style={{ fontFamily: "'Playfair Display', serif" }}>
-            {user.name} {usercontactdetails.name || t('profile.user')}
+            {user?.name || usercontactdetails?.name || t('profile.user')}
           </h2>
           <p className="mt-1 text-sm font-light italic text-gray-500 text-center opacity-70">
             Ready for your next transformation?
@@ -258,7 +258,7 @@ export default function Profile() {
           <MenuItem label={t('profile.myBookings')} icon={<Calendar className="text-slate-800" />} onClick={() => navigate("/bookings")} />
           <MenuItem label={t('profile.wishlist')} icon={<Heart className="text-red-500" />} onClick={() => navigate("/wishlist")} />
           <MenuItem label="Language" icon={<Globe className="text-slate-800" />} onClick={() => setShowLanguageModal(true)} />
-          {user.role === "OWNER" && <MenuItem label={t('profile.salonDashboard')} icon={<LayoutDashboard className="text-slate-800" />} onClick={() => navigate("/dashboard")} />}
+          {user?.role === "OWNER" && <MenuItem label={t('profile.salonDashboard')} icon={<LayoutDashboard className="text-slate-800" />} onClick={() => navigate("/dashboard")} />}
         </div>
 
         <div className="mt-6">
