@@ -118,9 +118,9 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
   return (
     <div className="fixed inset-0 z-50 bg-white animate-in fade-in zoom-in-95 duration-200 overflow-y-auto">
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b bg-white sticky top-0 z-10">
-        <button onClick={() => navigate(-1)} className="p-1 active:bg-gray-100 rounded-full">
-          <ArrowLeft className="w-6 h-6 text-gray-700" />
+      <div className="flex items-center gap-3 p-4 border-b sticky top-0 z-10" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
+        <button onClick={() => navigate(-1)} className="p-1 active:bg-white/20 rounded-full">
+          <ArrowLeft className="w-6 h-6 text-white" />
         </button>
 
         <div className="flex-1 relative">
@@ -130,7 +130,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
               ref={searchInputRef}
               type="text"
               placeholder={t('search.searchForSalons')}
-              className="w-full bg-gray-100 rounded-xl px-4 py-3 outline-none text-sm font-medium focus:ring-2 focus:ring-blue-100 transition-all"
+              className="w-full bg-white/95 backdrop-blur-md rounded-xl px-4 py-3 outline-none text-sm font-medium focus:ring-2 focus:ring-gray-200 transition-all text-gray-800 placeholder-gray-400 border border-gray-200 shadow-sm"
               value={searchQuery}
               onChange={handlechangevalue}
             />
@@ -138,7 +138,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
 
           {searchQuery && (
             <X
-              className="absolute right-3 top-3 w-5 h-5 text-gray-400 cursor-pointer"
+              className="absolute right-3 top-3 w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600"
               onClick={() => {
                 setSearchQuery("");
                 setSalons([]);
@@ -172,7 +172,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
               <div
                 key={salon.id}
                 onClick={() => handleSalonSelect(salon)}
-                className="flex items-center gap-4 p-3 rounded-2xl border border-gray-50 hover:bg-gray-50 active:scale-[0.98] transition-all cursor-pointer"
+                className="flex items-center gap-4 p-3 rounded-2xl border border-gray-100 bg-gray-50 hover:bg-gray-100 active:scale-[0.98] transition-all cursor-pointer shadow-sm"
               >
                 <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
                   <img
@@ -201,7 +201,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
         {/* Empty State / Recent Searches */}
         {!searchQuery && (
           <div className="py-10 text-center">
-            <Search className="w-12 h-12 text-gray-100 mx-auto mb-4" />
+            <Search className="w-12 h-12 text-gray-200 mx-auto mb-4" />
             <p className="text-xs font-bold text-gray-400 tracking-widest">{t('search.typeToDiscover')}</p>
           </div>
         )}

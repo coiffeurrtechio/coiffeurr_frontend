@@ -218,7 +218,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-slate-50 pb-10 overflow-x-hidden">
+    <div className="min-h-screen pb-10 overflow-x-hidden bg-gradient-to-br from-slate-50 via-slate-50 to-slate-50">
       <ParticleSystem />
       {toast && (
         <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-6 py-3 rounded-2xl shadow-2xl animate-in slide-in-from-top duration-300 ${toast.type === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
@@ -227,7 +227,7 @@ export default function Profile() {
         </div>
       )}
 
-      <div className="h-40 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600 relative overflow-hidden">
+      <div className="h-40 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
         <div className="max-w-7xl mx-auto w-full h-full relative flex items-start justify-between p-6">
           <button onClick={() => navigate("/")} className="p-3 bg-white/20 rounded-full text-white backdrop-blur-md hover:bg-white/30 active:scale-90 transition-all shadow-lg">
             <ArrowLeft size={20} />
@@ -254,7 +254,7 @@ export default function Profile() {
           </p>
         </div>
 
-        <div className="mt-8 bg-gradient-to-br from-white/95 to-slate-50/95 rounded-[2rem] shadow-xl border border-white/20 overflow-hidden divide-y divide-slate-100 backdrop-blur-[15px]">
+        <div className="mt-8 bg-white rounded-[2rem] shadow-xl border border-white/20 overflow-hidden divide-y divide-slate-100 backdrop-blur-[15px]">
           <MenuItem label={t('profile.myBookings')} icon={<Calendar className="text-slate-800" />} onClick={() => navigate("/bookings")} />
           <MenuItem label={t('profile.wishlist')} icon={<Heart className="text-red-500" />} onClick={() => navigate("/wishlist")} />
           <MenuItem label={t('settings.language') || 'Language'} icon={<Globe className="text-slate-800" />} onClick={() => setShowLanguageModal(true)} />
@@ -357,7 +357,7 @@ export default function Profile() {
               {usercontactdetails.anniversary && (
                 <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-5 border border-white/50 shadow-lg">
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-white rounded-xl text-slate-700 shadow-sm">
+                    <div className="p-2 bg-white rounded-xl text-slate-800 shadow-sm">
                       <Heart size={18} />
                     </div>
                     <div className="flex-1">

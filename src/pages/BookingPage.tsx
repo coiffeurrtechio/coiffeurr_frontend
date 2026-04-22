@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import {
-    ArrowLeft, Calendar, Clock, MapPin, ChevronRight,
+    ArrowLeft, Calendar, Clock, MapPin, ChevronRight, ChevronLeft,
     Star, X, Receipt, User as UserIcon, Scissors, Info,
     ChevronDown,
     User,
@@ -29,7 +29,8 @@ function BookingPage() {
     const itemsPerPage = 10;
     // Date Filter State
     const [selectedDate, setSelectedDate] = useState<string>('');
-    const dateInputRef = useRef<HTMLInputElement>(null);
+    const [showCalendar, setShowCalendar] = useState(false);
+    const [currentMonth, setCurrentMonth] = useState(new Date());
     // Upcoming Bookings State
     const [showUpcoming, setShowUpcoming] = useState(false);
 
@@ -100,18 +101,48 @@ function BookingPage() {
 
     const getStatusStyles = (status: string) => {
         switch (status?.toUpperCase()) {
-            case 'COMPLETED': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-            case 'PENDING': return 'bg-amber-50 text-amber-600 border-amber-100';
-            case 'CANCELLED': return 'bg-red-50 text-red-600 border-red-100';
-            default: return 'bg-slate-50 text-slate-700 border-slate-200';
+            case 'COMPLETED': return 'bg-green-100 text-green-700 border-green-200';
+            case 'PENDING': return 'bg-amber-100 text-amber-700 border-amber-200';
+            case 'CANCELLED': return 'bg-red-100 text-red-700 border-red-200';
+            default: return 'bg-slate-100 text-slate-700 border-slate-200';
         }
     };
 
+    const getDaysInMonth = (date: Date) => {
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const daysInMonth = lastDay.getDate();
+        const startingDayOfWeek = firstDay.getDay();
+        return { daysInMonth, startingDayOfWeek };
+    };
+
+    const handleDateSelect = (day: number) => {
+        const year = currentMonth.getFullYear();
+        const month = String(currentMonth.getMonth() + 1).padStart(2, '0');
+        const dayStr = String(day).padStart(2, '0');
+        setSelectedDate(`${year}-${month}-${dayStr}`);
+        setShowCalendar(false);
+    };
+
+    const handleMonthChange = (direction: 'prev' | 'next') => {
+        setCurrentMonth(prev => {
+            const newDate = new Date(prev);
+            if (direction === 'prev') {
+                newDate.setMonth(newDate.getMonth() - 1);
+            } else {
+                newDate.setMonth(newDate.getMonth() + 1);
+            }
+            return newDate;
+        });
+    };
+
     return (
-        <div className="min-h-screen pb-10" style={{ backgroundColor: 'var(--soft-ivory)' }}>
+        <div className="min-h-screen pb-10 bg-gradient-to-br from-slate-50 via-slate-50 to-slate-50">
             <Loader isVisible={loading} />
 
-            <header className="sticky top-0 z-30 shadow-lg" style={{ background: 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)' }}>
+            <header className="sticky top-0 z-30 shadow-lg" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
                 <div className="max-w-2xl mx-auto px-6 h-16 flex items-center justify-between">
                     <button onClick={() => window.history.back()} className="p-3 bg-white/20 rounded-full text-white backdrop-blur-md hover:bg-white/30 active:scale-90 transition-all shadow-lg">
                         <ArrowLeft className="w-5 h-5" />
@@ -142,20 +173,13 @@ function BookingPage() {
                         </div>
                         <div className="relative">
                             <button
-                                onClick={() => dateInputRef.current?.showPicker?.()}
-                                className={`p-4 rounded-2xl outline-none transition-all cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5 ${selectedDate ? 'ring-2' : ''}`}
+                                onClick={() => setShowCalendar(!showCalendar)}
+                                className={`p-4 rounded-2xl outline-none transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 cursor-pointer ${selectedDate ? 'ring-2' : ''}`}
                                 style={{ backgroundColor: 'var(--light-greige)', border: selectedDate ? '1px solid var(--muted-gold)' : '1px solid var(--light-greige)', boxShadow: 'var(--inset-shadow)' }}
                                 title={selectedDate || 'Filter by date'}
                             >
                                 <Calendar size={20} className={`transition-colors`} style={{ color: selectedDate ? 'var(--deep-charcoal)' : '#666' }} />
                             </button>
-                            <input
-                                ref={dateInputRef}
-                                type="date"
-                                value={selectedDate}
-                                onChange={(e) => setSelectedDate(e.target.value)}
-                                className="absolute inset-0 opacity-0 cursor-pointer"
-                            />
                             {selectedDate && (
                                 <button
                                     onClick={(e) => {
@@ -168,6 +192,53 @@ function BookingPage() {
                                     ×
                                 </button>
                             )}
+                            {showCalendar && (
+                                <div className="absolute top-full left-0 mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-gray-200 p-4 w-72 animate-in fade-in zoom-in-95 duration-200">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <button onClick={() => handleMonthChange('prev')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                            <ChevronLeft size={20} />
+                                        </button>
+                                        <span className="font-bold text-sm" style={{ color: 'var(--deep-charcoal)' }}>
+                                            {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                                        </span>
+                                        <button onClick={() => handleMonthChange('next')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                            <ChevronRight size={20} />
+                                        </button>
+                                    </div>
+                                    <div className="grid grid-cols-7 gap-1 mb-2">
+                                        {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
+                                            <div key={day} className="text-center text-xs font-bold text-gray-500 py-1">{day}</div>
+                                        ))}
+                                    </div>
+                                    <div className="grid grid-cols-7 gap-1">
+                                        {(() => {
+                                            const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentMonth);
+                                            const days = [];
+                                            for (let i = 0; i < startingDayOfWeek; i++) {
+                                                days.push(<div key={`empty-${i}`} className="p-2" />);
+                                            }
+                                            for (let day = 1; day <= daysInMonth; day++) {
+                                                const isSelected = selectedDate === `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                                                days.push(
+                                                    <button
+                                                        key={day}
+                                                        onClick={() => handleDateSelect(day)}
+                                                        className={`p-2 rounded-lg text-sm font-bold transition-all hover:scale-105 ${
+                                                            isSelected 
+                                                                ? 'text-white' 
+                                                                : 'hover:bg-gray-100'
+                                                        }`}
+                                                        style={isSelected ? { background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' } : { color: 'var(--deep-charcoal)' }}
+                                                    >
+                                                        {day}
+                                                    </button>
+                                                );
+                                            }
+                                            return days;
+                                        })()}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
@@ -176,16 +247,16 @@ function BookingPage() {
                                 setShowUpcoming(!showUpcoming);
                                 setCurrentPage(1);
                             }}
-                            className={`px-6 py-4 border rounded-2xl outline-none transition-all cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2.5 typography-label-light ${showUpcoming ? '' : ''}`}
+                            className={`px-6 py-4 border rounded-2xl outline-none transition-all cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2.5 typography-label-light`}
                             style={{
-                                background: showUpcoming ? 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)' : 'var(--light-greige)',
+                                background: 'var(--light-greige)',
                                 borderColor: showUpcoming ? 'var(--muted-gold)' : 'var(--light-greige)',
-                                color: showUpcoming ? 'white' : 'var(--deep-charcoal)',
+                                color: 'var(--deep-charcoal)',
                                 boxShadow: showUpcoming ? '0 4px 20px rgba(212, 175, 55, 0.3)' : 'var(--inset-shadow)'
                             }}
                             title="Show upcoming bookings"
                         >
-                            <Star size={18} className={showUpcoming ? 'text-white fill-white' : ''} style={{ color: showUpcoming ? 'white' : '#666' }} />
+                            <Star size={18} className={showUpcoming ? 'fill-[#D4AF37]' : ''} style={{ color: showUpcoming ? '#D4AF37' : '#666' }} />
                             <span className={`text-sm font-bold transition-colors typography-label-light`}>Upcoming</span>
                         </button>
                     </div>
@@ -258,7 +329,7 @@ function BookingPage() {
                                     }`}
                                     style={
                                         currentPage === page
-                                            ? { background: 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)', color: 'white', boxShadow: '0 4px 20px rgba(212, 175, 55, 0.3)' }
+                                            ? { background: 'var(--deep-charcoal)', color: 'white', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)' }
                                             : { backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }
                                     }
                                 >
@@ -289,7 +360,7 @@ function BookingPage() {
                     <div className="relative w-full max-w-lg rounded-t-[2rem] sm:rounded-[3rem] overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-y-auto no-scrollbar floating-tile">
 
                         {/* Modal Header/Banner with Service Image */}
-                        <div className="relative h-56 sm:h-64" style={{ background: 'linear-gradient(135deg, var(--muted-gold) 0%, var(--deep-charcoal) 100%)' }}>
+                        <div className="relative h-56 sm:h-64" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
                             <img
                                 src={selectedBooking.service?.imageUrl || selectedBooking.salon?.logoUrl}
                                 className="w-full h-full object-cover"
@@ -312,7 +383,7 @@ function BookingPage() {
                                     <h2 className="text-xl sm:text-3xl font-black text-white tracking-tight mt-2 sm:mt-3 typography-display">{selectedBooking.service?.name}</h2>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-2xl sm:text-4xl font-black text-white typography-number">₹{selectedBooking.price}</p>
+                                    <p className="text-2xl sm:text-4xl font-black typography-number px-4 py-2 rounded-xl border-2 border-white bg-white" style={{ color: 'var(--deep-charcoal)' }}>₹{selectedBooking.price}</p>
                                     <p className="text-[9px] sm:text-[10px] font-bold text-white/80 tracking-widest typography-label-light">{t('bookings.totalAmount')}</p>
                                 </div>
                             </div>
@@ -335,7 +406,7 @@ function BookingPage() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                                 <div className="p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border shadow-lg floating-tile" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)' }}>
                                     <p className="text-[9px] sm:text-[10px] font-black tracking-widest mb-3 sm:mb-4 flex items-center gap-2 typography-label-light" style={{ color: '#666' }}>
-                                        <Calendar size={14} className="sm:size-16" style={{ color: '#666' }} /> {t('bookings.schedule')}
+                                        <Calendar size={10} className="sm:size-12" style={{ color: '#666' }} /> {t('bookings.schedule')}
                                     </p>
                                     <p className="text-sm sm:text-base font-black typography-display" style={{ color: 'var(--deep-charcoal)' }}>{selectedBooking.slot?.date}</p>
                                     <p className="text-xs sm:text-sm font-bold mt-1 typography-label-light" style={{ color: '#666' }}>{formatTo12Hour(selectedBooking.slot?.time)}</p>
@@ -344,7 +415,7 @@ function BookingPage() {
 
                                 <div className="p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border shadow-lg floating-tile" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)' }}>
                                     <p className="text-[9px] sm:text-[10px] font-black tracking-widest mb-3 sm:mb-4 flex items-center gap-2 typography-label-light" style={{ color: '#666' }}>
-                                        <User size={14} className="sm:size-16" style={{ color: '#666' }} /> {t('bookings.specialist')}
+                                        <User size={10} className="sm:size-12" style={{ color: '#666' }} /> {t('bookings.specialist')}
                                     </p>
                                     <div className="flex items-center gap-3 sm:gap-4">
                                         <img
@@ -354,18 +425,14 @@ function BookingPage() {
                                         />
                                         <div className="flex-1">
                                             <p className="text-sm sm:text-base font-black typography-display" style={{ color: 'var(--deep-charcoal)' }}>{selectedBooking.staff?.name}</p>
-                                            <div className="flex items-center gap-1.5">
-                                                <Star size={10} className="sm:size-12" style={{ fill: 'var(--muted-gold)', color: 'var(--muted-gold)' }} />
-                                                <span className="text-[9px] sm:text-[10px] font-bold typography-label-light" style={{ color: '#666' }}>{selectedBooking.staff?.rating?.average} ({selectedBooking.staff?.experienceYears}{t('bookings.yearsExp')})</span>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Salon Card with Logo */}
-                            <div className="p-4 sm:p-6 rounded-[2rem] sm:rounded-[2.5rem] text-white space-y-4 sm:space-y-5 shadow-2xl" style={{ background: 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)' }}>
-                                <div className="flex items-center gap-3 sm:gap-5 border-b border-white/10 pb-4 sm:pb-5">
+                            <div className="p-4 sm:p-6 rounded-[2rem] sm:rounded-[2.5rem] text-white space-y-5 sm:space-y-6 shadow-2xl" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
+                                <div className="flex items-center gap-3 sm:gap-5 border-b border-white/10 pb-5 sm:pb-6">
                                     <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-2xl p-1.5 shrink-0 overflow-hidden shadow-lg">
                                         <img src={selectedBooking.salon?.logoUrl} className="w-full h-full object-contain" alt={t('booking.salonLogo') || 'Salon Logo'} />
                                     </div>
@@ -379,11 +446,11 @@ function BookingPage() {
                                         rel="noreferrer"
                                         className="p-3 sm:p-4 bg-white/10 hover:bg-white/20 rounded-2xl transition-all active:scale-95 shrink-0"
                                     >
-                                        <Navigation size={18} className="sm:size-20 text-white" />
+                                        <Navigation size={8} className="sm:size-10 text-white" />
                                     </a>
                                 </div>
                                 <div className="flex gap-3 sm:gap-4">
-                                    <MapPin size={16} className="sm:size-18 text-slate-400 shrink-0" />
+                                    <MapPin size={6} className="sm:size-8 text-slate-400 shrink-0" />
                                     <p className="text-[10px] sm:text-[11px] font-medium leading-relaxed opacity-90 typography-label-light">
                                         {selectedBooking.salon?.address?.street}, {selectedBooking.salon?.address?.city}, {selectedBooking.salon?.address?.state} - {selectedBooking.salon?.address?.pincode}
                                     </p>
@@ -391,14 +458,14 @@ function BookingPage() {
                             </div>
 
                             {/* Customer Row */}
-                            <div className="p-4 sm:p-5 rounded-[2rem] sm:rounded-[2.5rem] border flex items-center justify-between shadow-lg floating-tile" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)' }}>
-                                <div className="flex items-center gap-3 sm:gap-4">
-                                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center font-black text-base sm:text-lg shadow-lg shrink-0" style={{ background: 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)', color: 'white' }}>
+                            <div className="p-3 sm:p-4 rounded-[1.5rem] sm:rounded-[2rem] border flex items-center justify-between shadow-lg floating-tile" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)' }}>
+                                <div className="flex items-center gap-2 sm:gap-3">
+                                    <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-black text-xs sm:text-sm shadow-lg shrink-0" style={{ backgroundColor: 'var(--deep-charcoal)', color: 'white' }}>
                                         {selectedBooking.user?.name?.charAt(0)}
                                     </div>
                                     <div className="min-w-0 flex-1">
                                         <p className="text-[8px] sm:text-[9px] font-black tracking-widest typography-label-light" style={{ color: '#666' }}>{t('bookings.bookedBy')}</p>
-                                        <p className="text-sm sm:text-base font-black truncate typography-display" style={{ color: 'var(--deep-charcoal)' }}>{selectedBooking.user?.name}</p>
+                                        <p className="text-xs sm:text-sm font-black truncate typography-display" style={{ color: 'var(--deep-charcoal)' }}>{selectedBooking.user?.name}</p>
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-end shrink-0 ml-2">
@@ -415,7 +482,7 @@ function BookingPage() {
                                 <button
                                     onClick={() => setIsModalOpen(false)}
                                     className="w-full py-5 text-white rounded-[2rem] font-black text-xs tracking-[0.2em] shadow-xl hover:shadow-2xl active:scale-95 transition-all typography-label-light"
-                                    style={{ background: 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)' }}
+                                    style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}
                                 >
                                     {t('bookings.closeDetails')}
                                 </button>
