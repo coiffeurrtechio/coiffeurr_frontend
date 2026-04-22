@@ -3,34 +3,59 @@ import { useNavigate } from 'react-router-dom';
 import {
   Store, User, MapPin, Clock, ArrowRight, ArrowLeft,
   Smartphone, Hash, Mail, Loader2, Lock, Coffee,
-  CheckCircle2, XCircle, Navigation, Globe, LocateFixed, 
+  CheckCircle2, XCircle, Navigation, Globe, LocateFixed,
   AlertCircle, ShieldCheck, Eye, EyeOff, Camera
 } from 'lucide-react';
 import { Button } from '../../components/ui_components/button';
 import Config from '../../configs/config';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n/config';
+import '../../styles/classy-salon.css';
+import Sponser_Footer from '../../components/Sponser_Footer';
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 const SalonRegistration: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const user = localStorage.getItem("authState");
+  const parsedUser = user ? JSON.parse(user) : null;
+  const isloggedin = parsedUser?.isAuthenticated;
+
+  // Force English when user is not logged in
+  useEffect(() => {
+    if (!isloggedin) {
+      i18n.changeLanguage('en');
+    }
+  }, [isloggedin]);
   
   const [step, setStep] = useState(1); 
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isLocating, setIsLocating] = useState(false); // State for GPS loading
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const [passwordValidation, setPasswordValidation] = useState({
+    minLength: false,
+    hasUpperCase: false,
+    hasNumber: false,
+    hasSpecialChar: false
+  });
 
   const [formData, setFormData] = useState({
     salonName: '',
     ownerName: '',
     email: '',
     password: '',
+    confirmPassword: '',
     primaryPhone: '',
-    otp: '', 
-    image_url: '', 
+    otp: '',
+    image_url: '',
     address: { street: '', city: '', state: '', pincode: '', country: 'India' },
     location: { latitude: 0, longitude: 0 }, // GPS State
     timing: {
@@ -51,6 +76,19 @@ const SalonRegistration: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [notification]);
+
+  const validatePassword = (password: string) => {
+    setPasswordValidation({
+      minLength: password.length >= 8,
+      hasUpperCase: /[A-Z]/.test(password),
+      hasNumber: /[0-9]/.test(password),
+      hasSpecialChar: /[^A-Za-z0-9]/.test(password)
+    });
+  };
+
+  const isPasswordValid = () => {
+    return Object.values(passwordValidation).every(v => v);
+  };
 
   // NEW: GPS Detection Handler
   const handleGetCurrentLocation = () => {
@@ -207,86 +245,155 @@ const SalonRegistration: React.FC = () => {
     switch (step) {
       case 1:
         return (
-          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+          <div className="space-y-4 slide-in-right staggered-1">
             <InputField label="Enter WhatsApp Number *" name="primaryPhone" type="tel" value={formData.primaryPhone} onChange={handleChange} icon={Smartphone} placeholder="9876543210" />
-            <Button onClick={() => handleSendOTP('phone')} disabled={isLoading || formData.primaryPhone.length !== 10} className="w-full h-12 rounded-2xl bg-[#1E4D8C] text-white font-bold">
+            <Button onClick={() => handleSendOTP('phone')} disabled={isLoading || formData.primaryPhone.length !== 10} className="w-full h-14 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30">
               {isLoading ? <Loader2 className="animate-spin" /> : 'Send Phone OTP'}
             </Button>
           </div>
         );
       case 2:
         return (
-          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+          <div className="space-y-4 slide-in-right staggered-1">
             <InputField label="Phone OTP *" name="otp" value={formData.otp} onChange={handleChange} icon={Hash} placeholder="00000" />
-            <Button onClick={() => handleVerifyOTP('phone')} disabled={isLoading || !formData.otp} className="w-full h-12 rounded-2xl bg-emerald-600 text-white font-bold">
+            <Button onClick={() => handleVerifyOTP('phone')} disabled={isLoading || !formData.otp} className="w-full h-14 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30">
               {isLoading ? <Loader2 className="animate-spin" /> : 'Verify Phone'}
             </Button>
-            <button onClick={() => setStep(1)} className="text-xs font-bold text-gray-400 w-full text-center">Change Phone Number</button>
+            <button onClick={() => setStep(1)} className="w-full text-[10px] font-black text-white/50 hover:text-white py-2 rounded-full transition-colors text-button">Back</button>
           </div>
         );
       case 3:
         return (
-          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+          <div className="space-y-4 slide-in-right staggered-1">
             <InputField label="Email Address *" name="email" type="email" value={formData.email} onChange={handleChange} icon={Mail} placeholder="owner@salon.com" />
-            <Button onClick={() => handleSendOTP('email')} disabled={isLoading || !formData.email} className="w-full h-12 rounded-2xl bg-[#1E4D8C] text-white font-bold">
+            <Button onClick={() => handleSendOTP('email')} disabled={isLoading || !formData.email} className="w-full h-14 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30">
               {isLoading ? <Loader2 className="animate-spin" /> : 'Send Email OTP'}
             </Button>
           </div>
         );
       case 4:
         return (
-          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+          <div className="space-y-4 slide-in-right staggered-1">
             <InputField label="Email OTP *" name="otp" value={formData.otp} onChange={handleChange} icon={Hash} placeholder="00000" />
-            <Button onClick={() => handleVerifyOTP('email')} disabled={isLoading || !formData.otp} className="w-full h-12 rounded-2xl bg-emerald-600 text-white font-bold">
+            <Button onClick={() => handleVerifyOTP('email')} disabled={isLoading || !formData.otp} className="w-full h-14 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30">
               {isLoading ? <Loader2 className="animate-spin" /> : 'Verify Email'}
             </Button>
+            <button onClick={() => setStep(3)} className="w-full text-[10px] font-black text-white/50 hover:text-white py-2 rounded-full transition-colors text-button">Back</button>
           </div>
         );
       case 5:
         return (
-          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+          <div className="space-y-4 slide-in-right staggered-1">
             <div className="flex flex-col items-center justify-center mb-4">
-              <div className="relative group">
-                <div className="w-20 h-20 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gray-50 relative flex items-center justify-center">
-                  {isUploading ? <Loader2 className="animate-spin text-[#1E4D8C]" /> : 
-                   formData.image_url ? <img src={formData.image_url} className="w-full h-full object-cover" /> : <Store className="text-gray-300" size={30} />}
+              <div className="relative">
+                <div className="w-20 h-20 rounded-full border-4 border-white/30 shadow-lg overflow-hidden bg-white/10 relative">
+                  {isUploading ? <Loader2 className="animate-spin text-[#D4AF37]" /> :
+                   formData.image_url ? <img src={formData.image_url} className="w-full h-full object-cover" /> : <Store className="text-white/30" size={30} />}
                 </div>
-                <button type="button" onClick={() => fileInputRef.current?.click()} className="absolute bottom-0 right-0 p-1.5 bg-[#1E4D8C] text-white rounded-full border-2 border-white shadow-lg"><Camera size={12} /></button>
+                <button type="button" onClick={() => fileInputRef.current?.click()} className="absolute bottom-0 right-0 p-1.5 bg-gradient-to-br from-[#D4AF37] to-[#FFD700] text-white rounded-full border-2 border-white shadow-lg active:scale-90 transition-transform focus-ring"><Camera size={12} /></button>
                 <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
               </div>
-              <p className="mt-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Studio Logo</p>
+              <p className="mt-2 text-[9px] font-black text-white/50 tracking-widest">Studio Logo</p>
             </div>
             <InputField label="Salon Name *" name="salonName" value={formData.salonName} onChange={handleChange} icon={Store} placeholder="Elite Hair Studio" />
             <InputField label="Owner Name *" name="ownerName" value={formData.ownerName} onChange={handleChange} icon={User} placeholder="John Doe" />
-            <div className="relative">
-              <InputField label="Password *" name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleChange} icon={Lock} placeholder="••••••••" />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-[34px] text-gray-400 hover:text-[#1E4D8C]">
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+            <div className="space-y-2">
+              <label className="dark-label ml-1">Password *</label>
+              <div className={`relative input-wrapper ${errors.password ? 'error' : ''}`}>
+                <Lock className={`absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon ${errors.password ? "text-[#DC143C]" : ""}`} size={18} />
+                <input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={(e) => {
+                    handleChange(e);
+                    validatePassword(e.target.value);
+                  }}
+                  placeholder="••••••••"
+                  className={`w-full h-12 pl-14 pr-12 dark-input text-sm font-bold outline-none transition-all duration-300 ${errors.password ? "error" : ""}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white p-1 transition-colors focus-ring z-10"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+              {/* Password Requirements */}
+              <div className="space-y-1 mt-2 px-1">
+                <div className={`flex items-center gap-2 text-[10px] font-medium ${passwordValidation.minLength ? 'text-emerald-400' : 'text-white/50'}`}>
+                  {passwordValidation.minLength ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
+                  <span>At least 8 characters</span>
+                </div>
+                <div className={`flex items-center gap-2 text-[10px] font-medium ${passwordValidation.hasUpperCase ? 'text-emerald-400' : 'text-white/50'}`}>
+                  {passwordValidation.hasUpperCase ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
+                  <span>At least one uppercase letter</span>
+                </div>
+                <div className={`flex items-center gap-2 text-[10px] font-medium ${passwordValidation.hasNumber ? 'text-emerald-400' : 'text-white/50'}`}>
+                  {passwordValidation.hasNumber ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
+                  <span>At least one number</span>
+                </div>
+                <div className={`flex items-center gap-2 text-[10px] font-medium ${passwordValidation.hasSpecialChar ? 'text-emerald-400' : 'text-white/50'}`}>
+                  {passwordValidation.hasSpecialChar ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
+                  <span>At least one special character</span>
+                </div>
+              </div>
             </div>
-            <Button onClick={() => setStep(6)} className="w-full h-12 rounded-2xl bg-[#1E4D8C] text-white font-bold">Next: Location & Hours</Button>
+            <div className="space-y-2">
+              <label className="dark-label ml-1">Confirm Password *</label>
+              <div className={`relative input-wrapper ${errors.confirmPassword ? 'error' : ''}`}>
+                <Lock className={`absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon ${errors.confirmPassword ? "text-[#DC143C]" : ""}`} size={18} />
+                <input
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="••••••••"
+                  className={`w-full h-12 pl-14 pr-12 dark-input text-sm font-bold outline-none transition-all duration-300 ${errors.confirmPassword ? "error" : ""}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white p-1 transition-colors focus-ring z-10"
+                >
+                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+            <Button onClick={() => {
+              if (!isPasswordValid()) {
+                setNotification({ type: 'error', message: 'Please meet all password requirements' });
+                return;
+              }
+              if (formData.password !== formData.confirmPassword) {
+                setNotification({ type: 'error', message: 'Passwords do not match' });
+                return;
+              }
+              setStep(6);
+            }} className="w-full h-14 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30">Next: Location & Hours</Button>
           </div>
         );
       case 6:
         return (
-          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
+          <div className="space-y-4 slide-in-right max-h-[65vh] overflow-y-auto pr-1 custom-scrollbar">
             <InputField label="Street *" name="address.street" value={formData.address.street} onChange={handleChange} icon={MapPin} />
             <div className="grid grid-cols-2 gap-3">
               <InputField label="City *" name="address.city" value={formData.address.city} onChange={handleChange} icon={MapPin} />
               <InputField label="Zip *" name="address.pincode" value={formData.address.pincode} onChange={handleChange} icon={Hash} />
             </div>
 
-            {/* NEW: GPS Section */}
-            <div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-100 space-y-3">
+            {/* GPS Section */}
+            <div className="p-4 bg-white/5 rounded-3xl border border-white/10 space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                <p className="text-[10px] font-black text-white/50 uppercase tracking-widest flex items-center gap-2">
                   <Navigation size={12}/> GPS Coordinates
                 </p>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={handleGetCurrentLocation}
                   disabled={isLocating}
-                  className="text-[10px] font-bold text-[#1E4D8C] hover:underline flex items-center gap-1"
+                  className="text-[10px] font-bold text-[#D4AF37] hover:text-[#FFD700] flex items-center gap-1"
                 >
                   {isLocating ? <Loader2 size={10} className="animate-spin" /> : <LocateFixed size={10} />}
                   Auto-Detect
@@ -297,27 +404,27 @@ const SalonRegistration: React.FC = () => {
                 <InputField label="Longitude" name="location.longitude" type="number" value={formData.location.longitude} onChange={handleChange} icon={Navigation} placeholder="0.0000" />
               </div>
             </div>
-            
-            <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-3">
-              <p className="text-[10px] font-black text-[#1E4D8C] uppercase tracking-widest flex items-center gap-2"><Clock size={12}/> Shift Timing</p>
+
+            <div className="p-4 bg-white/5 rounded-3xl border border-white/10 space-y-3">
+              <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest flex items-center gap-2"><Clock size={12}/> Shift Timing</p>
               <div className="grid grid-cols-2 gap-3">
                 <InputField label="Opens" name="timing.openingTime" type="time" value={formData.timing.openingTime} onChange={handleChange} icon={Clock} />
                 <InputField label="Closes" name="timing.closingTime" type="time" value={formData.timing.closingTime} onChange={handleChange} icon={Clock} />
               </div>
             </div>
 
-            <div className="p-4 bg-orange-50/50 rounded-2xl border border-orange-100 space-y-3">
-              <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest flex items-center gap-2"><Coffee size={12}/> Lunch Break</p>
+            <div className="p-4 bg-white/5 rounded-3xl border border-white/10 space-y-3">
+              <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest flex items-center gap-2"><Coffee size={12}/> Lunch Break</p>
               <div className="grid grid-cols-2 gap-3">
                 <InputField label="Starts" name="timing.lunchBreak.start" type="time" value={formData.timing.lunchBreak.start} onChange={handleChange} icon={Clock} />
                 <InputField label="Ends" name="timing.lunchBreak.end" type="time" value={formData.timing.lunchBreak.end} onChange={handleChange} icon={Clock} />
               </div>
             </div>
 
-            <Button onClick={handleSubmit} disabled={isLoading} className="w-full h-14 bg-[#1E4D8C] text-white font-black rounded-2xl shadow-xl">
+            <Button onClick={handleSubmit} disabled={isLoading} className="w-full h-14 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30">
               {isLoading ? <Loader2 className="animate-spin" /> : 'Finalize Registration'}
             </Button>
-            <button onClick={() => setStep(5)} className="text-xs font-bold text-gray-400 w-full text-center">Back to Details</button>
+            <button onClick={() => setStep(5)} className="w-full text-[10px] font-black text-white/50 hover:text-white py-2 rounded-full transition-colors text-button">Back</button>
           </div>
         );
       default: return null;
@@ -325,46 +432,64 @@ const SalonRegistration: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F7FE] flex items-center justify-center p-4 relative font-sans">
+    <div className="min-h-screen classy-salon-bg font-sans relative overflow-hidden flex flex-col">
+      <div className="classy-overlay" />
+
       {notification && (
-        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 bg-white border-l-4 ${notification.type === 'success' ? 'border-green-500 text-green-600' : 'border-red-500 text-red-600'}`}>
-          {notification.type === 'success' ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
-          <span className="text-sm font-bold">{notification.message}</span>
+        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-6 py-3 rounded-2xl shadow-2xl animate-in slide-in-from-top duration-300 glass-card ${notification.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
+          {notification.type === 'success' ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
+          <span className="text-sm font-bold text-white">{notification.message}</span>
         </div>
       )}
 
-      <div className="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden">
-        <div className="pt-8 px-8 flex justify-between gap-2">
-          {[1, 2, 3, 4, 5, 6].map(num => <div key={num} className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${step >= num ? 'bg-[#1E4D8C]' : 'bg-gray-100'}`} />)}
-        </div>
-        <div className="p-8 md:p-10">
-          <header className="mb-8">
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight">Studio Registration</h1>
-            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Section {step} of 6</p>
-          </header>
-          {renderStep()}
+      <div className="relative z-10 flex-1 flex items-center justify-center px-4 pt-4 pb-12">
+        <div className="w-full max-w-[450px] glass-card border border-white/10 rounded-[2.5rem] overflow-hidden backdrop-blur-xl p-4">
+          {/* Coiffeurr Logo */}
+          <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mb-2 mx-auto shadow-lg border border-white/20 transition-transform hover:scale-105 duration-300">
+            <img src="/Coiffeurr_Logo.png" alt="Coiffeurr" className="w-10 h-10 object-contain" />
+          </div>
+
+          <div className="pt-8 px-8 flex justify-between gap-2">
+            {[1, 2, 3, 4, 5, 6].map(num => <div key={num} className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${step >= num ? 'bg-gradient-to-r from-[#D4AF37] to-[#FFD700]' : 'bg-white/10'}`} />)}
+          </div>
+
+          <div className="p-8 md:p-10">
+            <header className="mb-8 text-center">
+              <h1
+                className="text-2xl font-bold text-white tracking-tight letter-reveal"
+                style={{ fontFamily: 'Playfair Display, serif' }}
+              >
+                Studio Registration
+              </h1>
+              <p className="punch-line text-[9px] letter-reveal tracking-widest" style={{ animationDelay: '0.2s' }}>
+                Your journey to excellence begins here.
+              </p>
+              <p className="text-xs text-white/60 font-bold uppercase tracking-widest mt-2 letter-reveal" style={{ animationDelay: '0.3s' }}>
+                Section {step} of 6
+              </p>
+            </header>
+            {renderStep()}
+          </div>
         </div>
       </div>
+      <Sponser_Footer collapsed={false} />
     </div>
   );
 };
 
 const InputField = React.memo(({ label, name, value, onChange, icon: Icon, type = "text", placeholder, error }: any) => (
-  <div className="space-y-1 w-full">
-    <div className="flex justify-between items-center px-1">
-      <label className={`text-[10px] font-black uppercase tracking-widest ${error ? 'text-red-500' : 'text-gray-400'}`}>{label}</label>
-      {error && <AlertCircle size={12} className="text-red-500" />}
-    </div>
-    <div className="relative group">
-      <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${error ? 'text-red-400' : 'text-gray-400 group-focus-within:text-[#1E4D8C]'}`}><Icon size={16} /></div>
-      <input 
-        name={name} 
-        type={type} 
-        value={value} 
-        onChange={onChange} 
-        placeholder={placeholder} 
-        step="any" // Required for float numbers in input type number
-        className={`w-full h-11 pl-11 pr-4 rounded-2xl text-sm font-bold outline-none transition-all border ${error ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-transparent focus:ring-4 focus:ring-blue-100'}`} 
+  <div className="space-y-2 w-full">
+    <label className={`dark-label ml-1 ${error ? 'text-red-400' : ''}`}>{label}</label>
+    <div className={`relative input-wrapper ${error ? 'error' : ''}`}>
+      <Icon className={`absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon ${error ? "text-[#DC143C]" : ""}`} size={18} />
+      <input
+        name={name}
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        step="any"
+        className={`w-full h-12 pl-14 pr-4 dark-input text-sm font-bold outline-none transition-all duration-300 ${error ? "error" : ""}`}
       />
     </div>
   </div>
