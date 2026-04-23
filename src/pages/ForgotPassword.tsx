@@ -123,7 +123,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen classy-salon-bg font-sans relative overflow-hidden flex flex-col">
+    <div className="min-h-screen classy-salon-bg flex flex-col items-center justify-center p-4 relative font-sans">
       <div className="classy-overlay" />
       
       {/* Toast Notification */}
@@ -134,12 +134,11 @@ export default function ForgotPassword() {
         </div>
       )}
 
-      <div className="relative z-10 flex-1 flex items-center justify-center px-4 pt-4 pb-12">
-        {/* Glassmorphism Card */}
-        <div className="w-full max-w-[450px] glass-card border border-white/10 rounded-[2.5rem] overflow-hidden backdrop-blur-xl p-4">
+      <div className="relative z-10 w-full max-w-md mx-auto glass-card rounded-[2.5rem] overflow-hidden">
+        <div className="p-6 sm:p-8">
           {/* Coiffeurr Logo */}
-          <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mb-2 mx-auto shadow-lg border border-white/20 transition-transform hover:scale-105 duration-300">
-            <img src="/Coiffeurr_Logo.png" alt="Coiffeurr" className="w-10 h-10 object-contain" />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-2xl flex items-center justify-center mb-4 sm:mb-6 mx-auto shadow-lg border border-white/20 transition-transform hover:scale-105 duration-300">
+            <img src="/Coiffeurr_Logo.png" alt="Coiffeurr" className="w-12 h-12 sm:w-14 sm:h-14 object-contain" />
           </div>
 
           {step !== 3 && (
@@ -278,6 +277,8 @@ export default function ForgotPassword() {
             <button type="button" className="text-center text-[9px] font-bold text-[#D4AF37] hover:text-[#FFD700] tracking-widest cursor-pointer transition-colors text-button focus-ring w-full py-2" onClick={() => setStep(1)}>
               {t('auth.resendCode')}
             </button>
+
+            <div className="w-full h-px bg-white/10 my-4" />
           </form>
         )}
 
@@ -303,7 +304,10 @@ export default function ForgotPassword() {
         )}
         </div>
       </div>
-      <Sponser_Footer collapsed={false} />
+
+      <div className="mt-8">
+        <Sponser_Footer collapsed={false} />
+      </div>
     </div>
   );
 }

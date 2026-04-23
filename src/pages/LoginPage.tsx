@@ -129,29 +129,31 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1E4D8C] to-[#0a2e5c] flex items-center justify-center p-4">
+    <div className="min-h-screen classy-salon-bg flex flex-col items-center justify-center p-4 relative font-sans">
+      <div className="classy-overlay" />
+      
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md mx-auto"
+        className="relative z-10 w-full max-w-md mx-auto glass-card rounded-[2.5rem] overflow-hidden"
       >
-        <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-xl rounded-3xl overflow-hidden">
-          <CardContent className="p-6 sm:p-8 space-y-4 sm:space-y-6">
+        <div className="p-6 sm:p-8">
+          <header className="mb-6 sm:mb-8 text-center">
             <motion.div 
-              className="mx-auto w-12 h-12 bg-white rounded-2xl flex items-center justify-center mb-2 shadow-lg border border-white/20 transition-transform hover:scale-105 duration-300"
+              className="mx-auto w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-2xl flex items-center justify-center mb-4 sm:mb-6 shadow-lg border border-white/20 transition-transform hover:scale-105 duration-300"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <img src="/Coiffeurr_Logo.png" alt="Coiffeurr" className="w-10 h-10 object-contain" />
+              <img src="/Coiffeurr_Logo.png" alt="Coiffeurr" className="w-12 h-12 sm:w-14 sm:h-14 object-contain" />
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
             >
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('auth.signIn')}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight" style={{ fontFamily: 'Playfair Display, serif' }}>{t('auth.signIn')}</h1>
             </motion.div>
             <motion.p 
               className="punch-line text-[9px]"
@@ -161,9 +163,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
             >
               Refining the art of your presence.
             </motion.p>
-            <div className="text-center space-y-2">
-              <p className="text-xs sm:text-sm text-gray-600">{t('auth.dontHaveAccount')} <Link to="/signup" className="text-[#1E4D8C] hover:underline font-semibold">{t('auth.createAccount')}</Link></p>
-            </div>
+          </header>
             <motion.div 
               className="flex bg-white/5 p-1 rounded-2xl"
               initial={{ opacity: 0, y: 20 }}
@@ -195,72 +195,78 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
               >
                 {loginMethod === 'email' ? (
                   <div className="space-y-2">
-                    <label className="text-xs sm:text-sm font-medium text-gray-700">{t('common.email')}</label>
+                    <label className="dark-label ml-1 text-xs sm:text-sm">{t('common.email')}</label>
                     <div className={`relative input-wrapper ${errors.email ? 'error' : ''}`}>
-                      <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5 ${errors.email ? "text-[#DC143C]" : ""}`} />
+                      <Mail className={`absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon ${errors.email ? "text-[#DC143C]" : ""}`} />
                       <input
                         type="email"
                         placeholder="name@example.com"
                         value={formData.email}
                         onChange={(e) => handleInputChange("email", e.target.value)}
-                        className={`w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1E4D8C] focus:border-transparent outline-none transition-all text-sm ${errors.email ? "error" : ""}`}
+                        className={`w-full h-10 sm:h-12 pl-12 sm:pl-14 pr-3 sm:pr-4 dark-input text-xs sm:text-sm font-bold outline-none transition-all duration-300 ${errors.email ? "error" : ""}`}
                       />
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <label className="text-xs sm:text-sm font-medium text-gray-700">{t('auth.phoneNumber')}</label>
+                    <label className="dark-label ml-1 text-xs sm:text-sm">{t('auth.phoneNumber')}</label>
                     <div className={`relative input-wrapper ${errors.phone ? 'error' : ''}`}>
-                      <Smartphone className={`absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5 ${errors.phone ? "text-[#DC143C]" : ""}`} />
+                      <Smartphone className={`absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon ${errors.phone ? "text-[#DC143C]" : ""}`} />
                       <input
                         type="tel"
                         placeholder="+91 00000 00000"
                         value={formData.phone}
                         onChange={(e) => handleInputChange("phone", e.target.value)}
-                        className={`w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1E4D8C] focus:border-transparent outline-none transition-all text-sm ${errors.phone ? "error" : ""}`}
+                        className={`w-full h-10 sm:h-12 pl-12 sm:pl-14 pr-3 sm:pr-4 dark-input text-xs sm:text-sm font-bold outline-none transition-all duration-300 ${errors.phone ? "error" : ""}`}
                       />
                     </div>
                   </div>
                 )}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center px-1">
-                    <label className="text-xs sm:text-sm font-medium text-gray-700">{t('auth.password')}</label>
-                    <Link to="/forgetpassword" className="text-[10px] font-black text-white/60 hover:text-[#D4AF37] tracking-widest text-button transition-colors focus-ring">
+                    <label className="dark-label ml-1 text-xs sm:text-sm">{t('auth.password')}</label>
+                    <Link to="/forgetpassword" className="text-[10px] font-black text-white/50 hover:text-[#D4AF37] tracking-widest text-button transition-colors focus-ring">
                       {t('auth.forgotPassword')}
                     </Link>
                   </div>
                   <div className="relative input-wrapper">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5" />
+                    <Lock className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon" />
                     <input
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       value={formData.password}
                       onChange={(e) => handleInputChange("password", e.target.value)}
-                      className="w-full pl-10 sm:pl-12 pr-20 py-2.5 sm:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1E4D8C] focus:border-transparent outline-none transition-all text-sm"
+                      className="w-full h-12 pl-12 pr-20 dark-input text-sm font-bold outline-none transition-all duration-300"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white p-1 transition-colors focus-ring z-10"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors focus-ring z-10"
                     >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
                 </div>
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-[#1E4D8C] hover:bg-[#0a2e5c] text-white py-2.5 sm:py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl text-sm sm:text-base"
+                  className="w-full h-14 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30 text-sm sm:text-base"
                 >
                   {isLoading ? t('common.loading') : t('auth.signIn')}
                 </Button>
+                <div className="text-center space-y-2">
+                  <p className="text-xs sm:text-sm text-white/60">{t('auth.dontHaveAccount')} <Link to="/signup" className="text-[#D4AF37] hover:text-[#FFD700] font-semibold">{t('auth.createAccount')}</Link></p>
+                </div>
+
+                <div className="w-full h-px bg-white/10 my-4" />
               </motion.form>
             </AnimatePresence>
-          </CardContent>
-        </Card>
+        </div>
       </motion.div>
 
-      <Sponser_Footer collapsed={false} />
+      <div className="mt-8">
+        <Sponser_Footer collapsed={false} />
+      </div>
     </div>
   );
 };

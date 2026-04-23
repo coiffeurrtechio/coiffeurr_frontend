@@ -256,7 +256,7 @@ const CustomerRegistration: React.FC = () => {
         </div>
       )}
 
-      <div className="relative z-10 w-full max-w-md mx-auto glass-card rounded-[2.5rem] overflow-hidden flex-1 flex flex-col justify-center">
+      <div className="relative z-10 w-full max-w-md mx-auto glass-card rounded-[2.5rem] overflow-hidden">
         <div className="pt-6 sm:pt-8 px-6 sm:px-8 flex justify-between gap-2">
           {[1, 2].map(num => <div key={num} className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${step >= num ? 'bg-gradient-to-r from-[#D4AF37] to-[#FFD700]' : 'bg-white/10'}`} />)}
         </div>
@@ -461,7 +461,10 @@ const CustomerRegistration: React.FC = () => {
           )}
         </div>
       </div>
-      <Sponser_Footer collapsed={false} />
+
+      <div className="mt-8">
+        <Sponser_Footer collapsed={false} />
+      </div>
     </div>
   );
 };

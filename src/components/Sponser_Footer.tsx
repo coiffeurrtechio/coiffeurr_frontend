@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 function Sponser_Footer({ collapsed }: { collapsed: boolean }) {
     const { t } = useTranslation();
     return (
-        <footer className="px-4 py-6 flex items-center justify-center border-t border-gray-100 bg-transparent">
+        <footer className="px-4 py-6 flex items-center justify-center bg-transparent">
             <div className="flex flex-col items-center justify-center gap-4 w-full max-w-md">
 
                 {/* Sponsorship Section */}
