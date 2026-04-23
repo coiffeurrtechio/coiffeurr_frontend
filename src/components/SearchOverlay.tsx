@@ -44,10 +44,18 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
 
     setIsLoading(true);
     try {
-      const params = new URLSearchParams({
-        query: query,
-        limit: '20'
-      });
+      const params = new URLSearchParams();
+      
+      // Check if query is a 6-digit pincode
+      const isPincode = /^\d{6}$/.test(query.trim());
+      
+      if (isPincode) {
+        params.append('pincode', query.trim());
+      } else {
+        params.append('query', query.trim());
+      }
+      
+      params.append('limit', '20');
 
       if (userLocation) {
         params.append('user_latitude', userLocation.latitude.toString());
@@ -116,6 +124,7 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
         {/* Trending Search Tags */}
         <div className="mb-4">
           <p className="text-[10px] font-black text-gray-400 tracking-widest mb-3">TRENDING SEARCHES</p>
+          <p className="text-[9px] italic text-gray-400 mb-3 opacity-60">Search by salon name, area, or 6-digit pincode.</p>
           <div className="flex flex-wrap gap-2">
             {trendingTags.map((tag) => (
               <button
@@ -137,7 +146,8 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
         ) : searchResults.length === 0 && searchQuery ? (
           <div className="text-center py-12">
             <Search className="mx-auto w-16 h-16 text-gray-300 mb-4" />
-            <p className="text-gray-500">No salons found</p>
+            <p className="text-gray-500 font-medium mb-2">No salons found</p>
+            <p className="text-gray-400 text-sm italic">It seems we haven't reached that area yet. Try searching for a nearby locality or a specific artist.</p>
           </div>
         ) : searchResults.length === 0 && !searchQuery ? (
           <div className="text-center py-12">

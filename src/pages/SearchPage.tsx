@@ -68,7 +68,16 @@ function SearchPage() {
     try {
       const normalizedQuery = normalizeSearchQuery(query);
       const apiParams = new URLSearchParams();
-      if (normalizedQuery?.trim()) apiParams.append("query", normalizedQuery);
+      
+      // Check if query is a 6-digit pincode
+      const isPincode = /^\d{6}$/.test(query.trim());
+      
+      if (isPincode) {
+        apiParams.append("pincode", query.trim());
+      } else if (normalizedQuery?.trim()) {
+        apiParams.append("query", normalizedQuery);
+      }
+      
       if (tempFilters.city?.trim()) apiParams.append("city", tempFilters.city.trim());
       apiParams.append("limit", "5"); // Get top 5 results instantly
       if (userLocation) {
@@ -105,8 +114,17 @@ function SearchPage() {
     try {
       const normalizedQuery = normalizeSearchQuery(name);
       const apiParams = new URLSearchParams();
+      
+      // Check if query is a 6-digit pincode
+      const isPincode = /^\d{6}$/.test(name.trim());
+      
+      if (isPincode) {
+        apiParams.append("pincode", name.trim());
+      } else if (normalizedQuery?.trim()) {
+        apiParams.append("query", normalizedQuery);
+      }
+      
       if (city?.trim()) apiParams.append("city", city.trim());
-      if (normalizedQuery?.trim()) apiParams.append("query", normalizedQuery);
       if (limit) apiParams.append("limit", limit);
       if (userLocation) {
         apiParams.append("user_latitude", userLocation.latitude.toString());
@@ -344,7 +362,8 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
               ) : (
                 <div className="p-8 text-center">
                   <Search className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-                  <p className="text-xs font-bold text-gray-400 tracking-widest">No results found</p>
+                  <p className="text-xs font-bold text-gray-400 tracking-widest mb-2">No results found</p>
+                  <p className="text-[10px] italic text-gray-400 opacity-70">It seems we haven't reached that area yet. Try searching for a nearby locality or a specific artist.</p>
                 </div>
               )}
             </div>
@@ -407,6 +426,24 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
           <div className="py-8 sm:py-10 text-center">
             <Search className="w-10 h-10 sm:w-12 sm:h-12 text-gray-200 mx-auto mb-3 sm:mb-4" />
             <p className="text-[10px] sm:text-xs font-bold text-gray-400 tracking-widest">{t('search.typeToDiscover')}</p>
+            
+            {/* Trending Search Tags */}
+            <div className="mt-6 sm:mt-8">
+              <p className="text-[10px] font-black text-gray-400 tracking-widest mb-3">TRENDING SEARCHES</p>
+              <p className="text-[9px] italic text-gray-400 mb-3 opacity-60">Search by salon name, area, or 6-digit pincode.</p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {trendingTags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => handleTagClick(tag)}
+                    className="px-3 py-1.5 rounded-full text-[10px] font-black bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all"
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+            
             <div className="mt-3 sm:mt-4 flex items-center justify-center gap-2 text-[8px] sm:text-[9px] text-gray-300">
               <Command size={12} className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="tracking-wider">Press</span>
