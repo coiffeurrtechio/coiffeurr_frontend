@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n/config';
-import { MapPin, User, Search, Star, Navigation, Award } from 'lucide-react';
+import { MapPin, User, Search, Star, Navigation, Award, X, ChevronDown } from 'lucide-react';
 import { useApi } from '../API/SalonsAPIs/ALLSalonAPI';
 import { usersalonApi } from '../API/SalonsAPIs/UserSalonAPI';
 import { Link, useNavigate } from 'react-router-dom';
@@ -31,6 +31,19 @@ const HomePage: React.FC = () => {
   const [showUI, setShowUI] = useState<boolean>(false);
   const [userImageUrl, setUserImageUrl] = useState<string>("");
   const [showOverlay, setShowOverlay] = useState<boolean>(false);
+
+  // Filter state
+  const [sortBy, setSortBy] = useState<string>('relevant');
+  const [priceRange, setPriceRange] = useState<string>('all');
+  const [distanceFilter, setDistanceFilter] = useState<string>('all');
+  const [filteredSalons, setFilteredSalons] = useState<any[]>([]);
+  const [isFiltering, setIsFiltering] = useState<boolean>(false);
+  const [displayLimit, setDisplayLimit] = useState<number>(10);
+  const [isDistanceDropdownOpen, setIsDistanceDropdownOpen] = useState<boolean>(false);
+  const [isPriceDropdownOpen, setIsPriceDropdownOpen] = useState<boolean>(false);
+  const [isRatingSortDropdownOpen, setIsRatingSortDropdownOpen] = useState<boolean>(false);
+  const [isPriceSortDropdownOpen, setIsPriceSortDropdownOpen] = useState<boolean>(false);
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
 
   const loadingPhrases = [
     'Preparing your experience...',
@@ -240,6 +253,67 @@ const HomePage: React.FC = () => {
     }
   };
 
+  // Apply filters and sorting
+  useEffect(() => {
+    if (!salons.length) {
+      setFilteredSalons([]);
+      return;
+    }
+
+    setIsFiltering(true);
+    let result = [...salons];
+
+    // Filter by distance
+    if (distanceFilter !== 'all') {
+      const maxDistance = distanceFilter === '2km' ? 2 : distanceFilter === '5km' ? 5 : distanceFilter === '10km' ? 10 : distanceFilter === '15km' ? 15 : 20;
+      result = result.filter(salon => {
+        const dist = parseFloat(salon.distance || '999');
+        return dist <= maxDistance;
+      });
+    }
+
+    // Filter by price range
+    if (priceRange !== 'all') {
+      const minPrice = parseInt(priceRange);
+      result = result.filter(salon => {
+        const price = parseInt(salon.priceRange || '9999');
+        return price >= minPrice;
+      });
+    }
+
+    // Sort
+    switch (sortBy) {
+      case 'rating_high_low':
+        result.sort((a, b) => (b.rating?.average || 0) - (a.rating?.average || 0));
+        break;
+      case 'rating_low_high':
+        result.sort((a, b) => (a.rating?.average || 0) - (b.rating?.average || 0));
+        break;
+      case 'price_low_high':
+        result.sort((a, b) => (parseInt(a.priceRange || '9999')) - (parseInt(b.priceRange || '9999')));
+        break;
+      case 'price_high_low':
+        result.sort((a, b) => (parseInt(b.priceRange || '9999')) - (parseInt(a.priceRange || '9999')));
+        break;
+      case 'distance':
+        result.sort((a, b) => (parseFloat(a.distance || '999')) - (parseFloat(b.distance || '999')));
+        break;
+      default:
+        break;
+    }
+
+    setFilteredSalons(result);
+    setIsFiltering(false);
+  }, [salons, sortBy, distanceFilter, priceRange]);
+
+  const clearFilters = () => {
+    setDistanceFilter('all');
+    setPriceRange('all');
+    setSortBy('relevant');
+  };
+
+  const hasActiveFilters = distanceFilter !== 'all' || priceRange !== 'all' || sortBy !== 'relevant';
+
   if (isLoading) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
       <div className="text-center">
@@ -331,7 +405,7 @@ const HomePage: React.FC = () => {
         <main className="max-w-7xl mx-auto px-4 sm:px-8 relative z-10">
           {/* --- TOP STYLISTS SECTION --- */}
           {isDataLoaded && staff.length > 0 && (
-            <div className={`mt-20 sm:mt-24 mb-10 ${showUI ? 'ui-fade-in' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
+            <div className={`mt-20 sm:mt-24 mb-2 ${showUI ? 'ui-fade-in' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
               <div className="flex items-center justify-between px-1 mb-4">
                 <div>
                   <h2 className="text-gray-900 text-lg sm:text-xl font-black tracking-tight" style={{ fontFamily: 'Playfair Display, serif' }}>{t('home.topArtistsNearYou')}</h2>
@@ -377,17 +451,287 @@ const HomePage: React.FC = () => {
               </div>
             </div>
           )}
-          <div className={`${staff.length > 0 ? 'mt-4' : 'mt-20 sm:mt-24'} mb-4`}>
-            <h2 className="text-gray-800 text-lg sm:text-xl font-black tracking-tight mb-6" style={{ fontFamily: 'Playfair Display, serif' }}>{t('home.recommendedForYou')}</h2>
+          <div className={`${staff.length > 0 ? 'mt-4' : 'mt-8 sm:mt-12'} mb-4`}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-gray-800 text-lg sm:text-xl font-black tracking-tight" style={{ fontFamily: 'Playfair Display, serif' }}>{t('home.recommendedForYou')}</h2>
+              {hasActiveFilters && (
+                <button onClick={clearFilters} className="text-xs font-bold text-[#D4AF37] hover:text-[#c9a037] transition-colors">
+                  Clear Filters
+                </button>
+              )}
+            </div>
+
+            {/* Sticky Filter Bar */}
+            <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md rounded-2xl p-3 mb-4 shadow-sm border border-gray-100">
+              <div className="flex gap-2 flex-wrap relative">
+                {/* Sort By: Distance */}
+                {sortBy === 'distance' ? (
+                  <button
+                    onClick={() => setSortBy('relevant')}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border border-[#D4AF37] bg-[#D4AF37] text-white"
+                  >
+                    Nearest <X size={12} />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setSortBy('distance')}
+                    className="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                  >
+                    Nearest
+                  </button>
+                )}
+
+                {/* Sort By: Rating */}
+                {sortBy === 'rating_high_low' || sortBy === 'rating_low_high' ? (
+                  <div className="relative">
+                    <button
+                      onClick={() => setSortBy('relevant')}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border border-[#D4AF37] bg-[#D4AF37] text-white"
+                    >
+                      Rating: {sortBy === 'rating_high_low' ? 'High-Low' : 'Low-High'} <X size={12} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <button
+                      onClick={() => {
+                        setIsRatingSortDropdownOpen(!isRatingSortDropdownOpen);
+                        setIsPriceSortDropdownOpen(false);
+                        setIsDistanceDropdownOpen(false);
+                      }}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                    >
+                      Rating <ChevronDown size={12} />
+                    </button>
+                    {isRatingSortDropdownOpen && (
+                      <div className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 py-2 min-w-[140px] z-50">
+                        <button
+                          onClick={() => { setSortBy('rating_high_low'); setIsRatingSortDropdownOpen(false); }}
+                          className="block w-full px-4 py-2 text-left text-[10px] font-black text-gray-700 hover:bg-gray-50"
+                        >
+                          High-Low
+                        </button>
+                        <button
+                          onClick={() => { setSortBy('rating_low_high'); setIsRatingSortDropdownOpen(false); }}
+                          className="block w-full px-4 py-2 text-left text-[10px] font-black text-gray-700 hover:bg-gray-50"
+                        >
+                          Low-High
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Price Sort Dropdown */}
+                {sortBy === 'price_low_high' || sortBy === 'price_high_low' ? (
+                  <div className="relative">
+                    <button
+                      onClick={() => setSortBy('relevant')}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border border-[#D4AF37] bg-[#D4AF37] text-white"
+                    >
+                      Cost: {sortBy === 'price_high_low' ? 'High-Low' : 'Low-High'} <X size={12} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <button
+                      onClick={() => {
+                        setIsPriceSortDropdownOpen(!isPriceSortDropdownOpen);
+                        setIsRatingSortDropdownOpen(false);
+                        setIsDistanceDropdownOpen(false);
+                        setIsPriceDropdownOpen(false);
+                      }}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                    >
+                      Cost <ChevronDown size={12} />
+                    </button>
+                    {isPriceSortDropdownOpen && (
+                      <div className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 py-2 min-w-[140px] z-50">
+                        <button
+                          onClick={() => { setSortBy('price_low_high'); setIsPriceSortDropdownOpen(false); }}
+                          className="block w-full px-4 py-2 text-left text-[10px] font-black text-gray-700 hover:bg-gray-50"
+                        >
+                          Low-High
+                        </button>
+                        <button
+                          onClick={() => { setSortBy('price_high_low'); setIsPriceSortDropdownOpen(false); }}
+                          className="block w-full px-4 py-2 text-left text-[10px] font-black text-gray-700 hover:bg-gray-50"
+                        >
+                          High-Low
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Price Range Filter */}
+                <div className="relative">
+                  {priceRange !== 'all' ? (
+                    <button
+                      onClick={() => setPriceRange('all')}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border border-[#D4AF37] bg-[#D4AF37] text-white"
+                    >
+                      ₹{priceRange}+ <X size={12} />
+                    </button>
+                  ) : (
+                    <div className="relative">
+                      <button
+                        onClick={() => {
+                          setIsPriceDropdownOpen(!isPriceDropdownOpen);
+                          setIsDistanceDropdownOpen(false);
+                          setIsRatingSortDropdownOpen(false);
+                          setIsPriceSortDropdownOpen(false);
+                        }}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                      >
+                        Price <ChevronDown size={12} />
+                      </button>
+                      {isPriceDropdownOpen && (
+                        <div className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 py-2 min-w-[140px] z-50">
+                          <button
+                            onClick={() => { setPriceRange('100'); setIsPriceDropdownOpen(false); }}
+                            className="block w-full px-4 py-2 text-left text-[10px] font-black text-gray-700 hover:bg-gray-50"
+                          >
+                            ₹100+ (Budget)
+                          </button>
+                          <button
+                            onClick={() => { setPriceRange('300'); setIsPriceDropdownOpen(false); }}
+                            className="block w-full px-4 py-2 text-left text-[10px] font-black text-gray-700 hover:bg-gray-50"
+                          >
+                            ₹300+ (Standard)
+                          </button>
+                          <button
+                            onClick={() => { setPriceRange('500'); setIsPriceDropdownOpen(false); }}
+                            className="block w-full px-4 py-2 text-left text-[10px] font-black text-gray-700 hover:bg-gray-50"
+                          >
+                            ₹500+ (Mid-range)
+                          </button>
+                          <button
+                            onClick={() => { setPriceRange('1000'); setIsPriceDropdownOpen(false); }}
+                            className="block w-full px-4 py-2 text-left text-[10px] font-black text-gray-700 hover:bg-gray-50"
+                          >
+                            ₹1000+ (Premium)
+                          </button>
+                          <button
+                            onClick={() => { setPriceRange('2000'); setIsPriceDropdownOpen(false); }}
+                            className="block w-full px-4 py-2 text-left text-[10px] font-black text-gray-700 hover:bg-gray-50"
+                          >
+                            ₹2000+ (Luxury)
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+
+                {/* Distance Filter with Custom Dropdown */}
+                <div className="relative">
+                  {distanceFilter !== 'all' ? (
+                    <button
+                      onClick={() => setDistanceFilter('all')}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border border-[#D4AF37] bg-[#D4AF37] text-white"
+                    >
+                      {distanceFilter === '2km' ? 'Within 2km' : distanceFilter === '5km' ? 'Within 5km' : distanceFilter === '10km' ? 'Within 10km' : distanceFilter === '15km' ? 'Within 15km' : '20km+'} <X size={12} />
+                    </button>
+                  ) : (
+                    <div className="relative">
+                      <button
+                        onClick={() => {
+                          setIsDistanceDropdownOpen(!isDistanceDropdownOpen);
+                          setIsPriceSortDropdownOpen(false);
+                          setIsRatingSortDropdownOpen(false);
+                        }}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                      >
+                        Distance <ChevronDown size={12} />
+                      </button>
+                      {isDistanceDropdownOpen && (
+                        <div className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 py-2 min-w-[140px] z-50">
+                          <button
+                            onClick={() => { setDistanceFilter('2km'); setIsDistanceDropdownOpen(false); }}
+                            className="block w-full px-4 py-2 text-left text-[10px] font-black text-gray-700 hover:bg-gray-50"
+                          >
+                            Within 2km
+                          </button>
+                          <button
+                            onClick={() => { setDistanceFilter('5km'); setIsDistanceDropdownOpen(false); }}
+                            className="block w-full px-4 py-2 text-left text-[10px] font-black text-gray-700 hover:bg-gray-50"
+                          >
+                            Within 5km
+                          </button>
+                          <button
+                            onClick={() => { setDistanceFilter('10km'); setIsDistanceDropdownOpen(false); }}
+                            className="block w-full px-4 py-2 text-left text-[10px] font-black text-gray-700 hover:bg-gray-50"
+                          >
+                            Within 10km
+                          </button>
+                          <button
+                            onClick={() => { setDistanceFilter('15km'); setIsDistanceDropdownOpen(false); }}
+                            className="block w-full px-4 py-2 text-left text-[10px] font-black text-gray-700 hover:bg-gray-50"
+                          >
+                            Within 15km
+                          </button>
+                          <button
+                            onClick={() => { setDistanceFilter('20km+'); setIsDistanceDropdownOpen(false); }}
+                            className="block w-full px-4 py-2 text-left text-[10px] font-black text-gray-700 hover:bg-gray-50"
+                          >
+                            20km+
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            </div>
+
+            {/* Active Filters */}
+            {hasActiveFilters && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {sortBy !== 'relevant' && (
+                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-xs font-medium text-[#D4AF37]">
+                    {sortBy === 'rating_high_low' ? 'Rating: High-Low' : sortBy === 'rating_low_high' ? 'Rating: Low-High' : sortBy === 'price_high_low' ? 'Cost: High-Low' : sortBy === 'price_low_high' ? 'Cost: Low-High' : 'Nearest'}
+                    <button onClick={() => setSortBy('relevant')} className="hover:text-[#c9a037] transition-colors">
+                      <X size={14} />
+                    </button>
+                  </div>
+                )}
+                {priceRange !== 'all' && (
+                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-xs font-medium text-[#D4AF37]">
+                    ₹{priceRange}+
+                    <button onClick={() => setPriceRange('all')} className="hover:text-[#c9a037] transition-colors">
+                      <X size={14} />
+                    </button>
+                  </div>
+                )}
+                {distanceFilter !== 'all' && (
+                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-xs font-medium text-[#D4AF37]">
+                    {distanceFilter === '2km' ? 'Within 2km' : distanceFilter === '5km' ? 'Within 5km' : distanceFilter === '10km' ? 'Within 10km' : distanceFilter === '15km' ? 'Within 15km' : '20km+'}
+                    <button onClick={() => setDistanceFilter('all')} className="hover:text-[#c9a037] transition-colors">
+                      <X size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Results Count */}
+            <div className="mb-4">
+              <p className="text-xs font-bold text-gray-500">
+                Showing {filteredSalons.length} salons near you
+              </p>
+            </div>
 
             <div className="grid grid-cols-1 gap-4 sm:gap-6 pb-4 min-h-[200px]">
 
               {/* LOGIC RE-STRUCTURED TO PREVENT FLICKER */}
 
               {/* 1. If data is still being fetched, show glassmorphism skeletons */}
-              {!isDataLoaded ? (
-                <div className="grid grid-cols-1 gap-4 sm:gap-6 pb-4">
-                  {[1, 2, 3].map((i) => (
+              {!isDataLoaded || isFiltering ? (
+                <div className="col-span-full grid grid-cols-1 gap-4 sm:gap-6 pb-4">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
                     <SalonCardSkeleton key={i} />
                   ))}
                 </div>
@@ -395,7 +739,7 @@ const HomePage: React.FC = () => {
 
                 /* 2. If loaded but no address (Location denied) */
                 !address ? (
-                  <div className="w-full flex flex-col items-center justify-center py-16 px-6 backdrop-blur-md rounded-[2rem] border-2 border-dashed border-gray-100 animate-in fade-in duration-500">
+                  <div className="col-span-full w-full flex flex-col items-center justify-center py-16 px-6 backdrop-blur-md rounded-[2rem] border-2 border-dashed border-gray-100 animate-in fade-in duration-500">
                     <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4"><MapPin className="w-8 h-8 text-[#1E4D8C]" /></div>
                     <h3 className="text-gray-900 font-black text-lg mb-2">{t('home.locationRequired')}</h3>
                     <button onClick={handleEnableLocation} className="bg-[#1E4D8C] text-white px-8 py-3 rounded-2xl font-black text-sm shadow-lg flex items-center gap-2"><Navigation className="w-4 h-4" /> {t('home.enableLocation')}</button>
@@ -403,50 +747,97 @@ const HomePage: React.FC = () => {
                 ) :
 
                   /* 3. If loaded, address exists, but array is empty (True empty state) */
-                  salons.length === 0 ? (
-                    <div className="w-full text-center py-20 bg-white/80 backdrop-blur-md rounded-3xl border border-gray-50 animate-in zoom-in duration-500">
-                      <NoSalonsFound />
+                  filteredSalons.length === 0 ? (
+                    <div className="col-span-full w-full text-center py-20 bg-white/80 backdrop-blur-md rounded-3xl border border-gray-50 animate-in zoom-in duration-500">
+                      <p className="text-gray-500 font-bold mb-4">No salons match your criteria</p>
+                      {hasActiveFilters && (
+                        <button
+                          onClick={clearFilters}
+                          className="px-6 py-3 bg-[#D4AF37] text-white rounded-2xl font-black text-sm shadow-lg hover:scale-105 transition-transform"
+                        >
+                          Reset All Filters
+                        </button>
+                      )}
                     </div>
                   ) : (
-                    /* 4. Success state */
-                    salons.map((salon, index) => {
-                      const distance = salon.distance ? parseFloat(salon.distance) : 0;
-                      const displayDistance = distance < 0.1 ? '< 0.1 km' : `${distance.toFixed(1)} km`;
-                      
-                      return (
-                      <Link to={`/salons/${salon.id}`} key={salon.id} className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 bg-white/95 backdrop-blur-sm rounded-2xl overflow-hidden group salon-slide-up active:scale-[0.97] transition-transform duration-100 hover:-translate-y-1 hover:shadow-xl" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)', animationDelay: `${index * 0.15}s` }}>
-                        <div className="relative h-44 sm:h-full">
-                          <img src={salon.logoUrl || "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=400"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={salon.salonName} />
-                          {/* Social Proof Badge for Salons */}
-                          {index < 2 && (
-                            <div className="absolute top-3 left-3 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-white text-[9px] font-black px-2.5 py-1 rounded-xl shadow-md">{t('home.mostBooked') || 'Most Booked'}</div>
-                          )}
-                          {salon.distance && (
-                            <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md text-gray-600 px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-sm border border-gray-200">
-                              <MapPin className="w-3 h-3" /><span className="text-[9px] font-bold tracking-[0.05em]">{displayDistance}</span>
+                    /* 4. Success state with pagination */
+                    <>
+                      {filteredSalons.slice(0, displayLimit).map((salon, index) => {
+                        const distance = salon.distance ? parseFloat(salon.distance) : 0;
+                        const displayDistance = distance < 0.1 ? '< 0.1 km' : `${distance.toFixed(1)} km`;
+
+                        return (
+                        <Link to={`/salons/${salon.id}`} key={salon.id} className="bg-white border border-gray-100 rounded-2xl overflow-hidden group flex hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 0.1}s` }}>
+                          <div className="relative w-32 sm:w-36 h-32 sm:h-36 shrink-0">
+                            <img src={salon.logoUrl || "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&amp;w=400"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={salon.salonName} />
+                          </div>
+                          <div className="p-4 flex-1 flex flex-col justify-between">
+                            <div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <h3 className="font-bold text-base text-gray-900 truncate" style={{ fontFamily: 'Playfair Display, serif' }}>{salon.salonName}</h3>
+                                <div className="flex items-center gap-1 bg-[#D4AF37]/10 px-2 py-0.5 rounded-full shrink-0">
+                                  <Star size={12} className="fill-[#D4AF37] text-[#D4AF37]" />
+                                  <span className="text-xs font-bold text-[#D4AF37]">{salon.rating?.average || "5.0"}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3 mb-2 text-xs text-gray-500">
+                                {salon.distance && (
+                                  <span className="flex items-center gap-1"><MapPin size={12} className="text-gray-400" />{displayDistance}</span>
+                                )}
+                              </div>
+                              <div className="flex flex-wrap gap-1.5 mb-2">
+                                {salon.salonType && <span className="text-[10px] font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-full">{salon.salonType}</span>}
+                                {salon.salonServices && salon.salonServices.length > 0 ? (
+                                  <>
+                                    {salon.salonServices.slice(0, 2).map((service: any, idx: number) => (
+                                      <span key={idx} className="text-[10px] font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-full">{service.name || service.serviceName}</span>
+                                    ))}
+                                    {salon.salonServices.length > 2 && (
+                                      <span className="text-[10px] font-medium text-[#D4AF37] bg-[#D4AF37]/10 px-2 py-1 rounded-full cursor-pointer hover:bg-[#D4AF37]/20">+{salon.salonServices.length - 2} more</span>
+                                    )}
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="text-[10px] font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-full">Haircut</span>
+                                    <span className="text-[10px] font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-full">Facial</span>
+                                  </>
+                                )}
+                              </div>
                             </div>
-                          )}
-                          <div className="absolute top-3 right-3 bg-white/95 backdrop-blur px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-sm"><Star size={12} className="fill-orange-400 text-orange-400" /><span className="text-xs font-black">{salon.rating?.average || "5.0"}</span></div>
-                        </div>
-                        <div className="p-6 flex-1 flex flex-col justify-between">
-                          <div>
-                            <div className="flex justify-between items-start mb-1">
-                              <h3 className="font-black text-base sm:text-lg text-gray-800 pr-2" style={{ fontFamily: 'Playfair Display, serif' }}>{salon.salonName}</h3>
-                              {salon.priceRange && <span className="shrink-0 text-[11px] sm:text-xs font-bold text-[#D4AF37] bg-gradient-to-r from-amber-50 to-yellow-50 px-3 py-1.5 rounded-xl border border-[#D4AF37]/20 shadow-sm">₹{salon.priceRange}</span>}
-                            </div>
-                            <div className="flex items-center gap-2 mb-2">
-                              {salon.salonType && <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded-md uppercase tracking-wider">{salon.salonType}</span>}
-                            </div>
-                            <div className="flex flex-col gap-1">
-                              <p className="text-xs text-gray-400 flex items-center gap-1 font-bold"><MapPin size={12} className="text-[#0f172a]" /><span className="truncate">{salon.address?.city}</span></p>
-                              <p className="text-[10px] text-gray-400 line-clamp-1">{salon.address?.street}</p>
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-[#D4AF37]">Starting from ₹{salon.priceRange || '299'}</span>
+                              <button className="py-1.5 px-4 font-bold text-xs rounded-lg transition-all hover:bg-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30">{t('home.bookNow')}</button>
                             </div>
                           </div>
-                          <button className="mt-4 sm:max-w-[140px] py-2.5 font-black text-xs rounded-xl transition-all hover:scale-105 book-now-button luxury-transition bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-[#0f172a] shadow-lg shadow-[#D4AF37]/20">{t('home.bookNow')}</button>
+                        </Link>
+                        );
+                      })}
+
+                      {/* See More Button */}
+                      {displayLimit < filteredSalons.length && (
+                        <div className="col-span-full flex justify-center mt-6">
+                          {isLoadingMore ? (
+                            <div className="flex items-center gap-2 px-8 py-3 bg-white/80 backdrop-blur-md border border-[#D4AF37]/30 text-[#D4AF37] rounded-2xl font-bold text-sm shadow-lg">
+                              <div className="w-4 h-4 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+                              Loading more premium salons...
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setIsLoadingMore(true);
+                                setTimeout(() => {
+                                  setDisplayLimit(prev => prev + 10);
+                                  setIsLoadingMore(false);
+                                }, 800);
+                              }}
+                              className="px-8 py-3 bg-white/80 backdrop-blur-md border border-[#D4AF37]/30 text-[#D4AF37] rounded-2xl font-bold text-sm shadow-lg hover:bg-white/90 transition-all"
+                            >
+                              See More Salons
+                            </button>
+                          )}
                         </div>
-                      </Link>
-                      );
-                    })
+                      )}
+                    </>
                   )}
             </div>
           </div>
