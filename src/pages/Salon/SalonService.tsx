@@ -173,7 +173,10 @@ const SalonService: React.FC = () => {
       if (!res?.error) {
         setisEditModalOpen(false);
         setbookingrequestsuccess(true);
-        setTimeout(() => setbookingrequestsuccess(false), 4000);
+        setTimeout(() => {
+          setbookingrequestsuccess(false);
+          navigate("/bookings");
+        }, 2000);
       } else {
         alert(res?.error || "Booking failed. Please try again.");
       }

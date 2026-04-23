@@ -256,18 +256,18 @@ const CustomerRegistration: React.FC = () => {
         </div>
       )}
 
-      <div className="relative z-10 w-full max-w-md glass-card rounded-[2.5rem] overflow-hidden flex-1 flex flex-col justify-center">
-        <div className="pt-8 px-8 flex justify-between gap-2">
+      <div className="relative z-10 w-full max-w-md mx-auto glass-card rounded-[2.5rem] overflow-hidden flex-1 flex flex-col justify-center">
+        <div className="pt-6 sm:pt-8 px-6 sm:px-8 flex justify-between gap-2">
           {[1, 2].map(num => <div key={num} className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${step >= num ? 'bg-gradient-to-r from-[#D4AF37] to-[#FFD700]' : 'bg-white/10'}`} />)}
         </div>
 
-        <div className="p-8">
-          <header className="mb-8 text-center">
-            <div className="mx-auto w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-lg border border-white/20 transition-transform hover:scale-105 duration-300">
-              <img src="/Coiffeurr_Logo.png" alt="Coiffeurr" className="w-14 h-14 object-contain" />
+        <div className="p-6 sm:p-8">
+          <header className="mb-6 sm:mb-8 text-center">
+            <div className="mx-auto w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-2xl flex items-center justify-center mb-4 sm:mb-6 shadow-lg border border-white/20 transition-transform hover:scale-105 duration-300">
+              <img src="/Coiffeurr_Logo.png" alt="Coiffeurr" className="w-12 h-12 sm:w-14 sm:h-14 object-contain" />
             </div>
             <h1 
-              className="text-3xl font-bold text-white tracking-tight letter-reveal"
+              className="text-2xl sm:text-3xl font-bold text-white tracking-tight letter-reveal"
               style={{ fontFamily: 'Playfair Display, serif' }}
             >
               {t('auth.register')}
@@ -281,9 +281,9 @@ const CustomerRegistration: React.FC = () => {
           </header>
 
           {step === 1 ? (
-            <div className="space-y-6 slide-in-right">
+            <div className="space-y-4 sm:space-y-6 slide-in-right">
               <div className="space-y-2 staggered-1">
-                <label className="dark-label ml-1">{t('auth.enterPhone')} *</label>
+                <label className="dark-label ml-1 text-xs sm:text-sm">{t('auth.enterPhone')} *</label>
                 <div className={`relative input-wrapper ${errors.phone ? 'error' : ''}`}>
                   <Smartphone className={`absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon ${errors.phone ? "text-[#DC143C]" : ""}`} />
                   <input
@@ -292,21 +292,21 @@ const CustomerRegistration: React.FC = () => {
                     value={formData.phone}
                     onChange={handleChange}
                     placeholder="9876543210"
-                    className={`w-full h-12 pl-14 pr-4 dark-input text-sm font-bold outline-none transition-all duration-300 ${errors.phone ? "error" : ""}`}
+                    className={`w-full h-10 sm:h-12 pl-12 sm:pl-14 pr-3 sm:pr-4 dark-input text-xs sm:text-sm font-bold outline-none transition-all duration-300 ${errors.phone ? "error" : ""}`}
                   />
                 </div>
               </div>
-              <Button onClick={handleNext} disabled={isLoading || formData.phone.length < 10} className="w-full h-14 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30">
+              <Button onClick={handleNext} disabled={isLoading || formData.phone.length < 10} className="w-full h-12 sm:h-14 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30 text-sm sm:text-base">
                 {isLoading ? <Loader2 className="animate-spin" /> : 'Next'}
               </Button>
             </div>
           ) : (
-            <div className="space-y-4 slide-in-right max-h-[65vh] overflow-y-auto pr-1 custom-scrollbar">
+            <div className="space-y-3 sm:space-y-4 slide-in-right max-h-[65vh] overflow-y-auto pr-1 custom-scrollbar">
 
               {/* PHOTO SECTION */}
-              <div className="flex flex-col items-center justify-center mb-4 staggered-1">
+              <div className="flex flex-col items-center justify-center mb-3 sm:mb-4 staggered-1">
                 <div className="relative">
-                  <div className="w-20 h-20 rounded-full border-4 border-white/30 shadow-lg overflow-hidden bg-white/10 relative">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-white/30 shadow-lg overflow-hidden bg-white/10 relative">
                     {isUploading ? (
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
                         <Loader2 className="animate-spin text-[#D4AF37]" size={20} />
@@ -324,10 +324,10 @@ const CustomerRegistration: React.FC = () => {
                   </button>
                   <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
                 </div>
-                <p className="mt-2 text-[9px] font-black text-white/50 tracking-widest">{t('auth.addPhoto')}</p>
+                <p className="mt-2 text-[8px] sm:text-[9px] font-black text-white/50 tracking-widest">{t('auth.addPhoto')}</p>
               </div>
 
-              <div className="bg-white/5 p-4 rounded-3xl border border-white/10 mb-2 staggered-2">
+              <div className="bg-white/5 p-3 sm:p-4 rounded-3xl border border-white/10 mb-2 staggered-2">
                 <div className="space-y-2">
                   <label className="dark-label ml-1">{t('auth.verificationCode')} *</label>
                   <div className={`relative input-wrapper ${errors.otp ? 'error' : ''}`}>
@@ -346,7 +346,7 @@ const CustomerRegistration: React.FC = () => {
               </div>
 
               <div className="space-y-2 staggered-3">
-                <label className="dark-label ml-1">{t('auth.fullName')} *</label>
+                <label className="dark-label ml-1 text-xs sm:text-sm">{t('auth.fullName')} *</label>
                 <div className={`relative input-wrapper ${errors.username ? 'error' : ''}`}>
                   <User className={`absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon ${errors.username ? "text-[#DC143C]" : ""}`} />
                   <input
@@ -355,13 +355,13 @@ const CustomerRegistration: React.FC = () => {
                     value={formData.username}
                     onChange={handleChange}
                     placeholder={t('auth.fullName')}
-                    className={`w-full h-12 pl-18 pr-4 dark-input text-sm font-bold outline-none transition-all duration-300 ${errors.username ? "error" : ""}`}
+                    className={`w-full h-10 sm:h-12 pl-16 sm:pl-18 pr-3 sm:pr-4 dark-input text-xs sm:text-sm font-bold outline-none transition-all duration-300 ${errors.username ? "error" : ""}`}
                   />
                 </div>
               </div>
 
               <div className="space-y-2 staggered-3">
-                <label className="dark-label ml-1">Email (Optional)</label>
+                <label className="dark-label ml-1 text-xs sm:text-sm">Email (Optional)</label>
                 <div className="relative input-wrapper">
                   <Mail className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon" size={18} />
                   <input
@@ -370,17 +370,17 @@ const CustomerRegistration: React.FC = () => {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="name@example.com"
-                    className="w-full h-12 pl-18 pr-4 dark-input text-sm font-bold outline-none transition-all duration-300"
+                    className="w-full h-10 sm:h-12 pl-16 sm:pl-18 pr-3 sm:pr-4 dark-input text-xs sm:text-sm font-bold outline-none transition-all duration-300"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 staggered-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 staggered-4">
                 <div className="space-y-2">
-                  <label className="dark-label ml-1">{t('auth.gender')}</label>
+                  <label className="dark-label ml-1 text-xs sm:text-sm">{t('auth.gender')}</label>
                   <div className="relative group">
                     <VenusAndMars className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon" size={18} />
-                    <select name="gender" className="w-full h-11 pl-18 pr-4 dark-input text-sm font-bold outline-none appearance-none focus-ring transition-all duration-300" value={formData.gender} onChange={handleChange}>
+                    <select name="gender" className="w-full h-10 sm:h-11 pl-16 sm:pl-18 pr-3 sm:pr-4 dark-input text-xs sm:text-sm font-bold outline-none appearance-none focus-ring transition-all duration-300" value={formData.gender} onChange={handleChange}>
                       <option value="male" className="bg-gray-800">Male</option>
                       <option value="female" className="bg-gray-800">Female</option>
                       <option value="other" className="bg-gray-800">Other</option>

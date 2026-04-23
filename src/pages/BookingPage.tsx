@@ -152,15 +152,15 @@ function BookingPage() {
                 </div>
             </header>
 
-            <main className="max-w-2xl mx-auto px-4 py-8">
+            <main className="max-w-2xl mx-auto px-4 py-6 sm:py-8">
                 {/* Status Summary */}
-                <div className="mb-8 flex flex-col gap-5 px-2">
-                    <div className="flex items-center gap-4 w-full sm:w-auto">
+                <div className="mb-6 sm:mb-8 flex flex-col gap-4 sm:gap-5 px-2">
+                    <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
                         <div className="relative w-full sm:w-auto">
                             <select
                                 value={filterStatus}
                                 onChange={(e) => setFilterStatus(e.target.value)}
-                                className="appearance-none rounded-2xl px-6 py-4 pr-12 text-base font-bold outline-none transition-all cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5 w-full sm:w-52 typography-label-light"
+                                className="appearance-none rounded-2xl px-4 sm:px-6 py-3 sm:py-4 pr-10 sm:pr-12 text-sm sm:text-base font-bold outline-none transition-all cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5 w-full sm:w-52 typography-label-light"
                                 style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
                             >
                                 <option value="ALL">{t('bookings.allBookings')}</option>
@@ -169,16 +169,16 @@ function BookingPage() {
                                 <option value="COMPLETED">{t('bookings.completed')}</option>
                                 <option value="CANCELLED">{t('bookings.cancelled')}</option>
                             </select>
-                            <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-transform duration-200" style={{ color: '#666' }} />
+                            <ChevronDown size={18} className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-transform duration-200 w-4 h-4 sm:w-5 sm:h-5" style={{ color: '#666' }} />
                         </div>
                         <div className="relative">
                             <button
                                 onClick={() => setShowCalendar(!showCalendar)}
-                                className={`p-4 rounded-2xl outline-none transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 cursor-pointer ${selectedDate ? 'ring-2' : ''}`}
+                                className={`p-3 sm:p-4 rounded-2xl outline-none transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 cursor-pointer ${selectedDate ? 'ring-2' : ''}`}
                                 style={{ backgroundColor: 'var(--light-greige)', border: selectedDate ? '1px solid var(--muted-gold)' : '1px solid var(--light-greige)', boxShadow: 'var(--inset-shadow)' }}
                                 title={selectedDate || 'Filter by date'}
                             >
-                                <Calendar size={20} className={`transition-colors`} style={{ color: selectedDate ? 'var(--deep-charcoal)' : '#666' }} />
+                                <Calendar size={20} className={`transition-colors w-4 h-4 sm:w-5 sm:h-5`} style={{ color: selectedDate ? 'var(--deep-charcoal)' : '#666' }} />
                             </button>
                             {selectedDate && (
                                 <button
@@ -193,29 +193,29 @@ function BookingPage() {
                                 </button>
                             )}
                             {showCalendar && (
-                                <div className="absolute top-full left-0 mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-gray-200 p-4 w-72 animate-in fade-in zoom-in-95 duration-200">
+                                <div className="absolute top-full left-0 mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-gray-200 p-3 sm:p-4 w-64 sm:w-72 animate-in fade-in zoom-in-95 duration-200">
                                     <div className="flex items-center justify-between mb-4">
-                                        <button onClick={() => handleMonthChange('prev')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                                            <ChevronLeft size={20} />
+                                        <button onClick={() => handleMonthChange('prev')} className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                            <ChevronLeft size={20} className="w-4 h-4 sm:w-5 sm:h-5" />
                                         </button>
-                                        <span className="font-bold text-sm" style={{ color: 'var(--deep-charcoal)' }}>
+                                        <span className="font-bold text-xs sm:text-sm" style={{ color: 'var(--deep-charcoal)' }}>
                                             {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                                         </span>
-                                        <button onClick={() => handleMonthChange('next')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                                            <ChevronRight size={20} />
+                                        <button onClick={() => handleMonthChange('next')} className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                            <ChevronRight size={20} className="w-4 h-4 sm:w-5 sm:h-5" />
                                         </button>
                                     </div>
-                                    <div className="grid grid-cols-7 gap-1 mb-2">
+                                    <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-2">
                                         {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
-                                            <div key={day} className="text-center text-xs font-bold text-gray-500 py-1">{day}</div>
+                                            <div key={day} className="text-center text-[10px] sm:text-xs font-bold text-gray-500 py-1">{day}</div>
                                         ))}
                                     </div>
-                                    <div className="grid grid-cols-7 gap-1">
+                                    <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
                                         {(() => {
                                             const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentMonth);
                                             const days = [];
                                             for (let i = 0; i < startingDayOfWeek; i++) {
-                                                days.push(<div key={`empty-${i}`} className="p-2" />);
+                                                days.push(<div key={`empty-${i}`} className="p-1.5 sm:p-2" />);
                                             }
                                             for (let day = 1; day <= daysInMonth; day++) {
                                                 const isSelected = selectedDate === `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -223,7 +223,7 @@ function BookingPage() {
                                                     <button
                                                         key={day}
                                                         onClick={() => handleDateSelect(day)}
-                                                        className={`p-2 rounded-lg text-sm font-bold transition-all hover:scale-105 ${
+                                                        className={`p-1.5 sm:p-2 rounded-lg text-xs sm:text-sm font-bold transition-all hover:scale-105 ${
                                                             isSelected 
                                                                 ? 'text-white' 
                                                                 : 'hover:bg-gray-100'
@@ -241,7 +241,7 @@ function BookingPage() {
                             )}
                         </div>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4">
                         <button
                             onClick={() => {
                                 setShowUpcoming(!showUpcoming);

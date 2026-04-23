@@ -129,164 +129,136 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col items-center justify-center p-4 overflow-hidden classy-salon-bg">
-      <div className="classy-overlay" />
-
-      <div className="relative z-10 w-full max-w-[420px] flex-1 flex flex-col justify-center">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-        >
-          <Card className="border border-white/10 glass-card rounded-[2.5rem] overflow-hidden backdrop-blur-xl">
-            <CardHeader className="text-center pb-1 pt-4 px-4">
-              <motion.div 
-                className="mx-auto w-12 h-12 bg-white rounded-2xl flex items-center justify-center mb-2 shadow-lg border border-white/20 transition-transform hover:scale-105 duration-300"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
+    <div className="min-h-screen bg-gradient-to-br from-[#1E4D8C] to-[#0a2e5c] flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md mx-auto"
+      >
+        <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-xl rounded-3xl overflow-hidden">
+          <CardContent className="p-6 sm:p-8 space-y-4 sm:space-y-6">
+            <motion.div 
+              className="mx-auto w-12 h-12 bg-white rounded-2xl flex items-center justify-center mb-2 shadow-lg border border-white/20 transition-transform hover:scale-105 duration-300"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <img src="/Coiffeurr_Logo.png" alt="Coiffeurr" className="w-10 h-10 object-contain" />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('auth.signIn')}</h1>
+            </motion.div>
+            <motion.p 
+              className="punch-line text-[9px]"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              Refining the art of your presence.
+            </motion.p>
+            <div className="text-center space-y-2">
+              <p className="text-xs sm:text-sm text-gray-600">{t('auth.dontHaveAccount')} <Link to="/signup" className="text-[#1E4D8C] hover:underline font-semibold">{t('auth.createAccount')}</Link></p>
+            </div>
+            <motion.div 
+              className="flex bg-white/5 p-1 rounded-2xl"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+            >
+              <button
+                onClick={() => setLoginMethod('phone')}
+                className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-xl text-[9px] font-black tracking-widest transition-all ${loginMethod === 'phone' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40'}`}
               >
-                <img src="/Coiffeurr_Logo.png" alt="Coiffeurr" className="w-10 h-10 object-contain" />
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
+                <Smartphone size={12} /> {t('common.phone')}
+              </button>
+              <button
+                onClick={() => setLoginMethod('email')}
+                className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-xl text-[9px] font-black tracking-widest transition-all ${loginMethod === 'email' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40'}`}
               >
-                <CardTitle 
-                  className="text-2xl font-bold text-white tracking-tight letter-reveal"
-                  style={{ fontFamily: 'Playfair Display, serif' }}
-                >
-                  {t('auth.signIn')}
-                </CardTitle>
-              </motion.div>
-              <motion.p 
-                className="punch-line text-[9px]"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
+                <Mail size={12} /> {t('common.email')}
+              </button>
+            </motion.div>
+            <AnimatePresence mode="wait">
+              <motion.form 
+                key={loginMethod}
+                onSubmit={handleSubmit} 
+                className="space-y-5"
+                initial={{ opacity: 0, x: loginMethod === 'email' ? 50 : -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: loginMethod === 'email' ? -50 : 50 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
               >
-                Refining the art of your presence.
-              </motion.p>
-            </CardHeader>
-
-            <CardContent className="space-y-3 px-4 pb-4">
-              {/* Method Toggle */}
-              <motion.div 
-                className="flex bg-white/5 p-1 rounded-2xl"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.5 }}
-              >
-                <button
-                  onClick={() => setLoginMethod('phone')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-xl text-[9px] font-black tracking-widest transition-all ${loginMethod === 'phone' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40'}`}
-                >
-                  <Smartphone size={12} /> {t('common.phone')}
-                </button>
-                <button
-                  onClick={() => setLoginMethod('email')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-xl text-[9px] font-black tracking-widest transition-all ${loginMethod === 'email' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40'}`}
-                >
-                  <Mail size={12} /> {t('common.email')}
-                </button>
-              </motion.div>
-
-              <AnimatePresence mode="wait">
-                <motion.form 
-                  key={loginMethod}
-                  onSubmit={handleSubmit} 
-                  className="space-y-5"
-                  initial={{ opacity: 0, x: loginMethod === 'email' ? 50 : -50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: loginMethod === 'email' ? -50 : 50 }}
-                  transition={{ duration: 0.4, ease: "easeInOut" }}
-                >
-                  {loginMethod === 'email' ? (
-                    <div className="space-y-2">
-                      <label className="dark-label ml-1">{t('common.email')}</label>
-                      <div className={`relative input-wrapper ${errors.email ? 'error' : ''}`}>
-                        <Mail className={`absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon z-10 ${errors.email ? "text-[#DC143C]" : ""}`} />
-                        <input
-                          type="email"
-                          placeholder="name@example.com"
-                          value={formData.email}
-                          onChange={(e) => handleInputChange("email", e.target.value)}
-                          className={`w-full h-12 pl-12 pr-12 dark-input text-sm font-bold outline-none transition-all duration-300 focus:ring-2 focus:ring-[#D4AF37]/50 ${errors.email ? "error" : ""}`}
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <label className="dark-label ml-1">{t('auth.phoneNumber')}</label>
-                      <div className={`relative input-wrapper ${errors.phone ? 'error' : ''}`}>
-                        <Smartphone className={`absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon z-10 ${errors.phone ? "text-[#DC143C]" : ""}`} />
-                        <input
-                          type="tel"
-                          placeholder="+91 00000 00000"
-                          value={formData.phone}
-                          onChange={(e) => handleInputChange("phone", e.target.value)}
-                          className={`w-full h-12 pl-12 pr-4 dark-input text-sm font-bold outline-none transition-all duration-300 focus:ring-2 focus:ring-[#D4AF37]/50 ${errors.phone ? "error" : ""}`}
-                        />
-                      </div>
-                    </div>
-                  )}
-
+                {loginMethod === 'email' ? (
                   <div className="space-y-2">
-                    <div className="flex justify-between items-center px-1">
-                      <label className="dark-label">{t('auth.password')}</label>
-                      <Link to="/forgetpassword" className="text-[10px] font-black text-white/60 hover:text-[#D4AF37] tracking-widest text-button transition-colors focus-ring">
-                        {t('auth.forgotPassword')}
-                      </Link>
-                    </div>
-                    <div className="relative input-wrapper">
-                      <Lock className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon" />
+                    <label className="text-xs sm:text-sm font-medium text-gray-700">{t('common.email')}</label>
+                    <div className={`relative input-wrapper ${errors.email ? 'error' : ''}`}>
+                      <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5 ${errors.email ? "text-[#DC143C]" : ""}`} />
                       <input
-                        type={showPassword ? "text" : "password"}
-                        placeholder="••••••••"
-                        value={formData.password}
-                        onChange={(e) => handleInputChange("password", e.target.value)}
-                        className="w-full h-12 pl-12 pr-20 dark-input text-sm font-bold outline-none transition-all duration-300 focus:ring-2 focus:ring-[#D4AF37]/50"
+                        type="email"
+                        placeholder="name@example.com"
+                        value={formData.email}
+                        onChange={(e) => handleInputChange("email", e.target.value)}
+                        className={`w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1E4D8C] focus:border-transparent outline-none transition-all text-sm ${errors.email ? "error" : ""}`}
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white p-1 transition-colors focus-ring z-10"
-                      >
-                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
                     </div>
                   </div>
-
-                  <Button
-                    type="submit"
-                    className={`w-full h-11 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold text-xs rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 mt-3 focus-ring shadow-lg shadow-[#D4AF37]/30 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? t('common.loading') : t('auth.signIn')}
-                  </Button>
-                </motion.form>
-              </AnimatePresence>
-
-              <div className="gold-divider" />
-
-              <motion.div 
-                className="text-center pt-1"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.6 }}
-              >
-                <p className="text-[10px] font-bold text-white/60">
-                  {t('auth.dontHaveAccount')}
-                  <Link to="/signup" className="text-[#D4AF37] hover:text-[#FFD700] ml-1 text-button transition-colors">{t('auth.createAccount')}</Link>
-                </p>
-              </motion.div>
-
-              <div className="w-full h-px bg-white/10 my-2" />
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
+                ) : (
+                  <div className="space-y-2">
+                    <label className="text-xs sm:text-sm font-medium text-gray-700">{t('auth.phoneNumber')}</label>
+                    <div className={`relative input-wrapper ${errors.phone ? 'error' : ''}`}>
+                      <Smartphone className={`absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5 ${errors.phone ? "text-[#DC143C]" : ""}`} />
+                      <input
+                        type="tel"
+                        placeholder="+91 00000 00000"
+                        value={formData.phone}
+                        onChange={(e) => handleInputChange("phone", e.target.value)}
+                        className={`w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1E4D8C] focus:border-transparent outline-none transition-all text-sm ${errors.phone ? "error" : ""}`}
+                      />
+                    </div>
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center px-1">
+                    <label className="text-xs sm:text-sm font-medium text-gray-700">{t('auth.password')}</label>
+                    <Link to="/forgetpassword" className="text-[10px] font-black text-white/60 hover:text-[#D4AF37] tracking-widest text-button transition-colors focus-ring">
+                      {t('auth.forgotPassword')}
+                    </Link>
+                  </div>
+                  <div className="relative input-wrapper">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={formData.password}
+                      onChange={(e) => handleInputChange("password", e.target.value)}
+                      className="w-full pl-10 sm:pl-12 pr-20 py-2.5 sm:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1E4D8C] focus:border-transparent outline-none transition-all text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white p-1 transition-colors focus-ring z-10"
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-[#1E4D8C] hover:bg-[#0a2e5c] text-white py-2.5 sm:py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl text-sm sm:text-base"
+                >
+                  {isLoading ? t('common.loading') : t('auth.signIn')}
+                </Button>
+              </motion.form>
+            </AnimatePresence>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       <Sponser_Footer collapsed={false} />
     </div>

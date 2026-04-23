@@ -192,7 +192,7 @@ export default function StaffDetailPage() {
         <div className="min-h-screen bg-white text-slate-900">
             {/* --- Navigation --- */}
             <nav className="fixed top-0 inset-x-0 z-50 bg-white/70 backdrop-blur-md border-b border-slate-100">
-                <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
                     <button onClick={() => navigate(-1)} className="p-2 -ml-2 hover:bg-slate-50 rounded-full transition-all">
                         <ArrowLeft className="w-5 h-5" />
                     </button>
@@ -203,7 +203,7 @@ export default function StaffDetailPage() {
 
             <main className="">
                 {/* --- Full-Width Image Carousel --- */}
-                <div className="w-full h-[60vh] md:h-[70vh] relative overflow-hidden">
+                <div className="w-full h-[50vh] sm:h-[60vh] md:h-[70vh] relative overflow-hidden">
                     <Swiper
                         modules={[Pagination, Autoplay]}
                         pagination={{ clickable: true, dynamicBullets: true }}
@@ -231,17 +231,17 @@ export default function StaffDetailPage() {
 
                     {/* --- Glassmorphism Header Card --- */}
                     <div className="absolute bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-white/20 shadow-2xl">
-                        <div className="max-w-7xl mx-auto px-6 py-8">
-                            <div className="flex flex-col md:flex-row md:items-end gap-4">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+                            <div className="flex flex-col md:flex-row md:items-end gap-3 sm:gap-4">
                                 <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-slate-500">{staff.role}</span>
+                                    <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                                        <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.4em] text-slate-500">{staff.role}</span>
                                         <span className="flex items-center gap-1.5 bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border border-amber-200">
                                             <Award className="w-3 h-3" />
                                             Verified Artist
                                         </span>
                                     </div>
-                                    <h1 className="text-4xl md:text-6xl font-serif text-gray-900 leading-tight" style={{ fontFamily: 'Playfair Display, serif' }}>{staff.name}</h1>
+                                    <h1 className="text-3xl sm:text-4xl md:text-6xl font-serif text-gray-900 leading-tight" style={{ fontFamily: 'Playfair Display, serif' }}>{staff.name}</h1>
                                     <div className="flex items-center gap-4 mt-2">
                                         {staff?.instagramHandle && (
                                             <a
@@ -273,17 +273,17 @@ export default function StaffDetailPage() {
                                 </div>
 
                                 {/* --- Stats Row with Gold Stars --- */}
-                                <div className="flex items-center gap-6">
-                                    <div className="text-center border-r border-slate-200 pr-6">
-                                        <div className="flex items-center gap-1 text-xl font-black">
-                                            <Star className="w-5 h-5 fill-[#D4AF37] text-[#D4AF37]" />
+                                <div className="flex items-center gap-4 sm:gap-6">
+                                    <div className="text-center border-r border-slate-200 pr-4 sm:pr-6">
+                                        <div className="flex items-center gap-1 text-lg sm:text-xl font-black">
+                                            <Star className="w-4 h-4 sm:w-5 sm:h-5 fill-[#D4AF37] text-[#D4AF37]" />
                                             <span className="text-[#D4AF37]">{staff.rating?.average}</span>
                                         </div>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{t('common.rating')}</p>
+                                        <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{t('common.rating')}</p>
                                     </div>
                                     <div className="text-center">
-                                        <div className="text-xl font-black text-gray-900">{staff.experienceYears}+</div>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{t('common.yearsExp')}</p>
+                                        <div className="text-lg sm:text-xl font-black text-gray-900">{staff.experienceYears}+</div>
+                                        <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{t('common.yearsExp')}</p>
                                     </div>
                                     {staff?.instagramHandle && (
                                         <a
@@ -303,29 +303,29 @@ export default function StaffDetailPage() {
                 </div>
 
                 {/* --- Content Section --- */}
-                <div className="max-w-7xl mx-auto px-6 py-12 space-y-16 -mt-12 rounded-t-[40px] bg-white relative z-10 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-12 sm:space-y-16 -mt-8 sm:-mt-12 rounded-t-[30px] sm:rounded-t-[40px] bg-white relative z-10 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
 
                         {/* --- Signature Services --- */}
-                        <section className="space-y-6">
+                        <section className="space-y-4 sm:space-y-6">
                             <div className="space-y-2">
-                                <h2 className="text-3xl font-serif text-gray-900" style={{ fontFamily: 'Playfair Display, serif' }}>
+                                <h2 className="text-2xl sm:text-3xl font-serif text-gray-900" style={{ fontFamily: 'Playfair Display, serif' }}>
                                     {staff.name.split(' ')[0]}
                                 </h2>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">
+                                <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">
                                     Signature Services
                                 </p>
                             </div>
 
                             {/* Contextual Booking Text with Salon Info */}
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 sm:gap-3">
                                 {salon?.branding?.coverImages?.[0] && (
                                     <img 
                                         src={salon.branding.coverImages[0]} 
                                         alt={salon.salonName}
-                                        className="w-10 h-10 rounded-xl object-cover"
+                                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-cover"
                                     />
                                 )}
-                                <p className="text-xs text-slate-500 font-normal">
+                                <p className="text-[11px] sm:text-xs text-slate-500 font-normal">
                                     Visit <span className="font-bold text-slate-700">{salon?.salonName || 'the salon'}</span> to book {staff.name.split(' ')[0]} for your transformation
                                 </p>
                             </div>
@@ -334,32 +334,32 @@ export default function StaffDetailPage() {
                                 {staff.services?.map((service: any, i: number) => (
                                     <div
                                         key={i}
-                                        className="p-4 bg-[#F9F9F9] rounded-2xl shadow-sm border border-slate-100 hover:border-[#D4AF37] hover:shadow-md transition-all group"
+                                        className="p-3 sm:p-4 bg-[#F9F9F9] rounded-2xl shadow-sm border border-slate-100 hover:border-[#D4AF37] hover:shadow-md transition-all group"
                                     >
-                                        <div className="flex items-center justify-between mb-3">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-xl bg-white border-2 border-[#D4AF37] flex items-center justify-center">
-                                                    <Scissors className="w-5 h-5 text-[#D4AF37]" />
+                                        <div className="flex items-center justify-between mb-2 sm:mb-3">
+                                            <div className="flex items-center gap-3 sm:gap-4">
+                                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white border-2 border-[#D4AF37] flex items-center justify-center">
+                                                    <Scissors className="w-4 h-4 sm:w-5 sm:h-5 text-[#D4AF37]" />
                                                 </div>
-                                                <span className="text-sm font-black text-gray-800 group-hover:tracking-[0.05em] transition-all duration-300">
+                                                <span className="text-xs sm:text-sm font-black text-gray-800 group-hover:tracking-[0.05em] transition-all duration-300">
                                                     {service.serviceName}
                                                 </span>
                                             </div>
-                                            <div className="flex items-center gap-3">
+                                            <div className="flex items-center gap-2 sm:gap-3">
                                                 <div className="flex items-center gap-1 text-slate-500">
-                                                    <Clock className="w-3 h-3" />
-                                                    <span className="text-xs font-bold">{service.durationMinutes}m</span>
+                                                    <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                                    <span className="text-[10px] sm:text-xs font-bold">{service.durationMinutes}m</span>
                                                 </div>
-                                                <span className="text-sm font-black text-[#2C2C2C]">
+                                                <span className="text-xs sm:text-sm font-black text-[#2C2C2C]">
                                                     ₹{service.price}
                                                 </span>
                                             </div>
                                         </div>
-                                        <div className="border-t border-slate-200 pt-3 flex items-center justify-between">
-                                            <span className="text-[10px] text-slate-400 font-normal">Available at this salon</span>
+                                        <div className="border-t border-slate-200 pt-2 sm:pt-3 flex items-center justify-between">
+                                            <span className="text-[9px] sm:text-[10px] text-slate-400 font-normal">Available at this salon</span>
                                             <button
                                                 onClick={() => navigate(`/salons/${salonId}`)}
-                                                className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-[0.2em] hover:tracking-[0.3em] transition-all"
+                                                className="text-[9px] sm:text-[10px] font-bold text-[#D4AF37] uppercase tracking-[0.2em] hover:tracking-[0.3em] transition-all"
                                             >
                                                 Go to Salon →
                                             </button>

@@ -380,7 +380,7 @@ const HomePage: React.FC = () => {
                 <p className={`text-xs sm:text-sm text-blue-200 ${showUI ? 'ui-fade-in' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>{t('home.tagline') || 'Where your signature style is authored.'}</p>
               </div>
 
-              <div className={`flex justify-center ${showUI ? 'ui-fade-in' : 'opacity-0'}`} style={{ animationDelay: '0.3s', width: '90%', margin: '0 auto' }}>
+              <div className={`flex justify-center ${showUI ? 'ui-fade-in' : 'opacity-0'}`} style={{ animationDelay: '0.3s', width: '100%', margin: '0 auto' }}>
                 <div
                   onClick={() => setIsSearchOverlayOpen(true)}
                   className={`bg-white/10 backdrop-blur-md rounded-2xl p-2.5 sm:p-4 border border-white/20 cursor-pointer active:scale-[0.97] transition-all duration-100 w-full ${isScrolled ? 'sticky top-2 z-30 p-2 sm:p-3 backdrop-blur-xl' : ''}`}
@@ -391,9 +391,9 @@ const HomePage: React.FC = () => {
                     <span className="text-white font-bold text-sm sm:text-base">{t('home.discoverTransformation') || 'Discover your next transformation'}</span>
                   </div>
                   <div className="flex gap-2">
-                    <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2.5 flex items-center border border-white/20 font-bold text-xs text-white/70">{t('home.tapToSearch')}</div>
-                    <button className="bg-white text-[#0f172a] px-4 py-2 rounded-lg font-black shadow-md flex items-center justify-center">
-                      <Search size={16} />
+                    <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-lg px-2 sm:px-3 py-2.5 flex items-center border border-white/20 font-bold text-[10px] sm:text-xs text-white/70">{t('home.tapToSearch')}</div>
+                    <button className="bg-white text-[#0f172a] px-3 sm:px-4 py-2 rounded-lg font-black shadow-md flex items-center justify-center">
+                      <Search size={16} className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </button>
                   </div>
                 </div>
@@ -413,9 +413,9 @@ const HomePage: React.FC = () => {
                 </div>
                 {/* <button onClick={() => navigate('/all-experts')} className="text-[#1E4D8C] bg-blue-50 p-2 rounded-full active:scale-90 transition-transform"><ChevronRight size={20} /></button> */}
               </div>
-              <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 scroll-snap-x scroll-snap-type-x-mandatory">
+              <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 scroll-snap-x scroll-snap-type-x-mandatory">
                 {staff.map((member, index) => (
-                  <div key={member.staff_id} onClick={() => navigate(`salon/${member.salon_id}/staff/${member.staff_id}`)} className="flex-shrink-0 w-32 sm:w-36 flex flex-col items-center group cursor-pointer artist-bounce scroll-snap-center active:scale-[0.97] transition-transform duration-100" style={{ animationDelay: `${index * 0.1}s` }}>
+                  <div key={member.staff_id} onClick={() => navigate(`salon/${member.salon_id}/staff/${member.staff_id}`)} className="flex-shrink-0 w-28 sm:w-32 md:w-36 flex flex-col items-center group cursor-pointer artist-bounce scroll-snap-center active:scale-[0.97] transition-transform duration-100" style={{ animationDelay: `${index * 0.1}s` }}>
                     <div className="relative mb-3">
                       <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full p-1 artist-image-container" style={{ border: '2px solid #D4AF37' }}>
                         <img
@@ -437,13 +437,13 @@ const HomePage: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="text-center w-full flex flex-col" style={{ minHeight: '100px' }}>
+                    <div className="text-center w-full flex flex-col" style={{ minHeight: '90px' }}>
                       <div style={{ minHeight: '50px' }}>
-                        <h4 className="font-black text-gray-900 text-sm capitalize truncate leading-tight" style={{ fontFamily: 'Playfair Display, serif' }}>{member.name}</h4>
-                        <p className="text-[10px] text-gray-500 font-medium truncate">{member.specialty || t('home.stylist')}</p>
+                        <h4 className="font-black text-gray-900 text-xs sm:text-sm capitalize truncate leading-tight" style={{ fontFamily: 'Playfair Display, serif' }}>{member.name}</h4>
+                        <p className="text-[9px] sm:text-[10px] text-gray-500 font-medium truncate">{member.specialty || t('home.stylist')}</p>
                       </div>
-                      <div className="flex flex-col items-center gap-1 mt-2">
-                        <div className="flex items-center gap-1 text-[9px] font-black text-emerald-600 bg-emerald-50 py-1 px-2 rounded-lg"><Award size={10} /><span>{member.experience_years}{t('home.yExp')}</span></div>
+                      <div className="flex flex-col items-center gap-1 mt-1 sm:mt-2">
+                        <div className="flex items-center gap-1 text-[8px] sm:text-[9px] font-black text-emerald-600 bg-emerald-50 py-0.5 sm:py-1 px-1.5 sm:px-2 rounded-lg"><Award size={10} className="w-2 h-2 sm:w-2.5 sm:h-2.5" /><span>{member.experience_years}{t('home.yExp')}</span></div>
                       </div>
                     </div>
                   </div>

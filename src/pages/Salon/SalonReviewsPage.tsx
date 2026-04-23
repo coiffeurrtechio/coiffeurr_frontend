@@ -140,27 +140,27 @@ const SalonReviewsPage = () => {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
+        <div className="max-w-6xl mx-auto px-4 py-3 sm:py-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <button
               onClick={() => window.history.back()}
               className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
             >
-              <ArrowLeft size={20} className="text-gray-600" />
+              <ArrowLeft size={20} className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
             </button>
             <div className="flex items-center gap-3">
               {salonData?.branding?.logoUrl && (
                 <img
                   src={salonData.branding.logoUrl}
                   alt={salonData.salonName}
-                  className="w-10 h-10 rounded-full object-cover border-2 border-[#D4AF37]/20"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-[#D4AF37]/20"
                 />
               )}
               <div>
-                <h1 className="text-xl font-bold text-gray-900" style={{ fontFamily: "'Playfair Display', serif" }}>
+                <h1 className="text-lg sm:text-xl font-bold text-gray-900" style={{ fontFamily: "'Playfair Display', serif" }}>
                   {salonData?.salonName}
                 </h1>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs sm:text-sm text-gray-500">
                   {salonData?.address?.city}, {salonData?.address?.state}
                 </p>
               </div>
@@ -169,24 +169,22 @@ const SalonReviewsPage = () => {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
         {/* Rating Summary */}
         {reviewSummary && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl shadow-lg p-6 mb-8"
-          >
-            <div className="flex flex-col md:flex-row gap-8">
-              {/* Average Rating */}
-              <div className="flex-shrink-0 text-center md:text-left">
-                <div className="text-5xl font-bold text-gray-900 mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6 sm:mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+              {/* Overall Rating */}
+              <div className="text-center">
+                <div className="text-4xl sm:text-5xl font-bold text-gray-900 mb-2">
                   {reviewSummary.averageRating.toFixed(1)}
                 </div>
-                <div className="flex justify-center md:justify-start gap-1 mb-2">
+                <div className="flex items-center justify-center gap-1 mb-2">
                   {renderStars(Math.round(reviewSummary.averageRating))}
                 </div>
-                <p className="text-sm text-gray-500">{reviewSummary.totalReviews} reviews</p>
+                <p className="text-xs sm:text-sm text-gray-600">
+                  Based on {reviewSummary.totalReviews} reviews
+                </p>
               </div>
 
               {/* Rating Distribution */}
@@ -195,78 +193,37 @@ const SalonReviewsPage = () => {
                 {renderRatingDistribution()}
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Reviews List */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-bold text-gray-900 mb-6" style={{ fontFamily: "'Playfair Display', serif" }}>
-            All Reviews
-          </h2>
-
+        <div className="space-y-3 sm:space-y-4">
           {reviews.length > 0 ? (
             <>
               {reviews.map((review, index) => (
-                <motion.div
+                <div
                   key={review.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="bg-white rounded-2xl shadow-md p-6"
+                  className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6"
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#D4AF37]/20 to-[#C9A227]/20 flex items-center justify-center">
-                        <span className="text-lg font-bold text-[#D4AF37]">
-                          {review.userName.charAt(0).toUpperCase()}
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-xs sm:text-sm">
+                      {review.userName?.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-sm sm:font-semibold text-gray-900">{review.userName}</h3>
+                        <span className="text-[10px] sm:text-xs text-gray-500">
+                          {new Date(review.createdAt).toLocaleDateString()}
                         </span>
                       </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">{review.userName}</p>
-                        <div className="flex items-center gap-1 mt-1">
-                          {renderStars(review.rating)}
-                        </div>
+                      <div className="flex items-center gap-1 mb-2">
+                        {renderStars(review.rating)}
                       </div>
+                      <p className="text-xs sm:text-sm text-gray-600">{review.text}</p>
                     </div>
-                    <p className="text-xs text-gray-500">
-                      {new Date(review.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      })}
-                    </p>
                   </div>
-                  <p className="text-gray-700 leading-relaxed">{review.text}</p>
-                  {review.helpfulCount > 0 && (
-                    <div className="flex items-center gap-2 mt-4 text-sm text-gray-500">
-                      <span>{review.helpfulCount} people found this helpful</span>
-                    </div>
-                  )}
-                </motion.div>
-              ))}
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-4 mt-8">
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="p-2 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronLeft size={20} className="text-gray-600" />
-                  </button>
-                  <span className="text-sm font-semibold text-gray-700">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="p-2 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronRight size={20} className="text-gray-600" />
-                  </button>
                 </div>
-              )}
+              ))}
             </>
           ) : (
             <div className="bg-white rounded-2xl shadow-md p-8 text-center">

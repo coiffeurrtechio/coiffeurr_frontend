@@ -113,18 +113,18 @@ export default function SalonsPage(): JSX.Element {
 
       {/* --- HEADER --- */}
       <section className="sticky top-0 z-40 bg-[#1E4D8C] text-white shadow-lg rounded-b-[2rem]">
-        <div className="container mx-auto px-4 py-6">
-          <div className="max-w-4xl mx-auto flex items-center gap-3">
+        <div className="container mx-auto px-4 py-4 sm:py-6">
+          <div className="max-w-4xl mx-auto flex items-center gap-2 sm:gap-3">
             <button onClick={() => navigate("/")} className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors">
-              <ArrowLeft className="w-6 h-6" />
+              <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
 
             <div
               className="relative flex-1 group cursor-pointer"
               onClick={() => navigate(`/search?query=${encodeURIComponent(searchTerm)}&city=${tempFilters.city}&limit=${tempFilters.limit}`)}
             >
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <div className="w-full h-12 pl-12 pr-4 rounded-2xl bg-white text-gray-900 shadow-xl flex items-center text-sm font-bold">
+              <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5" />
+              <div className="w-full h-10 sm:h-12 pl-10 sm:pl-12 pr-3 sm:pr-4 rounded-2xl bg-white text-gray-900 shadow-xl flex items-center text-xs sm:text-sm font-bold">
                 {searchTerm || t('salons.searchSalons')}
               </div>
             </div>
@@ -206,9 +206,9 @@ export default function SalonsPage(): JSX.Element {
       )}
 
       {/* --- PRECISE RESULTS GRID --- */}
-      <section className="py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <section className="py-6 sm:py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         {salons.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {salons.map((salon) => (
               <div
                 key={salon.id}
@@ -216,7 +216,7 @@ export default function SalonsPage(): JSX.Element {
                 className="group relative bg-white rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.1)] cursor-pointer border border-slate-100 flex flex-col"
               >
                 {/* --- 1. VISUAL IDENTIFIER (TOP) --- */}
-                <div className="relative h-64 w-full overflow-hidden bg-slate-50">
+                <div className="relative h-48 sm:h-56 md:h-64 w-full overflow-hidden bg-slate-50">
                   <img
                     src={salon.logoUrl || "/placeholder.svg"}
                     alt={salon.salonName}
@@ -234,8 +234,8 @@ export default function SalonsPage(): JSX.Element {
                   </div> */}
 
                   {/* Bottom Left: Quick Identity */}
-                  <div className="absolute bottom-6 left-6 right-6">
-                    <h3 className="text-white font-black text-2xl tracking-tighter leading-none truncate">
+                  <div className="absolute bottom-4 sm:bottom-6 left-4 sm:left-6 right-4 sm:right-6">
+                    <h3 className="text-white font-black text-xl sm:text-2xl tracking-tighter leading-none truncate">
                       {salon.salonName}
                     </h3>
                     <div className="flex items-center gap-2 mt-2">
@@ -249,7 +249,7 @@ export default function SalonsPage(): JSX.Element {
                 </div>
 
                 {/* --- 2. DATA SPECIFICATION (CONTENT) --- */}
-                <div className="p-6 flex-1 flex flex-col justify-between">
+                <div className="p-4 sm:p-6 flex-1 flex flex-col justify-between">
 
                   {/* Technical Detail Rows */}
                   <div className="space-y-1">
@@ -284,14 +284,14 @@ export default function SalonsPage(): JSX.Element {
                   </div>
 
                   {/* --- 3. CTA BLOCK (BOTTOM) --- */}
-                  <div className="mt-8 flex items-center gap-3">
+                  <div className="mt-4 sm:mt-8 flex items-center gap-2 sm:gap-3">
                     <Button
-                      className="flex-[3] bg-slate-900 hover:bg-[#1E4D8C] text-white rounded-2xl font-black text-[10px] tracking-[0.2em] h-14 shadow-xl transition-all active:scale-[0.98]"
+                      className="flex-[3] bg-slate-900 hover:bg-[#1E4D8C] text-white rounded-2xl font-black text-[9px] sm:text-[10px] tracking-[0.2em] h-12 sm:h-14 shadow-xl transition-all active:scale-[0.98]"
                     >
                       {t('salons.enterStudio')}
                     </Button>
-                    <div className="flex-1 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-300 group-hover:text-[#1E4D8C] group-hover:bg-blue-50 transition-all">
-                      <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                    <div className="flex-1 h-12 sm:h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-300 group-hover:text-[#1E4D8C] group-hover:bg-blue-50 transition-all">
+                      <ArrowRight size={20} className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
 

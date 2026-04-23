@@ -328,7 +328,7 @@ export default function SalonDetailPage() {
 
       {/* --- Floating Header --- */}
       <nav className="fixed top-0 inset-x-0 z-50 bg-white/70 backdrop-blur-md border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <button onClick={() => navigate(-1)} className="p-2 -ml-2 hover:bg-slate-50 rounded-full transition-all">
             <ArrowLeft className="w-5 h-5 text-slate-700" />
           </button>
@@ -343,7 +343,7 @@ export default function SalonDetailPage() {
 
       <main className="pt-16">
         {/* --- Hero Section --- */}
-        <section className="relative h-[50vh] md:h-[65vh] w-full bg-slate-100">
+        <section className="relative h-[40vh] sm:h-[50vh] md:h-[65vh] w-full bg-slate-100">
           <Swiper modules={[Pagination, Autoplay, EffectFade]} effect="fade" pagination={{ clickable: true }} autoplay={{ delay: 5000 }} className="h-full w-full">
             {(salon?.branding?.coverImages?.length ? salon.branding.coverImages : ["/placeholder.svg"]).map((img: string, i: number) => (
               <SwiperSlide key={i}><img src={img.trim()} alt="Salon" className="w-full h-full object-cover" /></SwiperSlide>
@@ -351,12 +351,12 @@ export default function SalonDetailPage() {
           </Swiper>
 
           {/* Glassmorphism Title Card - Overlapping bottom of hero */}
-          <div className="absolute -bottom-20 left-0 right-0 z-20 px-6">
-            <div className="max-w-3xl mx-auto bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 p-8 md:p-12">
+          <div className="absolute -bottom-16 sm:-bottom-20 left-0 right-0 z-20 px-4 sm:px-6">
+            <div className="max-w-3xl mx-auto bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 p-6 sm:p-8 md:p-12">
               <div className="text-center space-y-4">
-                <h1 className="text-3xl md:text-5xl font-serif tracking-tight leading-tight text-slate-900">{salon?.salonName}</h1>
-                <Badge className="bg-slate-900 text-white border-none text-[10px] tracking-widest px-4 py-1.5">{salon?.salonType} Salon</Badge>
-                <div className="flex items-center justify-center gap-4 text-sm font-medium text-slate-600">
+                <h1 className="text-2xl sm:text-3xl md:text-5xl font-serif tracking-tight leading-tight text-slate-900">{salon?.salonName}</h1>
+                <Badge className="bg-slate-900 text-white border-none text-[9px] sm:text-[10px] tracking-widest px-3 sm:px-4 py-1.5">{salon?.salonType} Salon</Badge>
+                <div className="flex items-center justify-center gap-3 sm:gap-4 text-xs sm:text-sm font-medium text-slate-600">
                   <span>{reviews?.length || "0"} Reviews</span>
                   <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
                   <span className="text-amber-600">{salon?.pricing?.priceRange}</span>
@@ -367,11 +367,11 @@ export default function SalonDetailPage() {
         </section>
 
         {/* --- Content Body - Single Centered Column --- */}
-        <section className="max-w-3xl mx-auto px-4 md:px-6 pt-32 pb-20">
+        <section className="max-w-3xl mx-auto px-4 sm:px-6 pt-28 sm:pt-32 pb-16 sm:pb-20">
           <div className="space-y-16">
             <div>
-              <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-6 text-center">The Studio</h2>
-              <p className="text-lg md:text-xl text-slate-600 font-light leading-relaxed text-center">{salon?.description}</p>
+              <h2 className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-4 sm:mb-6 text-center">The Studio</h2>
+              <p className="text-base sm:text-lg md:text-xl text-slate-600 font-light leading-relaxed text-center">{salon?.description}</p>
               {salon?.description?.includes('"') && (
                 <blockquote className="mt-8 p-8 bg-gradient-to-br from-amber-50 via-orange-50/50 to-yellow-50/30 border border-amber-200/50 rounded-2xl italic font-serif text-slate-700 text-center text-lg leading-relaxed relative">
                   <div className="absolute top-4 left-4 text-amber-400">
@@ -390,21 +390,21 @@ export default function SalonDetailPage() {
             <Tabs defaultValue="services" className="w-full">
               <TabsList className="w-full justify-center bg-slate-100/50 border-b border-slate-200 rounded-none p-0 h-auto gap-0">
                 {["services", "meet the artisans", "truth spoken"].map((tab) => (
-                  <TabsTrigger key={tab} value={tab === "meet the artisans" ? "stylists" : tab === "truth spoken" ? "reviews" : tab} className="flex-1 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-slate-900 rounded-none px-3 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-500 data-[state=active]:text-slate-900 transition-all">
+                  <TabsTrigger key={tab} value={tab === "meet the artisans" ? "stylists" : tab === "truth spoken" ? "reviews" : tab} className="flex-1 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-slate-900 rounded-none px-2 sm:px-3 py-3 sm:py-4 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-500 data-[state=active]:text-slate-900 transition-all">
                     {tab}
                   </TabsTrigger>
                 ))}
               </TabsList>
 
               {/* SERVICES TAB */}
-              <TabsContent value="services" className="pt-10">
+              <TabsContent value="services" className="pt-6 sm:pt-10">
                 {salonService?.length > 0 ? (
                   <div className="divide-y divide-slate-100">
                     {salonService.map((item: any, index: number) => (
-                      <div key={index} className="py-6 grid grid-cols-[1fr_auto_auto] gap-4 items-center">
-                        <div className="min-h-[60px] flex flex-col justify-center">
+                      <div key={index} className="py-4 sm:py-6 grid grid-cols-[1fr_auto_auto] gap-3 sm:gap-4 items-center">
+                        <div className="min-h-[50px] sm:min-h-[60px] flex flex-col justify-center">
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-medium">{item.serviceName.replace('Triming', 'Trimming')}</h4>
+                            <h4 className="text-sm sm:font-medium">{item.serviceName.replace('Triming', 'Trimming')}</h4>
                             {index === 0 && (
                               <Badge className="bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 text-white border-none text-[9px] uppercase tracking-wider px-3 py-1 shadow-md shrink-0">
                                 <span className="flex items-center gap-1">
@@ -414,12 +414,12 @@ export default function SalonDetailPage() {
                               </Badge>
                             )}
                           </div>
-                          <p className="text-sm text-slate-500">{item.description}</p>
+                          <p className="text-xs sm:text-sm text-slate-500">{item.description}</p>
                         </div>
-                        <div className="font-semibold text-slate-900 text-right">
-                          <span className="text-sm text-slate-500 font-normal">₹</span>{item.price}
+                        <div className="font-semibold text-slate-900 text-right text-sm sm:text-base">
+                          <span className="text-xs sm:text-sm text-slate-500 font-normal">₹</span>{item.price}
                         </div>
-                        <Button size="sm" className="rounded-full border-2 border-slate-900 bg-transparent text-slate-900 hover:bg-slate-900 hover:text-white hover:shadow-lg hover:shadow-slate-900/20 transition-all duration-300 hover:scale-105 px-6" onClick={() => handleViewService(item?.service_id)}>Book Now</Button>
+                        <Button size="sm" className="rounded-full border-2 border-slate-900 bg-transparent text-slate-900 hover:bg-slate-900 hover:text-white hover:shadow-lg hover:shadow-slate-900/20 transition-all duration-300 hover:scale-105 px-4 sm:px-6 text-xs sm:text-sm" onClick={() => handleViewService(item?.service_id)}>Book Now</Button>
                       </div>
                     ))}
                   </div>
@@ -427,15 +427,14 @@ export default function SalonDetailPage() {
               </TabsContent>
 
               {/* STYLISTS TAB */}
-              <TabsContent value="stylists" className="pt-10">
+              <TabsContent value="stylists" className="pt-6 sm:pt-10">
                 {salonStaff?.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {salonStaff.map((staff: any) => (
                       <div
                         key={staff.staff_id}
                         onClick={() => handleStaffClick(staff.staff_id)}
-                        className="group relative bg-white p-5 transition-all cursor-pointer hover:scale-[1.02] hover:shadow-xl border border-slate-100 rounded-2xl flex gap-5 min-h-[120px]"
-                      >
+                        className="group relative bg-white p-4 sm:p-5 transition-all cursor-pointer hover:scale-[1.02] hover:shadow-xl border border-slate-100 rounded-2xl flex gap-4 sm:gap-5 min-h-[100px] sm:min-h-[120px]">
                         {/* Rating - Absolute Position Top Right */}
                         {staff.rating?.average && (
                           <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-slate-900 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-md">
@@ -445,7 +444,7 @@ export default function SalonDetailPage() {
                         )}
 
                         {/* Artist Image */}
-                        <div className="w-20 h-20 bg-slate-100 shrink-0 overflow-hidden rounded-xl">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-100 shrink-0 overflow-hidden rounded-xl">
                           {staff.images?.[0] ? (
                             <img
                               src={staff.images[0]}
@@ -461,14 +460,14 @@ export default function SalonDetailPage() {
 
                         {/* Text Content - Right Aligned */}
                         <div className="flex-1 flex flex-col justify-center">
-                          <h3 className="text-xl font-serif font-medium text-slate-900 mb-1">{staff.name}</h3>
-                          <p className="text-[10px] font-bold text-[#1E4D8C] uppercase tracking-wider mb-1">{staff.role}</p>
-                          <p className="text-[10px] text-slate-400 font-normal uppercase">{staff.experienceYears} Years Exp</p>
+                          <h3 className="text-lg sm:text-xl font-serif font-medium text-slate-900 mb-1">{staff.name}</h3>
+                          <p className="text-[9px] sm:text-[10px] font-bold text-[#1E4D8C] uppercase tracking-wider mb-1">{staff.role}</p>
+                          <p className="text-[9px] sm:text-[10px] text-slate-400 font-normal uppercase">{staff.experienceYears} Years Exp</p>
                           
                           {/* Specialty Tags - Pill Shaped with Border */}
-                          <div className="flex flex-wrap gap-2 mt-3">
+                          <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2 sm:mt-3">
                             {staff.expertise?.slice(0, 3).map((exp: string, i: number) => (
-                              <span key={i} className="text-[9px] border border-slate-200 px-3 py-1 rounded-full uppercase text-slate-600">{exp}</span>
+                              <span key={i} className="text-[8px] sm:text-[9px] border border-slate-200 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase text-slate-600">{exp}</span>
                             ))}
                           </div>
                         </div>

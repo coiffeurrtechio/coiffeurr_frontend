@@ -245,9 +245,9 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
   return (
     <div className="fixed inset-0 z-50 bg-white animate-in fade-in zoom-in-95 duration-200 overflow-y-auto">
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b sticky top-0 z-10" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
-        <button onClick={() => navigate(-1)} className="p-1 active:bg-white/20 rounded-full">
-          <ArrowLeft className="w-6 h-6 text-white" />
+      <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 border-b sticky top-0 z-10" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
+        <button onClick={() => navigate(-1)} className="p-1 sm:p-1.5 active:bg-white/20 rounded-full">
+          <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
         </button>
 
         <div className="flex-1 relative">
@@ -258,7 +258,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
                 ref={searchInputRef}
                 type="text"
                 placeholder={t('search.searchForSalons')}
-                className="w-full bg-white/95 backdrop-blur-md rounded-xl px-4 py-3 outline-none text-sm font-medium transition-all text-gray-800 placeholder-gray-400 border-2 shadow-sm"
+                className="w-full bg-white/95 backdrop-blur-md rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 outline-none text-xs sm:text-sm font-medium transition-all text-gray-800 placeholder-gray-400 border-2 shadow-sm"
                 style={{
                   borderColor: showResults ? 'rgba(30, 77, 140, 0.6)' : 'rgba(0, 0, 0, 0.1)',
                   boxShadow: showResults ? '0 0 0 3px rgba(30, 77, 140, 0.2), 0 0 20px rgba(30, 77, 140, 0.15)' : '0 4px 6px rgba(0, 0, 0, 0.1)'
@@ -269,7 +269,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
               />
               {searchQuery && (
                 <X
-                  className="absolute right-3 top-3 w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600 transition-colors"
+                  className="absolute right-2.5 sm:right-3 top-2.5 sm:top-3 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 cursor-pointer hover:text-gray-600 transition-colors"
                   onClick={() => {
                     setSearchQuery("");
                     setSalons([]);
@@ -285,29 +285,29 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
           {showResults && (
             <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
               {isQuickLoading ? (
-                <div className="p-4 space-y-3">
+                <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center gap-4 p-3">
-                      <div className="w-12 h-12 rounded-xl bg-gray-200 animate-pulse" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
-                        <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2" />
+                    <div key={i} className="flex items-center gap-3 sm:gap-4 p-2 sm:p-3">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gray-200 animate-pulse" />
+                      <div className="flex-1 space-y-1.5 sm:space-y-2">
+                        <div className="h-3 sm:h-4 bg-gray-200 rounded animate-pulse w-3/4" />
+                        <div className="h-2.5 sm:h-3 bg-gray-200 rounded animate-pulse w-1/2" />
                       </div>
                     </div>
                   ))}
                 </div>
               ) : quickResults.length > 0 ? (
                 <>
-                  <div className="p-2">
+                  <div className="p-1.5 sm:p-2">
                     {quickResults.slice(0, 5).map((salon, index) => (
                       <div
                         key={salon.id}
                         onClick={() => handleSalonSelect(salon)}
-                        className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${
+                        className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl cursor-pointer transition-all ${
                           index === selectedIndex ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-400' : 'hover:bg-gray-50 border-2 border-transparent'
                         }`}
                       >
-                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
                           <img
                             src={salon.logoUrl || "/placeholder.png"}
                             alt={salon.salonName}
@@ -315,15 +315,15 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
                           />
                         </div>
                         <div className="flex-1">
-                          <h4 className="text-sm font-black text-gray-800 tracking-tight">
+                          <h4 className="text-xs sm:text-sm font-black text-gray-800 tracking-tight">
                             {salon.salonName}
                           </h4>
-                          <p className="text-[10px] text-gray-400 font-bold italic">
+                          <p className="text-[9px] sm:text-[10px] text-gray-400 font-bold italic">
                             {salon.address?.city}
                           </p>
                         </div>
-                        <div className="flex items-center gap-1 bg-orange-50 px-2 py-1 rounded-lg">
-                          <Star size={10} className="fill-orange-400 text-orange-400" />
+                        <div className="flex items-center gap-1 bg-orange-50 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg">
+                          <Star size={10} className="w-3 h-3 sm:w-4 sm:h-4 fill-orange-400 text-orange-400" />
                           <span className="text-[10px] font-black text-orange-700">{salon.rating?.average}</span>
                         </div>
                       </div>
@@ -331,12 +331,12 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
                   </div>
                   <button
                     onClick={handleViewMore}
-                    className="w-full py-3 text-xs font-black text-center tracking-widest transition-colors hover:bg-gray-50 text-blue-600"
+                    className="w-full py-2.5 sm:py-3 text-[10px] sm:text-xs font-black text-center tracking-widest transition-colors hover:bg-gray-50 text-blue-600"
                   >
                     VIEW MORE RESULTS
                   </button>
-                  <div className="px-4 py-2 bg-gray-50 border-t border-gray-100">
-                    <p className="text-[9px] text-gray-400 text-center tracking-wider">
+                  <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-50 border-t border-gray-100">
+                    <p className="text-[8px] sm:text-[9px] text-gray-400 text-center tracking-wider">
                       <span className="font-bold">↑↓</span> Navigate · <span className="font-bold">Enter</span> Select · <span className="font-bold">Esc</span> Close
                     </p>
                   </div>
@@ -362,23 +362,23 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
       </div>
 
       {/* Results Section */}
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         {fetchSalonAPI && searchQuery && (
-          <div className="flex justify-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1E4D8C]"></div>
+          <div className="flex justify-center py-3 sm:py-4">
+            <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-[#1E4D8C]"></div>
           </div>
         )}
 
         {!fetchSalonAPI && salons.length > 0 && searchQuery && (
-          <div className="space-y-4">
-            <h3 className="text-[10px] font-black text-gray-400 tracking-widest ml-1">{t('search.salonsFound')}</h3>
+          <div className="space-y-3 sm:space-y-4">
+            <h3 className="text-[9px] sm:text-[10px] font-black text-gray-400 tracking-widest ml-1">{t('search.salonsFound')}</h3>
             {salons.map((salon) => (
               <div
                 key={salon.id}
                 onClick={() => handleSalonSelect(salon)}
-                className="flex items-center gap-4 p-3 rounded-2xl border border-gray-100 bg-gray-50 hover:bg-gray-100 active:scale-[0.98] transition-all cursor-pointer shadow-sm"
+                className="flex items-center gap-3 sm:gap-4 p-2.5 sm:p-3 rounded-2xl border border-gray-100 bg-gray-50 hover:bg-gray-100 active:scale-[0.98] transition-all cursor-pointer shadow-sm"
               >
-                <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
                   <img
                     src={salon.logoUrl || "/placeholder.png"}
                     alt={salon.salonName}
@@ -386,15 +386,15 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
                   />
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-sm font-black text-gray-800 tracking-tight">
+                  <h4 className="text-xs sm:text-sm font-black text-gray-800 tracking-tight">
                     {salon.salonName}
                   </h4>
-                  <p className="text-[10px] text-gray-400 font-bold italic">
+                  <p className="text-[9px] sm:text-[10px] text-gray-400 font-bold italic">
                     {salon.address?.city}
                   </p>
                 </div>
-                <div className="flex items-center gap-1 bg-orange-50 px-2 py-1 rounded-lg">
-                  <Star size={10} className="fill-orange-400 text-orange-400" />
+                <div className="flex items-center gap-1 bg-orange-50 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg">
+                  <Star size={10} className="w-3 h-3 sm:w-4 sm:h-4 fill-orange-400 text-orange-400" />
                   <span className="text-[10px] font-black text-orange-700">{salon.rating?.average}</span>
                 </div>
               </div>
@@ -404,13 +404,13 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
 
         {/* Empty State / Recent Searches */}
         {!searchQuery && !showResults && (
-          <div className="py-10 text-center">
-            <Search className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-            <p className="text-xs font-bold text-gray-400 tracking-widest">{t('search.typeToDiscover')}</p>
-            <div className="mt-4 flex items-center justify-center gap-2 text-[9px] text-gray-300">
-              <Command size={12} />
+          <div className="py-8 sm:py-10 text-center">
+            <Search className="w-10 h-10 sm:w-12 sm:h-12 text-gray-200 mx-auto mb-3 sm:mb-4" />
+            <p className="text-[10px] sm:text-xs font-bold text-gray-400 tracking-widest">{t('search.typeToDiscover')}</p>
+            <div className="mt-3 sm:mt-4 flex items-center justify-center gap-2 text-[8px] sm:text-[9px] text-gray-300">
+              <Command size={12} className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="tracking-wider">Press</span>
-              <span className="font-bold bg-gray-100 px-2 py-1 rounded">K</span>
+              <span className="font-bold bg-gray-100 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs">K</span>
               <span className="tracking-wider">for quick search</span>
             </div>
           </div>
