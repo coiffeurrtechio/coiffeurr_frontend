@@ -409,7 +409,7 @@ function BookingPage() {
                     <div className="relative w-full max-w-lg rounded-t-[2rem] sm:rounded-[3rem] overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-y-auto no-scrollbar floating-tile">
 
                         {/* Modal Header/Banner with Service Image */}
-                        <div className="relative h-56 sm:h-64" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
+                        <div className="relative h-40 sm:h-64" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
                             <img
                                 src={selectedBooking.service?.imageUrl || selectedBooking.salon?.logoUrl}
                                 className="w-full h-full object-cover"
@@ -419,26 +419,26 @@ function BookingPage() {
 
                             <button
                                 onClick={() => setIsModalOpen(false)}
-                                className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2.5 sm:p-3 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/30 active:scale-90 transition-all z-20 shadow-xl"
+                                className="absolute top-3 right-3 sm:top-6 sm:right-6 p-2 sm:p-3 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/30 active:scale-90 transition-all z-20 shadow-xl"
                             >
-                                <X size={20} className="sm:size-[22px]" />
+                                <X size={18} className="sm:size-[22px]" />
                             </button>
 
-                            <div className="absolute bottom-6 left-5 right-5 sm:bottom-8 sm:left-8 sm:right-8 z-10 flex flex-col sm:flex-row justify-between items-end gap-3">
+                            <div className="absolute bottom-4 left-4 right-4 sm:bottom-8 sm:left-8 sm:right-8 z-10 flex flex-col sm:flex-row justify-between items-end gap-2 sm:gap-3">
                                 <div className="flex-1">
-                                    <Badge className={`px-4 py-1.5 sm:px-5 sm:py-2 rounded-full text-[9px] sm:text-[10px] font-black tracking-widest shadow-2xl border-none ${getStatusStyles(selectedBooking.status)}`}>
+                                    <Badge className={`px-3 py-1 sm:px-5 sm:py-2 rounded-full text-[8px] sm:text-[10px] font-black tracking-widest shadow-2xl border-none ${getStatusStyles(selectedBooking.status)}`}>
                                         {selectedBooking.statusLabel || selectedBooking.status}
                                     </Badge>
-                                    <h2 className="text-xl sm:text-3xl font-black text-white tracking-tight mt-2 sm:mt-3 typography-display">{selectedBooking.service?.name}</h2>
+                                    <h2 className="text-lg sm:text-3xl font-black text-white tracking-tight mt-1.5 sm:mt-3 typography-display">{selectedBooking.service?.name}</h2>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-2xl sm:text-4xl font-black typography-number px-4 py-2 rounded-xl border-2 border-white bg-white" style={{ color: 'var(--deep-charcoal)' }}>₹{selectedBooking.price}</p>
-                                    <p className="text-[9px] sm:text-[10px] font-bold text-white/80 tracking-widest typography-label-light">{t('bookings.totalAmount')}</p>
+                                    <p className="text-xl sm:text-4xl font-black typography-number px-3 py-1.5 sm:px-4 py-2 rounded-xl border-2 border-white bg-white" style={{ color: 'var(--deep-charcoal)' }}>₹{selectedBooking.price}</p>
+                                    <p className="text-[8px] sm:text-[10px] font-bold text-white/80 tracking-widest typography-label-light">{t('bookings.totalAmount')}</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="p-5 sm:p-8 space-y-6 sm:space-y-8">
+                        <div className="p-4 sm:p-8 space-y-4 sm:space-y-8">
 
                             {/* Included Items Tags */}
                             {selectedBooking.service?.includedItems?.length > 0 && (
@@ -452,85 +452,85 @@ function BookingPage() {
                             )}
 
                             {/* Info Grid: Date, Time & Staff with Image */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                                <div className="p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border shadow-lg floating-tile" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)' }}>
-                                    <p className="text-[9px] sm:text-[10px] font-black tracking-widest mb-3 sm:mb-4 flex items-center gap-2 typography-label-light" style={{ color: '#666' }}>
-                                        <Calendar size={10} className="sm:size-12" style={{ color: '#666' }} /> {t('bookings.schedule')}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5">
+                                <div className="p-3 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border shadow-lg floating-tile" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)' }}>
+                                    <p className="text-[8px] sm:text-[10px] font-black tracking-widest mb-2 sm:mb-4 flex items-center gap-2 typography-label-light" style={{ color: '#666' }}>
+                                        <Calendar size={8} className="sm:size-12" style={{ color: '#666' }} /> {t('bookings.schedule')}
                                     </p>
-                                    <p className="text-sm sm:text-base font-black typography-display" style={{ color: 'var(--deep-charcoal)' }}>{selectedBooking.slot?.date}</p>
-                                    <p className="text-xs sm:text-sm font-bold mt-1 typography-label-light" style={{ color: '#666' }}>{formatTo12Hour(selectedBooking.slot?.time)}</p>
-                                    <p className="text-[9px] sm:text-[10px] font-bold mt-2 tracking-wider typography-label-light" style={{ color: '#666' }}>{selectedBooking.slot?.duration} {t('bookings.minutesSession')}</p>
+                                    <p className="text-xs sm:text-base font-black typography-display" style={{ color: 'var(--deep-charcoal)' }}>{selectedBooking.slot?.date}</p>
+                                    <p className="text-[10px] sm:text-sm font-bold mt-1 typography-label-light" style={{ color: '#666' }}>{formatTo12Hour(selectedBooking.slot?.time)}</p>
+                                    <p className="text-[8px] sm:text-[10px] font-bold mt-1.5 tracking-wider typography-label-light" style={{ color: '#666' }}>{selectedBooking.slot?.duration} {t('bookings.minutesSession')}</p>
                                 </div>
 
-                                <div className="p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border shadow-lg floating-tile" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)' }}>
-                                    <p className="text-[9px] sm:text-[10px] font-black tracking-widest mb-3 sm:mb-4 flex items-center gap-2 typography-label-light" style={{ color: '#666' }}>
-                                        <User size={10} className="sm:size-12" style={{ color: '#666' }} /> {t('bookings.specialist')}
+                                <div className="p-3 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border shadow-lg floating-tile" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)' }}>
+                                    <p className="text-[8px] sm:text-[10px] font-black tracking-widest mb-2 sm:mb-4 flex items-center gap-2 typography-label-light" style={{ color: '#666' }}>
+                                        <User size={8} className="sm:size-12" style={{ color: '#666' }} /> {t('bookings.specialist')}
                                     </p>
-                                    <div className="flex items-center gap-3 sm:gap-4">
+                                    <div className="flex items-center gap-2 sm:gap-4">
                                         <img
                                             src={selectedBooking.staff?.imageUrl}
-                                            className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border-3 border-white shadow-lg"
+                                            className="w-10 h-10 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-white shadow-lg"
                                             alt="Staff"
                                         />
                                         <div className="flex-1">
-                                            <p className="text-sm sm:text-base font-black typography-display" style={{ color: 'var(--deep-charcoal)' }}>{selectedBooking.staff?.name}</p>
+                                            <p className="text-xs sm:text-base font-black typography-display" style={{ color: 'var(--deep-charcoal)' }}>{selectedBooking.staff?.name}</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Salon Card with Logo */}
-                            <div className="p-4 sm:p-6 rounded-[2rem] sm:rounded-[2.5rem] text-white space-y-5 sm:space-y-6 shadow-2xl" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
-                                <div className="flex items-center gap-3 sm:gap-5 border-b border-white/10 pb-5 sm:pb-6">
-                                    <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-2xl p-1.5 shrink-0 overflow-hidden shadow-lg">
+                            <div className="p-3 sm:p-6 rounded-[1.5rem] sm:rounded-[2.5rem] text-white space-y-3 sm:space-y-6 shadow-2xl" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
+                                <div className="flex items-center gap-2 sm:gap-5 border-b border-white/10 pb-3 sm:pb-6">
+                                    <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white rounded-xl p-1.5 shrink-0 overflow-hidden shadow-lg">
                                         <img src={selectedBooking.salon?.logoUrl} className="w-full h-full object-contain" alt={t('booking.salonLogo') || 'Salon Logo'} />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-[8px] sm:text-[9px] font-black text-white/50 tracking-[0.2em] typography-label-light">{t('bookings.studio')}</p>
-                                        <h4 className="text-sm sm:text-base font-black tracking-tight truncate typography-display">{selectedBooking.salon?.name}</h4>
+                                        <p className="text-[7px] sm:text-[9px] font-black text-white/50 tracking-[0.2em] typography-label-light">{t('bookings.studio')}</p>
+                                        <h4 className="text-xs sm:text-base font-black tracking-tight truncate typography-display">{selectedBooking.salon?.name}</h4>
                                     </div>
                                     <a
                                         href={selectedBooking.salon?.directionsUrl}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="p-3 sm:p-4 bg-white/10 hover:bg-white/20 rounded-2xl transition-all active:scale-95 shrink-0"
+                                        className="p-2 sm:p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-all active:scale-95 shrink-0"
                                     >
-                                        <Navigation size={8} className="sm:size-10 text-white" />
+                                        <Navigation size={6} className="sm:size-10 text-white" />
                                     </a>
                                 </div>
-                                <div className="flex gap-3 sm:gap-4">
-                                    <MapPin size={6} className="sm:size-8 text-slate-400 shrink-0" />
-                                    <p className="text-[10px] sm:text-[11px] font-medium leading-relaxed opacity-90 typography-label-light">
+                                <div className="flex gap-2 sm:gap-4">
+                                    <MapPin size={5} className="sm:size-8 text-slate-400 shrink-0" />
+                                    <p className="text-[9px] sm:text-[11px] font-medium leading-relaxed opacity-90 typography-label-light">
                                         {selectedBooking.salon?.address?.street}, {selectedBooking.salon?.address?.city}, {selectedBooking.salon?.address?.state} - {selectedBooking.salon?.address?.pincode}
                                     </p>
                                 </div>
                             </div>
 
                             {/* Customer Row */}
-                            <div className="p-3 sm:p-4 rounded-[1.5rem] sm:rounded-[2rem] border flex items-center justify-between shadow-lg floating-tile" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)' }}>
+                            <div className="p-2.5 sm:p-4 rounded-[1.5rem] sm:rounded-[2rem] border flex items-center justify-between shadow-lg floating-tile" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)' }}>
                                 <div className="flex items-center gap-2 sm:gap-3">
-                                    <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-black text-xs sm:text-sm shadow-lg shrink-0" style={{ backgroundColor: 'var(--deep-charcoal)', color: 'white' }}>
+                                    <div className="w-6 h-6 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center font-black text-[10px] sm:text-sm shadow-lg shrink-0" style={{ backgroundColor: 'var(--deep-charcoal)', color: 'white' }}>
                                         {selectedBooking.user?.name?.charAt(0)}
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-[8px] sm:text-[9px] font-black tracking-widest typography-label-light" style={{ color: '#666' }}>{t('bookings.bookedBy')}</p>
-                                        <p className="text-xs sm:text-sm font-black truncate typography-display" style={{ color: 'var(--deep-charcoal)' }}>{selectedBooking.user?.name}</p>
+                                        <p className="text-[7px] sm:text-[9px] font-black tracking-widest typography-label-light" style={{ color: '#666' }}>{t('bookings.bookedBy')}</p>
+                                        <p className="text-[10px] sm:text-sm font-black truncate typography-display" style={{ color: 'var(--deep-charcoal)' }}>{selectedBooking.user?.name}</p>
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-end shrink-0 ml-2">
-                                    <p className="text-[8px] sm:text-[9px] font-black tracking-widest typography-label-light" style={{ color: '#666' }}>{t('bookings.contact')}</p>
-                                    <p className="text-xs sm:text-sm font-bold typography-label-light" style={{ color: '#666' }}>{selectedBooking.user?.phone}</p>
+                                    <p className="text-[7px] sm:text-[9px] font-black tracking-widest typography-label-light" style={{ color: '#666' }}>{t('bookings.contact')}</p>
+                                    <p className="text-[10px] sm:text-sm font-bold typography-label-light" style={{ color: '#666' }}>{selectedBooking.user?.phone}</p>
                                 </div>
                             </div>
 
                             {/* Footer Actions */}
-                            <div className="pt-4 space-y-4">
-                                <p className="text-center text-[9px] font-bold tracking-[0.2em] typography-label-light" style={{ color: '#666' }}>
+                            <div className="pt-3 space-y-3">
+                                <p className="text-center text-[8px] font-bold tracking-[0.2em] typography-label-light" style={{ color: '#666' }}>
                                     Booking ID: {selectedBooking.bookingId}
                                 </p>
                                 <button
                                     onClick={() => setIsModalOpen(false)}
-                                    className="w-full py-5 text-white rounded-[2rem] font-black text-xs tracking-[0.2em] shadow-xl hover:shadow-2xl active:scale-95 transition-all typography-label-light"
+                                    className="w-full py-4 text-white rounded-[1.5rem] font-black text-[10px] tracking-[0.2em] shadow-xl hover:shadow-2xl active:scale-95 transition-all typography-label-light"
                                     style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}
                                 >
                                     {t('bookings.closeDetails')}
