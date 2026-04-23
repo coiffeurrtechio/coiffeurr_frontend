@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
+import { motion, AnimatePresence } from "framer-motion";
 import {
     ArrowLeft, Calendar, Clock, MapPin, ChevronRight, ChevronLeft,
     Star, X, Receipt, User as UserIcon, Scissors, Info,
@@ -31,12 +32,35 @@ function BookingPage() {
     const [selectedDate, setSelectedDate] = useState<string>('');
     const [showCalendar, setShowCalendar] = useState(false);
     const [currentMonth, setCurrentMonth] = useState(new Date());
+    const calendarRef = useRef<HTMLDivElement>(null);
     // Upcoming Bookings State
     const [showUpcoming, setShowUpcoming] = useState(false);
 
     useEffect(() => {
+        setCurrentPage(1);
         fetchAppointmentBookings();
-    }, [currentPage, selectedDate, showUpcoming]);
+    }, [selectedDate, showUpcoming, filterStatus]);
+
+    useEffect(() => {
+        fetchAppointmentBookings();
+    }, [currentPage]);
+
+    // Close calendar when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
+                setShowCalendar(false);
+            }
+        };
+
+        if (showCalendar) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showCalendar]);
 
     const fetchAppointmentBookings = async () => {
         try {
@@ -51,6 +75,9 @@ function BookingPage() {
             }
             if (showUpcoming) {
                 url += `&upcoming=true`;
+            }
+            if (filterStatus !== 'ALL') {
+                url += `&status=${filterStatus}`;
             }
 
             const res = await userapiRequest<any>(url);
@@ -153,120 +180,140 @@ function BookingPage() {
             </header>
 
             <main className="max-w-2xl mx-auto px-4 py-6 sm:py-8">
-                {/* Status Summary */}
-                <div className="mb-6 sm:mb-8 flex flex-col gap-4 sm:gap-5 px-2">
-                    <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
-                        <div className="relative w-full sm:w-auto">
-                            <select
-                                value={filterStatus}
-                                onChange={(e) => setFilterStatus(e.target.value)}
-                                className="appearance-none rounded-2xl px-4 sm:px-6 py-3 sm:py-4 pr-10 sm:pr-12 text-sm sm:text-base font-bold outline-none transition-all cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5 w-full sm:w-52 typography-label-light"
-                                style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
-                            >
-                                <option value="ALL">{t('bookings.allBookings')}</option>
-                                <option value="PENDING">{t('bookings.pending')}</option>
-                                <option value="CONFIRMED">{t('bookings.confirmed')}</option>
-                                <option value="COMPLETED">{t('bookings.completed')}</option>
-                                <option value="CANCELLED">{t('bookings.cancelled')}</option>
-                            </select>
-                            <ChevronDown size={18} className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-transform duration-200 w-4 h-4 sm:w-5 sm:h-5" style={{ color: '#666' }} />
-                        </div>
-                        <div className="relative">
+                {/* Tab Navigation */}
+                <div className="mb-6 sm:mb-8">
+                    <div className="flex gap-1 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-2">
+                        {['ALL', 'PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'].map((status) => (
                             <button
-                                onClick={() => setShowCalendar(!showCalendar)}
-                                className={`p-3 sm:p-4 rounded-2xl outline-none transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 cursor-pointer ${selectedDate ? 'ring-2' : ''}`}
-                                style={{ backgroundColor: 'var(--light-greige)', border: selectedDate ? '1px solid var(--muted-gold)' : '1px solid var(--light-greige)', boxShadow: 'var(--inset-shadow)' }}
-                                title={selectedDate || 'Filter by date'}
+                                key={status}
+                                onClick={() => setFilterStatus(status)}
+                                className={`relative px-4 sm:px-6 py-3 text-[10px] sm:text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-all duration-300 ${
+                                    filterStatus === status
+                                        ? 'text-slate-900'
+                                        : 'text-slate-400 hover:text-slate-600'
+                                }`}
                             >
-                                <Calendar size={20} className={`transition-colors w-4 h-4 sm:w-5 sm:h-5`} style={{ color: selectedDate ? 'var(--deep-charcoal)' : '#666' }} />
+                                {status === 'ALL' ? t('bookings.allBookings') : 
+                                 status === 'PENDING' ? t('bookings.pending') :
+                                 status === 'CONFIRMED' ? t('bookings.confirmed') :
+                                 status === 'COMPLETED' ? t('bookings.completed') :
+                                 t('bookings.cancelled')}
+                                {filterStatus === status && (
+                                    <motion.div
+                                        layoutId="activeTab"
+                                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#D4AF37]"
+                                        initial={false}
+                                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                                    />
+                                )}
                             </button>
-                            {selectedDate && (
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedDate('');
-                                    }}
-                                    className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow-lg hover:shadow-xl transition-all hover:scale-110"
-                                    style={{ background: 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)', color: 'white' }}
-                                >
-                                    ×
-                                </button>
-                            )}
-                            {showCalendar && (
-                                <div className="absolute top-full left-0 mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-gray-200 p-3 sm:p-4 w-64 sm:w-72 animate-in fade-in zoom-in-95 duration-200">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <button onClick={() => handleMonthChange('prev')} className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                                            <ChevronLeft size={20} className="w-4 h-4 sm:w-5 sm:h-5" />
-                                        </button>
-                                        <span className="font-bold text-xs sm:text-sm" style={{ color: 'var(--deep-charcoal)' }}>
-                                            {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                                        </span>
-                                        <button onClick={() => handleMonthChange('next')} className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                                            <ChevronRight size={20} className="w-4 h-4 sm:w-5 sm:h-5" />
-                                        </button>
-                                    </div>
-                                    <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-2">
-                                        {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
-                                            <div key={day} className="text-center text-[10px] sm:text-xs font-bold text-gray-500 py-1">{day}</div>
-                                        ))}
-                                    </div>
-                                    <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
-                                        {(() => {
-                                            const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentMonth);
-                                            const days = [];
-                                            for (let i = 0; i < startingDayOfWeek; i++) {
-                                                days.push(<div key={`empty-${i}`} className="p-1.5 sm:p-2" />);
-                                            }
-                                            for (let day = 1; day <= daysInMonth; day++) {
-                                                const isSelected = selectedDate === `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                                                days.push(
-                                                    <button
-                                                        key={day}
-                                                        onClick={() => handleDateSelect(day)}
-                                                        className={`p-1.5 sm:p-2 rounded-lg text-xs sm:text-sm font-bold transition-all hover:scale-105 ${
-                                                            isSelected 
-                                                                ? 'text-white' 
-                                                                : 'hover:bg-gray-100'
-                                                        }`}
-                                                        style={isSelected ? { background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' } : { color: 'var(--deep-charcoal)' }}
-                                                    >
-                                                        {day}
-                                                    </button>
-                                                );
-                                            }
-                                            return days;
-                                        })()}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3 sm:gap-4">
-                        <button
-                            onClick={() => {
-                                setShowUpcoming(!showUpcoming);
-                                setCurrentPage(1);
-                            }}
-                            className={`px-6 py-4 border rounded-2xl outline-none transition-all cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2.5 typography-label-light`}
-                            style={{
-                                background: 'var(--light-greige)',
-                                borderColor: showUpcoming ? 'var(--muted-gold)' : 'var(--light-greige)',
-                                color: 'var(--deep-charcoal)',
-                                boxShadow: showUpcoming ? '0 4px 20px rgba(212, 175, 55, 0.3)' : 'var(--inset-shadow)'
-                            }}
-                            title="Show upcoming bookings"
-                        >
-                            <Star size={18} className={showUpcoming ? 'fill-[#D4AF37]' : ''} style={{ color: showUpcoming ? '#D4AF37' : '#666' }} />
-                            <span className={`text-sm font-bold transition-colors typography-label-light`}>Upcoming</span>
-                        </button>
+                        ))}
                     </div>
                 </div>
 
+                {/* Date and Upcoming Filters */}
+                <div className="mb-6 sm:mb-8 flex items-center gap-3 sm:gap-4 px-2">
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowCalendar(!showCalendar)}
+                            className={`p-3 sm:p-4 rounded-2xl outline-none transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 cursor-pointer ${selectedDate ? 'ring-2' : ''}`}
+                            style={{ backgroundColor: 'var(--light-greige)', border: selectedDate ? '1px solid var(--muted-gold)' : '1px solid var(--light-greige)', boxShadow: 'var(--inset-shadow)' }}
+                            title={selectedDate || 'Filter by date'}
+                        >
+                            <Calendar size={20} className={`transition-colors w-4 h-4 sm:w-5 sm:h-5`} style={{ color: selectedDate ? 'var(--deep-charcoal)' : '#666' }} />
+                        </button>
+                        {selectedDate && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedDate('');
+                                }}
+                                className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow-lg hover:shadow-xl transition-all hover:scale-110"
+                                style={{ background: 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)', color: 'white' }}
+                            >
+                                ×
+                            </button>
+                        )}
+                        {showCalendar && (
+                            <div ref={calendarRef} className="absolute top-full left-0 mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-gray-200 p-3 sm:p-4 w-64 sm:w-72 animate-in fade-in zoom-in-95 duration-200">
+                                <div className="flex items-center justify-between mb-4">
+                                    <button onClick={() => handleMonthChange('prev')} className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                        <ChevronLeft size={20} className="w-4 h-4 sm:w-5 sm:h-5" />
+                                    </button>
+                                    <span className="font-bold text-xs sm:text-sm" style={{ color: 'var(--deep-charcoal)' }}>
+                                        {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                                    </span>
+                                    <button onClick={() => handleMonthChange('next')} className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                        <ChevronRight size={20} className="w-4 h-4 sm:w-5 sm:h-5" />
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-2">
+                                    {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
+                                        <div key={day} className="text-center text-[10px] sm:text-xs font-bold text-gray-500 py-1">{day}</div>
+                                    ))}
+                                </div>
+                                <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
+                                    {(() => {
+                                        const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentMonth);
+                                        const days = [];
+                                        for (let i = 0; i < startingDayOfWeek; i++) {
+                                            days.push(<div key={`empty-${i}`} className="p-1.5 sm:p-2" />);
+                                        }
+                                        for (let day = 1; day <= daysInMonth; day++) {
+                                            const isSelected = selectedDate === `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                                            days.push(
+                                                <button
+                                                    key={day}
+                                                    onClick={() => handleDateSelect(day)}
+                                                    className={`p-1.5 sm:p-2 rounded-lg text-xs sm:text-sm font-bold transition-all hover:scale-105 ${
+                                                        isSelected 
+                                                            ? 'text-white' 
+                                                            : 'hover:bg-gray-100'
+                                                    }`}
+                                                    style={isSelected ? { background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' } : { color: 'var(--deep-charcoal)' }}
+                                                >
+                                                    {day}
+                                                </button>
+                                            );
+                                        }
+                                        return days;
+                                    })()}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <button
+                        onClick={() => {
+                            setShowUpcoming(!showUpcoming);
+                            setCurrentPage(1);
+                        }}
+                        className={`px-4 sm:px-6 py-2.5 sm:py-4 border rounded-2xl outline-none transition-all cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 sm:gap-2.5 typography-label-light`}
+                        style={{
+                            background: 'var(--light-greige)',
+                            borderColor: showUpcoming ? 'var(--muted-gold)' : 'var(--light-greige)',
+                            color: 'var(--deep-charcoal)',
+                            boxShadow: showUpcoming ? '0 4px 20px rgba(212, 175, 55, 0.3)' : 'var(--inset-shadow)'
+                        }}
+                        title="Show upcoming bookings"
+                    >
+                        <Star size={16} className={showUpcoming ? 'fill-[#D4AF37]' : ''} style={{ color: showUpcoming ? '#D4AF37' : '#666' }} />
+                        <span className={`text-xs sm:text-sm font-bold transition-colors typography-label-light`}>Upcoming</span>
+                    </button>
+                </div>
+
                 <div className="space-y-2">
-                    {bookingdata.length > 0 ? (
-                        bookingdata
-                            .filter(b => filterStatus === 'ALL' || b.status === filterStatus)
-                            .map((booking, index) => (
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={filterStatus}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            {bookingdata.length > 0 ? (
+                                bookingdata
+                                    .filter(b => filterStatus === 'ALL' || b.status?.toUpperCase() === filterStatus)
+                                    .map((booking, index) => (
                                 <div
                                     key={booking.id || index}
                                     onClick={() => fetchBookingDetails(booking.id)}
@@ -304,6 +351,8 @@ function BookingPage() {
                     ) : (
                         <div className="py-20 text-center font-bold tracking-widest text-xs typography-label-light" style={{ color: '#666' }}>{t('bookings.noRecordsFound')}</div>
                     )}
+                        </motion.div>
+                    </AnimatePresence>
                 </div>
 
                 {/* Pagination Controls */}
