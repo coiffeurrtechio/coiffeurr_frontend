@@ -44,6 +44,7 @@ const HomePage: React.FC = () => {
   const [isRatingSortDropdownOpen, setIsRatingSortDropdownOpen] = useState<boolean>(false);
   const [isPriceSortDropdownOpen, setIsPriceSortDropdownOpen] = useState<boolean>(false);
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+  const [expandedServices, setExpandedServices] = useState<Record<string, boolean>>({});
 
   const loadingPhrases = [
     'Preparing your experience...',
@@ -787,19 +788,22 @@ const HomePage: React.FC = () => {
                               </div>
                               <div className="flex flex-wrap gap-1.5 mb-2">
                                 {salon.salonType && <span className="text-[10px] font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-full">{salon.salonType}</span>}
-                                {salon.salonServices && salon.salonServices.length > 0 ? (
+                                {salon.salonServices && salon.salonServices.length > 0 && (
                                   <>
-                                    {salon.salonServices.slice(0, 2).map((service: any, idx: number) => (
+                                    {(expandedServices[salon.id] ? salon.salonServices : salon.salonServices.slice(0, 2)).map((service: any, idx: number) => (
                                       <span key={idx} className="text-[10px] font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-full">{service.name || service.serviceName}</span>
                                     ))}
                                     {salon.salonServices.length > 2 && (
-                                      <span className="text-[10px] font-medium text-[#D4AF37] bg-[#D4AF37]/10 px-2 py-1 rounded-full cursor-pointer hover:bg-[#D4AF37]/20">+{salon.salonServices.length - 2} more</span>
+                                      <button 
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          setExpandedServices(prev => ({ ...prev, [salon.id]: !prev[salon.id] }));
+                                        }}
+                                        className="text-[10px] font-medium text-[#D4AF37] bg-[#D4AF37]/10 px-2 py-1 rounded-full cursor-pointer hover:bg-[#D4AF37]/20"
+                                      >
+                                        {expandedServices[salon.id] ? 'See less' : 'See all'}
+                                      </button>
                                     )}
-                                  </>
-                                ) : (
-                                  <>
-                                    <span className="text-[10px] font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-full">Haircut</span>
-                                    <span className="text-[10px] font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-full">Facial</span>
                                   </>
                                 )}
                               </div>

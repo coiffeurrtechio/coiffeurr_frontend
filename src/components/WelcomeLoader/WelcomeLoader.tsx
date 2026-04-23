@@ -66,7 +66,7 @@ const WelcomeLoader: React.FC<WelcomeLoaderProps> = ({ onComplete }) => {
 
           {/* Royal Text */}
           <motion.div
-            className="absolute bottom-96 text-center px-4"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center px-4"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: phase !== 'reveal' ? 1 : 0, y: phase !== 'reveal' ? 0 : -30 }}
             transition={{ duration: 0.8, delay: 0.5 }}
