@@ -32,10 +32,6 @@ import UniversalVerification from "../pages/UniversalVerification";
 import SalonReviewsPage from "../pages/Salon/SalonReviewsPage";
 import SuperAdminLogin from "../pages/SuperAdmin/SuperAdminLogin";
 import SuperAdminHome from "../pages/SuperAdmin/SuperAdminHome";
-import SuperAdminLayout from "../pages/SuperAdmin/SuperAdminLayout";
-import SalonManagement from "../pages/SuperAdmin/SalonManagement";
-import BookingManagement from "../pages/SuperAdmin/BookingManagement";
-import UserManagement from "../pages/SuperAdmin/UserManagement";
 
 
 export interface AppRoute {
@@ -111,14 +107,9 @@ const routes: AppRoute[] = [
   },
   {
     key: 7,
-    path: "/super-admin",
-    Element: SuperAdminLayout,
+    path: "/super-admin/dashboard/*",
+    Element: SuperAdminHome,
     isProtected: false,
-    children: [
-      { key: 71, path: "dashboard", Element: SuperAdminHome, isProtected: false },
-      { key: 72, path: "dashboard/bookings", Element: BookingManagement, isProtected: false },
-      { key: 73, path: "dashboard/users", Element: UserManagement, isProtected: false },
-    ],
   },
 
   // ✅ Dashboard (without header/footer)

@@ -6,12 +6,12 @@ import {
   Notebook,
   ChevronRight,
   Building2,
-  ShieldCheck,
-  LogOut
+  ShieldCheck
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "../../components/ui_components/button";
 import { useTranslation } from "react-i18next";
+import SponserFooter from "../../components/Sponser_Footer";
 
 interface SidebarProps {
   open: boolean;
@@ -25,16 +25,11 @@ function SuperAdminDashboard({ open, setOpen, collapsed }: SidebarProps) {
   const location = useLocation();
 
   const menuItems = [
+    { id: "analytics", label: "Analytics", icon: LayoutDashboard, path: "/super-admin/dashboard/analytics" },
     { id: "salons", label: "Salons", icon: Building2, path: "/super-admin/dashboard" },
     { id: "bookings", label: "Bookings", icon: Notebook, path: "/super-admin/dashboard/bookings" },
     { id: "users", label: "Users", icon: Users, path: "/super-admin/dashboard/users" },
   ];
-
-  const handleLogout = () => {
-    localStorage.removeItem("super_admin_access_token");
-    document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    navigate("/super-admin/login");
-  };
 
   return (
     <>
@@ -49,7 +44,7 @@ function SuperAdminDashboard({ open, setOpen, collapsed }: SidebarProps) {
       <aside
         className={`
           fixed top-0 left-0 h-screen z-[60]
-          bg-[#0A0A0A] text-white
+          bg-[#111827] text-white
           transform transition-all duration-300 ease-in-out
           ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
           ${collapsed ? "md:w-20" : "md:w-64"}
@@ -57,7 +52,7 @@ function SuperAdminDashboard({ open, setOpen, collapsed }: SidebarProps) {
           border-r border-white/10 shadow-2xl backdrop-blur-[20px]
         `}
       >
-        <div className="h-full flex flex-col overflow-hidden bg-[#0A0A0A]">
+        <div className="h-full flex flex-col overflow-hidden bg-[#111827]">
 
           {/* LOGO SECTION */}
           <div
@@ -143,24 +138,7 @@ function SuperAdminDashboard({ open, setOpen, collapsed }: SidebarProps) {
 
           </nav>
 
-          {/* Logout Button */}
-          <div className="p-4 border-t border-white/10">
-            <Button
-              variant="ghost"
-              onClick={handleLogout}
-              className={`
-                w-full justify-center group py-4 rounded-xl transition-all duration-200
-                ${collapsed ? "px-2" : "justify-between px-4"}
-                text-red-400 hover:bg-red-500/10 hover:text-red-300
-              `}
-              title={collapsed ? "Logout" : ""}
-            >
-              <div className={`flex items-center ${collapsed ? "" : "gap-3"}`}>
-                <LogOut size={18} />
-                {!collapsed && <span className="font-bold text-sm tracking-tight">Logout</span>}
-              </div>
-            </Button>
-          </div>
+          <SponserFooter collapsed={collapsed} />
         </div>
       </aside>
 
