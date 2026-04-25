@@ -33,7 +33,7 @@ export default function Profile() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const authData = JSON.parse(localStorage.getItem("authState") || "{}");
-  const [user, setUser] = useState<any>(authData?.user?.user);
+  const [user, setUser] = useState<any>(authData?.user);
   const [usercontactdetails, setusercontactdetails] = useState<any>({
     email: "",
     phone: "",
@@ -47,7 +47,7 @@ export default function Profile() {
   const [editForm, setEditForm] = useState({
     address: { house_no: "", street: "", locality: "", city: "", state: "", pincode: "", country: "India", landmark: "" },
     profileImage: "",
-    user_id: authData?.user?.user?.id || "",
+    user_id: authData?.user?.id || "",
     gender: "",
     dob: "",
     marital_status: ""
@@ -58,10 +58,10 @@ export default function Profile() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const syncLocalStorage = (updatedData: any) => {
+  const updateAuthState = (updatedData: any) => {
     const freshAuth = JSON.parse(localStorage.getItem("authState") || "{}");
-    if (freshAuth.user?.user) {
-      freshAuth.user.user = { ...freshAuth.user.user, ...updatedData };
+    if (freshAuth.user) {
+      freshAuth.user = { ...freshAuth.user, ...updatedData };
       localStorage.setItem("authState", JSON.stringify(freshAuth));
     }
   };
@@ -69,7 +69,7 @@ export default function Profile() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const id = authData?.user?.user?.id || authData?.user?.id;
+      const id = authData?.user?.id;
       if (!id) return handleLogout();
       const res = await userapiRequest<any>(`/users/${id}/pii`);
       if (res.data) {
@@ -204,7 +204,7 @@ export default function Profile() {
 
       if (response.ok) {
         setusercontactdetails((prev: any) => ({ ...prev, ...payload }));
-        syncLocalStorage(payload);
+        updateAuthState(payload);
         setIsEditModalOpen(false);
         showToast(t('profile.profileUpdated'));
       } else {
@@ -476,7 +476,7 @@ export default function Profile() {
                   setIsUploading(true);
                   const uploadData = new FormData();
                   uploadData.append("files", file);
-                  uploadData.append("salon_id", authData?.user?.user?.id);
+                  uploadData.append("salon_id", authData?.user?.id);
                   const res = await userapiPost<any>(`/upload/salon-images`, uploadData);
                   if (res?.data?.data?.urls[0]) setEditForm(prev => ({ ...prev, profileImage: res.data.data.urls[0] }));
                   setIsUploading(false);

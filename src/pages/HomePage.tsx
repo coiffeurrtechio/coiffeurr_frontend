@@ -92,10 +92,10 @@ const HomePage: React.FC = () => {
 
   // Fetch user contact details to get image URL when logged in
   useEffect(() => {
-    if (isloggedin && parsedUser?.user?.user?.id) {
+    if (isloggedin && parsedUser?.user?.id) {
       const fetchUserImage = async () => {
         try {
-          const res = await userapiRequest<any>(`/users/${parsedUser.user.user.id}/pii`);
+          const res = await userapiRequest<any>(`/users/${parsedUser.user.id}/pii`);
           if (res.data?.image_url) {
             setUserImageUrl(res.data.image_url);
           }
@@ -105,7 +105,7 @@ const HomePage: React.FC = () => {
       };
       fetchUserImage();
     }
-  }, [isloggedin, parsedUser?.user?.user?.id]);
+  }, [isloggedin, parsedUser?.user?.id]);
 
   // Force English when user is not logged in
   useEffect(() => {

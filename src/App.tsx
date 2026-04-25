@@ -58,11 +58,28 @@ const App = () => {
           }
         }
         else {
-          dispatch(
-            login({
-              user: result             // user details (id, email, etc.)
-            })
-          );
+          // Fetch user PII to get image URL
+          try {
+            const piiResponse = await fetch(`${Config.API_BASE_URL}/users/${result.user.id}/pii`, {
+              headers: {
+                'Authorization': `Bearer ${result.access_token}`,
+                'Content-Type': 'application/json',
+              },
+              credentials: 'include',
+            });
+
+            if (piiResponse.ok) {
+              const piiData = await piiResponse.json();
+              // Update user state with image URL from PII
+              dispatch(login({ user: { ...result.user, access_token: result.access_token, image_url: piiData.image_url } }));
+            } else {
+              dispatch(login({ user: result }));
+            }
+          } catch (piiError) {
+            console.error('Failed to fetch PII:', piiError);
+            // Continue even if PII fetch fails
+            dispatch(login({ user: result }));
+          }
 
         }
 

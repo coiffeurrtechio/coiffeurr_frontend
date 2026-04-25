@@ -134,6 +134,9 @@ const CustomerRegistration: React.FC = () => {
       const resData = await response.json();
       if (!response.ok) throw new Error(resData?.detail || t('auth.signupFailed'));
       setNotification({ type: 'success', message: `OTP sent to ${formData.phone}!` });
+      setOtpSent(true);
+      setOtpTimer(300);
+      setCanResendOtp(false);
       setStep(2);
     } catch (err: any) {
       setNotification({ type: 'error', message: err.message });
@@ -166,6 +169,9 @@ const CustomerRegistration: React.FC = () => {
         return;
       }
       setNotification({ type: 'success', message: `OTP sent to ${formData.phone}!` });
+      setOtpSent(true);
+      setOtpTimer(300);
+      setCanResendOtp(false);
       setStep(2);
     } catch (err: any) {
       setNotification({ type: 'error', message: err.message });
@@ -664,6 +670,22 @@ const CustomerRegistration: React.FC = () => {
                       maxLength={5}
                       className={`w-full h-12 pl-18 pr-4 dark-input text-sm font-bold outline-none transition-all duration-300 ${errors.otp ? "error" : ""}`}
                     />
+                  </div>
+                  <div className="flex items-center justify-between mt-2">
+                    {canResendOtp ? (
+                      <button
+                        type="button"
+                        onClick={handleSendOTP}
+                        disabled={isLoading}
+                        className="text-[10px] font-bold text-[#D4AF37] hover:text-[#FFD700] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Resend OTP
+                      </button>
+                    ) : (
+                      <span className="text-[10px] font-bold text-white/50">
+                        Resend in {Math.floor(otpTimer / 60)}:{(otpTimer % 60).toString().padStart(2, '0')}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
