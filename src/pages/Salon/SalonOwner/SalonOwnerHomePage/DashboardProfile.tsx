@@ -21,6 +21,27 @@ const formatTime = (time: string) => {
   return time.includes(':') ? time.split(':').slice(0, 2).join(':') : time;
 };
 
+// Helper function to convert AM/PM time to 24-hour format for time input
+const convertTo24Hour = (time: string) => {
+  if (!time) return '';
+  // If already in 24-hour format (HH:MM or HH:MM:SS), return it
+  if (!time.includes('AM') && !time.includes('PM')) {
+    return time.split(':').slice(0, 2).join(':');
+  }
+  
+  const [timePart, period] = time.trim().split(' ');
+  const [hours, minutes] = timePart.split(':').map(Number);
+  
+  let hours24 = hours;
+  if (period?.toUpperCase() === 'PM' && hours !== 12) {
+    hours24 = hours + 12;
+  } else if (period?.toUpperCase() === 'AM' && hours === 12) {
+    hours24 = 0;
+  }
+  
+  return `${String(hours24).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+};
+
 // Advanced Animated Scissors Component with Motion
 const AnimatedScissors: React.FC = () => (
   <motion.div
@@ -1406,7 +1427,16 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
     pricing: initialData?.pricing || { priceRange: "" },
     address: initialData?.address || { street: "", city: "", state: "", pincode: "", country: "India" },
     location: initialData?.location || { latitude: 0, longitude: 0 },
-    timing: initialData?.timing || { openingTime: "", closingTime: "", lunchBreak: { start: "", end: "" }, weeklyOff: [] },
+    timing: {
+      ...initialData?.timing,
+      openingTime: convertTo24Hour(initialData?.timing?.openingTime),
+      closingTime: convertTo24Hour(initialData?.timing?.closingTime),
+      lunchBreak: {
+        start: convertTo24Hour(initialData?.timing?.lunchBreak?.start),
+        end: convertTo24Hour(initialData?.timing?.lunchBreak?.end)
+      },
+      weeklyOff: initialData?.timing?.weeklyOff || []
+    },
     branding: initialData?.branding || { logoUrl: "", coverImages: [] },
     socialMedia: initialData?.socialMedia || { instagram: "", facebook: "", other: "" }
   }));
@@ -1499,10 +1529,10 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
     if (!file) return;
 
     // 1. Strict Size Validation (2MB)
-    const MAX_SIZE = 2 * 1024 * 1024; // 2MB in bytes
+    const MAX_SIZE = 8 * 1024 * 1024; // 8MB in bytes
 
     if (file.size > MAX_SIZE) {
-      alert("File is too large! Please upload an image smaller than 2MB.");
+      alert("File is too large! Please upload an image smaller than 8MB.");
       // We return here so no state is updated and no conversion happens
       return;
     }
@@ -1600,92 +1630,61 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
 
                 <section className="space-y-6">
                   <h4 className="text-[10px] font-black uppercase text-gray-500 tracking-widest border-b border-gray-100/50 pb-2" style={{ fontFamily: "'Playfair Display', serif" }}>Logo Management</h4>
-                  <div className="flex items-center gap-6 p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-200/50">
-                    <div className="w-24 h-24 rounded-2xl bg-white shadow-inner overflow-hidden flex-shrink-0 border-2 border-white">
-                      <img
-                        src={tempLogo ? tempLogo.preview : (formData.branding.logoUrl || '/api/placeholder/100/100')}
-                        alt="Logo Preview"
-                        className={`w-full h-full object-cover ${tempLogo ? 'opacity-50' : ''}`}
-                      />
-                    </div>
-
-                    <div className="flex-1 space-y-3">
-                      {!tempLogo ? (
-                        <EditFileInput
-                          label="Select New Logo"
-                          onChange={async (file: File) => {
-                            if (file.size > 2 * 1024 * 1024) return alert("Max 2MB");
-                            const preview = await fileToBase64(file);
-                            setTempLogo({ file, preview });
-                          }}
-                        />
-                      ) : (
-                        <div className="flex gap-2">
-                          <motion.button
-                            disabled={isUploading}
-                            onClick={() => handleCloudUpload(tempLogo.file, 'logo')}
-                            className="flex-1 h-10 bg-gradient-to-r from-[#D4AF37] to-[#C9A227] text-white rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2 shadow-lg shadow-[#D4AF37]/30"
-                            whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(212, 175, 55, 0.4)" }}
-                            whileTap={{ scale: 0.98 }}
+                  <div className="p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-sm">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Salon Logo {isUploading && '(uploading...)'}</label>
+                      <div className="grid grid-cols-4 gap-2">
+                        <label className="aspect-square border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-all bg-white/60 backdrop-blur-sm">
+                          <Plus size={20} className="text-gray-400" />
+                          <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            if (file.size > 8 * 1024 * 1024) return alert("Max 8MB");
+                            await handleCloudUpload(file, 'logo');
+                          }} disabled={isUploading} />
+                        </label>
+                        {formData.branding.logoUrl && (
+                          <motion.div 
+                            className="relative aspect-square rounded-2xl overflow-hidden group bg-white/60 backdrop-blur-sm border border-gray-200/50 shadow-sm"
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.2 }}
                           >
-                            {isUploading ? 'Uploading...' : <><Check size={14} /> Confirm</>}
-                          </motion.button>
-                          <motion.button onClick={() => setTempLogo(null)} className="px-4 h-10 bg-gray-100 text-gray-600 rounded-xl text-[10px] font-black uppercase hover:bg-gray-200 transition-all" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                            Cancel
-                          </motion.button>
-                        </div>
-                      )}
+                            <img src={formData.branding.logoUrl} className="w-full h-full object-cover" />
+                            <button type="button" onClick={() => handleNestedChange('branding.logoUrl', '')} className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><X size={10} /></button>
+                          </motion.div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </section>
 
                 <section className="space-y-4">
-                  <label className="text-[10px] font-black text-gray-400 uppercase ml-1">Cover Gallery</label>
-
-                  <div className="p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-dashed border-gray-200/50 mb-4">
-                    {!tempGalleryFile ? (
-                      <EditFileInput
-                        label="Add New Gallery Image"
-                        onChange={async (file: File) => {
-                          if (file.size > 2 * 1024 * 1024) return alert("Max 2MB");
-                          const preview = await fileToBase64(file);
-                          setTempGalleryFile({ file, preview });
-                        }}
-                      />
-                    ) : (
-                      <div className="flex items-center gap-4">
-                        <img src={tempGalleryFile.preview} className="w-16 h-16 rounded-xl object-cover" />
-                        <div className="flex-1 flex gap-2">
-                          <motion.button
-                            disabled={isUploading}
-                            onClick={() => handleCloudUpload(tempGalleryFile.file, 'gallery')}
-                            className="flex-1 h-10 bg-gradient-to-r from-[#D4AF37] to-[#C9A227] text-white rounded-xl text-[10px] font-black uppercase shadow-lg shadow-[#D4AF37]/30"
-                            whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(212, 175, 55, 0.4)" }}
-                            whileTap={{ scale: 0.98 }}
-                          >
-                            {isUploading ? 'Uploading...' : 'Upload to Gallery'}
-                          </motion.button>
-                          <motion.button onClick={() => setTempGalleryFile(null)} className="px-4 h-10 bg-gray-100 rounded-xl text-[10px] font-black uppercase hover:bg-gray-200 transition-all" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                            Cancel
-                          </motion.button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-4 gap-3">
-                    {formData.branding.coverImages?.map((img: string, idx: number) => (
-                      <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group border border-gray-200/50 shadow-sm">
-                        <img src={img} className="w-full h-full object-cover" alt="Gallery" />
-                        <motion.button
-                          onClick={() => handleNestedChange('branding.coverImages', formData.branding.coverImages.filter((_: any, i: number) => i !== idx))}
-                          className="absolute inset-0 bg-red-500/80 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                          whileHover={{ scale: 1.05 }}
+                  <div className="p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-sm">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-2">Cover Gallery {isUploading && '(uploading...)'}</label>
+                    <div className="grid grid-cols-4 gap-2">
+                      <label className="aspect-square border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-all bg-white/60 backdrop-blur-sm">
+                        <Plus size={20} className="text-gray-400" />
+                        <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          if (file.size > 8 * 1024 * 1024) return alert("Max 8MB");
+                          await handleCloudUpload(file, 'gallery');
+                        }} disabled={isUploading} />
+                      </label>
+                      {formData.branding.coverImages?.map((img: string, idx: number) => (
+                        <motion.div 
+                          key={idx} 
+                          className="relative aspect-square rounded-2xl overflow-hidden group bg-white/60 backdrop-blur-sm border border-gray-200/50 shadow-sm"
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.2 }}
                         >
-                          <Trash2 size={16} />
-                        </motion.button>
-                      </div>
-                    ))}
+                          <img src={img} className="w-full h-full object-cover" alt="Gallery" />
+                          <button type="button" onClick={() => handleNestedChange('branding.coverImages', formData.branding.coverImages.filter((_: any, i: number) => i !== idx))} className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><X size={10} /></button>
+                        </motion.div>
+                      ))}
+                    </div>
                   </div>
                 </section>
               </section>
@@ -1726,12 +1725,48 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
               <section className="space-y-4">
                 <h4 className="text-[10px] font-black uppercase text-gray-500 tracking-widest border-b border-gray-100/50 pb-2" style={{ fontFamily: "'Playfair Display', serif" }}>Business Hours & Weekly Off</h4>
                 <div className="grid grid-cols-2 gap-4">
-                  <EditInput label="Opens" type="time" value={formData.timing.openingTime} onChange={(val: any) => handleNestedChange('timing.openingTime', val)} />
-                  <EditInput label="Closes" type="time" value={formData.timing.closingTime} onChange={(val: any) => handleNestedChange('timing.closingTime', val)} />
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-gray-400 uppercase ml-1">Opening Time</label>
+                    <input
+                      type="time"
+                      value={formData.timing.openingTime || ''}
+                      onChange={(e) => handleNestedChange('timing.openingTime', e.target.value)}
+                      className="w-full h-12 px-5 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-2xl text-sm font-bold text-[#1a1a1a] focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all outline-none"
+                    />
+                    <p className="text-[9px] text-gray-400 ml-1">24-hour format (e.g., 09:00)</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-gray-400 uppercase ml-1">Closing Time</label>
+                    <input
+                      type="time"
+                      value={formData.timing.closingTime || ''}
+                      onChange={(e) => handleNestedChange('timing.closingTime', e.target.value)}
+                      className="w-full h-12 px-5 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-2xl text-sm font-bold text-[#1a1a1a] focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all outline-none"
+                    />
+                    <p className="text-[9px] text-gray-400 ml-1">24-hour format (e.g., 21:00)</p>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <EditInput label="Break Start" type="time" value={formData.timing.lunchBreak?.start} onChange={(val: any) => handleNestedChange('timing.lunchBreak.start', val)} />
-                  <EditInput label="Break End" type="time" value={formData.timing.lunchBreak?.end} onChange={(val: any) => handleNestedChange('timing.lunchBreak.end', val)} />
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-gray-400 uppercase ml-1">Lunch Start</label>
+                    <input
+                      type="time"
+                      value={formData.timing.lunchBreak?.start || ''}
+                      onChange={(e) => handleNestedChange('timing.lunchBreak.start', e.target.value)}
+                      className="w-full h-12 px-5 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-2xl text-sm font-bold text-[#1a1a1a] focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all outline-none"
+                    />
+                    <p className="text-[9px] text-gray-400 ml-1">24-hour format (e.g., 13:00)</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-gray-400 uppercase ml-1">Lunch End</label>
+                    <input
+                      type="time"
+                      value={formData.timing.lunchBreak?.end || ''}
+                      onChange={(e) => handleNestedChange('timing.lunchBreak.end', e.target.value)}
+                      className="w-full h-12 px-5 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-2xl text-sm font-bold text-[#1a1a1a] focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all outline-none"
+                    />
+                    <p className="text-[9px] text-gray-400 ml-1">24-hour format (e.g., 14:00)</p>
+                  </div>
                 </div>
 
                 <div className="p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-200/50">
