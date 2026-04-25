@@ -45,6 +45,8 @@ export default function SalonRegistrationForm() {
   const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([""]);
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinCode, setPinCode] = useState("");
   
   const form = useForm<FormValues>({
     defaultValues: {
@@ -92,10 +94,24 @@ export default function SalonRegistrationForm() {
   // }
 
   async function handleUseLocation() {
-    if (!("geolocation" in navigator)) {
-      showToast({ type: "error", title: "Location not available", message: "Your browser does not support geolocation." })
+    // Check if HTTPS is required (most mobile browsers require HTTPS for geolocation)
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+      showToast({ 
+        type: "error", 
+        title: "HTTPS Required", 
+        message: "Geolocation requires HTTPS. Please use a secure connection." 
+      })
       return
     }
+
+    if (!("geolocation" in navigator)) {
+      setShowPinModal(true);
+      return
+    }
+
+    // Detect if mobile device
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords
@@ -104,10 +120,50 @@ export default function SalonRegistrationForm() {
         showToast({ type: "success", title: "Location captured", message: "Latitude and longitude have been filled." })
       },
       (err) => {
-        showToast({ type: "error", title: "Unable to get location", message: err.message })
+        // Show PIN code fallback on any geolocation error
+        setShowPinModal(true);
       },
-      { enableHighAccuracy: true, timeout: 10000 },
+      { 
+        enableHighAccuracy: isMobile, // Use high accuracy for mobile GPS
+        timeout: isMobile ? 30000 : 10000, // Longer timeout for mobile (30s vs 10s)
+        maximumAge: isMobile ? 60000 : 0 // Allow cached location on mobile (1 min)
+      },
     )
+  }
+
+  async function handlePinCodeLocation() {
+    if (!pinCode || pinCode.length < 6) {
+      showToast({ type: "error", title: "Invalid PIN", message: "Please enter a valid 6-digit PIN code." })
+      return
+    }
+
+    try {
+      // Using a free geocoding API (you can replace with your preferred API)
+      const response = await fetch(`https://api.postalpincode.in/pincode/${pinCode}`);
+      const data = await response.json();
+      
+      if (data && data[0] && data[0].PostOffice && data[0].PostOffice[0]) {
+        const location = data[0].PostOffice[0];
+        const lat = parseFloat(location.Latitude);
+        const lng = parseFloat(location.Longitude);
+        
+        if (!isNaN(lat) && !isNaN(lng)) {
+          form.setValue("latitude", String(lat), { shouldValidate: true, shouldDirty: true })
+          form.setValue("longitude", String(lng), { shouldValidate: true, shouldDirty: true })
+          form.setValue("city", location.District || "", { shouldValidate: true, shouldDirty: true })
+          form.setValue("state", location.State || "", { shouldValidate: true, shouldDirty: true })
+          setShowPinModal(false);
+          setPinCode("");
+          showToast({ type: "success", title: "Location found", message: `Location set to ${location.Name}, ${location.District}` })
+        } else {
+          showToast({ type: "error", title: "Location not found", message: "Could not find coordinates for this PIN code." })
+        }
+      } else {
+        showToast({ type: "error", title: "Invalid PIN", message: "PIN code not found. Please check and try again." })
+      }
+    } catch (err) {
+      showToast({ type: "error", title: "Error", message: "Failed to fetch location. Please try again." })
+    }
   }
 
  async function onSubmit() {
@@ -399,6 +455,53 @@ export default function SalonRegistrationForm() {
           </div>
         </form>
       </Card>
+
+      {/* PIN Code Fallback Modal */}
+      {showPinModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl">
+            <div className="text-center mb-6">
+              <div className="text-4xl mb-3">💇‍♂️</div>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">Bad hair day for GPS!</h3>
+              <p className="text-sm text-gray-600">Please provide your PIN code to the rescue!</p>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="pinCode">Enter PIN Code</Label>
+                <Input
+                  id="pinCode"
+                  type="text"
+                  placeholder="e.g., 400001"
+                  value={pinCode}
+                  onChange={(e) => setPinCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  maxLength={6}
+                  className="text-center text-lg tracking-widest"
+                />
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowPinModal(false);
+                    setPinCode("");
+                  }}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handlePinCodeLocation}
+                  className="flex-1"
+                >
+                  Find Location
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

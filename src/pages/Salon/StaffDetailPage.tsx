@@ -398,10 +398,10 @@ export default function StaffDetailPage() {
                             )}
 
                             {/* The Visual Archive */}
-                            {(staff?.instagramHandle || staff?.facebookHandle) && (
+                            {(staff?.instagramHandle || staff?.facebookHandle || staff?.otherLinks) && (
                                 <div className="pt-6">
                                     <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">{t('common.visualArchive')}</h4>
-                                    <div className="flex gap-3">
+                                    <div className="flex gap-3 flex-wrap">
                                         {staff?.instagramHandle && (
                                             <a
                                                 href={`https://instagram.com/${staff.instagramHandle.replace('@', '')}`}
@@ -422,6 +422,17 @@ export default function StaffDetailPage() {
                                             >
                                                 <Facebook className="w-3 h-3" />
                                                 Facebook
+                                            </a>
+                                        )}
+                                        {staff?.otherLinks && (
+                                            <a
+                                                href={staff.otherLinks.startsWith('http') ? staff.otherLinks : `https://${staff.otherLinks}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 px-6 py-2 border border-slate-300 text-slate-600 text-[10px] font-bold uppercase tracking-[0.2em] rounded-full hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all"
+                                            >
+                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                                Other
                                             </a>
                                         )}
                                     </div>

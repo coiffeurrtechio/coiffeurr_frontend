@@ -1453,6 +1453,10 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
   // For the Gallery, we'll track which index or if it's a "new" upload
   const [tempGalleryFile, setTempGalleryFile] = useState<{ file: File; preview: string } | null>(null);
 
+  // PIN code fallback states
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinCode, setPinCode] = useState("");
+
 
   const handleNestedChange = (path: string, value: any) => {
     const keys = path.split('.');
@@ -1484,10 +1488,20 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
   };
 
   const handleGetCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
+    // Check if HTTPS is required (most mobile browsers require HTTPS for geolocation)
+    if (typeof window !== 'undefined' && window.location.protocol !== 'https:' && 
+        window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      alert("Geolocation requires HTTPS. Please use a secure connection.");
       return;
     }
+
+    if (!navigator.geolocation) {
+      setShowPinModal(true);
+      return;
+    }
+
+    // Detect if mobile device
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     setIsLocating(true);
     navigator.geolocation.getCurrentPosition(
@@ -1498,9 +1512,49 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
       },
       (error) => {
         setIsLocating(false);
-        alert("Unable to retrieve location. Please enter manually.");
+        // Show PIN code fallback on any geolocation error
+        setShowPinModal(true);
+      },
+      { 
+        enableHighAccuracy: isMobile, // Use high accuracy for mobile GPS
+        timeout: isMobile ? 30000 : 10000, // Longer timeout for mobile (30s vs 10s)
+        maximumAge: isMobile ? 60000 : 0 // Allow cached location on mobile (1 min)
       }
     );
+  };
+
+  const handlePinCodeLocation = async () => {
+    if (!pinCode || pinCode.length < 6) {
+      alert("Please enter a valid 6-digit PIN code.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`https://api.postalpincode.in/pincode/${pinCode}`);
+      const data = await response.json();
+      
+      if (data && data[0] && data[0].PostOffice && data[0].PostOffice[0]) {
+        const location = data[0].PostOffice[0];
+        const lat = parseFloat(location.Latitude);
+        const lng = parseFloat(location.Longitude);
+        
+        if (!isNaN(lat) && !isNaN(lng)) {
+          handleNestedChange('location.latitude', lat);
+          handleNestedChange('location.longitude', lng);
+          handleNestedChange('address.city', location.District || "");
+          handleNestedChange('address.state', location.State || "");
+          setShowPinModal(false);
+          setPinCode("");
+          alert(`Location set to ${location.Name}, ${location.District}`);
+        } else {
+          alert("Could not find coordinates for this PIN code.");
+        }
+      } else {
+        alert("PIN code not found. Please check and try again.");
+      }
+    } catch (err) {
+      alert("Failed to fetch location. Please try again.");
+    }
   };
 
 
@@ -1870,6 +1924,58 @@ const EditProfileModal = ({ onClose, initialData, onUpdate }: any) => {
           </div>
         </div>
       </motion.div>
+
+      {/* PIN Code Fallback Modal */}
+      {showPinModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-[#0a0a0a]/60 backdrop-blur-sm">
+          <motion.div 
+            className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-6 max-w-md w-full"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <div className="text-center mb-6">
+              <div className="text-4xl mb-3">💇‍♂️</div>
+              <h3 className="text-xl font-bold text-[#1a1a1a] mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>Bad hair day for GPS!</h3>
+              <p className="text-sm text-gray-600">Please provide your PIN code to the rescue!</p>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="text-[10px] font-black text-gray-400 uppercase ml-1">Enter PIN Code</label>
+                <input
+                  type="text"
+                  placeholder="e.g., 400001"
+                  value={pinCode}
+                  onChange={(e) => setPinCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  maxLength={6}
+                  className="w-full h-12 px-5 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-2xl text-sm font-bold text-[#1a1a1a] focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition-all outline-none text-center text-lg tracking-widest"
+                />
+              </div>
+              <div className="flex gap-3">
+                <motion.button
+                  onClick={() => {
+                    setShowPinModal(false);
+                    setPinCode("");
+                  }}
+                  className="flex-1 h-12 rounded-2xl bg-gray-100 text-gray-600 font-bold hover:bg-gray-200 transition-all font-sans uppercase text-xs tracking-widest"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  onClick={handlePinCodeLocation}
+                  className="flex-1 h-12 rounded-2xl bg-gradient-to-r from-[#D4AF37] to-[#C9A227] text-white font-bold shadow-lg shadow-[#D4AF37]/30 hover:shadow-[#D4AF37]/50 font-sans uppercase text-xs tracking-widest"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Find Location
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };

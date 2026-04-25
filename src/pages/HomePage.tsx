@@ -282,8 +282,11 @@ const HomePage: React.FC = () => {
     if (priceRange !== 'all') {
       const minPrice = parseInt(priceRange);
       result = result.filter(salon => {
-        const price = parseInt(salon.priceRange || '9999');
-        return price >= minPrice;
+        const priceRangeStr = salon.priceRange || '';
+        // Extract minimum price from string like "₹100 - ₹500" or "₹100"
+        const match = priceRangeStr.match(/₹(\d+)/);
+        const salonMinPrice = match ? parseInt(match[1]) : 0;
+        return salonMinPrice >= minPrice;
       });
     }
 
@@ -433,10 +436,6 @@ const HomePage: React.FC = () => {
                             animation: 'fadeIn 0.5s ease-in-out'
                           }}
                         />
-                        {/* Social Proof Badge - Top Right */}
-                        {index < 3 && (
-                          <div className="absolute top-0 right-0 z-20 bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap trending-pulse">{t('home.trending') || 'Trending'}</div>
-                        )}
                         {/* Rating Badge - Top Left */}
                         <div className="absolute top-0 left-0 z-20 bg-white px-2 py-0.5 rounded-md shadow-md border border-gray-100 flex items-center gap-1">
                           <Star size={10} className="fill-yellow-400 text-yellow-400" /><span className="text-[10px] font-black text-gray-700">{member.rating?.average?.toFixed(1)}</span>
@@ -446,7 +445,7 @@ const HomePage: React.FC = () => {
                     <div className="text-center w-full flex flex-col" style={{ minHeight: '90px' }}>
                       <div style={{ minHeight: '50px' }}>
                         <h4 className="font-black text-gray-900 text-xs sm:text-sm capitalize truncate leading-tight" style={{ fontFamily: 'Playfair Display, serif' }}>{member.name}</h4>
-                        <p className="text-[9px] sm:text-[10px] text-gray-500 font-medium truncate">{member.specialty || t('home.stylist')}</p>
+                        <p className="text-[9px] sm:text-[10px] text-gray-500 font-medium truncate">{member.role || t('home.stylist')}</p>
                       </div>
                       <div className="flex flex-col items-center gap-1 mt-1 sm:mt-2">
                         <div className="flex items-center gap-1 text-[8px] sm:text-[9px] font-black text-emerald-600 bg-emerald-50 py-0.5 sm:py-1 px-1.5 sm:px-2 rounded-lg"><Award size={10} className="w-2 h-2 sm:w-2.5 sm:h-2.5" /><span>{member.experience_years}{t('home.yExp')}</span></div>
@@ -461,7 +460,7 @@ const HomePage: React.FC = () => {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-gray-800 text-lg sm:text-xl font-black tracking-tight" style={{ fontFamily: 'Playfair Display, serif' }}>{t('home.recommendedForYou')}</h2>
               {hasActiveFilters && (
-                <button onClick={clearFilters} className="text-xs font-bold text-[#D4AF37] hover:text-[#c9a037] transition-colors">
+                <button onClick={clearFilters} className="text-xs font-bold text-[#1E4D8C] hover:text-[#1a3d7a] transition-colors">
                   Clear Filters
                 </button>
               )}
@@ -697,25 +696,25 @@ const HomePage: React.FC = () => {
             {hasActiveFilters && (
               <div className="flex flex-wrap gap-2 mb-3">
                 {sortBy !== 'relevant' && (
-                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-xs font-medium text-[#D4AF37]">
+                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#1E4D8C]/10 border border-[#1E4D8C]/30 text-xs font-medium text-[#1E4D8C]">
                     {sortBy === 'rating_high_low' ? 'Rating: High-Low' : sortBy === 'rating_low_high' ? 'Rating: Low-High' : sortBy === 'price_high_low' ? 'Cost: High-Low' : sortBy === 'price_low_high' ? 'Cost: Low-High' : 'Nearest'}
-                    <button onClick={() => setSortBy('relevant')} className="hover:text-[#c9a037] transition-colors">
+                    <button onClick={() => setSortBy('relevant')} className="hover:text-[#1a3d7a] transition-colors">
                       <X size={14} />
                     </button>
                   </div>
                 )}
                 {priceRange !== 'all' && (
-                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-xs font-medium text-[#D4AF37]">
+                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#1E4D8C]/10 border border-[#1E4D8C]/30 text-xs font-medium text-[#1E4D8C]">
                     ₹{priceRange}+
-                    <button onClick={() => setPriceRange('all')} className="hover:text-[#c9a037] transition-colors">
+                    <button onClick={() => setPriceRange('all')} className="hover:text-[#1a3d7a] transition-colors">
                       <X size={14} />
                     </button>
                   </div>
                 )}
                 {distanceFilter !== 'all' && (
-                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-xs font-medium text-[#D4AF37]">
+                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#1E4D8C]/10 border border-[#1E4D8C]/30 text-xs font-medium text-[#1E4D8C]">
                     {distanceFilter === '2km' ? 'Within 2km' : distanceFilter === '5km' ? 'Within 5km' : distanceFilter === '10km' ? 'Within 10km' : distanceFilter === '15km' ? 'Within 15km' : '20km+'}
-                    <button onClick={() => setDistanceFilter('all')} className="hover:text-[#c9a037] transition-colors">
+                    <button onClick={() => setDistanceFilter('all')} className="hover:text-[#1a3d7a] transition-colors">
                       <X size={14} />
                     </button>
                   </div>
@@ -759,7 +758,7 @@ const HomePage: React.FC = () => {
                       {hasActiveFilters && (
                         <button
                           onClick={clearFilters}
-                          className="px-6 py-3 bg-[#D4AF37] text-white rounded-2xl font-black text-sm shadow-lg hover:scale-105 transition-transform"
+                          className="px-6 py-3 bg-[#1E4D8C] text-white rounded-2xl font-black text-sm shadow-lg hover:scale-105 transition-transform"
                         >
                           Reset All Filters
                         </button>
@@ -781,9 +780,9 @@ const HomePage: React.FC = () => {
                             <div>
                               <div className="flex items-center gap-2 mb-2">
                                 <h3 className="font-bold text-base text-gray-900 truncate" style={{ fontFamily: 'Playfair Display, serif' }}>{salon.salonName}</h3>
-                                <div className="flex items-center gap-1 bg-[#D4AF37]/10 px-2 py-0.5 rounded-full shrink-0">
-                                  <Star size={12} className="fill-[#D4AF37] text-[#D4AF37]" />
-                                  <span className="text-xs font-bold text-[#D4AF37]">{salon.rating?.average || "5.0"}</span>
+                                <div className="flex items-center gap-1 bg-[#1E4D8C]/10 px-2 py-0.5 rounded-full shrink-0">
+                                  <Star size={12} className="fill-[#1E4D8C] text-[#1E4D8C]" />
+                                  <span className="text-xs font-bold text-[#1E4D8C]">{salon.rating?.average || "5.0"}</span>
                                 </div>
                               </div>
                               <div className="flex items-center gap-3 mb-2 text-xs text-gray-500">
@@ -792,6 +791,13 @@ const HomePage: React.FC = () => {
                                 )}
                               </div>
                               <div className="flex flex-wrap gap-1.5 mb-2">
+                                {salon.tags && Array.isArray(salon.tags) && salon.tags.length > 0 && (
+                                  salon.tags.map((tag: string, idx: number) => (
+                                    <span key={idx} className="text-[8px] font-black uppercase tracking-wider text-[#1E4D8C] bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/50 px-2 py-0.5 rounded-full shadow-sm">
+                                      {tag.replace(/_/g, ' ')}
+                                    </span>
+                                  ))
+                                )}
                                 {salon.salonType && <span className="text-[10px] font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-full">{salon.salonType}</span>}
                                 {salon.salonServices && salon.salonServices.length > 0 && (
                                   <>
@@ -799,12 +805,12 @@ const HomePage: React.FC = () => {
                                       <span key={idx} className="text-[10px] font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-full">{service.name || service.serviceName}</span>
                                     ))}
                                     {salon.salonServices.length > 2 && (
-                                      <button 
+                                      <button
                                         onClick={(e) => {
                                           e.preventDefault();
                                           setExpandedServices(prev => ({ ...prev, [salon.id]: !prev[salon.id] }));
                                         }}
-                                        className="text-[10px] font-medium text-[#D4AF37] bg-[#D4AF37]/10 px-2 py-1 rounded-full cursor-pointer hover:bg-[#D4AF37]/20"
+                                        className="text-[10px] font-medium text-[#1E4D8C] bg-[#1E4D8C]/10 px-2 py-1 rounded-full cursor-pointer hover:bg-[#1E4D8C]/20"
                                       >
                                         {expandedServices[salon.id] ? 'See less' : 'See all'}
                                       </button>
@@ -814,8 +820,8 @@ const HomePage: React.FC = () => {
                               </div>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="text-xs font-bold text-[#D4AF37]">Starting from ₹{salon.priceRange || '299'}</span>
-                              <button className="py-1.5 px-4 font-bold text-xs rounded-lg transition-all hover:bg-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30">{t('home.bookNow')}</button>
+                              <span className="text-xs font-bold text-[#1E4D8C]">Starting from ₹{salon.priceRange || '299'}</span>
+                              <button className="py-1.5 px-4 font-bold text-xs rounded-lg transition-all hover:bg-[#1E4D8C]/20 bg-[#1E4D8C]/10 text-[#1E4D8C] border border-[#1E4D8C]/30">{t('home.bookNow')}</button>
                             </div>
                           </div>
                         </Link>
@@ -826,8 +832,8 @@ const HomePage: React.FC = () => {
                       {displayLimit < filteredSalons.length && (
                         <div className="col-span-full flex justify-center mt-6">
                           {isLoadingMore ? (
-                            <div className="flex items-center gap-2 px-8 py-3 bg-white/80 backdrop-blur-md border border-[#D4AF37]/30 text-[#D4AF37] rounded-2xl font-bold text-sm shadow-lg">
-                              <div className="w-4 h-4 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+                            <div className="flex items-center gap-2 px-8 py-3 bg-white/80 backdrop-blur-md border border-[#1E4D8C]/30 text-[#1E4D8C] rounded-2xl font-bold text-sm shadow-lg">
+                              <div className="w-4 h-4 border-2 border-[#1E4D8C] border-t-transparent rounded-full animate-spin" />
                               Loading more premium salons...
                             </div>
                           ) : (
@@ -839,7 +845,7 @@ const HomePage: React.FC = () => {
                                   setIsLoadingMore(false);
                                 }, 800);
                               }}
-                              className="px-8 py-3 bg-white/80 backdrop-blur-md border border-[#D4AF37]/30 text-[#D4AF37] rounded-2xl font-bold text-sm shadow-lg hover:bg-white/90 transition-all"
+                              className="px-8 py-3 bg-white/80 backdrop-blur-md border border-[#1E4D8C]/30 text-[#1E4D8C] rounded-2xl font-bold text-sm shadow-lg hover:bg-white/90 transition-all"
                             >
                               See More Salons
                             </button>

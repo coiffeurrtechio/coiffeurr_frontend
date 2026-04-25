@@ -371,14 +371,15 @@ export default function SalonDetailPage() {
           <div className="space-y-16">
             <div>
               <h2 className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-4 sm:mb-6 text-center">The Studio</h2>
-              <p className="text-base sm:text-lg md:text-xl text-slate-600 font-light leading-relaxed text-center">{salon?.description}</p>
-              {salon?.description?.includes('"') && (
-                <blockquote className="mt-8 p-8 bg-gradient-to-br from-amber-50 via-orange-50/50 to-yellow-50/30 border border-amber-200/50 rounded-2xl italic font-serif text-slate-700 text-center text-lg leading-relaxed relative">
+              {salon?.description?.includes('"') ? (
+                <blockquote className="p-8 bg-gradient-to-br from-amber-50 via-orange-50/50 to-yellow-50/30 border border-amber-200/50 rounded-2xl italic font-serif text-slate-700 text-center text-lg leading-relaxed relative">
                   <div className="absolute top-4 left-4 text-amber-400">
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21L14.017 18C14.017 16.8954 13.1216 16 12.017 16H9.01697C7.9124 16 7.01697 16.8954 7.01697 18L7.01697 21H14.017ZM12.017 14C13.1216 14 14.017 13.1046 14.017 12C14.017 10.8954 13.1216 10 12.017 10C10.9124 10 10.017 10.8954 10.017 12C10.017 13.1046 10.9124 14 12.017 14Z"/></svg>
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21L14.017 18C14.017 16.8954 13.1216 16 12.017 16H9.01697C7.9124 16 7.01697 16.8954 7.01697 18L7.01697 21H14.017ZM12.017 14C13.1216 14 14.017 13.1046 14.017 12C14.017 10.8954 13.1216 10 12.017 10C10.9124 10 10.017 10.8954 10.017 12C14.017 13.1046 10.9124 14 12.017 14Z"/></svg>
                   </div>
                   <span className="relative z-10">{salon?.description?.match(/"([^"]*)"/)?.[1] || salon?.description}</span>
                 </blockquote>
+              ) : (
+                <p className="text-base sm:text-lg md:text-xl text-slate-600 font-light leading-relaxed text-center">{salon?.description}</p>
               )}
               <div className="mt-8 flex flex-wrap justify-center gap-2">
                 {salon?.expertise?.map((exp: string, i: number) => (
@@ -629,13 +630,13 @@ export default function SalonDetailPage() {
                 </div>
 
                 {/* Social Media */}
-                {(salon?.socialMedia?.instagram || salon?.socialMedia?.facebook) && (
+                {(salon?.socialMedia?.instagram || salon?.socialMedia?.facebook || salon?.socialMedia?.other) && (
                   <div className="flex items-start gap-4">
                     <div className="w-6 h-6 text-[#1E4D8C] shrink-0 mt-0.5 flex items-center justify-center">
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
                     </div>
                     <div className="flex-1">
-                      <div className="flex gap-3">
+                      <div className="flex gap-3 flex-wrap">
                         {salon?.socialMedia?.instagram && (
                           <a
                             href={formatInstagramUrl(salon.socialMedia.instagram)}
@@ -654,6 +655,17 @@ export default function SalonDetailPage() {
                             className="inline-flex items-center gap-2 text-[10px] font-black text-[#1E4D8C] uppercase tracking-wider hover:underline"
                           >
                             <Facebook size={12} /> Facebook
+                          </a>
+                        )}
+                        {salon?.socialMedia?.other && (
+                          <a
+                            href={salon.socialMedia.other.startsWith('http') ? salon.socialMedia.other : `https://${salon.socialMedia.other}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-[10px] font-black text-[#1E4D8C] uppercase tracking-wider hover:underline"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                            Other
                           </a>
                         )}
                       </div>
@@ -711,9 +723,9 @@ export default function SalonDetailPage() {
               </div>
 
               {/* Social Media - Desktop */}
-              {(salon?.socialMedia?.instagram || salon?.socialMedia?.facebook) && (
+              {(salon?.socialMedia?.instagram || salon?.socialMedia?.facebook || salon?.socialMedia?.other) && (
                 <div className="hidden md:flex items-center justify-center gap-4 mt-8 pt-8 border-t border-slate-200">
-                  <div className="flex gap-4">
+                  <div className="flex gap-4 flex-wrap justify-center">
                     {salon?.socialMedia?.instagram && (
                       <a
                         href={formatInstagramUrl(salon.socialMedia.instagram)}
@@ -732,6 +744,17 @@ export default function SalonDetailPage() {
                         className="inline-flex items-center gap-2 text-[10px] font-black text-[#1E4D8C] uppercase tracking-wider hover:underline"
                       >
                         <Facebook size={14} /> Facebook
+                      </a>
+                    )}
+                    {salon?.socialMedia?.other && (
+                      <a
+                        href={salon.socialMedia.other.startsWith('http') ? salon.socialMedia.other : `https://${salon.socialMedia.other}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-[10px] font-black text-[#1E4D8C] uppercase tracking-wider hover:underline"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                        Other
                       </a>
                     )}
                   </div>
