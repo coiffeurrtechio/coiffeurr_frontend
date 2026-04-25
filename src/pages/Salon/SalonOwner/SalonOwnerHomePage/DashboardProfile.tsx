@@ -404,7 +404,7 @@ const DashboardProfile: React.FC = () => {
       const parsedAuth = authData ? JSON.parse(authData) : null;
       const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
 
-      if (!salonId) return;
+      if (!salonId || salonId === 'undefined') return;
       const res = await apiRequest<any>(`/salons/${salonId}`);
       if (res.data) {
         // Handle both direct data and nested salonData structure

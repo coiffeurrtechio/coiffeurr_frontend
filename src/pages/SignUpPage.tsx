@@ -337,7 +337,7 @@ const CustomerRegistration: React.FC = () => {
 
       // Use Google Identity Services for ID token (not OAuth2 access token)
       google.accounts.id.initialize({
-        client_id: '584558727500-i5sv6ci73aqgnuple5rebq6r1gq85vb4.apps.googleusercontent.com',
+        client_id: Config.GOOGLE_CLIENT_ID,
         callback: (response: any) => {
           setGoogleUserData({ idToken: response.credential });
           setShowWhatsAppModal(true);

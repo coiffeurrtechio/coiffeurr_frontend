@@ -6,6 +6,7 @@ import { ToastProvider } from './components/Toast.tsx'
 import { Provider } from "react-redux";
 import store from './utils/Storage/store.ts'
 import { GoogleOAuthProvider } from '@react-oauth/google'
+import Config from './configs/config'
 
 // PWA Import
 import { registerSW } from 'virtual:pwa-register'
@@ -25,7 +26,7 @@ const updateSW = registerSW({
 })
 
 createRoot(document.getElementById('root')!).render(
-  <GoogleOAuthProvider clientId="584558727500-i5sv6ci73aqgnuple5rebq6r1gq85vb4.apps.googleusercontent.com">
+  <GoogleOAuthProvider clientId={Config.GOOGLE_CLIENT_ID}>
     <Provider store={store}>
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <ToastProvider>

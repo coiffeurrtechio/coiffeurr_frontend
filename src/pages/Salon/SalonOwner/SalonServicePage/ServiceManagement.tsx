@@ -76,7 +76,7 @@ const ServiceManagement: React.FC = () => {
             const authData = localStorage.getItem("authState");
             const parsedAuth = authData ? JSON.parse(authData) : null;
             const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
-            if (!salonId) {
+            if (!salonId || salonId === 'undefined') {
                 dispatch(logoutUser());
                 navigate("/login");
                 return;

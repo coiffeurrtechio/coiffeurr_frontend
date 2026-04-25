@@ -62,7 +62,7 @@ const StaffManagement: React.FC = () => {
             const authData = localStorage.getItem("authState");
             const parsedAuth = authData ? JSON.parse(authData) : null;
             const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
-            if (!salonId) return navigate("/login");
+            if (!salonId || salonId === 'undefined') return navigate("/login");
 
             const res = await apiRequest<any>(`/salons/${salonId}/staff`);
             if (res.data) setStaffList(res.data);
@@ -74,7 +74,7 @@ const StaffManagement: React.FC = () => {
             const authData = localStorage.getItem("authState");
             const parsedAuth = authData ? JSON.parse(authData) : null;
             const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
-            if (!salonId) {
+            if (!salonId || salonId === 'undefined') {
                 console.error('salonId is undefined in fetchServices');
                 return;
             }

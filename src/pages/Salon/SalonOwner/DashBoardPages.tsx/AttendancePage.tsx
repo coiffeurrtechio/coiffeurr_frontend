@@ -125,9 +125,13 @@ const AttendancePage: React.FC = () => {
       const authData = localStorage.getItem("authState");
       const parsedAuth = authData ? JSON.parse(authData) : null;
       const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
-      if (!salonId) {
-        dispatch(logoutUser() as any);
-        navigate("/login");
+      if (!salonId || salonId === 'undefined') {
+        // Don't auto-logout if coming from login (race condition)
+        const fromLogin = sessionStorage.getItem('fromLogin');
+        if (!fromLogin) {
+          dispatch(logoutUser() as any);
+          navigate("/login");
+        }
         return;
       }
 
@@ -164,9 +168,13 @@ const AttendancePage: React.FC = () => {
       const authData = localStorage.getItem("authState");
       const parsedAuth = authData ? JSON.parse(authData) : null;
       const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
-      if (!salonId) {
-        dispatch(logoutUser() as any);
-        navigate("/login");
+      if (!salonId || salonId === 'undefined') {
+        // Don't auto-logout if coming from login (race condition)
+        const fromLogin = sessionStorage.getItem('fromLogin');
+        if (!fromLogin) {
+          dispatch(logoutUser() as any);
+          navigate("/login");
+        }
         return;
       }
 
@@ -468,9 +476,13 @@ const AttendancePage: React.FC = () => {
       const authData = localStorage.getItem("authState");
       const parsedAuth = authData ? JSON.parse(authData) : null;
       const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
-      if (!salonId) {
-        dispatch(logoutUser() as any);
-        navigate("/login");
+      if (!salonId || salonId === 'undefined') {
+        // Don't auto-logout if coming from login (race condition)
+        const fromLogin = sessionStorage.getItem('fromLogin');
+        if (!fromLogin) {
+          dispatch(logoutUser() as any);
+          navigate("/login");
+        }
         return;
       }
 
@@ -523,9 +535,13 @@ const AttendancePage: React.FC = () => {
       const authData = localStorage.getItem("authState");
       const parsedAuth = authData ? JSON.parse(authData) : null;
       const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
-      if (!salonId) {
-        dispatch(logoutUser() as any);
-        navigate("/login");
+      if (!salonId || salonId === 'undefined') {
+        // Don't auto-logout if coming from login (race condition)
+        const fromLogin = sessionStorage.getItem('fromLogin');
+        if (!fromLogin) {
+          dispatch(logoutUser() as any);
+          navigate("/login");
+        }
         return;
       }
 

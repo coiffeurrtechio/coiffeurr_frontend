@@ -30,9 +30,14 @@ const DashboardLayout: React.FC = () => {
   useEffect(() => {
     // Check if user is coming from login page
     const fromLogin = sessionStorage.getItem('fromLogin');
+    console.log('DashboardLayout fromLogin check:', fromLogin);
     if (fromLogin === 'true') {
       setShowWelcomeLoader(true);
-      sessionStorage.removeItem('fromLogin');
+      // Remove flag after a delay to allow other effects to use it
+      setTimeout(() => {
+        sessionStorage.removeItem('fromLogin');
+        console.log('fromLogin flag removed');
+      }, 5000);
     }
   }, []);
 
@@ -42,7 +47,11 @@ const DashboardLayout: React.FC = () => {
         const authData = localStorage.getItem("authState");
         const parsedAuth = authData ? JSON.parse(authData) : null;
         const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
-        if (!salonId) return;
+        if (!salonId || salonId === 'undefined') {
+          // OWNER without salon - don't redirect, just return gracefully
+          console.log('OWNER without salonId, skipping salon data fetch');
+          return;
+        }
         
         const response = await fetch(`${Config.API_Salon_owner}/salons/${salonId}`);
         if (response.ok) {
@@ -53,7 +62,12 @@ const DashboardLayout: React.FC = () => {
         console.error('Failed to fetch salon data:', error);
       }
     };
-    fetchSalonData();
+    // Only fetch if not coming from login (to avoid race condition)
+    const fromLogin = sessionStorage.getItem('fromLogin');
+    console.log('DashboardLayout fetchSalonData, fromLogin:', fromLogin);
+    if (!fromLogin) {
+      fetchSalonData();
+    }
   }, []);
 
   const handleVisibilityToggle = () => {

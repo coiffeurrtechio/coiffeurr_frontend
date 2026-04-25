@@ -92,6 +92,11 @@ const HomePage: React.FC = () => {
 
   // Fetch user contact details to get image URL when logged in
   useEffect(() => {
+    const fromLogin = sessionStorage.getItem('fromLogin');
+    if (fromLogin === 'true') {
+      // Skip fetch if just logged in (image already fetched in LoginPage)
+      return;
+    }
     if (isloggedin && parsedUser?.user?.id) {
       const fetchUserImage = async () => {
         try {

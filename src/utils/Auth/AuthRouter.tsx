@@ -10,11 +10,14 @@ interface AuthRouterProps {
 
 const AuthRouter: React.FC<AuthRouterProps> = ({ element, allowedRoles }) => {
   const isAuthenticated = useSelector((state: any) => state.auth.isAuthenticated);
-  const userRole = useSelector((state: any) => state.auth.user?.user?.role || "guest");
+  const user = useSelector((state: any) => state.auth.user);
+  // Handle both nested (result.user.role) and direct (result.user) structures
+  const userRole = user?.user?.role || user?.role || "guest";
 
   console.log("userRole = ",userRole);
   console.log("allowedRoles = ",allowedRoles);
   console.log("allowedRoles && !allowedRoles.includes(userRole) = ",allowedRoles ? !allowedRoles.includes(userRole) : false);
+  console.log("Full user state:", user);
   
   // 🔒 If not logged in
   // if (!isAuthenticated) {

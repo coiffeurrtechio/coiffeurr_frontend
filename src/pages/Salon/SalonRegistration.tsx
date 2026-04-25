@@ -4,7 +4,7 @@ import {
   Store, User, MapPin, Clock, ArrowRight, ArrowLeft,
   Smartphone, Hash, Mail, Loader2, Lock, Coffee,
   CheckCircle2, XCircle, Navigation, Globe, LocateFixed,
-  AlertCircle, ShieldCheck, Eye, EyeOff, Camera
+  AlertCircle, ShieldCheck, Eye, EyeOff, Camera, X
 } from 'lucide-react';
 import { Button } from '../../components/ui_components/button';
 import Config from '../../configs/config';
@@ -126,7 +126,7 @@ const SalonRegistration: React.FC = () => {
       uploadData.append("files", file);
       uploadData.append("salon_id", formData.primaryPhone); 
 
-      const response = await fetch(`${Config.API_AUTH_URL}/upload/salon-images`, {
+      const response = await fetch(`${Config.API_Customers}/upload/salon-images`, {
         method: "POST",
         body: uploadData,
       });
@@ -287,8 +287,15 @@ const SalonRegistration: React.FC = () => {
             <div className="flex flex-col items-center justify-center mb-4">
               <div className="relative">
                 <div className="w-20 h-20 rounded-full border-4 border-white/30 shadow-lg overflow-hidden bg-white/10 relative">
-                  {isUploading ? <Loader2 className="animate-spin text-[#D4AF37]" /> :
-                   formData.image_url ? <img src={formData.image_url} className="w-full h-full object-cover" /> : <Store className="text-white/30" size={30} />}
+                  {isUploading ? (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <Loader2 className="animate-spin text-[#D4AF37]" size={24} />
+                    </div>
+                  ) : formData.image_url ? (
+                    <img src={formData.image_url} className="w-full h-full object-cover" />
+                  ) : (
+                    <Store className="text-white/30" size={30} />
+                  )}
                 </div>
                 <button type="button" onClick={() => fileInputRef.current?.click()} className="absolute bottom-0 right-0 p-1.5 bg-gradient-to-br from-[#D4AF37] to-[#FFD700] text-white rounded-full border-2 border-white shadow-lg active:scale-90 transition-transform focus-ring"><Camera size={12} /></button>
                 <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
@@ -408,16 +415,16 @@ const SalonRegistration: React.FC = () => {
             <div className="p-4 bg-white/5 rounded-3xl border border-white/10 space-y-3">
               <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest flex items-center gap-2"><Clock size={12}/> Shift Timing</p>
               <div className="grid grid-cols-2 gap-3">
-                <InputField label="Opens" name="timing.openingTime" type="time" value={formData.timing.openingTime} onChange={handleChange} icon={Clock} />
-                <InputField label="Closes" name="timing.closingTime" type="time" value={formData.timing.closingTime} onChange={handleChange} icon={Clock} />
+                <TimeDropdown label="Opens" name="timing.openingTime" value={formData.timing.openingTime} onChange={handleChange} icon={Clock} />
+                <TimeDropdown label="Closes" name="timing.closingTime" value={formData.timing.closingTime} onChange={handleChange} icon={Clock} />
               </div>
             </div>
 
             <div className="p-4 bg-white/5 rounded-3xl border border-white/10 space-y-3">
               <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest flex items-center gap-2"><Coffee size={12}/> Lunch Break</p>
               <div className="grid grid-cols-2 gap-3">
-                <InputField label="Starts" name="timing.lunchBreak.start" type="time" value={formData.timing.lunchBreak.start} onChange={handleChange} icon={Clock} />
-                <InputField label="Ends" name="timing.lunchBreak.end" type="time" value={formData.timing.lunchBreak.end} onChange={handleChange} icon={Clock} />
+                <TimeDropdown label="Starts" name="timing.lunchBreak.start" value={formData.timing.lunchBreak.start} onChange={handleChange} icon={Clock} />
+                <TimeDropdown label="Ends" name="timing.lunchBreak.end" value={formData.timing.lunchBreak.end} onChange={handleChange} icon={Clock} />
               </div>
             </div>
 
@@ -494,5 +501,88 @@ const InputField = React.memo(({ label, name, value, onChange, icon: Icon, type 
     </div>
   </div>
 ));
+
+const TimeDropdown = React.memo(({ label, name, value, onChange, icon: Icon }: any) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Generate time options in 24-hour format (00:00 to 23:45 in 15-min intervals)
+  const timeOptions = [];
+  for (let hour = 0; hour < 24; hour++) {
+    for (let min = 0; min < 60; min += 15) {
+      const timeStr = `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
+      timeOptions.push(timeStr);
+    }
+  }
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSelect = (time: string) => {
+    onChange({ target: { name, value: time } } as React.ChangeEvent<HTMLInputElement>);
+    setIsOpen(false);
+  };
+
+  const handleClear = () => {
+    onChange({ target: { name, value: '' } } as React.ChangeEvent<HTMLInputElement>);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="space-y-2 w-full" ref={dropdownRef}>
+      <label className="dark-label ml-1">{label}</label>
+      <div className="relative">
+        <Icon className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon" size={18} />
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-full h-12 pl-14 dark-input text-sm font-bold outline-none transition-all duration-300 text-left flex items-center"
+        >
+          <span className={value ? 'text-white' : 'text-white/40'}>
+            {value || 'Select time'}
+          </span>
+        </button>
+        {value && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white p-1 transition-colors z-10"
+          >
+            <X size={14} />
+          </button>
+        )}
+        
+        {isOpen && (
+          <div className="absolute z-[100] w-full mt-2 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl max-h-60 overflow-y-auto custom-scrollbar bottom-full mb-2">
+            <div className="p-2 space-y-1">
+              {timeOptions.map((time) => (
+                <button
+                  key={time}
+                  type="button"
+                  onClick={() => handleSelect(time)}
+                  className={`w-full px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 text-left ${
+                    value === time
+                      ? 'bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black'
+                      : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  {time}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
 
 export default SalonRegistration;

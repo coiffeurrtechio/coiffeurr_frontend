@@ -94,7 +94,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
         throw new Error(result?.detail || 'Login failed');
       }
 
-      dispatch(login({ user: result }));
+      dispatch(login({ user: result.user }));
 
       // Fetch user PII to get image URL
       try {
@@ -159,7 +159,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
 
       // Use Google Identity Services for ID token (not OAuth2 access token)
       google.accounts.id.initialize({
-        client_id: '584558727500-i5sv6ci73aqgnuple5rebq6r1gq85vb4.apps.googleusercontent.com',
+        client_id: Config.GOOGLE_CLIENT_ID,
         callback: async (response: any) => {
           try {
             // Call backend Google login API with ID token
@@ -176,7 +176,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
               throw new Error(result?.detail || 'Google login failed');
             }
 
-            dispatch(login({ user: result }));
+            dispatch(login({ user: result.user }));
 
             // Fetch user PII to get image URL
             try {
@@ -198,8 +198,24 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
               // Continue even if PII fetch fails
             }
 
-            // Redirect to current origin (localhost or production)
-            globalThis.location.href = globalThis.location.origin;
+            // Set language from user preference in login response, default to English if not set
+            const languagePreference = result?.user?.language_preference || 'en';
+            if (['en', 'hi', 'mr'].includes(languagePreference)) {
+              i18n.changeLanguage(languagePreference);
+              localStorage.setItem('selectedLanguage', languagePreference);
+            } else {
+              i18n.changeLanguage('en');
+              localStorage.setItem('selectedLanguage', 'en');
+            }
+
+            if (result?.user?.role === "OWNER") {
+              sessionStorage.setItem('fromLogin', 'true');
+              navigate("/dashboard");
+            }
+            else {
+              sessionStorage.setItem('fromLogin', 'true');
+              navigate("/");
+            }
           } catch (error: any) {
             showToast({
               type: "error",

@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from 'react-i18next';
 import {
   Camera, ArrowLeft, Mail, Phone, Calendar,
   LayoutDashboard, LogOut, ChevronRight, ChevronDown,
   Heart, Edit3, X, MapPin, Loader2, CheckCircle2, AlertCircle,
-  Plus, Home, MapPinned, LocateFixed, User, Globe, Gift, MessageCircle, Link
+  Plus, Home, MapPinned, LocateFixed, User, Globe, Gift, MessageCircle, Link,
+  CalendarDays, ChevronLeft
 } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -31,6 +33,38 @@ export default function Profile() {
   const [isUserDetailsExpanded, setIsUserDetailsExpanded] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+    return { daysInMonth, startingDayOfWeek };
+  };
+
+  const handleDateSelect = (day: number) => {
+    const year = currentMonth.getFullYear();
+    const month = String(currentMonth.getMonth() + 1).padStart(2, '0');
+    const dayStr = String(day).padStart(2, '0');
+    setEditForm(prev => ({ ...prev, dob: `${year}-${month}-${dayStr}` }));
+    setIsCalendarOpen(false);
+  };
+
+  const handleMonthChange = (direction: 'prev' | 'next') => {
+    setCurrentMonth(prev => {
+      const newDate = new Date(prev);
+      if (direction === 'prev') {
+        newDate.setMonth(newDate.getMonth() - 1);
+      } else {
+        newDate.setMonth(newDate.getMonth() + 1);
+      }
+      return newDate;
+    });
+  };
 
   const authData = JSON.parse(localStorage.getItem("authState") || "{}");
   const [user, setUser] = useState<any>(authData?.user);
@@ -70,7 +104,13 @@ export default function Profile() {
     setLoading(true);
     try {
       const id = authData?.user?.id;
-      if (!id) return handleLogout();
+      if (!id) {
+        // Don't auto-logout if auth state is still loading
+        if (authData?.isAuthenticated) {
+          return handleLogout();
+        }
+        return;
+      }
       const res = await userapiRequest<any>(`/users/${id}/pii`);
       if (res.data) {
         setusercontactdetails(res.data);
@@ -464,12 +504,12 @@ export default function Profile() {
             </div>
 
             <div className="space-y-6">
-              <div className="flex flex-col items-center justify-center py-8 bg-gradient-to-br from-slate-50 to-slate-100 rounded-3xl border-2 border-dashed border-slate-200 relative hover:border-slate-300 transition-colors">
-                <div className="w-24 h-24 rounded-full border-4 border-white overflow-hidden shadow-xl bg-gradient-to-br from-gray-100 to-gray-200 relative">
-                  {isUploading && <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10 backdrop-blur-sm"><Loader2 className="w-6 h-6 text-white animate-spin" /></div>}
-                  {editForm.profileImage ? <img src={editForm.profileImage} alt="Preview" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-2xl">{user.name?.charAt(0)}</div>}
+              <div className="flex flex-col items-center justify-center py-4 relative">
+                <div className="w-40 h-40 rounded-full border-4 border-white overflow-hidden shadow-xl bg-gradient-to-br from-gray-100 to-gray-200 relative">
+                  {isUploading && <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10 backdrop-blur-sm"><Loader2 className="w-8 h-8 text-white animate-spin" /></div>}
+                  {editForm.profileImage ? <img src={editForm.profileImage} alt="Preview" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-3xl">{user.name?.charAt(0)}</div>}
                 </div>
-                <button onClick={() => fileInputRef.current?.click()} className="absolute bottom-6 right-[38%] p-3 bg-gradient-to-br from-slate-700 to-slate-800 text-white rounded-full border-3 border-white shadow-xl hover:shadow-2xl active:scale-90 transition-all"><Camera size={14} /></button>
+                <button onClick={() => fileInputRef.current?.click()} className="absolute bottom-4 right-[calc(50%-3rem)] p-3 bg-gradient-to-br from-slate-700 to-slate-800 text-white rounded-full border-3 border-white shadow-xl hover:shadow-2xl active:scale-90 transition-all"><Camera size={16} /></button>
                 <input type="file" ref={fileInputRef} onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
@@ -499,12 +539,122 @@ export default function Profile() {
                 </div>
                 <div>
                   <label className="text-[9px] font-black text-gray-400 ml-1">{t('profile.dateOfBirth') || 'Date of Birth'}</label>
-                  <input
-                    type="date"
-                    value={editForm.dob ? editForm.dob.split('T')[0] : ''}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, dob: e.target.value }))}
-                    className="w-full h-10 mt-1 px-3 bg-gray-50 rounded-xl font-bold text-xs outline-none focus:ring-2 focus:ring-slate-100 transition-all"
-                  />
+                  <div className="relative input-wrapper">
+                    <CalendarDays className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-700 opacity-60 z-10" size={18} />
+                    <input
+                      type="text"
+                      value={editForm.dob || ''}
+                      onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+                      readOnly
+                      placeholder="DD/MM/YYYY"
+                      className="w-full h-10 mt-1 pl-10 pr-3 bg-gray-50 rounded-xl font-bold text-xs outline-none focus:ring-2 focus:ring-slate-100 transition-all cursor-pointer"
+                    />
+                    {isCalendarOpen && createPortal(
+                      <div 
+                        className="fixed inset-0 z-[99999999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+                        onClick={(e) => {
+                          if (e.target === e.currentTarget) {
+                            setIsCalendarOpen(false);
+                          }
+                        }}
+                      >
+                        <div 
+                          className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-3 sm:p-4 w-64 sm:w-72 animate-in zoom-in-95 duration-200"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <button onClick={() => handleMonthChange('prev')} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                              <ChevronLeft size={16} className="w-4 h-4" />
+                            </button>
+                            <div className="flex items-center gap-1.5">
+                              <select
+                                value={currentMonth.getMonth()}
+                                onChange={(e) => {
+                                  const newDate = new Date(currentMonth);
+                                  newDate.setMonth(parseInt(e.target.value));
+                                  setCurrentMonth(newDate);
+                                }}
+                                className="font-bold text-xs sm:text-sm text-gray-900 bg-transparent border-none outline-none cursor-pointer"
+                              >
+                                {Array.from({ length: 12 }, (_, i) => (
+                                  <option key={i} value={i} className="bg-white">
+                                    {new Date(0, i).toLocaleDateString('en-US', { month: 'short' })}
+                                  </option>
+                                ))}
+                              </select>
+                              <select
+                                value={currentMonth.getFullYear()}
+                                onChange={(e) => {
+                                  const newDate = new Date(currentMonth);
+                                  newDate.setFullYear(parseInt(e.target.value));
+                                  setCurrentMonth(newDate);
+                                }}
+                                className="font-bold text-xs sm:text-sm text-gray-900 bg-transparent border-none outline-none cursor-pointer max-w-20"
+                              >
+                                {(() => {
+                                  const currentYear = new Date().getFullYear();
+                                  const years = [];
+                                  for (let i = 0; i < 150; i++) {
+                                    years.push(currentYear - 149 + i);
+                                  }
+                                  return years.map(year => (
+                                    <option key={year} value={year} className="bg-white">
+                                      {year}
+                                    </option>
+                                  ));
+                                })()}
+                              </select>
+                            </div>
+                            <button onClick={() => handleMonthChange('next')} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                              <ChevronRight size={16} className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-7 gap-0.5 mb-1.5">
+                            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
+                              <div key={day} className="text-center text-[10px] sm:text-xs font-bold text-gray-500 py-1">{day}</div>
+                            ))}
+                          </div>
+                          <div className="grid grid-cols-7 gap-0.5">
+                            {(() => {
+                              const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentMonth);
+                              const days = [];
+                              for (let i = 0; i < startingDayOfWeek; i++) {
+                                days.push(<div key={`empty-${i}`} className="p-1" />);
+                              }
+                              for (let day = 1; day <= daysInMonth; day++) {
+                                const isSelected = editForm.dob === `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                                const isToday = new Date().toDateString() === new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day).toDateString();
+                                days.push(
+                                  <button
+                                    key={day}
+                                    onClick={() => handleDateSelect(day)}
+                                    className={`p-1 rounded-lg text-xs sm:text-sm font-bold transition-all hover:scale-105 ${
+                                      isSelected 
+                                        ? 'text-white' 
+                                        : isToday
+                                        ? 'text-[#D4AF37] font-bold'
+                                        : 'hover:bg-gray-100'
+                                    }`}
+                                    style={isSelected ? { background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' } : { color: '#1e293b' }}
+                                  >
+                                    {day}
+                                  </button>
+                                );
+                              }
+                              return days;
+                            })()}
+                          </div>
+                          <button
+                            onClick={() => setIsCalendarOpen(false)}
+                            className="mt-3 w-full py-1.5 text-gray-600 hover:text-gray-900 font-bold text-xs transition-colors"
+                          >
+                            Close
+                          </button>
+                        </div>
+                      </div>,
+                      document.body
+                    )}
+                  </div>
                 </div>
                 <div className="col-span-2">
                   <label className="text-[9px] font-black text-gray-400 ml-1">{t('profile.maritalStatus') || 'Marital Status'}</label>

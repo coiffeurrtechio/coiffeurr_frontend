@@ -154,9 +154,19 @@ const BookingsPage: React.FC = () => {
     const salonId = getSalonId();
     const userId = getUserId();
 
-    if (!salonId) {
-      dispatch(logoutUser());
-      navigate("/login");
+    if (!salonId || salonId === 'undefined') {
+      // Don't auto-logout if coming from login (race condition)
+      const fromLogin = sessionStorage.getItem('fromLogin');
+      if (!fromLogin) {
+        // If OWNER without salon, just return gracefully (don't logout)
+        const authData = localStorage.getItem("authState");
+        const parsedAuth = authData ? JSON.parse(authData) : null;
+        const userRole = parsedAuth?.user?.user?.role || parsedAuth?.user?.role;
+        if (userRole !== 'OWNER') {
+          dispatch(logoutUser());
+          navigate("/login");
+        }
+      }
       return;
     }
 
