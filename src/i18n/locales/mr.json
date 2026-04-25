@@ -81,7 +81,7 @@
     "truthsAbout": "बद्दल सत्य",
     "noReviewsYet": "अजून कोणतीही समीक्षा नाही. आपला अनुभव सामायिक करणारे पहिले व्हा!",
     "exit": "बाहेर",
-    "systemLive": "सिस्टम लाइव्ह",
+    "systemLive": "सिस्टम ऑनलाइन",
     "offline": "ऑफलाइन",
     "switchOnToListing": "लिस्टिंग उपलब्ध करण्यासाठी चालू करा"
   },
@@ -130,7 +130,7 @@
   "dashboard": {
     "expandSidebar": "साइडबार विस्तार करा",
     "collapseSidebar": "साइडबार कोलॅप्स करा",
-    "systemLive": "सिस्टम लाइव्ह",
+    "systemLive": "सिस्टम ऑनलाइन",
     "offline": "ऑफलाइन",
     "switchOnToListingAvailable": "लिस्टिंग उपलब्ध करण्यासाठी स्विच ऑन करा",
     "clickToTurnOffListing": "सॅलून लिस्टिंग बंद करण्यासाठी क्लिक करा (ग्राहकांपासून लपवा)",

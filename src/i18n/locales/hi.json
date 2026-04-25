@@ -81,7 +81,7 @@
     "truthsAbout": "के बारे में सच्चाई",
     "noReviewsYet": "अभी तक कोई समीक्षा नहीं। अपना अनुभव साझा करने वाले पहले बनें!",
     "exit": "बाहर",
-    "systemLive": "सिस्टम लाइव",
+    "systemLive": "सिस्टम ऑनलाइन",
     "offline": "ऑफ़लाइन",
     "switchOnToListing": "लिस्टिंग उपलब्ध कराने के लिए चालू करें"
   },
@@ -130,7 +130,7 @@
   "dashboard": {
     "expandSidebar": "साइडबार विस्तृत करें",
     "collapseSidebar": "साइडबार संक्षिप्त करें",
-    "systemLive": "सिस्टम लाइव",
+    "systemLive": "सिस्टम ऑनलाइन",
     "offline": "ऑफ़लाइन",
     "switchOnToListingAvailable": "लिस्टिंग उपलब्ध कराने के लिए चालू करें",
     "clickToTurnOffListing": "सैलून लिस्टिंग बंद करने के लिए क्लिक करें (ग्राहकों से छुपाएं)",

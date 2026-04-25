@@ -81,7 +81,7 @@
     "truthsAbout": "Truths about",
     "noReviewsYet": "No reviews yet. Be the first to share your experience!",
     "exit": "Exit",
-    "systemLive": "SYSTEM LIVE",
+    "systemLive": "SYSTEM ONLINE",
     "offline": "OFFLINE",
     "switchOnToListing": "Switch on to make listing available"
   },
@@ -130,7 +130,7 @@
   "dashboard": {
     "expandSidebar": "Expand sidebar",
     "collapseSidebar": "Collapse sidebar",
-    "systemLive": "SYSTEM LIVE",
+    "systemLive": "SYSTEM ONLINE",
     "offline": "OFFLINE",
     "switchOnToListingAvailable": "Switch on to make listing available",
     "clickToTurnOffListing": "Click to turn OFF salon listing (hide from customers)",

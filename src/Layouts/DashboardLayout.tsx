@@ -145,22 +145,90 @@ const DashboardLayout: React.FC = () => {
                 <motion.button
                   onClick={handleVisibilityToggle}
                   disabled={isTogglingVisibility}
-                  className={`relative px-4 py-2 rounded-full transition-all duration-500 ${
+                  className={`relative w-16 h-8 rounded-full transition-all duration-500 ${
                     salonData.isBlocked 
-                      ? 'bg-gray-800/80 border border-gray-400/30' 
-                      : 'bg-emerald-950/10 border-2 border-emerald-500/60'
+                      ? 'bg-gray-200/80' 
+                      : 'bg-emerald-500'
                   }`}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   title={!salonData.isBlocked ? 'Click to turn OFF salon listing (hide from customers)' : 'Click to turn ON salon listing (show to customers)'}
+                  style={{
+                    boxShadow: !salonData.isBlocked 
+                      ? '0 0 20px rgba(16, 185, 129, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.2)' 
+                      : '0 2px 8px rgba(0, 0, 0, 0.1), inset 0 2px 4px rgba(255, 255, 255, 0.5)'
+                  }}
                 >
+                  {/* Toggle Knob */}
+                  <motion.div
+                    className={`absolute top-1 w-6 h-6 rounded-full shadow-lg ${
+                      salonData.isBlocked ? 'left-1 bg-white' : 'left-9 bg-white'
+                    }`}
+                    animate={{
+                      left: salonData.isBlocked ? 4 : 36
+                    }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 500,
+                      damping: 30
+                    }}
+                    style={{
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)'
+                    }}
+                  >
+                    {/* Icon inside knob */}
+                    {!salonData.isBlocked ? (
+                      <motion.div
+                        className="w-full h-full flex items-center justify-center"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.1 }}
+                      >
+                        <svg 
+                          width="14" 
+                          height="14" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="#10B981" 
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        className="w-full h-full flex items-center justify-center"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.1 }}
+                      >
+                        <svg 
+                          width="14" 
+                          height="14" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="#9CA3AF" 
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </motion.div>
+                    )}
+                  </motion.div>
+
+                  {/* Glow effect when active */}
                   {!salonData.isBlocked && (
                     <motion.div
-                      className="absolute inset-0 rounded-full border-2 border-emerald-400"
+                      className="absolute inset-0 rounded-full bg-emerald-400/30"
                       initial={{ opacity: 0.5, scale: 1 }}
                       animate={{
-                        opacity: [0.5, 1, 0.5],
-                        scale: [1, 1.05, 1],
+                        opacity: [0.3, 0.6, 0.3],
+                        scale: [1, 1.1, 1],
                       }}
                       transition={{
                         duration: 2,
@@ -169,38 +237,15 @@ const DashboardLayout: React.FC = () => {
                       }}
                     />
                   )}
-                  <div className="flex items-center gap-2 relative z-10">
-                    {!salonData.isBlocked ? (
-                      <motion.div
-                        className="w-2 h-2 bg-emerald-400 rounded-full"
-                        animate={{
-                          scale: [1, 1.2, 1],
-                          opacity: [1, 0.8, 1],
-                        }}
-                        transition={{
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeInOut"
-                        }}
-                      />
-                    ) : (
-                      <div className="w-2 h-2 bg-gray-500 rounded-full" />
-                    )}
-                    <span 
-                      className={`text-[10px] font-black uppercase tracking-[0.2em] ${
-                        !salonData.isBlocked ? 'text-emerald-600' : 'text-gray-400'
-                      }`}
-                      style={{ fontFamily: "'JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', monospace" }}
-                    >
-                      {!salonData.isBlocked ? t('common.systemLive') : t('common.offline')}
-                    </span>
-                  </div>
                 </motion.button>
-                {salonData.isBlocked && (
-                  <p className="text-[9px] text-gray-500 font-medium text-center" style={{ maxWidth: '180px' }}>
-                    {t('common.switchOnToListing')}
-                  </p>
-                )}
+                <p 
+                  className={`text-[9px] font-medium text-center transition-colors ${
+                    !salonData.isBlocked ? 'text-emerald-600' : 'text-gray-500'
+                  }`}
+                  style={{ maxWidth: '180px' }}
+                >
+                  {!salonData.isBlocked ? t('common.systemLive') : t('common.offline')}
+                </p>
               </div>
             )}
           </div>

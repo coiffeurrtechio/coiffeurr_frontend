@@ -385,33 +385,23 @@ const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, all
 
                     {/* Image Section */}
                     <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">{t('services.serviceBanner')}</label>
-                        <div className="flex items-center gap-4 p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-100/50 shadow-sm">
-                            <div className="relative w-20 h-20 rounded-xl bg-white border border-gray-200 flex items-center justify-center overflow-hidden shrink-0 shadow-lg">
-                                {formData.imageUrl ? (
-                                    <img src={formData.imageUrl} className="w-full h-full object-cover" alt="" />
-                                ) : (
-                                    <ImageIcon size={24} className="text-gray-300" />
-                                )}
-                                {uploading && (
-                                    <div className="absolute inset-0 bg-white/60 flex items-center justify-center backdrop-blur-sm">
-                                        <div className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
-                                    </div>
-                                )}
-                            </div>
-                            <div className="flex-1 space-y-2">
-                                <label className="inline-block">
-                                    <motion.span 
-                                        className="cursor-pointer px-4 py-2 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-100 transition-all shadow-sm"
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                    >
-                                        {formData.imageUrl ? t('services.changePhoto') : t('services.uploadPhoto')}
-                                    </motion.span>
-                                    <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} disabled={uploading} />
-                                </label>
-                                <p className="text-[9px] text-gray-400 font-medium">{t('services.clickToUpload')}</p>
-                            </div>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">{t('services.serviceBanner')} {uploading && t('staff.uploading')}</label>
+                        <div className="grid grid-cols-4 gap-2">
+                            <label className="aspect-square border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-all bg-white/60 backdrop-blur-sm">
+                                <Plus size={20} className="text-gray-400" />
+                                <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} disabled={uploading} />
+                            </label>
+                            {formData.imageUrl && (
+                                <motion.div 
+                                    className="relative aspect-square rounded-2xl overflow-hidden group bg-white/60 backdrop-blur-sm border border-gray-200/50 shadow-sm"
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    <img src={formData.imageUrl} className="w-full h-full object-cover" />
+                                    <button type="button" onClick={() => setFormData({ ...formData, imageUrl: '' })} className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><X size={10} /></button>
+                                </motion.div>
+                            )}
                         </div>
                     </div>
 
