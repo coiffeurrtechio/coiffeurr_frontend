@@ -5,6 +5,7 @@ import SalonRegistrationForm from "../pages/Salon/SalonRegistrationForm";
 import SalonsPage from "../pages/Salon/SalonsPage";
 import SingleSalonPage from "../pages/Salon/SingleSalonPage";
 import SignUpPage from "../pages/SignUpPage";
+import NotRegistered from "../pages/NotRegistered";
 import MainLayout from "../Layouts/MainLayout";
 import DashboardLayout from "../Layouts/DashboardLayout";
 import type { ComponentType } from "react";
@@ -83,6 +84,12 @@ const routes: AppRoute[] = [
     key: 3,
     path: "/signup",
     Element: SignUpPage,
+    isProtected: false,
+  },
+  {
+    key: 8,
+    path: "/not-registered",
+    Element: NotRegistered,
     isProtected: false,
   },
   {

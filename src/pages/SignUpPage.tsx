@@ -1,22 +1,19 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  User, ArrowRight, Smartphone, Loader2, Lock,
-  CheckCircle2, AlertCircle, ShieldCheck, Camera,
-  CalendarDays, VenusAndMars, Eye, EyeOff, Info, Mail
-} from 'lucide-react';
-import { Button } from '../components/ui_components/button';
-import Config from '../configs/config';
-import { useDispatch } from 'react-redux';
-import { login } from '../utils/Storage/slice/authSlice';
-import { useToast } from '../components/Toast';
+import React, { useEffect, useState, useRef, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from 'react-i18next';
-import i18n from '../i18n/config';
-import '../styles/classy-salon.css';
-import Sponser_Footer from '../components/Sponser_Footer';
+import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate, Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { login } from "../utils/Storage/slice/authSlice";
+import { useToast } from "../components/Toast";
+import { Button } from "../components/ui_components/button";
+import { Smartphone, Mail, Lock, Eye, EyeOff, VenusAndMars, CalendarDays, CheckCircle2, X, Loader2, ChevronLeft, ChevronRight, AlertCircle, User, Camera, ShieldCheck, Info } from "lucide-react";
+import Config from "../configs/config";
+import { useApi } from "../API/SalonsAPIs/ALLSalonAPI";
+import Sponser_Footer from "../components/Sponser_Footer";
 
 const CustomerRegistration: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dispatch = useDispatch();
@@ -27,7 +24,51 @@ const CustomerRegistration: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+    return { daysInMonth, startingDayOfWeek };
+  };
+
+  const handleDateSelect = (day: number) => {
+    const year = currentMonth.getFullYear();
+    const month = String(currentMonth.getMonth() + 1).padStart(2, '0');
+    const dayStr = String(day).padStart(2, '0');
+    setFormData(prev => ({ ...prev, dob: `${year}-${month}-${dayStr}` }));
+    setIsCalendarOpen(false);
+  };
+
+  const handleMonthChange = (direction: 'prev' | 'next') => {
+    setCurrentMonth(prev => {
+      const newDate = new Date(prev);
+      if (direction === 'prev') {
+        newDate.setMonth(newDate.getMonth() - 1);
+      } else {
+        newDate.setMonth(newDate.getMonth() + 1);
+      }
+      return newDate;
+    });
+  };
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showTermsModal, setShowTermsModal] = useState(false);
+
+  // Google signup state
+  const [googleUserData, setGoogleUserData] = useState<any>(null);
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [whatsappOtp, setWhatsappOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [otpTimer, setOtpTimer] = useState(300);
+  const [canResendOtp, setCanResendOtp] = useState(false);
 
   const [formData, setFormData] = useState({
     username: '',
@@ -39,7 +80,7 @@ const CustomerRegistration: React.FC = () => {
     dob: '', 
     marital_status: 'single',
     image_url: '',
-    agreeToPolicy: true
+    agreeToPolicy: false
   });
 
   const user = localStorage.getItem("authState");
@@ -158,12 +199,14 @@ const CustomerRegistration: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    console.log('handleSubmit called', formData);
     const newErrors: Record<string, string> = {};
     if (!formData.otp) newErrors.otp = t('auth.requiredField');
     if (!formData.username) newErrors.username = t('auth.requiredField');
     if (passwordIssues.length > 0) newErrors.password = t('auth.requiredField');
     if (!formData.password) newErrors.password = t('auth.requiredField');
     if (!formData.dob) newErrors.dob = t('auth.requiredField');
+    if (!formData.agreeToPolicy) newErrors.agreeToPolicy = "Please accept the Terms and Conditions";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -173,17 +216,21 @@ const CustomerRegistration: React.FC = () => {
     setIsLoading(true);
     const finalPayload = {
       email: formData.email || "",
-      otp: formData.otp,
       phone: formData.phone,
+      otp: formData.otp,
       username: formData.username,
       password: formData.password,
       agreeToPolicy: formData.agreeToPolicy,
       gender: formData.gender,
-      dob: formatDateToPayload(formData.dob),
+      dob: formData.dob,
       marital_status: formData.marital_status,
       image_url: formData.image_url,
+      email_verified: false,  // Email is not verified during signup
+      phone_verified: true,   // Phone is verified via OTP
       metadata: { signupSource: "web" }
     };
+
+    console.log('Sending payload:', finalPayload);
 
     try {
       const response = await fetch(`${Config.API_AUTH_URL}/signup`, {
@@ -193,6 +240,8 @@ const CustomerRegistration: React.FC = () => {
       });
 
       const resData = await response.json();
+      console.log('API response:', resData);
+      
       if (!response.ok) throw new Error(resData?.detail || t('auth.signupFailed'));
 
       dispatch(login({ user: resData }));
@@ -220,7 +269,13 @@ const CustomerRegistration: React.FC = () => {
         navigate("/");
       }
     } catch (error: any) {
-      setNotification({ type: 'error', message: error.message });
+      console.error('Signup error:', error);
+      showToast({
+        type: "error",
+        title: t('auth.signupFailed'),
+        message: error.message || t('auth.signupFailed'),
+        duration: 5000,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -230,7 +285,7 @@ const CustomerRegistration: React.FC = () => {
     const { name, value } = e.target;
     if (name === 'phone' || name === 'otp') {
       const sanitized = value.replace(/[^0-9]/g, '');
-      const limit = name === 'phone' ? 10 : 6;
+      const limit = name === 'phone' ? 10 : 5;
       setFormData(prev => ({ ...prev, [name]: sanitized.slice(0, limit) }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -244,6 +299,229 @@ const CustomerRegistration: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [notification]);
+
+  // OTP countdown timer
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    if (otpSent && otpTimer > 0) {
+      interval = setInterval(() => {
+        setOtpTimer((prev) => {
+          if (prev <= 1) {
+            setCanResendOtp(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else if (otpSent && otpTimer === 0) {
+      setCanResendOtp(true);
+    }
+    return () => clearInterval(interval);
+  }, [otpSent, otpTimer]);
+
+  const handleGoogleLogin = async () => {
+    try {
+      setIsLoading(true);
+
+      // Load Google Identity Services
+      const google = (window as any).google;
+      if (!google) {
+        throw new Error('Google SDK not loaded');
+      }
+
+      // Use Google Identity Services for ID token (not OAuth2 access token)
+      google.accounts.id.initialize({
+        client_id: '584558727500-i5sv6ci73aqgnuple5rebq6r1gq85vb4.apps.googleusercontent.com',
+        callback: (response: any) => {
+          setGoogleUserData({ idToken: response.credential });
+          setShowWhatsAppModal(true);
+          setIsLoading(false);
+        },
+      });
+
+      // Trigger the Google sign-in popup
+      google.accounts.id.prompt((notification: any) => {
+        if (notification.isNotDisplayed()) {
+          showToast({
+            type: "error",
+            title: "Google Login Failed",
+            message: "Google sign-in popup not displayed",
+            duration: 5000,
+          });
+          setIsLoading(false);
+        }
+      });
+    } catch (error: any) {
+      showToast({
+        type: "error",
+        title: "Google Login Failed",
+        message: error.message,
+        duration: 5000,
+      });
+      setIsLoading(false);
+    }
+  };
+
+  const handleSendWhatsAppOtp = async () => {
+    if (!whatsappNumber || whatsappNumber.length < 10) {
+      showToast({
+        type: "error",
+        title: "Invalid Number",
+        message: "Please enter a valid 10-digit WhatsApp number",
+        duration: 5000,
+      });
+      return;
+    }
+
+    try {
+      setIsSendingOtp(true);
+      const response = await fetch(`${Config.API_AUTH_URL}/signup/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: whatsappNumber }),
+      });
+
+      const resData = await response.json();
+      if (!response.ok) throw new Error(resData?.detail || 'Failed to send OTP');
+
+      setOtpSent(true);
+      setOtpTimer(300);
+      setCanResendOtp(false);
+      showToast({
+        type: "success",
+        title: "OTP Sent",
+        message: "OTP sent to your WhatsApp number",
+        duration: 5000,
+      });
+    } catch (error: any) {
+      showToast({
+        type: "error",
+        title: "Failed to Send OTP",
+        message: error.message,
+        duration: 5000,
+      });
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const handleWhatsAppSubmit = async () => {
+    if (!googleUserData || !googleUserData.idToken) return;
+
+    try {
+      setIsVerifyingOtp(true);
+      const response = await fetch(`${Config.API_AUTH_URL}/google-signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          id_token: googleUserData.idToken,
+          phone: whatsappNumber || null,
+          otp: whatsappOtp || null,
+          email_verified: true,  // Google verifies email
+          phone_verified: whatsappOtp ? true : false  // Phone verified if OTP provided
+        }),
+        credentials: 'include',
+      });
+
+      const resData = await response.json();
+      if (!response.ok) {
+        // Check if email is already registered
+        if (resData?.detail?.includes('already registered') || resData?.detail?.includes('Email already')) {
+          showToast({
+            type: "error",
+            title: "Email Already Registered",
+            message: "Please login instead",
+            duration: 5000,
+          });
+          setTimeout(() => {
+            globalThis.location.href = '/login';
+          }, 1500);
+          return;
+        }
+        throw new Error(resData?.detail || 'Signup failed');
+      }
+
+      dispatch(login({ user: { ...resData.user, access_token: resData.access_token } }));
+
+      showToast({
+        type: "success",
+        title: "Signup Successful",
+        message: "Welcome to Coiffeurr!",
+        duration: 5000,
+      });
+
+      globalThis.location.href = globalThis.location.origin;
+    } catch (error: any) {
+      showToast({
+        type: "error",
+        title: "Signup Failed",
+        message: error.message,
+        duration: 5000,
+      });
+    } finally {
+      setIsVerifyingOtp(false);
+      setShowWhatsAppModal(false);
+    }
+  };
+
+  const handleSkipWhatsApp = async () => {
+    if (!googleUserData || !googleUserData.idToken) return;
+
+    try {
+      setIsVerifyingOtp(true);
+      const response = await fetch(`${Config.API_AUTH_URL}/google-signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          id_token: googleUserData.idToken,
+          phone: null,
+          otp: null,
+          email_verified: true,  // Google verifies email
+          phone_verified: false  // Phone not provided/verified
+        }),
+        credentials: 'include',
+      });
+
+      const resData = await response.json();
+      if (!response.ok) {
+        // Check if email is already registered
+        if (resData?.detail?.includes('already registered') || resData?.detail?.includes('Email already')) {
+          showToast({
+            type: "error",
+            title: "Email Already Registered",
+            message: "Please login instead",
+            duration: 5000,
+          });
+          setTimeout(() => {
+            globalThis.location.href = '/login';
+          }, 1500);
+          return;
+        }
+        throw new Error(resData?.detail || 'Signup failed');
+      }
+
+      dispatch(login({ user: { ...resData.user, access_token: resData.access_token } }));
+
+      showToast({
+        type: "success",
+        title: "Signup Successful",
+        message: "Welcome to Coiffeurr!",
+        duration: 5000,
+      });
+
+      globalThis.location.href = globalThis.location.origin;
+    } catch (error: any) {
+      showToast({
+        type: "error",
+        title: "Signup Failed",
+        message: error.message,
+        duration: 5000,
+      });
+    } finally {
+      setIsVerifyingOtp(false);
+      setShowWhatsAppModal(false);
+    }
+  };
 
   return (
     <div className="min-h-screen classy-salon-bg flex flex-col items-center justify-center p-4 relative font-sans">
@@ -282,7 +560,52 @@ const CustomerRegistration: React.FC = () => {
 
           {step === 1 ? (
             <div className="space-y-4 sm:space-y-6 slide-in-right">
-              <div className="space-y-2 staggered-1">
+              {/* Google Signup - Prominent at top */}
+              <div className="staggered-1">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex-1 h-px bg-white/20" />
+                  <span className="text-xs font-bold text-white/50 tracking-widest uppercase">Quick Signup</span>
+                  <div className="flex-1 h-px bg-white/20" />
+                </div>
+                <div className="flex flex-col items-center gap-3">
+                  <p className="text-xs text-white/50">sign up with google</p>
+                  <button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    disabled={isLoading}
+                    className="group relative w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg hover:shadow-2xl hover:shadow-[#4285F4]/30 transition-all duration-500 focus-ring overflow-hidden"
+                  >
+                    {/* Glow effect */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#4285F4] via-[#34A853] to-[#FBBC05] opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-md" />
+                    
+                    {/* Ring animation */}
+                    <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-[#4285F4]/30 transition-all duration-500 group-hover:scale-125" />
+                    
+                    {/* Google logo */}
+                    <svg 
+                      width="24" 
+                      height="24" 
+                      viewBox="0 0 24 24" 
+                      className="relative z-10 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12"
+                    >
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    
+                    {/* Particle dots */}
+                    <div className="absolute inset-0 pointer-events-none">
+                      <div className="absolute top-1 left-1 w-1 h-1 bg-[#4285F4] rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping" />
+                      <div className="absolute top-1 right-1 w-1 h-1 bg-[#34A853] rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping delay-75" />
+                      <div className="absolute bottom-1 left-1 w-1 h-1 bg-[#FBBC05] rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping delay-150" />
+                      <div className="absolute bottom-1 right-1 w-1 h-1 bg-[#EA4335] rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping delay-200" />
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2 staggered-2">
                 <label className="dark-label ml-1 text-xs sm:text-sm">{t('auth.enterPhone')} *</label>
                 <div className={`relative input-wrapper ${errors.phone ? 'error' : ''}`}>
                   <Smartphone className={`absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon ${errors.phone ? "text-[#DC143C]" : ""}`} />
@@ -296,7 +619,7 @@ const CustomerRegistration: React.FC = () => {
                   />
                 </div>
               </div>
-              <Button onClick={handleNext} disabled={isLoading || formData.phone.length < 10} className="w-full h-12 sm:h-14 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30 text-sm sm:text-base">
+              <Button onClick={handleNext} disabled={isLoading || formData.phone.length < 10} className="w-full h-12 sm:h-14 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30 text-sm sm:text-base staggered-3">
                 {isLoading ? <Loader2 className="animate-spin" /> : 'Next'}
               </Button>
             </div>
@@ -338,7 +661,7 @@ const CustomerRegistration: React.FC = () => {
                       value={formData.otp}
                       onChange={handleChange}
                       placeholder={t('auth.enterOTP')}
-                      maxLength={6}
+                      maxLength={5}
                       className={`w-full h-12 pl-18 pr-4 dark-input text-sm font-bold outline-none transition-all duration-300 ${errors.otp ? "error" : ""}`}
                     />
                   </div>
@@ -390,15 +713,120 @@ const CustomerRegistration: React.FC = () => {
                 <div className="space-y-2">
                   <label className="dark-label ml-1">{t('auth.dateOfBirth')}</label>
                   <div className={`relative input-wrapper ${errors.dob ? 'error' : ''}`}>
-                    <CalendarDays className={`absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon ${errors.dob ? "text-[#DC143C]" : ""}`} size={18} />
+                    <CalendarDays className={`absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon z-10 ${errors.dob ? "text-[#DC143C]" : ""}`} size={18} />
                     <input
-                        name="dob"
-                        type="date"
-                        max={maxDate}
-                        className={`w-full h-11 pl-18 pr-4 dark-input text-sm font-bold outline-none transition-all duration-300 ${errors.dob ? 'error' : ''}`}
-                        value={formData.dob}
-                        onChange={handleChange}
+                      type="text"
+                      value={formData.dob}
+                      onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+                      readOnly
+                      placeholder="DD/MM/YYYY"
+                      className={`w-full h-11 pl-18 pr-4 dark-input text-sm font-bold outline-none transition-all duration-300 cursor-pointer ${errors.dob ? 'error' : ''}`}
                     />
+                    {isCalendarOpen && createPortal(
+                      <div 
+                        className="fixed inset-0 z-[99999999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+                        onClick={(e) => {
+                          if (e.target === e.currentTarget) {
+                            setIsCalendarOpen(false);
+                          }
+                        }}
+                      >
+                        <div 
+                          className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-3 sm:p-4 w-64 sm:w-72 animate-in zoom-in-95 duration-200"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <button onClick={() => handleMonthChange('prev')} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                              <ChevronLeft size={16} className="w-4 h-4" />
+                            </button>
+                            <div className="flex items-center gap-1.5">
+                              <select
+                                value={currentMonth.getMonth()}
+                                onChange={(e) => {
+                                  const newDate = new Date(currentMonth);
+                                  newDate.setMonth(parseInt(e.target.value));
+                                  setCurrentMonth(newDate);
+                                }}
+                                className="font-bold text-xs sm:text-sm text-gray-900 bg-transparent border-none outline-none cursor-pointer"
+                              >
+                                {Array.from({ length: 12 }, (_, i) => (
+                                  <option key={i} value={i} className="bg-white">
+                                    {new Date(0, i).toLocaleDateString('en-US', { month: 'short' })}
+                                  </option>
+                                ))}
+                              </select>
+                              <select
+                                value={currentMonth.getFullYear()}
+                                onChange={(e) => {
+                                  const newDate = new Date(currentMonth);
+                                  newDate.setFullYear(parseInt(e.target.value));
+                                  setCurrentMonth(newDate);
+                                }}
+                                className="font-bold text-xs sm:text-sm text-gray-900 bg-transparent border-none outline-none cursor-pointer max-w-20"
+                              >
+                                {(() => {
+                                  const currentYear = new Date().getFullYear();
+                                  const years = [];
+                                  for (let i = 0; i < 150; i++) {
+                                    years.push(currentYear - 149 + i);
+                                  }
+                                  return years.map(year => (
+                                    <option key={year} value={year} className="bg-white">
+                                      {year}
+                                    </option>
+                                  ));
+                                })()}
+                              </select>
+                            </div>
+                            <button onClick={() => handleMonthChange('next')} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                              <ChevronRight size={16} className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-7 gap-0.5 mb-1.5">
+                            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
+                              <div key={day} className="text-center text-[10px] sm:text-xs font-bold text-gray-500 py-1">{day}</div>
+                            ))}
+                          </div>
+                          <div className="grid grid-cols-7 gap-0.5">
+                            {(() => {
+                              const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentMonth);
+                              const days = [];
+                              for (let i = 0; i < startingDayOfWeek; i++) {
+                                days.push(<div key={`empty-${i}`} className="p-1" />);
+                              }
+                              for (let day = 1; day <= daysInMonth; day++) {
+                                const isSelected = formData.dob === `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                                const isToday = new Date().toDateString() === new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day).toDateString();
+                                days.push(
+                                  <button
+                                    key={day}
+                                    onClick={() => handleDateSelect(day)}
+                                    className={`p-1 rounded-lg text-xs sm:text-sm font-bold transition-all hover:scale-105 ${
+                                      isSelected 
+                                        ? 'text-white' 
+                                        : isToday
+                                        ? 'text-[#D4AF37] font-bold'
+                                        : 'hover:bg-gray-100'
+                                    }`}
+                                    style={isSelected ? { background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' } : { color: '#1e293b' }}
+                                  >
+                                    {day}
+                                  </button>
+                                );
+                              }
+                              return days;
+                            })()}
+                          </div>
+                          <button
+                            onClick={() => setIsCalendarOpen(false)}
+                            className="mt-3 w-full py-1.5 text-gray-600 hover:text-gray-900 font-bold text-xs transition-colors"
+                          >
+                            Close
+                          </button>
+                        </div>
+                      </div>,
+                      document.body
+                    )}
                   </div>
                 </div>
               </div>
@@ -448,13 +876,57 @@ const CustomerRegistration: React.FC = () => {
                 )}
               </div>
 
+              {/* Terms and Conditions */}
+              <div className="flex items-start gap-3 staggered-6">
+                <div className="relative mt-1">
+                  <input
+                    type="checkbox"
+                    id="agreeToPolicy"
+                    checked={formData.agreeToPolicy}
+                    onChange={(e) => setFormData(prev => ({ ...prev, agreeToPolicy: e.target.checked }))}
+                    className="sr-only cursor-pointer"
+                  />
+                  <div 
+                    onClick={() => setFormData(prev => ({ ...prev, agreeToPolicy: !prev.agreeToPolicy }))}
+                    className={`w-5 h-5 rounded-full border-2 cursor-pointer transition-all duration-300 flex items-center justify-center ${
+                      formData.agreeToPolicy 
+                        ? 'bg-[#D4AF37] border-[#D4AF37] shadow-lg shadow-[#D4AF37]/50' 
+                        : errors.agreeToPolicy
+                        ? 'border-[#DC143C] bg-[#DC143C]/10'
+                        : 'border-white/30 bg-white/5 hover:border-[#D4AF37]/50'
+                    }`}
+                  >
+                    {formData.agreeToPolicy && (
+                      <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <label htmlFor="agreeToPolicy" className="text-xs text-white/70 leading-relaxed cursor-pointer">
+                    I agree to the <span onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowTermsModal(true); }} className="text-[#D4AF37] font-bold hover:underline cursor-pointer">Terms of Service & Privacy Policy</span>
+                  </label>
+                  {errors.agreeToPolicy && (
+                    <p className="text-[10px] text-[#DC143C] mt-1 font-bold">{errors.agreeToPolicy}</p>
+                  )}
+                </div>
+              </div>
+
               <div className="gold-divider" />
 
-              <Button disabled={isLoading || isUploading} onClick={handleSubmit} className={`w-full h-14 shimmer-button text-white font-extrabold rounded-2xl mt-4 flex items-center justify-center gap-2 staggered-6 focus-ring ${(isLoading || isUploading) ? 'loading-state' : ''}`}>
+              <Button 
+                disabled={isLoading || isUploading || !formData.username || !formData.otp || formData.otp.length !== 5 || !formData.password || !formData.dob || !formData.agreeToPolicy} 
+                onClick={handleSubmit} 
+                className={`w-full h-14 font-extrabold rounded-2xl transition-all duration-300 focus-ring text-sm sm:text-base staggered-6 ${
+                  isLoading || isUploading || !formData.username || !formData.otp || formData.otp.length !== 5 || !formData.password || !formData.dob || !formData.agreeToPolicy
+                    ? 'bg-gradient-to-r from-gray-600 to-gray-500 text-gray-300 cursor-not-allowed shadow-none'
+                    : 'bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-[#D4AF37]/30'
+                }`}
+              >
                 {isLoading ? <Loader2 className="animate-spin" /> : t('auth.completeSignup')}
-                {!isLoading && <ArrowRight size={18} />}
               </Button>
-              <button type="button" onClick={() => setStep(1)} className="w-full text-[10px] font-black text-white/50 hover:text-white hover:bg-white/10 py-2 px-4 rounded-full transition-colors text-button">Back</button>
+              <button type="button" onClick={() => setStep(1)} className="w-full h-12 text-xs font-bold text-white/60 hover:text-white hover:bg-white/10 rounded-2xl transition-colors text-button border border-white/10">Back</button>
               
               <div className="w-full h-px bg-white/10 my-4" />
             </div>
@@ -465,6 +937,302 @@ const CustomerRegistration: React.FC = () => {
       <div className="mt-8">
         <Sponser_Footer collapsed={false} />
       </div>
+
+      {/* Terms & Privacy Modal */}
+      {showTermsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowTermsModal(false)}>
+          <div className="glass-card rounded-3xl p-6 sm:p-8 w-full max-w-2xl mx-auto animate-in fade-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-start mb-6">
+              <h2 className="text-2xl sm:text-3xl font-bold text-white" style={{ fontFamily: 'Playfair Display, serif' }}>
+                Terms of Service & Privacy Policy
+              </h2>
+              <button onClick={() => setShowTermsModal(false)} className="text-white/60 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-6 text-white/80 text-sm">
+              <div>
+                <p className="text-xs text-white/50 mb-4">Last Updated: April 1, 2026</p>
+                <p className="mb-4">Welcome to Coiffeurr ("Platform", "we", "our", "us"). By accessing or using our website, mobile application, or services ("Services"), you agree to these Terms. If you do not agree, please do not use the Platform.</p>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-[#D4AF37] mb-2">1. Nature of Service</h3>
+                <p className="mb-2">Coiffeurr is an intermediary platform connecting users ("Customers") with independent salons and service providers ("Service Providers").</p>
+                <p className="mb-2">We do not:</p>
+                <ul className="list-disc list-inside space-y-1 ml-4">
+                  <li>Own, operate, or control any salon</li>
+                  <li>Provide salon services directly</li>
+                  <li>Guarantee quality, safety, or suitability of services</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-[#D4AF37] mb-2">2. User Responsibilities</h3>
+                <p className="mb-2">You agree to:</p>
+                <ul className="list-disc list-inside space-y-1 ml-4">
+                  <li>Provide accurate information</li>
+                  <li>Arrive on time for appointments</li>
+                  <li>Follow salon policies</li>
+                  <li>Use the Platform lawfully</li>
+                </ul>
+                <p className="mt-2 mb-2">You are responsible for:</p>
+                <ul className="list-disc list-inside space-y-1 ml-4">
+                  <li>Your booking decisions</li>
+                  <li>Informing salons about allergies or conditions</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-[#D4AF37] mb-2">3. No Liability</h3>
+                <p className="mb-2">To the maximum extent permitted by law, Coiffeurr is not liable for:</p>
+                <ul className="list-disc list-inside space-y-1 ml-4">
+                  <li>Injuries, allergic reactions, or health issues</li>
+                  <li>Poor service or dissatisfaction</li>
+                  <li>Loss, theft, or damage at salon premises</li>
+                  <li>Misconduct or negligence by Service Providers</li>
+                  <li>Delays, cancellations, or rescheduling</li>
+                </ul>
+                <p className="mt-2">All services are used at your own risk.</p>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-[#D4AF37] mb-2">4. No Warranty</h3>
+                <p className="mb-2">The Platform is provided "as-is" and "as-available" without warranties, including:</p>
+                <ul className="list-disc list-inside space-y-1 ml-4">
+                  <li>No guarantee of availability</li>
+                  <li>No assurance of accuracy of listings or pricing</li>
+                  <li>No guarantee of uninterrupted or error-free service</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-[#D4AF37] mb-2">5. Payments & Refunds</h3>
+                <ul className="list-disc list-inside space-y-1 ml-4">
+                  <li>Payments are processed via third-party gateways</li>
+                  <li>We are not responsible for payment issues caused by them</li>
+                  <li>Refunds depend on salon and platform policies</li>
+                  <li>Refunds may be denied in case of misuse</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-[#D4AF37] mb-2">6. Cancellations & No-Shows</h3>
+                <ul className="list-disc list-inside space-y-1 ml-4">
+                  <li>Users must follow the cancellation policy at booking</li>
+                  <li>Repeated no-shows may lead to account suspension</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-[#D4AF37] mb-2">7. Third-Party Services</h3>
+                <p className="mb-2">Service Providers are independent entities.</p>
+                <p className="mb-2">We do not:</p>
+                <ul className="list-disc list-inside space-y-1 ml-4">
+                  <li>Conduct background checks (unless stated)</li>
+                  <li>Guarantee certifications</li>
+                  <li>Take responsibility for their actions</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-[#D4AF37] mb-2">8. Limitation of Liability</h3>
+                <ul className="list-disc list-inside space-y-1 ml-4">
+                  <li>We are not liable for indirect or consequential damages</li>
+                  <li>Total liability (if any) is limited to the booking amount</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-[#D4AF37] mb-2">9. Indemnification</h3>
+                <p className="mb-2">You agree to indemnify Coiffeurr from claims arising from:</p>
+                <ul className="list-disc list-inside space-y-1 ml-4">
+                  <li>Your use of the Platform</li>
+                  <li>Interactions with Service Providers</li>
+                  <li>Violation of these Terms</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-[#D4AF37] mb-2">10. Account Termination</h3>
+                <p className="mb-2">We may suspend or terminate accounts for:</p>
+                <ul className="list-disc list-inside space-y-1 ml-4">
+                  <li>Misuse or fraud</li>
+                  <li>Violation of Terms</li>
+                </ul>
+                <p className="mt-2">We may modify or discontinue the Platform at any time.</p>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-[#D4AF37] mb-2">11. Privacy</h3>
+                <p>Your use of the Platform is subject to our Privacy Policy.</p>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-[#D4AF37] mb-2">12. Security</h3>
+                <p className="mb-2">We take your security seriously and implement industry-standard measures to protect your information.</p>
+                <ul className="list-disc list-inside space-y-1 ml-4">
+                  <li>Your personal data is encrypted and stored securely</li>
+                  <li>We use secure payment gateways for all transactions</li>
+                  <li>Regular security updates protect your account</li>
+                  <li>We monitor for suspicious activity to prevent unauthorized access</li>
+                  <li>Your information is never shared without your consent</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-[#D4AF37] mb-2">13. Governing Law</h3>
+                <ul className="list-disc list-inside space-y-1 ml-4">
+                  <li>These Terms are governed by the laws of India.</li>
+                  <li>Disputes are subject to the courts of Assam.</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-[#D4AF37] mb-2">14. Changes to Terms</h3>
+                <p>We may update these Terms at any time. Continued use means acceptance.</p>
+              </div>
+
+              <div className="border-t border-white/10 pt-6">
+                <h3 className="text-lg font-bold text-[#D4AF37] mb-3">Support</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-white/60">Email:</span>
+                    <span className="text-white">mrmrscoiffeurr@gmail.com</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-white/60">WhatsApp:</span>
+                    <span className="text-white">+91-7045464907</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Button
+              onClick={() => setShowTermsModal(false)}
+              className="w-full h-12 shimmer-button text-white font-bold rounded-2xl mt-6"
+            >
+              I Understand
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* WhatsApp Modal */}
+      {showWhatsAppModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="glass-card rounded-3xl p-6 sm:p-8 w-full max-w-md mx-auto animate-in fade-in zoom-in-95 duration-300">
+            <div className="text-center mb-6">
+              <div className="mx-auto w-16 h-16 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+                <Smartphone size={32} className="text-white" />
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
+                WhatsApp number?
+              </h2>
+              <p className="text-sm text-white/70">
+                It helps us send your booking details smoothly—otherwise your inbox might get a little too much love from us.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="dark-label ml-1 text-xs sm:text-sm">WhatsApp Number (Optional)</label>
+                <div className="relative input-wrapper">
+                  <Smartphone className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon" />
+                  <input
+                    type="tel"
+                    value={whatsappNumber}
+                    onChange={(e) => {
+                      const sanitized = e.target.value.replace(/[^0-9]/g, '');
+                      setWhatsappNumber(sanitized.slice(0, 10));
+                    }}
+                    placeholder="9876543210"
+                    className="w-full h-12 pl-12 pr-4 dark-input text-sm font-bold outline-none transition-all duration-300"
+                    disabled={otpSent}
+                  />
+                </div>
+              </div>
+
+              {!otpSent ? (
+                <Button
+                  onClick={handleSendWhatsAppOtp}
+                  disabled={isSendingOtp || !whatsappNumber || whatsappNumber.length < 10}
+                  className="w-full h-12 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white font-bold rounded-2xl hover:from-[#128C7E] hover:to-[#25D366] transition-all duration-300 text-sm"
+                >
+                  {isSendingOtp ? <Loader2 className="animate-spin" /> : 'Send OTP'}
+                </Button>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <label className="dark-label ml-1 text-xs sm:text-sm">Enter OTP</label>
+                    <div className="relative input-wrapper">
+                      <ShieldCheck className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon" />
+                      <input
+                        type="tel"
+                        value={whatsappOtp}
+                        onChange={(e) => {
+                          const sanitized = e.target.value.replace(/[^0-9]/g, '');
+                          setWhatsappOtp(sanitized.slice(0, 5));
+                        }}
+                        placeholder="Enter 5-digit OTP"
+                        maxLength={5}
+                        className="w-full h-12 pl-12 pr-4 dark-input text-sm font-bold outline-none transition-all duration-300"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Timer display */}
+                  <div className="text-center">
+                    <p className="text-xs text-white/60">
+                      OTP expires in: <span className="font-bold text-[#D4AF37]">
+                        {Math.floor(otpTimer / 60).toString().padStart(2, '0')}:{(otpTimer % 60).toString().padStart(2, '0')}
+                      </span>
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <Button
+                      onClick={handleSkipWhatsApp}
+                      className="flex-1 h-12 bg-white/10 text-white font-bold rounded-2xl hover:bg-white/20 transition-all duration-300 text-sm"
+                    >
+                      Skip
+                    </Button>
+                    <Button
+                      onClick={handleWhatsAppSubmit}
+                      disabled={isVerifyingOtp}
+                      className="flex-1 h-12 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white font-bold rounded-2xl hover:from-[#128C7E] hover:to-[#25D366] transition-all duration-300 text-sm"
+                    >
+                      {isVerifyingOtp ? <Loader2 className="animate-spin" /> : 'Verify & Continue'}
+                    </Button>
+                  </div>
+
+                  {/* Resend OTP button */}
+                  <Button
+                    onClick={handleSendWhatsAppOtp}
+                    disabled={!canResendOtp || isSendingOtp}
+                    className="w-full h-10 bg-white/5 text-white/70 font-bold rounded-xl hover:bg-white/10 transition-all duration-300 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSendingOtp ? <Loader2 className="animate-spin w-4 h-4" /> : canResendOtp ? 'Resend OTP' : `Resend in ${Math.floor(otpTimer / 60).toString().padStart(2, '0')}:${(otpTimer % 60).toString().padStart(2, '0')}`}
+                  </Button>
+                </>
+              )}
+
+              {!otpSent && (
+                <Button
+                  onClick={handleSkipWhatsApp}
+                  className="w-full h-12 bg-white/10 text-white font-bold rounded-2xl hover:bg-white/20 transition-all duration-300 text-sm mt-2"
+                >
+                  Skip
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

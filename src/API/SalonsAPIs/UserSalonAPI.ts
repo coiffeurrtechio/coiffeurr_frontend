@@ -15,54 +15,47 @@ export function usersalonApi() {
   const navigate = useNavigate();
 
   const generateAccessToken = async (): Promise<string | null> => {
-    // const userData = localStorage.getItem("authState");
-    // // if (!userData) return null;
-    // const parsed = JSON.parse(userData);
-    // const accessToken = parsed?.user?.access_token
-    // const refreshToken = parsed?.refreshToken
-
     try {
       const response = await fetch(`${Config.API_BASE_URL}/refresh`, {
         method: "POST",
         headers: {
           "Accept": "application/json",
-          // Remove "Content-Type" if you aren't sending a body
         },
-        // body: JSON.stringify({}), // Send an empty object to satisfy some fetch implementations
         credentials: "include",
       });
 
       if (!response.ok) {
-        // dispatch(logout());
         dispatch(logoutUser());
-
         navigate("/login");
         return null;
       }
 
       const result = await response.json();
+      
+      // Update Redux state with new user data
       dispatch(
         login({
-          user: result             // user details (id, email, etc.)
+          user: result
         })
       );
 
+      // Update localStorage with new access token
+      const userData = localStorage.getItem("authState");
+      if (userData) {
+        const parsed = JSON.parse(userData);
+        localStorage.setItem(
+          "authState",
+          JSON.stringify({
+            ...parsed,
+            user: {
+              ...parsed.user,
+              access_token: result.access_token
+            }
+          })
+        );
+      }
 
-      const json = await response.json();
-
-      localStorage.setItem(
-        "authState",
-        JSON.stringify({
-          ...parsed,
-          user: {
-            json
-          },
-        })
-      );
-      localStorage.setItem("accessToken", JSON.stringify(json.accessToken));
-
-
-      return result;
+      return result.access_token;
     } catch {
       navigate("/login");
       return null;
