@@ -158,7 +158,7 @@ export default function StaffDetailPage() {
                 targetId: staffId
             };
 
-            const res = await userapiPost<any>(`/reviews/reviews`, payload);
+            const res = await userapiPost<any>(`/reviews`, payload);
             console.log("res = ", res);
 
             if (res.status === 400) {

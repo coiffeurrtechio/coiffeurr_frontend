@@ -333,27 +333,34 @@ const HomePage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen font-sans pb-2 sm:pb-2 relative overflow-x-hidden" style={{ fontFamily: 'Inter, sans-serif' }}>
+    <div className="min-h-screen font-sans pb-2 sm:pb-2 relative overflow-x-hidden" style={{ fontFamily: 'Inter, sans-serif', overflowX: 'hidden' }}>
       {showOverlay && <GrandEntranceOverlay onComplete={() => {}} />}
       <div className={`fixed inset-0 opacity-[0.04] pointer-events-none transition-all duration-300 ${isSearchOverlayOpen ? 'blur-sm' : ''}`} style={{ backgroundImage: `url('/Background.jpeg')`, backgroundSize: '400px', zIndex: isSearchOverlayOpen ? 40 : -1 }} />
 
       <div className="relative z-10">
         <header className="text-white rounded-b-[2rem] sm:rounded-b-[3rem] shadow-lg relative z-20 pt-safe pb-safe" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
           <div className="max-w-7xl mx-auto p-6 sm:px-8 sm:pt-8 sm:pb-12">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-2 max-w-[70%]">
-                <div className="w-10 h-10 bg-white p-1 rounded-2xl transition-transform group-hover:scale-105">
-                  <img src="/Coiffeurr_Logo.png" alt="salon" className="w-full h-full object-contain" />
-                </div>
+            <div className="flex items-center justify-between mb-8 relative">
+              {/* Left: Location */}
+              <div className="flex items-center gap-2 max-w-[30%] sm:max-w-[25%]">
                 <MapPin className="w-4 h-4 text-blue-200 shrink-0" />
                 <span className="font-medium text-xs sm:text-sm truncate">
                   {address || t('home.locating')}
                 </span>
               </div>
+              
+              {/* Center: Logo - Perfectly centered */}
+              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white p-1 rounded-2xl transition-transform group-hover:scale-105" style={{ animation: 'softPulse 4s ease-in-out infinite', mixBlendMode: 'difference', opacity: '0.9', filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.1))' }}>
+                  <img src="/Coiffeurr_Logo.png" alt="Coiffeurr" className="w-full h-full object-contain" style={{ shapeRendering: 'geometricPrecision', vectorEffect: 'non-scaling-stroke' }} />
+                </div>
+              </div>
+              
+              {/* Right: Profile/Login */}
               {isloggedin ? (
                 <div 
                   onClick={() => navigate("/profile")}
-                  className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 rounded-full cursor-pointer hover:bg-white/30 transition-colors overflow-hidden"
+                  className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 rounded-full cursor-pointer hover:bg-white/30 transition-colors overflow-hidden ml-auto"
                 >
                   {userImageUrl ? (
                     <img 
@@ -369,7 +376,12 @@ const HomePage: React.FC = () => {
                   )}
                 </div>
               ) : (
-                <button onClick={() => navigate("/login")} className="text-[10px] font-bold tracking-[0.2em] px-5 py-2.5 bg-white text-[#1E4D8C] rounded-full hover:bg-opacity-90 transition-all shadow-sm">{t('home.login')}</button>
+                <button
+                  onClick={() => navigate("/login")}
+                  className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-full text-xs font-bold transition-colors ml-auto"
+                >
+                  {t('home.login')}
+                </button>
               )}
             </div>
 
@@ -772,56 +784,84 @@ const HomePage: React.FC = () => {
                         const displayDistance = distance < 0.1 ? '< 0.1 km' : `${distance.toFixed(1)} km`;
 
                         return (
-                        <Link to={`/salons/${salon.id}`} key={salon.id} className="bg-white border border-gray-100 rounded-2xl overflow-hidden group flex hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 0.1}s` }}>
-                          <div className="relative w-32 sm:w-36 h-32 sm:h-36 shrink-0">
-                            <img src={salon.logoUrl || "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&amp;w=400"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={salon.salonName} />
+                        <Link to={`/salons/${salon.id}`} key={salon.id} className="bg-white border border-[#E0E0E0] rounded-xl overflow-hidden group flex hover:shadow-sm transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 0.1}s`, borderWidth: '0.5px' }}>
+                          {/* Mobile: 40% image, Desktop: fixed width */}
+                          <div className="relative w-[40%] sm:w-32 sm:w-36 h-24 sm:h-32 sm:h-36 shrink-0">
+                            <img src={salon.logoUrl || "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&amp;w=400"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={salon.salonName} style={{ borderRadius: '8px' }} />
                           </div>
-                          <div className="p-4 flex-1 flex flex-col justify-between">
+                          <div className="p-3 sm:p-5 flex-1 flex flex-col justify-between" style={{ padding: '16px' }}>
                             <div>
-                              <div className="flex items-center gap-2 mb-2">
-                                <h3 className="font-bold text-base text-gray-900 truncate" style={{ fontFamily: 'Playfair Display, serif' }}>{salon.salonName}</h3>
-                                <div className="flex items-center gap-1 bg-[#1E4D8C]/10 px-2 py-0.5 rounded-full shrink-0">
-                                  <Star size={12} className="fill-[#1E4D8C] text-[#1E4D8C]" />
-                                  <span className="text-xs font-bold text-[#1E4D8C]">{salon.rating?.average || "5.0"}</span>
+                              {/* Top Row: Title with Rating */}
+                              <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-4">
+                                <h3 className="font-light text-base sm:text-lg text-[#1A1A1A] truncate" style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.1rem', fontWeight: '300' }}>{salon.salonName}</h3>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <Star size={10} className="fill-[#C5A059] text-[#C5A059] w-3 h-3 sm:w-4 sm:h-4" />
+                                  <span className="text-[10px] sm:text-xs text-[#C5A059]">
+                                    {salon.rating?.average || "5.0"} {salon.rating?.reviewsCount ? `(${salon.rating.reviewsCount} reviews)` : ''}
+                                  </span>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-3 mb-2 text-xs text-gray-500">
-                                {salon.distance && (
-                                  <span className="flex items-center gap-1"><MapPin size={12} className="text-gray-400" />{displayDistance}</span>
-                                )}
-                              </div>
-                              <div className="flex flex-wrap gap-1.5 mb-2">
+                              
+                              {/* Middle Row: Badges */}
+                              <div className="flex flex-wrap gap-2 sm:gap-3 mb-2 sm:mb-4">
                                 {salon.tags && Array.isArray(salon.tags) && salon.tags.length > 0 && (
                                   salon.tags.map((tag: string, idx: number) => (
-                                    <span key={idx} className="text-[8px] font-black uppercase tracking-wider text-[#1E4D8C] bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/50 px-2 py-0.5 rounded-full shadow-sm">
+                                    <span key={idx} className="text-[8px] font-normal uppercase text-[#757575] bg-transparent border border-[#C5A059] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded" style={{ letterSpacing: '2px', borderWidth: '0.5px' }}>
                                       {tag.replace(/_/g, ' ')}
                                     </span>
                                   ))
                                 )}
-                                {salon.salonType && <span className="text-[10px] font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-full">{salon.salonType}</span>}
-                                {salon.salonServices && salon.salonServices.length > 0 && (
-                                  <>
-                                    {(expandedServices[salon.id] ? salon.salonServices : salon.salonServices.slice(0, 2)).map((service: any, idx: number) => (
-                                      <span key={idx} className="text-[10px] font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-full">{service.name || service.serviceName}</span>
-                                    ))}
-                                    {salon.salonServices.length > 2 && (
-                                      <button
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          setExpandedServices(prev => ({ ...prev, [salon.id]: !prev[salon.id] }));
-                                        }}
-                                        className="text-[10px] font-medium text-[#1E4D8C] bg-[#1E4D8C]/10 px-2 py-1 rounded-full cursor-pointer hover:bg-[#1E4D8C]/20"
-                                      >
-                                        {expandedServices[salon.id] ? 'See less' : 'See all'}
-                                      </button>
-                                    )}
-                                  </>
-                                )}
                               </div>
                             </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-bold text-[#1E4D8C]">Starting from ₹{salon.priceRange || '299'}</span>
-                              <button className="py-1.5 px-4 font-bold text-xs rounded-lg transition-all hover:bg-[#1E4D8C]/20 bg-[#1E4D8C]/10 text-[#1E4D8C] border border-[#1E4D8C]/30">{t('home.bookNow')}</button>
+                            
+                            {/* Bottom Row: Pricing, Rating+Distance (mobile), Button */}
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                              {/* Mobile: Rating and Distance on same line with separator */}
+                              <div className="flex items-center gap-2 sm:hidden">
+                                <div className="flex items-center gap-1">
+                                  <Star size={8} className="fill-[#C5A059] text-[#C5A059]" />
+                                  <span className="text-[10px] text-[#C5A059]">{salon.rating?.average || "5.0"}</span>
+                                </div>
+                                <span className="text-[#757575]">|</span>
+                                {salon.distance && (
+                                  <span className="text-[10px] text-[#757575] font-light flex items-center gap-1">
+                                    <MapPin size={8} className="text-[#757575]" />
+                                    {displayDistance}
+                                  </span>
+                                )}
+                              </div>
+                              
+                              {/* Desktop: Pricing, Distance, Separator */}
+                              <div className="hidden sm:flex items-center gap-4">
+                                {/* Pricing */}
+                                <div>
+                                  <p className="text-[10px] text-[#757575] uppercase tracking-wider mb-0.5">Starting from</p>
+                                  <p className="text-sm text-[#1A1A1A] font-normal">
+                                    ₹{salon.priceRange || '299'}
+                                  </p>
+                                </div>
+                                
+                                {/* Vertical Separator */}
+                                {salon.distance && (
+                                  <div className="w-px h-8 bg-[#E0E0E0]" style={{ width: '0.5px' }}></div>
+                                )}
+                                
+                                {/* Distance */}
+                                {salon.distance && (
+                                  <span className="text-[10px] text-[#757575] font-light flex items-center gap-1">
+                                    <MapPin size={8} className="text-[#757575]" />
+                                    {displayDistance}
+                                  </span>
+                                )}
+                              </div>
+                              
+                              {/* Mobile: Full-width button, Desktop: Text-link */}
+                              <button className="sm:hidden w-full py-2 bg-[#C5A059] text-black font-bold text-xs uppercase tracking-wider rounded-sm transition-all duration-300" style={{ letterSpacing: '1px' }}>
+                                Book Now
+                              </button>
+                              <button className="hidden sm:block text-xs font-bold text-[#C5A059] uppercase tracking-wider hover:underline decoration-1 underline-offset-4 transition-all duration-300" style={{ letterSpacing: '1px' }}>
+                                Book Now
+                              </button>
                             </div>
                           </div>
                         </Link>

@@ -111,7 +111,7 @@ const SalonService: React.FC = () => {
         targetType: "SERVICE",
         targetId: serviceId
       };
-      const res = await userapiPost<any>(`/reviews/reviews`, payload);
+      const res = await userapiPost<any>(`/reviews`, payload);
 
       if (res.status === 400 || res?.error) {
         setReviewError(res?.data?.detail || "An unexpected error occurred.");

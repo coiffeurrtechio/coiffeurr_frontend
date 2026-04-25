@@ -40,6 +40,7 @@ export default function SalonDetailPage() {
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
   const [salonStaff, setSalonStaff] = useState<any[]>([]);
+  const [showContactButton, setShowContactButton] = useState(false);
 
   // Reviews State
   const [reviews, setReviews] = useState<any[]>([]);
@@ -80,6 +81,27 @@ export default function SalonDetailPage() {
       checkWishlistStatus();
     }
   }, [salonId]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollHeight = document.documentElement.scrollHeight;
+      const scrollTop = document.documentElement.scrollTop;
+      const clientHeight = document.documentElement.clientHeight;
+      
+      // Show button when user is near the bottom (within 200px) or has scrolled more than 50% of the page
+      const isNearBottom = scrollTop + clientHeight >= scrollHeight - 200;
+      const hasScrolledHalf = scrollTop > scrollHeight * 0.5;
+      
+      if (isNearBottom || hasScrolledHalf) {
+        setShowContactButton(true);
+      } else {
+        setShowContactButton(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const checkWishlistStatus = async () => {
     const user = localStorage.getItem("authState");
@@ -190,7 +212,7 @@ export default function SalonDetailPage() {
         targetId: salonId
       };
 
-      const res = await userapiPost<any>(`/reviews/reviews`, payload, {});
+      const res = await userapiPost<any>(`/reviews`, payload, {});
 
       if (res.status === 400) {
         const errorMessage = res?.data?.detail || "Something went wrong. Please try again.";
@@ -272,10 +294,16 @@ export default function SalonDetailPage() {
     e.preventDefault();
     if (!salonId) return;
 
-    setIsFavorite(prev => !prev);
     const user = localStorage.getItem("authState");
     const parsedUser = user ? JSON.parse(user) : null;
-    const userID = parsedUser?.user?.user?.id || parsedUser?.user?.id;
+    const userID = parsedUser?.user?.user?.id || parsedUser?.user?.id || parsedUser?.id;
+
+    if (!userID) {
+      console.error("User ID not found in auth state");
+      return;
+    }
+
+    setIsFavorite(prev => !prev);
 
     try {
       const res = await userapiPost(`/wishlist/${userID}/${salonId}`);
@@ -406,14 +434,6 @@ export default function SalonDetailPage() {
                         <div className="min-h-[50px] sm:min-h-[60px] flex flex-col justify-center">
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className="text-sm sm:font-medium">{item.serviceName.replace('Triming', 'Trimming')}</h4>
-                            {index === 0 && (
-                              <Badge className="bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 text-white border-none text-[9px] uppercase tracking-wider px-3 py-1 shadow-md shrink-0">
-                                <span className="flex items-center gap-1">
-                                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
-                                  Signature Service
-                                </span>
-                              </Badge>
-                            )}
                           </div>
                           <p className="text-xs sm:text-sm text-slate-500">{item.description}</p>
                         </div>
@@ -784,7 +804,8 @@ export default function SalonDetailPage() {
         <div className="fixed bottom-0 left-0 right-0 lg:hidden z-50 p-4">
           <div className="bg-white/80 backdrop-blur-lg rounded-2xl p-2 shadow-2xl border border-slate-200/50">
             <a href={`tel:${salon?.primaryPhone}`} className="block">
-              <Button className="w-full h-14 rounded-xl bg-[#1E4D8C] text-white text-[11px] font-black uppercase tracking-[0.2em] shadow-lg hover:scale-[1.02] transition-all">
+              <Button className="w-full h-14 rounded-xl bg-[#C5A059] text-black text-[11px] font-black uppercase tracking-[0.2em] shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
+                <Phone size={16} />
                 Contact Front Desk
               </Button>
             </a>
