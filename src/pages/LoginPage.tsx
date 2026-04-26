@@ -109,8 +109,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
 
         if (piiResponse.ok) {
           const piiData = await piiResponse.json();
+          // Use Cloudinary URL from database, fallback to Google URL if needed
+          const imageUrl = piiData.image_url || piiData.metadata?.google_picture_url;
           // Update user state with image URL from PII
-          dispatch(login({ user: { ...result.user, access_token: result.access_token, image_url: piiData.image_url } }));
+          dispatch(login({ user: { ...result.user, access_token: result.access_token, image_url: imageUrl } }));
         }
       } catch (piiError) {
         console.error('Failed to fetch PII:', piiError);
@@ -180,8 +182,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
 
         if (piiResponse.ok) {
           const piiData = await piiResponse.json();
+          // Use Cloudinary URL from database, fallback to Google URL if needed
+          const imageUrl = piiData.image_url || piiData.metadata?.google_picture_url;
           // Update user state with image URL from PII
-          dispatch(login({ user: { ...result.user, access_token: result.access_token, image_url: piiData.image_url } }));
+          dispatch(login({ user: { ...result.user, access_token: result.access_token, image_url: imageUrl } }));
         }
       } catch (piiError) {
         console.error('Failed to fetch PII:', piiError);
@@ -352,7 +356,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
                 <div className="w-full h-px bg-white/10 my-4" />
                 
                 <div className="flex flex-col items-center gap-3">
-                  <p className="text-xs text-white/50">sign in with google</p>
+                  <p className="text-xs text-white/50">Sign in with Google</p>
                   <GoogleLoginButton
                     onSuccess={handleGoogleLoginSuccess}
                     onError={() => {

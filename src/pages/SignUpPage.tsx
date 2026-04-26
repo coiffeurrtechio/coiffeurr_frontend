@@ -538,7 +538,7 @@ const CustomerRegistration: React.FC = () => {
                   <div className="flex-1 h-px bg-white/20" />
                 </div>
                 <div className="flex flex-col items-center gap-3">
-                  <p className="text-xs text-white/50">sign up with google</p>
+                  <p className="text-xs text-white/50">Sign up with Google</p>
                   <GoogleLoginButton
                     onSuccess={handleGoogleLoginSuccess}
                     onError={() => {

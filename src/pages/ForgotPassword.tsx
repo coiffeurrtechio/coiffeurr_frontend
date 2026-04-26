@@ -18,6 +18,7 @@ export default function ForgotPassword() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(0);
 
   const user = localStorage.getItem("authState");
   const parsedUser = user ? JSON.parse(user) : null;
@@ -29,6 +30,17 @@ export default function ForgotPassword() {
       i18n.changeLanguage('en');
     }
   }, [isloggedin]);
+
+  // Countdown timer for resend OTP
+  useEffect(() => {
+    let interval: number;
+    if (step === 2 && resendCountdown > 0) {
+      interval = setInterval(() => {
+        setResendCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [step, resendCountdown]);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -77,8 +89,34 @@ export default function ForgotPassword() {
       if (response.ok) {
         showToast(t('auth.otpSent'));
         setStep(2);
+        setResendCountdown(300); // Start 5-minute countdown
       } else {
         showToast(t('auth.userNotFound'), "error");
+      }
+    } catch (error) {
+      showToast(t('auth.somethingWentWrong'), "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Resend OTP
+  const handleResendOTP = async () => {
+    if (resendCountdown > 0) return;
+    
+    setLoading(true);
+    try {
+      const response = await fetch(`${Config.API_AUTH_URL}/forgot-password/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email }),
+      });
+
+      if (response.ok) {
+        showToast(t('auth.otpSent'));
+        setResendCountdown(300); // Reset 5-minute countdown
+      } else {
+        showToast(t('auth.somethingWentWrong'), "error");
       }
     } catch (error) {
       showToast(t('auth.somethingWentWrong'), "error");
@@ -274,8 +312,16 @@ export default function ForgotPassword() {
               {loading ? <Loader2 className="animate-spin" /> : t('auth.resetAndLogin')}
             </Button>
             
-            <button type="button" className="text-center text-[9px] font-bold text-[#D4AF37] hover:text-[#FFD700] tracking-widest cursor-pointer transition-colors text-button focus-ring w-full py-2" onClick={() => setStep(1)}>
-              {t('auth.resendCode')}
+            <button 
+              type="button" 
+              disabled={resendCountdown > 0 || loading}
+              className={`text-center text-[9px] font-bold tracking-widest cursor-pointer transition-colors text-button focus-ring w-full py-2 ${resendCountdown > 0 ? 'text-white/40 cursor-not-allowed' : 'text-[#D4AF37] hover:text-[#FFD700]'}`}
+              onClick={handleResendOTP}
+            >
+              {resendCountdown > 0 
+                ? `Resend in ${Math.floor(resendCountdown / 60)}:${(resendCountdown % 60).toString().padStart(2, '0')}`
+                : t('auth.resendCode')
+              }
             </button>
 
             <div className="w-full h-px bg-white/10 my-4" />
