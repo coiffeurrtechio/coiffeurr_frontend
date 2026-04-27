@@ -116,6 +116,7 @@ const SalonManagement = () => {
       if (filterVerified !== null) url += `is_verified=${filterVerified}&`;
       if (filterBlocked !== null) url += `is_blocked=${filterBlocked}&`;
       if (filterTag) url += `tag=${encodeURIComponent(filterTag)}&`;
+      url += `include_deleted=true&`;
       
       const response = await fetch(url, {
         headers: {

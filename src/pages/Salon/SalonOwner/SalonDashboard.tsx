@@ -7,7 +7,8 @@ import {
   ChevronRight,
   BarChart3,
   UserCheck,
-  Globe
+  Globe,
+  LogOut
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "../../../components/ui_components/button";
@@ -18,9 +19,12 @@ interface SidebarProps {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   collapsed: boolean;
+  onLogout?: () => void;
+  isPoweringDown?: boolean;
+  onLogoutClick?: () => void;
 }
 
-function SalonDashboard({ open, setOpen, collapsed }: SidebarProps) {
+function SalonDashboard({ open, setOpen, collapsed, onLogout, isPoweringDown = false, onLogoutClick }: SidebarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -139,6 +143,41 @@ function SalonDashboard({ open, setOpen, collapsed }: SidebarProps) {
                 </Button>
               );
             })}
+
+            {/* Logout Button */}
+            <motion.button
+              onClick={() => {
+                if (onLogoutClick) {
+                  onLogoutClick();
+                }
+              }}
+              className={`
+                w-full justify-start group py-2.5 transition-all duration-200 relative flex items-center gap-3 px-4
+                ${collapsed ? "px-2 justify-center" : ""}
+                ${isPoweringDown ? 'grayscale opacity-50 pointer-events-none' : ''}
+              `}
+              style={{
+                marginTop: '120px',
+                background: 'rgba(239, 68, 68, 0.15)',
+                borderRadius: '6px',
+                boxShadow: '0 0 15px rgba(239, 68, 68, 0.3)'
+              }}
+              whileHover={{
+                boxShadow: 'none',
+                scale: 1.02
+              }}
+              whileTap={{ scale: 0.98 }}
+              title={collapsed ? t('dashboard.exit') : ""}
+            >
+              <div className={`flex items-center ${collapsed ? "" : "gap-3"}`}>
+                <LogOut size={16} style={{ color: '#EF4444' }} />
+                {!collapsed && (
+                  <span className="font-bold text-sm tracking-tight" style={{ color: '#EF4444' }}>
+                    {t('dashboard.exit')}
+                  </span>
+                )}
+              </div>
+            </motion.button>
 
           </nav>
 

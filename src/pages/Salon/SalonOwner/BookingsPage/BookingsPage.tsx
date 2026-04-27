@@ -67,9 +67,11 @@ const BookingsPage: React.FC = () => {
   const [statusNote, setStatusNote] = useState<string>("");
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const [isRescheduleMode, setIsRescheduleMode] = useState(false);
+  const [isCancelMode, setIsCancelMode] = useState(false);
   const [rescheduleDate, setRescheduleDate] = useState("");
   const [rescheduleTime, setRescheduleTime] = useState("");
   const [rescheduleReason, setRescheduleReason] = useState("");
+  const [cancellationReason, setCancellationReason] = useState("");
   const [availableSlots, setAvailableSlots] = useState<any[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [isRescheduling, setIsRescheduling] = useState(false);
@@ -86,7 +88,7 @@ const BookingsPage: React.FC = () => {
     date: '',
     from_date: '', // Don't default to today, let API provide range
     to_date: '',
-    date_preset: 'today',
+    date_preset: '',
     min_price: '',
     max_price: '',
     global_search: ''
@@ -366,6 +368,30 @@ const BookingsPage: React.FC = () => {
       setNotification({ type: 'error', message: error.message || t('booking.rescheduleFailed') });
     } finally {
       setIsRescheduling(false);
+    }
+  };
+
+  const handleCancelBooking = async () => {
+    const userId = getUserId();
+    const reason = cancellationReason.trim() || t('booking.defaultCancellationMessage');
+    try {
+      await withSlowLoader(async () => {
+        const encodedNote = encodeURIComponent(reason);
+        const res = await apiSalonPatch(
+          `/bookings/${selectedBooking?.id}/status?status=CANCELLED&note=${encodedNote}`,
+          {},
+          { headers: { "X-User-Id": userId } }
+        );
+
+        if (res.error) throw new Error(res.error);
+        setNotification({ type: 'success', message: t('booking.bookingMarkedAs', { status: 'CANCELLED' }) });
+        setIsModalOpen(false);
+        setIsCancelMode(false);
+        setCancellationReason("");
+        fetchBookings();
+      });
+    } catch (error: any) {
+      setNotification({ type: 'error', message: error.message || t('booking.updateFailed') });
     }
   };
 
@@ -766,7 +792,7 @@ const BookingsPage: React.FC = () => {
                 <img src={selectedBooking.serviceData.imageUrl} alt="service" className="w-full h-full object-cover opacity-40" />
               )}
               <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)' }} />
-              <button onClick={() => { setIsModalOpen(false); setIsRescheduleMode(false); }} className="absolute top-6 right-6 p-2 bg-white/20 hover:bg-white/40 rounded-full text-white backdrop-blur-md transition-all"><X size={20} /></button>
+              <button onClick={() => { setIsModalOpen(false); setIsRescheduleMode(false); setIsCancelMode(false); setCancellationReason(""); }} className="absolute top-6 right-6 p-2 bg-white/20 hover:bg-white/40 rounded-full text-white backdrop-blur-md transition-all"><X size={20} /></button>
               <div className="absolute bottom-6 left-6 right-6">
                 <span className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-white" style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)' }}>{t('booking.bookingDetail')}</span>
                 <h2 className="text-xl font-black text-white typography-display mt-2">{selectedBooking.serviceData?.serviceName}</h2>
@@ -941,10 +967,33 @@ const BookingsPage: React.FC = () => {
 
                 {selectedBooking.status === 'CONFIRMED' && (
                   <>
-                    {!isRescheduleMode ? (
-                      <button onClick={() => updateBookingStatus(selectedBooking.id, 'COMPLETED')} className="w-full h-16 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-3 hover:-translate-y-0.5 shadow-lg typography-label-light" style={{ backgroundColor: '#000000', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)' }}>
-                        <CheckCircle size={18} /> {t('booking.markAsCompleted')}
-                      </button>
+                    {!isRescheduleMode && !isCancelMode ? (
+                      <div className="grid grid-cols-2 gap-4">
+                        <button onClick={() => setIsCancelMode(true)} className="h-16 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 hover:-translate-y-0.5 shadow-lg typography-label-light flex items-center justify-center gap-2" style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}>
+                          <X size={18} /> {t('booking.cancelBooking')}
+                        </button>
+                        <button onClick={() => updateBookingStatus(selectedBooking.id, 'COMPLETED')} className="h-16 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-3 hover:-translate-y-0.5 shadow-lg typography-label-light" style={{ backgroundColor: '#000000', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)' }}>
+                          <CheckCircle size={18} /> {t('booking.markAsCompleted')}
+                        </button>
+                      </div>
+                    ) : isCancelMode ? (
+                      <div className="space-y-4 animate-in slide-in-from-bottom-2 p-4 rounded-2xl border floating-tile" style={{ backgroundColor: 'var(--light-greige)', borderColor: 'var(--light-greige)' }}>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-widest ml-1 typography-label-light" style={{ color: '#666' }}>{t('booking.cancellationReason')}</label>
+                          <textarea
+                            value={cancellationReason}
+                            onChange={(e) => setCancellationReason(e.target.value)}
+                            placeholder={t('booking.cancellationReasonPlaceholder')}
+                            className="w-full p-4 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-50 transition-all outline-none resize-none h-20 typography-label-light"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <button onClick={() => { setIsCancelMode(false); setCancellationReason(""); }} className="h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 shadow-lg typography-label-light" style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}>Go back</button>
+                          <button onClick={handleCancelBooking} className="h-14 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 shadow-lg typography-label-light" style={{ backgroundColor: '#000000', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)' }}>
+                            <X size={14} /> {t('booking.cancelBooking')}
+                          </button>
+                        </div>
+                      </div>
                     ) : (
                       <div className="grid grid-cols-2 gap-4">
                         <button onClick={() => setIsRescheduleMode(false)} disabled={isRescheduling} className="h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 shadow-lg typography-label-light" style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}>{t('booking.cancel')}</button>
@@ -961,8 +1010,8 @@ const BookingsPage: React.FC = () => {
                         </button>
                       </div>
                     )}
-                    <button onClick={() => setIsRescheduleMode(!isRescheduleMode)} disabled={isRescheduling} className="w-full mt-3 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 shadow-lg typography-label-light" style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}>
-                      <RefreshCcw size={14} /> {isRescheduleMode ? t('booking.cancelReschedule') : t('booking.rescheduleBooking')}
+                    <button onClick={() => { setIsRescheduleMode(false); setIsCancelMode(false); }} disabled={isRescheduling} className="w-full mt-3 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 shadow-lg typography-label-light" style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}>
+                      <RefreshCcw size={14} /> {t('booking.rescheduleBooking')}
                     </button>
                   </>
                 )}

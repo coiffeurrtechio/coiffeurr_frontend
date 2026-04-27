@@ -16,6 +16,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [isSalonOnline, setIsSalonOnline] = useState(true);
   const [isPoweringDown, setIsPoweringDown] = useState(false);
   const [hasNotification, setHasNotification] = useState(true);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -31,7 +32,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   return (
     <div className="flex h-screen w-full bg-[#FAF9F6] overflow-hidden">
       {/* 1. THE SIDEBAR (Fixed position) */}
-      <Sidebar open={open} setOpen={setOpen} collapsed={false} />
+      <Sidebar open={open} setOpen={setOpen} collapsed={false} onLogout={handleLogout} isPoweringDown={isPoweringDown} onLogoutClick={() => {
+        console.log('onLogoutClick called, setting showLogoutConfirm to true');
+        setShowLogoutConfirm(true);
+      }} />
 
       {/* 2. THE GHOST SPACER 
           This physically occupies the space on desktop so the content 
@@ -137,106 +141,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               >
                 <Zap size={18} strokeWidth={1.5} />
               </motion.button>
-
-              {/* Hairline Divider */}
-              <div className="w-px h-6 mx-2" style={{ background: 'linear-gradient(to bottom, transparent, rgba(212, 175, 55, 0.3), transparent)' }} />
-
-              {/* Custom Gold Bell with Notification */}
-              <motion.button
-                className="relative p-2 rounded-xl transition-all"
-                whileHover={{ 
-                  scale: 1.1,
-                  rotate: [0, -5, 5, -5, 5, 0],
-                  transition: { duration: 0.4 }
-                }}
-                style={{ color: '#D4AF37' }}
-              >
-                {/* Custom Minimalist Bell SVG in Polished Gold */}
-                <svg 
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 2C10.3431 2 9 3.34315 9 5V6C6.23858 6 4 8.23858 4 11V15L2 17V18H22V17L20 15V11C20 8.23858 17.7614 6 15 6V5C15 3.34315 13.6569 2 12 2Z" />
-                  <path d="M10 21C10 21.5523 10.4477 22 11 22H13C13.5523 22 14 21.5523 14 21" />
-                </svg>
-                
-                {/* Glowing Amber Dot */}
-                <AnimatePresence>
-                  {hasNotification && (
-                    <motion.span
-                      className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full"
-                      style={{ 
-                        background: 'radial-gradient(circle, #FFB347, #FF8C00)',
-                        boxShadow: '0 0 8px rgba(255, 179, 71, 0.8), 0 0 16px rgba(255, 140, 0, 0.4)'
-                      }}
-                      initial={{ scale: 0 }}
-                      animate={{ 
-                        scale: [1, 1.2, 1],
-                        opacity: [1, 0.8, 1]
-                      }}
-                      exit={{ scale: 0 }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                    />
-                  )}
-                </AnimatePresence>
-              </motion.button>
-
-              {/* Hairline Divider */}
-              <div className="w-px h-6 mx-2" style={{ background: 'linear-gradient(to bottom, transparent, rgba(212, 175, 55, 0.3), transparent)' }} />
-
-              {/* User Profile Section */}
-              <div className="flex items-center gap-3 pl-2">
-                <div className="text-right hidden sm:block">
-                  <p className="text-xs font-bold" style={{ color: '#1a1a1a', fontFamily: "'Playfair Display', serif" }}>{t('common.admin')}</p>
-                  <p className="text-[9px] uppercase tracking-wider" style={{ color: '#999' }}>{t('common.manager')}</p>
-                </div>
-                
-                {/* Secure Exit - Ghost Button with Power Symbol */}
-                <motion.button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all duration-300"
-                  style={{
-                    border: '1px solid rgba(220, 38, 38, 0.2)',
-                    background: 'rgba(255, 255, 255, 0.3)',
-                    backdropFilter: 'blur(10px)'
-                  }}
-                  whileHover={{
-                    borderColor: 'rgba(220, 38, 38, 0.6)',
-                    background: 'rgba(220, 38, 38, 0.1)',
-                    scale: 1.02
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  {/* Custom Power Symbol SVG */}
-                  <svg 
-                    width="16" 
-                    height="16" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    style={{ color: '#DC2626' }}
-                  >
-                    <path d="M12 2V12" />
-                    <path d="M18.4 6.6C19.2 7.4 19.8 8.4 20.2 9.5C20.6 10.6 20.8 11.8 20.8 13C20.8 14.2 20.6 15.4 20.2 16.5C19.8 17.6 19.2 18.6 18.4 19.4C17.6 20.2 16.6 20.8 15.5 21.2C14.4 21.6 13.2 21.8 12 21.8C10.8 21.8 9.6 21.6 8.5 21.2C7.4 20.8 6.4 20.2 5.6 19.4C4.8 18.6 4.2 17.6 3.8 16.5C3.4 15.4 3.2 14.2 3.2 13C3.2 11.8 3.4 10.6 3.8 9.5C4.2 8.4 4.8 7.4 5.6 6.6" />
-                  </svg>
-                  <span className="text-[10px] font-bold uppercase tracking-wider hidden sm:block" style={{ color: '#DC2626' }}>
-                    {t('dashboard.exit')}
-                  </span>
-                </motion.button>
-              </div>
             </div>
           </div>
         </header>
@@ -248,6 +152,65 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           </div>
         </main>
       </div>
+
+      {/* LOGOUT CONFIRMATION MODAL */}
+      <AnimatePresence>
+        {showLogoutConfirm && (
+          <div className="fixed inset-0 bg-black/40 z-[100] flex items-center justify-center p-4" style={{ backdropFilter: 'blur(20px)' }}>
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="bg-white/95 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl max-w-md w-full p-8 text-center"
+              style={{ boxShadow: "rgba(0,0,0,0.15) 0 8px 32px" }}
+            >
+              <div className="flex flex-col items-center gap-4 mb-6">
+                <div className="p-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full" style={{ boxShadow: "0 0 20px rgba(212, 175, 55, 0.2)" }}>
+                  {/* Custom Power Symbol SVG */}
+                  <svg 
+                    width="28" 
+                    height="28" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ color: '#D4AF37' }}
+                  >
+                    <path d="M12 2V12" />
+                    <path d="M18.4 6.6C19.2 7.4 19.8 8.4 20.2 9.5C20.6 10.6 20.8 11.8 20.8 13C20.8 14.2 20.6 15.4 20.2 16.5C19.8 17.6 19.2 18.6 18.4 19.4C17.6 20.2 16.6 20.8 15.5 21.2C14.4 21.6 13.2 21.8 12 21.8C10.8 21.8 9.6 21.6 8.5 21.2C7.4 20.8 6.4 20.2 5.6 19.4C4.8 18.6 4.2 17.6 3.8 16.5C3.4 15.4 3.2 14.2 3.2 13C3.2 11.8 3.4 10.6 3.8 9.5C4.2 8.4 4.8 7.4 5.6 6.6" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-black text-[#1a1a1a] tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  {t('common.systemShutdown')}
+                </h3>
+              </div>
+              <p className="text-gray-600 mb-8 text-sm leading-relaxed">
+                {t('common.endSessionConfirm')}
+              </p>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => {
+                    setShowLogoutConfirm(false);
+                    handleLogout();
+                  }}
+                  className="w-full px-6 py-4 bg-[#1a1a1a] text-white rounded-2xl font-bold text-sm shadow-lg transition-all hover:scale-1.02 hover:shadow-[0_0_30px_rgba(26,26,26,0.4)] active:scale-0.98"
+                >
+                  {t('common.powerDown')}
+                </button>
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="w-full px-6 py-3 text-gray-500 font-semibold text-sm hover:text-gray-700 transition-colors"
+                >
+                  {t('common.cancel')}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* MOBILE OVERLAY */}
       {open && (

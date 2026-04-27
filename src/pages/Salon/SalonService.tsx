@@ -30,6 +30,7 @@ const SalonService: React.FC = () => {
   const [bookingrequestsuccess, setbookingrequestsuccess] = useState(false);
   const [isEditModalOpen, setisEditModalOpen] = useState<boolean>(false);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [showLoginRequiredModal, setShowLoginRequiredModal] = useState(false);
 
   const [salonservicedata, setsalonservicedata] = useState<any>(service);
   const [availableSlots, setAvailableSlots] = useState<any[]>([]);
@@ -63,6 +64,23 @@ const SalonService: React.FC = () => {
 
   useEffect(() => {
     fetchService();
+    // Restore booking state if user was redirected from login
+    const pendingState = sessionStorage.getItem('pendingBookingState');
+    if (pendingState) {
+      try {
+        const state = JSON.parse(pendingState);
+        if (state.salonId === salonId && state.serviceId === serviceId) {
+          setMainPageSelectedStaffId(state.mainPageSelectedStaffId);
+          setMainPageSelectedDate(state.mainPageSelectedDate);
+          setMainPageSelectedTime(state.mainPageSelectedTime);
+          setMainPageSelectedSlotTime(state.mainPageSelectedSlotTime);
+          // Clear the saved state after restoring
+          sessionStorage.removeItem('pendingBookingState');
+        }
+      } catch (error) {
+        console.error('Error restoring booking state:', error);
+      }
+    }
   }, []);
 
   // Fetch available slots when date changes
@@ -129,9 +147,27 @@ const SalonService: React.FC = () => {
     }
   };
 
+  const handleLoginRedirect = () => {
+    // Save booking state before redirecting to login
+    sessionStorage.setItem('pendingBookingState', JSON.stringify({
+      salonId,
+      serviceId,
+      mainPageSelectedStaffId,
+      mainPageSelectedDate,
+      mainPageSelectedTime,
+      mainPageSelectedSlotTime,
+      returnUrl: location.pathname
+    }));
+    setShowLoginRequiredModal(false);
+    navigate("/login");
+  };
+
   const BookAppointment = async (e?: React.MouseEvent<HTMLButtonElement>) => {
     e?.preventDefault();
-    if (!isloggedin) { navigate("/login"); return; }
+    if (!isloggedin) {
+      setShowLoginRequiredModal(true);
+      return;
+    }
 
     if (!mainPageSelectedDate || !mainPageSelectedSlotTime || !mainPageSelectedStaffId) {
       alert("Please select a Stylist, Date and Time slot.");
@@ -578,6 +614,36 @@ const SalonService: React.FC = () => {
             >
               {isReviewSubmitting ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Processing...</> : "Submit Review"}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- LOGIN REQUIRED MODAL --- */}
+      {showLoginRequiredModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-8 space-y-6 animate-in zoom-in duration-300">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-black text-gray-800">Login Required</h3>
+              <button onClick={() => setShowLoginRequiredModal(false)} className="p-2 hover:bg-gray-100 rounded-full"><X size={20} /></button>
+            </div>
+            <p className="text-sm text-slate-600 font-light leading-relaxed">
+              Please login to make your reservation. Your selections will be saved and restored after login.
+            </p>
+            <div className="space-y-3">
+              <Button
+                onClick={handleLoginRedirect}
+                className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm shadow-xl active:scale-95 transition-all"
+              >
+                Login to Continue
+              </Button>
+              <Button
+                onClick={() => setShowLoginRequiredModal(false)}
+                variant="outline"
+                className="w-full py-4 border-2 border-slate-200 text-slate-600 rounded-2xl font-black text-sm hover:bg-slate-50 transition-all"
+              >
+                Cancel
+              </Button>
+            </div>
           </div>
         </div>
       )}

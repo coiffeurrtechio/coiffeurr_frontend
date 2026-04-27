@@ -64,7 +64,7 @@ const StaffManagement: React.FC = () => {
             const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
             if (!salonId || salonId === 'undefined') return navigate("/login");
 
-            const res = await apiRequest<any>(`/salons/${salonId}/staff`);
+            const res = await apiRequest<any>(`/salons/${salonId}/staff?include_inactive=true`);
             if (res.data) setStaffList(res.data);
         } catch (error) { console.error(error); }
     };
@@ -216,6 +216,24 @@ const StaffManagement: React.FC = () => {
         }
     };
 
+    const toggleActiveStatus = async (staff: any) => {
+        try {
+            const authData = localStorage.getItem("authState");
+            const parsedAuth = authData ? JSON.parse(authData) : null;
+            const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
+
+            const payload = {
+                active: !staff.active
+            };
+
+            await apiSalonPut(`/salons/${salonId}/staff/${staff.staff_id}`, payload);
+            fetchStaff();
+            setShowSuccessPopup(true);
+        } catch (error) {
+            console.error("Error toggling staff status:", error);
+        }
+    };
+
     return (
         <div className="min-h-screen p-6 animate-in fade-in duration-500" style={{ fontFamily: 'Inter, sans-serif', backgroundColor: 'var(--soft-ivory)' }}>
             <DashboardLoader isVisible={loading || submitting} />
@@ -267,12 +285,18 @@ const StaffManagement: React.FC = () => {
                                     }
                                 </div>
                             </div>
-                            <div className="absolute top-3 right-3">
-                                <span className={`px-3 py-1.5 rounded-full text-[9px] font-semibold uppercase tracking-wider border-2 ${
+                            <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); toggleActiveStatus(staff); }}
+                                    className={`w-12 h-6 rounded-full relative transition-colors shadow-sm ${staff.active ? 'bg-green-500' : 'bg-red-500'}`}
+                                >
+                                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${staff.active ? 'left-7' : 'left-1'}`} />
+                                </button>
+                                <span className={`text-[9px] font-semibold ${
                                     staff.active 
                                         ? 'text-white' 
-                                        : 'text-gray-600 bg-white'
-                                }`} style={staff.active ? { backgroundColor: 'var(--sage-green)', borderColor: 'var(--sage-green)' } : { borderColor: 'var(--light-greige)' }}>
+                                        : 'text-red-600'
+                                }`}>
                                     {staff.active ? t('staff.active') : t('staff.inactive')}
                                 </span>
                             </div>
@@ -844,17 +868,6 @@ const StaffFormModal = ({ title, onClose, onSubmit, formData, setFormData, allSe
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between bg-white/60 backdrop-blur-sm p-4 rounded-xl border border-gray-200/50 shadow-sm">
-                        <span className="text-[11px] font-bold text-gray-600 uppercase tracking-widest">Active Status</span>
-                        <motion.button 
-                            type="button" 
-                            onClick={() => setFormData({ ...formData, active: !formData.active })} 
-                            className={`w-12 h-6 rounded-full relative transition-colors shadow-sm ${formData.active ? 'bg-[#D4AF37]' : 'bg-gray-300'}`}
-                            whileTap={{ scale: 0.95 }}
-                        >
-                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${formData.active ? 'left-7' : 'left-1'}`} />
-                        </motion.button>
-                    </div>
 
                     <motion.button 
                         type="submit" 

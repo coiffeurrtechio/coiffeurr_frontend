@@ -113,7 +113,7 @@ const DashboardLayout: React.FC = () => {
 
       <div className="flex h-screen w-full bg-[#F4F7FE] overflow-hidden">
         {/* 1. STATIONARY SIDEBAR */}
-        <SalonDashboard open={open} setOpen={setOpen} collapsed={sidebarCollapsed} />
+        <SalonDashboard open={open} setOpen={setOpen} collapsed={sidebarCollapsed} onLogout={handleLogout} isPoweringDown={isPoweringDown} onLogoutClick={() => setShowLogoutConfirm(true)} />
 
       {/* 2. GHOST SPACER (Desktop only) */}
       <div className={`hidden md:block flex-shrink-0 transition-all duration-300 ${sidebarCollapsed ? 'w-20' : 'w-64'}`} />
@@ -264,46 +264,6 @@ const DashboardLayout: React.FC = () => {
               <div className="relative">
                 <NotificationCenter />
               </div>
-
-              {/* Hairline Divider */}
-              <div className="w-px h-6 mx-4" style={{ background: 'linear-gradient(to bottom, transparent, rgba(212, 175, 55, 0.3), transparent)' }} />
-
-              {/* Secure Exit - Ghost Button with Power Symbol */}
-              <motion.button
-                onClick={() => setShowLogoutConfirm(true)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all duration-300"
-                style={{
-                  border: '1px solid rgba(220, 38, 38, 0.2)',
-                  background: 'rgba(255, 255, 255, 0.3)',
-                  backdropFilter: 'blur(10px)'
-                }}
-                whileHover={{
-                  borderColor: 'rgba(220, 38, 38, 0.6)',
-                  background: 'rgba(220, 38, 38, 0.1)',
-                  scale: 1.02
-                }}
-                whileTap={{ scale: 0.98 }}
-                title="Logout"
-              >
-                {/* Custom Power Symbol SVG */}
-                <svg 
-                  width="16" 
-                  height="16" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  style={{ color: '#DC2626' }}
-                >
-                  <path d="M12 2V12" />
-                  <path d="M18.4 6.6C19.2 7.4 19.8 8.4 20.2 9.5C20.6 10.6 20.8 11.8 20.8 13C20.8 14.2 20.6 15.4 20.2 16.5C19.8 17.6 19.2 18.6 18.4 19.4C17.6 20.2 16.6 20.8 15.5 21.2C14.4 21.6 13.2 21.8 12 21.8C10.8 21.8 9.6 21.6 8.5 21.2C7.4 20.8 6.4 20.2 5.6 19.4C4.8 18.6 4.2 17.6 3.8 16.5C3.4 15.4 3.2 14.2 3.2 13C3.2 11.8 3.4 10.6 3.8 9.5C4.2 8.4 4.8 7.4 5.6 6.6" />
-                </svg>
-                <span className="text-[10px] font-bold uppercase tracking-wider hidden sm:block" style={{ color: '#DC2626' }}>
-                  {t('common.exit')}
-                </span>
-              </motion.button>
             </div>
           </div>
         </header>

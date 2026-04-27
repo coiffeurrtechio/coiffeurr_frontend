@@ -135,7 +135,19 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
       }
       else {
         sessionStorage.setItem('fromLogin', 'true');
-        navigate("/");
+        // Check if there's a pending booking state to redirect back
+        const pendingState = sessionStorage.getItem('pendingBookingState');
+        if (pendingState) {
+          try {
+            const state = JSON.parse(pendingState);
+            navigate(state.returnUrl || "/");
+          } catch (error) {
+            console.error('Error parsing pending state:', error);
+            navigate("/");
+          }
+        } else {
+          navigate("/");
+        }
       }
 
     } catch (error: any) {
@@ -208,7 +220,19 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
       }
       else {
         sessionStorage.setItem('fromLogin', 'true');
-        navigate("/");
+        // Check if there's a pending booking state to redirect back
+        const pendingState = sessionStorage.getItem('pendingBookingState');
+        if (pendingState) {
+          try {
+            const state = JSON.parse(pendingState);
+            navigate(state.returnUrl || "/");
+          } catch (error) {
+            console.error('Error parsing pending state:', error);
+            navigate("/");
+          }
+        } else {
+          navigate("/");
+        }
       }
     } catch (error: any) {
       showToast({

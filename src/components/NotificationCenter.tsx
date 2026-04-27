@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Check, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSalonApi } from '../API/Salon_Owner_API/SalonOwnerAPI';
@@ -27,6 +27,7 @@ const NotificationCenter: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const previousUnreadCount = useRef(0);
 
   // Get user ID from auth state
   const getUserId = () => {
@@ -35,6 +36,58 @@ const NotificationCenter: React.FC = () => {
     const parsed = JSON.parse(authData);
     return parsed?.user?.user?.id || parsed?.user?.id || parsed?.user?._id;
   };
+
+  // Request notification permission and initialize audio
+  useEffect(() => {
+    const requestNotificationPermission = async () => {
+      if ('Notification' in window && Notification.permission === 'default') {
+        await Notification.requestPermission();
+      }
+    };
+    requestNotificationPermission();
+  }, []);
+
+  // Play notification sound when unread count increases
+  useEffect(() => {
+    if (unreadCount > previousUnreadCount.current) {
+      // Play sound using Web Audio API
+      const playNotificationSound = () => {
+        try {
+          const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          oscillator.frequency.value = 800;
+          oscillator.type = 'sine';
+          
+          gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+          
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.5);
+        } catch (err) {
+          console.log('Audio play failed:', err);
+        }
+      };
+      
+      playNotificationSound();
+      
+      // Show browser notification if permission granted
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('New Booking', {
+          body: `You have ${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}`,
+          icon: '/favicon.ico',
+          badge: '/favicon.ico',
+          tag: 'booking-notification',
+          requireInteraction: false
+        });
+      }
+    }
+    previousUnreadCount.current = unreadCount;
+  }, [unreadCount]);
 
   // Fetch notifications
   const fetchNotifications = async () => {
@@ -132,13 +185,13 @@ const NotificationCenter: React.FC = () => {
     }
   };
 
-  // Initial fetch - disabled for now to prevent 401 errors
-  // useEffect(() => {
-  //   fetchUnreadCount();
-  //   // Poll for new notifications every 30 seconds
-  //   const interval = setInterval(fetchUnreadCount, 30000);
-  //   return () => clearInterval(interval);
-  // }, []);
+  // Initial fetch and polling for new notifications
+  useEffect(() => {
+    fetchNotifications();
+    // Poll for new notifications every 30 seconds
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Fetch full list when dropdown opens
   useEffect(() => {

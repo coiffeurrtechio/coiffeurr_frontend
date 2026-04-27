@@ -81,7 +81,7 @@ const ServiceManagement: React.FC = () => {
                 navigate("/login");
                 return;
             }
-            const res = await apiRequest<any>(`/salons/${salonId}/services`);
+            const res = await apiRequest<any>(`/salons/${salonId}/services?include_inactive=true`);
             if (res.data) setServiceList(res.data);
         } catch (error) { console.error("Fetch error:", error); }
     };
@@ -118,6 +118,26 @@ const ServiceManagement: React.FC = () => {
             staff_ids: Array.isArray(service.staff_ids) ? service.staff_ids : []
         });
         setIsEditModalOpen(true);
+    };
+
+    const toggleActiveStatus = async (service: any) => {
+        try {
+            const authData = localStorage.getItem("authState");
+            const parsedAuth = authData ? JSON.parse(authData) : null;
+            const salonId = parsedAuth?.user?.user?.salonId || parsedAuth?.user?.salonId;
+
+            const payload = {
+                ...service,
+                active: !service.active,
+                staff_ids: Array.isArray(service.staff_ids) ? service.staff_ids : []
+            };
+
+            await apiSalonPut(`/salons/${salonId}/services/${service.service_id}`, payload);
+            fetchServices();
+            setShowSuccessPopup(true);
+        } catch (error) {
+            console.error("Error toggling service status:", error);
+        }
     };
 
     const handleUpdateService = async (e: React.FormEvent) => {
@@ -237,12 +257,18 @@ const ServiceManagement: React.FC = () => {
                                     )}
                                 </div>
                             </div>
-                            <div className="absolute top-3 right-3">
-                                <span className={`px-3 py-1.5 rounded-full text-[9px] font-semibold uppercase tracking-wider border-2 shadow-sm ${
+                            <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); toggleActiveStatus(service); }}
+                                    className={`w-12 h-6 rounded-full relative transition-colors shadow-sm ${service.active ? 'bg-green-500' : 'bg-red-500'}`}
+                                >
+                                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${service.active ? 'left-7' : 'left-1'}`} />
+                                </button>
+                                <span className={`text-[9px] font-semibold ${
                                     service.active 
                                         ? 'text-white' 
-                                        : 'text-gray-600 bg-white'
-                                }`} style={service.active ? { backgroundColor: '#D4AF37', borderColor: '#D4AF37' } : { borderColor: '#e5e5e5' }}>
+                                        : 'text-red-600'
+                                }`}>
                                     {service.active ? t('services.active') : t('services.inactive')}
                                 </span>
                             </div>
@@ -501,17 +527,6 @@ const ServiceFormModal = ({ title, onClose, onSubmit, formData, setFormData, all
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between bg-white/60 backdrop-blur-sm p-4 rounded-xl border border-gray-200/50 shadow-sm">
-                        <span className="text-[11px] font-bold text-gray-600 uppercase tracking-widest">{t('services.activeStatus')}</span>
-                        <motion.button 
-                            type="button" 
-                            onClick={() => setFormData({ ...formData, active: !formData.active })} 
-                            className={`w-12 h-6 rounded-full relative transition-colors shadow-sm ${formData.active ? 'bg-[#D4AF37]' : 'bg-gray-300'}`}
-                            whileTap={{ scale: 0.95 }}
-                        >
-                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${formData.active ? 'left-7' : 'left-1'}`} />
-                        </motion.button>
-                    </div>
 
                     <motion.button 
                         type="submit" 
