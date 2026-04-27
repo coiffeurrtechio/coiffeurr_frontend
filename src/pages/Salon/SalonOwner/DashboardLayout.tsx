@@ -1,5 +1,5 @@
 import React, { useState, type ReactNode } from "react";
-import { Menu, Search, User, Zap } from "lucide-react";
+import { Menu, Search, User, Zap, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
 import Sidebar from "./SalonDashboard";
@@ -12,7 +12,8 @@ interface DashboardLayoutProps {
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(window.innerWidth > 1024);
+  const [collapsed, setCollapsed] = useState(false);
   const [isSalonOnline, setIsSalonOnline] = useState(true);
   const [isPoweringDown, setIsPoweringDown] = useState(false);
   const [hasNotification, setHasNotification] = useState(true);
@@ -32,16 +33,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   return (
     <div className="flex h-screen w-full bg-[#FAF9F6] overflow-hidden">
       {/* 1. THE SIDEBAR (Fixed position) */}
-      <Sidebar open={open} setOpen={setOpen} collapsed={false} onLogout={handleLogout} isPoweringDown={isPoweringDown} onLogoutClick={() => {
+      <Sidebar open={open} setOpen={setOpen} collapsed={collapsed} onLogout={handleLogout} isPoweringDown={isPoweringDown} onLogoutClick={() => {
         console.log('onLogoutClick called, setting showLogoutConfirm to true');
         setShowLogoutConfirm(true);
       }} />
 
-      {/* 2. THE GHOST SPACER 
-          This physically occupies the space on desktop so the content 
-          starts AFTER the fixed sidebar. 
+      {/* 2. THE GHOST SPACER
+          This physically occupies the space on desktop so the content
+          starts AFTER the fixed sidebar.
       */}
-      <div className="hidden md:block w-64 flex-shrink-0" />
+      <div className={`hidden md:block flex-shrink-0 transition-all duration-300 ${collapsed ? 'w-20' : 'w-64'}`} />
 
       {/* 3. THE RIGHT SIDE CONTENT WRAPPER 
           Crucial: Everything (Header + Main) must be inside this div 
@@ -52,10 +53,52 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         {/* TOP HEADER */}
         <header className={`h-16 flex items-center justify-between px-4 md:px-8 border-b border-black/[0.05] bg-[#FAF9F6]/80 backdrop-blur-[15px] flex-shrink-0 z-30 sticky top-0 transition-all duration-800 ${isPoweringDown ? 'grayscale opacity-50' : ''}`}>
           <div className="flex items-center gap-4">
-            <button onClick={() => setOpen(true)} className="md:hidden p-2 hover:bg-gray-100/50 rounded-md transition-all">
+            <motion.button
+              onClick={() => setOpen(true)}
+              className="md:hidden flex items-center justify-center p-3 rounded-xl transition-all"
+              style={{
+                background: 'rgba(255, 255, 255, 0.6)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(212, 175, 55, 0.15)',
+                boxShadow: '0 0 15px rgba(212, 175, 55, 0.1)'
+              }}
+              whileHover={{
+                boxShadow: '0 0 25px rgba(212, 175, 55, 0.2)',
+                scale: 1.05
+              }}
+              whileTap={{ scale: 0.95 }}
+            >
               <Menu className="w-6 h-6 text-gray-600" />
-            </button>
-            
+            </motion.button>
+
+            {/* SIDEBAR COLLAPSE TOGGLE - Desktop Only */}
+            <motion.button
+              onClick={() => setCollapsed(!collapsed)}
+              className="hidden md:flex items-center justify-center p-3 rounded-xl transition-all"
+              style={{
+                background: 'rgba(255, 255, 255, 0.6)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(212, 175, 55, 0.15)',
+                boxShadow: '0 0 15px rgba(212, 175, 55, 0.1)'
+              }}
+              whileHover={{
+                boxShadow: '0 0 25px rgba(212, 175, 55, 0.2)',
+                scale: 1.05
+              }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <motion.div
+                animate={{ rotate: collapsed ? 180 : 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+              >
+                {collapsed ? (
+                  <ChevronRight className="w-5 h-5 text-gray-600" />
+                ) : (
+                  <ChevronLeft className="w-5 h-5 text-gray-600" />
+                )}
+              </motion.div>
+            </motion.button>
+
             {/* TACTILE STATUS CAPSULE - Salon Online Toggle */}
             <motion.button
               onClick={() => setIsSalonOnline(!isSalonOnline)}

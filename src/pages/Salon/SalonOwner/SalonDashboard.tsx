@@ -8,7 +8,8 @@ import {
   BarChart3,
   UserCheck,
   Globe,
-  LogOut
+  LogOut,
+  X
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "../../../components/ui_components/button";
@@ -41,26 +42,29 @@ function SalonDashboard({ open, setOpen, collapsed, onLogout, isPoweringDown = f
 
   return (
     <>
-      {/* Mobile Overlay - Closes sidebar when clicking outside on mobile */}
-      {open && (
-        <div
-          className="fixed inset-0 bg-black/50 z-[55] md:hidden backdrop-blur-sm"
-          onClick={() => setOpen(false)}
-        />
-      )}
-
       <aside
         className={`
           fixed top-0 left-0 h-screen z-[60]
-          bg-[#0A0A0A] text-white
+          bg-[#0A0A0A] md:bg-[#0A0A0A] text-white
           transform transition-all duration-300 ease-in-out
           ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
           ${collapsed ? "md:w-20" : "md:w-64"}
           w-64
           border-r border-white/10 shadow-2xl backdrop-blur-[20px]
         `}
+        style={{
+          background: open ? 'rgba(10, 10, 10, 0.85)' : 'rgba(10, 10, 10, 0.95)'
+        }}
       >
         <div className="h-full flex flex-col overflow-hidden bg-[#0A0A0A]">
+
+          {/* MOBILE CLOSE BUTTON */}
+          <button
+            onClick={() => setOpen(false)}
+            className="md:hidden absolute top-4 right-4 p-2 hover:bg-white/10 rounded-lg transition-colors z-[70]"
+          >
+            <X className="w-5 h-5 text-white" />
+          </button>
 
           {/* LOGO SECTION */}
           <div
@@ -144,7 +148,10 @@ function SalonDashboard({ open, setOpen, collapsed, onLogout, isPoweringDown = f
               );
             })}
 
-            {/* Logout Button */}
+            {/* VISUAL SEPARATOR */}
+            <div className="mt-6 border-t border-white/10" />
+
+            {/* Logout Button - Professional Tech Style */}
             <motion.button
               onClick={() => {
                 if (onLogoutClick) {
@@ -152,31 +159,43 @@ function SalonDashboard({ open, setOpen, collapsed, onLogout, isPoweringDown = f
                 }
               }}
               className={`
-                w-full justify-start group py-2.5 transition-all duration-200 relative flex items-center gap-3 px-4
+                w-full group py-3 relative flex items-center gap-3 px-4 mt-4
                 ${collapsed ? "px-2 justify-center" : ""}
                 ${isPoweringDown ? 'grayscale opacity-50 pointer-events-none' : ''}
               `}
               style={{
-                marginTop: '120px',
-                background: 'rgba(239, 68, 68, 0.15)',
-                borderRadius: '6px',
-                boxShadow: '0 0 15px rgba(239, 68, 68, 0.3)'
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '12px',
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 0 15px rgba(255, 255, 255, 0.05)',
+                transition: 'all 0.3s ease'
               }}
               whileHover={{
-                boxShadow: 'none',
-                scale: 1.02
+                background: 'rgba(239, 68, 68, 0.08)',
+                boxShadow: '0 0 25px rgba(239, 68, 68, 0.15)',
+                borderColor: 'rgba(239, 68, 68, 0.2)'
               }}
               whileTap={{ scale: 0.98 }}
               title={collapsed ? t('dashboard.exit') : ""}
             >
-              <div className={`flex items-center ${collapsed ? "" : "gap-3"}`}>
-                <LogOut size={16} style={{ color: '#EF4444' }} />
+              <motion.div
+                className={`flex items-center ${collapsed ? "" : "gap-3"}`}
+                whileHover={{ x: 4 }}
+                transition={{ duration: 0.2 }}
+              >
+                <LogOut size={16} className="text-gray-400 group-hover:text-red-400 transition-colors" />
                 {!collapsed && (
-                  <span className="font-bold text-sm tracking-tight" style={{ color: '#EF4444' }}>
+                  <span 
+                    className="font-semibold text-sm tracking-wide" 
+                    style={{ 
+                      fontFamily: "'JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', monospace"
+                    }}
+                  >
                     {t('dashboard.exit')}
                   </span>
                 )}
-              </div>
+              </motion.div>
             </motion.button>
 
           </nav>
