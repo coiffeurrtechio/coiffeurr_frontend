@@ -1010,7 +1010,7 @@ const BookingsPage: React.FC = () => {
                         </button>
                       </div>
                     )}
-                    <button onClick={() => { setIsRescheduleMode(false); setIsCancelMode(false); }} disabled={isRescheduling} className="w-full mt-3 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 shadow-lg typography-label-light" style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}>
+                    <button onClick={() => { setIsRescheduleMode(true); setIsCancelMode(false); }} disabled={isRescheduling} className="w-full mt-3 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 shadow-lg typography-label-light" style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}>
                       <RefreshCcw size={14} /> {t('booking.rescheduleBooking')}
                     </button>
                   </>

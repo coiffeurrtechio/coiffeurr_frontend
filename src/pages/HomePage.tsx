@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n/config';
 import { MapPin, User, Search, Star, Navigation, Award, X, ChevronDown } from 'lucide-react';
+import NotificationCenter from '../components/NotificationCenter';
 import { useApi } from '../API/SalonsAPIs/ALLSalonAPI';
 import { usersalonApi } from '../API/SalonsAPIs/UserSalonAPI';
 import { Link, useNavigate } from 'react-router-dom';
@@ -356,33 +357,41 @@ const HomePage: React.FC = () => {
                 </div>
               </div>
               
-              {/* Right: Profile/Login */}
-              {isloggedin ? (
-                <div 
-                  onClick={() => navigate("/profile")}
-                  className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 rounded-full cursor-pointer hover:bg-white/30 transition-colors overflow-hidden ml-auto"
-                >
-                  {userImageUrl ? (
-                    <img 
-                      src={userImageUrl} 
-                      alt="User" 
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    <User className="w-6 h-6 sm:w-8 sm:h-8 p-1 text-white" />
-                  )}
-                </div>
-              ) : (
-                <button
-                  onClick={() => navigate("/login")}
-                  className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-full text-xs font-bold transition-colors ml-auto"
-                >
-                  {t('home.login')}
-                </button>
-              )}
+              {/* Right: Notification + Profile/Login */}
+              <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+                {/* Notification Center - Only show when logged in */}
+                {isloggedin && (
+                  <NotificationCenter userType="customer" iconColor="#FFFFFF" />
+                )}
+
+                {/* Profile/Login */}
+                {isloggedin ? (
+                  <div
+                    onClick={() => navigate("/profile")}
+                    className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 rounded-full cursor-pointer hover:bg-white/30 transition-colors overflow-hidden"
+                  >
+                    {userImageUrl ? (
+                      <img
+                        src={userImageUrl}
+                        alt="User"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <User className="w-6 h-6 sm:w-8 sm:h-8 p-1 text-white" />
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => navigate("/login")}
+                    className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-full text-xs font-bold transition-colors"
+                  >
+                    {t('home.login')}
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="max-w-2xl mx-auto">

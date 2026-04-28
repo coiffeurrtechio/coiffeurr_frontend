@@ -15,12 +15,14 @@ import { BookingRequestSuccess } from "../../components/Loaders/BookingRequestSu
 // API & Interfaces
 import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI";
 import { usersalonApi } from "../../API/SalonsAPIs/UserSalonAPI";
+import { useToast } from "../../components/Toast";
 
 const SalonService: React.FC = () => {
   const navigate = useNavigate();
   const { salonId, serviceId } = useParams();
   const { apiRequest, apiCustomerpiPost } = useApi();
   const { userapiPost } = usersalonApi();
+  const { showToast } = useToast();
 
   const location = useLocation();
   const service = location.state?.serviceData;
@@ -29,7 +31,6 @@ const SalonService: React.FC = () => {
   const [bookingrequestsend, setbookingrequestsend] = useState(false);
   const [bookingrequestsuccess, setbookingrequestsuccess] = useState(false);
   const [isEditModalOpen, setisEditModalOpen] = useState<boolean>(false);
-  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [showLoginRequiredModal, setShowLoginRequiredModal] = useState(false);
 
   const [salonservicedata, setsalonservicedata] = useState<any>(service);
@@ -209,16 +210,29 @@ const SalonService: React.FC = () => {
       if (!res?.error) {
         setisEditModalOpen(false);
         setbookingrequestsuccess(true);
+        showToast({
+          type: 'success',
+          title: 'Booking Confirmed!',
+          message: 'Your appointment has been successfully booked.'
+        });
         setTimeout(() => {
           setbookingrequestsuccess(false);
           navigate("/bookings");
         }, 2000);
       } else {
-        alert(res?.error || "Booking failed. Please try again.");
+        showToast({
+          type: 'error',
+          title: 'Booking Failed',
+          message: res?.error || "Booking failed. Please try again."
+        });
       }
     } catch (error) {
       console.error("Booking Error:", error);
-      alert("Booking failed. Please try again.");
+      showToast({
+        type: 'error',
+        title: 'Booking Failed',
+        message: "Booking failed. Please try again."
+      });
     } finally {
       setbookingrequestsend(false);
     }
@@ -248,14 +262,12 @@ const SalonService: React.FC = () => {
         throw new Error(res.error);
       }
 
-      // Show the notification
-      setNotification({
-        message: "Added to wishlist" ,
-        type: 'success'
+      // Show toast notification
+      showToast({
+        type: 'success',
+        title: 'Success!',
+        message: 'Added to wishlist'
       });
-
-      // Auto-hide after 3 seconds
-      setTimeout(() => setNotification(null), 3000);
 
       console.log("Wishlist updated successfully");
     } catch (error) {
@@ -268,14 +280,6 @@ const SalonService: React.FC = () => {
 
   return (
     <main className="min-h-screen bg-white text-slate-900 font-sans selection:bg-slate-100">
-
-      {/* --- Floating Notification --- */}
-      {notification && (
-        <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-[110] px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300 bg-white border-l-4 ${notification.type === 'success' ? 'border-green-500 text-green-600' : 'border-red-500 text-red-600'}`}>
-          {notification.type === 'success' ? <Check size={20} /> : <X size={20} />}
-          <span className="text-sm font-bold uppercase tracking-wider">{notification.message}</span>
-        </div>
-      )}
 
       {/* --- Minimal Header --- */}
       <nav className="fixed top-0 inset-x-0 z-50 bg-white/70 backdrop-blur-md border-b border-slate-50">

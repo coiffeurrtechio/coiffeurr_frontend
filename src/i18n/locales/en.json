@@ -702,7 +702,7 @@
     "cancellationReason": "Cancellation Reason",
     "cancellationReasonPlaceholder": "Why are you cancelling this booking?",
     "defaultCancellationMessage": "We're sorry—your booking has been cancelled by the salon. Please try booking another salon or select a different time. We're here to help!",
-    "bookingMarkedAs": "Booking marked as {status}",
+    "bookingMarkedAs": "Booking marked as {{status}}",
     "updateFailed": "Update failed",
     "bookingRescheduledSuccessfully": "Booking rescheduled successfully",
     "rescheduleFailed": "Reschedule failed",

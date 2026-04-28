@@ -703,7 +703,7 @@
     "rescheduling": "पुनर्निर्धारण होत आहे...",
     "cancelReschedule": "पुनर्निर्धारण रद्द करा",
     "markAsCompleted": "पूर्ण म्हणून चिन्हांकित करा",
-    "bookingMarkedAs": "बुकिंग {status} म्हणून चिन्हांकित केले",
+    "bookingMarkedAs": "बुकिंग {{status}} म्हणून चिन्हांकित केले",
     "updateFailed": "अपडेट अयशस्वी",
     "bookingRescheduledSuccessfully": "बुकिंग यशस्वीरित्या पुनर्निर्धारित केले",
     "rescheduleFailed": "पुनर्निर्धारण अयशस्वी",

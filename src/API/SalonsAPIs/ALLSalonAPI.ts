@@ -76,20 +76,17 @@ export function useApi() {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> => {
     try {
-      // const userData = localStorage.getItem("authState");
-      // if (!userData) return { data: null, error: "No user data", status: 401 };
+      const userData = localStorage.getItem("authState");
+      if (!userData) return { data: null, error: "No user data", status: 401 };
 
-      // const parsed = JSON.parse(userData);
-      // const accessToken = parsed?.user?.access_token;
-      // console.log("parsed =", parsed);
-      // console.log("accessToken =", accessToken);
-
+      const parsed = JSON.parse(userData);
+      const accessToken = parsed?.user?.access_token;
 
       const response = await fetch(`${Config.API_Customers}${endpoint}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          // Authorization: `Bearer ${accessToken}`,
+          "Authorization": `Bearer ${accessToken}`,
           ...(options.headers || {}),
         },
         credentials: "include",

@@ -20,14 +20,14 @@ const AuthRouter: React.FC<AuthRouterProps> = ({ element, allowedRoles }) => {
   console.log("Full user state:", user);
   
   // 🔒 If not logged in
-  // if (!isAuthenticated) {
-  //   return <Navigate to="/login" replace />;
-  // }
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
-  // // 🚫 If role not allowed
-  // if (allowedRoles && !allowedRoles.includes(userRole)) {
-  //   return <Navigate to="/" replace />;
-  // }
+  // 🚫 If role not allowed
+  if (allowedRoles && !allowedRoles.includes(userRole)) {
+    return <Navigate to="/" replace />;
+  }
 
   // ✅ Authorized
   return <>{element}</>;

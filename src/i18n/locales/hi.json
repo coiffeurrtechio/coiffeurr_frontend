@@ -702,7 +702,7 @@
     "cancellationReason": "रद्दीकरण का कारण",
     "cancellationReasonPlaceholder": "आप इस बुकिंग को क्यों रद्द कर रहे हैं?",
     "defaultCancellationMessage": "हमें खेद है—आपकी बुकिंग सैलून द्वारा रद्द कर दी गई है। कृपया किसी अन्य सैलून को बुक करने का प्रयास करें या एक अलग समय चुनें। हम आपकी मदद के लिए यहां हैं!",
-    "bookingMarkedAs": "बुकिंग {status} के रूप में चिह्नित की गई",
+    "bookingMarkedAs": "बुकिंग {{status}} के रूप में चिह्नित की गई",
     "updateFailed": "अपडेट विफल",
     "bookingRescheduledSuccessfully": "बुकिंग सफलतापूर्वक पुनर्निर्धारित की गई",
     "rescheduleFailed": "पुनर्निर्धारण विफल",

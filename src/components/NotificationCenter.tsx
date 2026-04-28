@@ -1,8 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Check, Clock } from 'lucide-react';
+import { X, Check, Clock, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 import { useSalonApi } from '../API/Salon_Owner_API/SalonOwnerAPI';
+import { useApi } from '../API/SalonsAPIs/ALLSalonAPI';
 import { useTranslation } from 'react-i18next';
+
+interface ToastNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+}
 
 interface Notification {
   id: string;
@@ -20,22 +29,32 @@ interface NotificationListResponse {
   totalCount: number;
 }
 
-const NotificationCenter: React.FC = () => {
+interface NotificationCenterProps {
+  userType?: 'salon' | 'customer';
+  iconColor?: string;
+}
+
+const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'salon', iconColor }) => {
   const { t } = useTranslation();
-  const { apiSalonRequest, apiSalonPost } = useSalonApi();
+  const navigate = useNavigate();
+  const salonApi = useSalonApi();
+  const customerApi = useApi();
+  
+  // Use appropriate API based on user type
+  const apiRequest = userType === 'salon' 
+    ? salonApi.apiSalonRequest 
+    : customerApi.apiRequest;
+  const apiPost = userType === 'salon'
+    ? salonApi.apiSalonPost
+    : customerApi.apiPost;
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [toastQueue, setToastQueue] = useState<ToastNotification[]>([]);
   const previousUnreadCount = useRef(0);
-
-  // Get user ID from auth state
-  const getUserId = () => {
-    const authData = localStorage.getItem("authState");
-    if (!authData) return null;
-    const parsed = JSON.parse(authData);
-    return parsed?.user?.user?.id || parsed?.user?.id || parsed?.user?._id;
-  };
+  const previousNotifications = useRef<Notification[]>([]);
 
   // Request notification permission and initialize audio
   useEffect(() => {
@@ -47,63 +66,111 @@ const NotificationCenter: React.FC = () => {
     requestNotificationPermission();
   }, []);
 
-  // Play notification sound when unread count increases
+  // Play notification sound
+  const playNotificationSound = () => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Pleasant chime sound - two tones
+      oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A5
+      oscillator.frequency.setValueAtTime(1109, audioContext.currentTime + 0.1); // C#6
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.6);
+    } catch (err) {
+      console.log('Audio play failed:', err);
+    }
+  };
+
+  // Remove toast from queue
+  const removeToast = (toastId: string) => {
+    setToastQueue(prev => prev.filter(t => t.id !== toastId));
+  };
+
+  // Detect new notifications and show toasts
   useEffect(() => {
-    if (unreadCount > previousUnreadCount.current) {
-      // Play sound using Web Audio API
-      const playNotificationSound = () => {
-        try {
-          const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-          const oscillator = audioContext.createOscillator();
-          const gainNode = audioContext.createGain();
-          
-          oscillator.connect(gainNode);
-          gainNode.connect(audioContext.destination);
-          
-          oscillator.frequency.value = 800;
-          oscillator.type = 'sine';
-          
-          gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-          
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.5);
-        } catch (err) {
-          console.log('Audio play failed:', err);
-        }
-      };
-      
-      playNotificationSound();
-      
-      // Show browser notification if permission granted
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('New Booking', {
-          body: `You have ${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}`,
-          icon: '/favicon.ico',
-          badge: '/favicon.ico',
-          tag: 'booking-notification',
-          requireInteraction: false
+    if (notifications.length > 0 && previousNotifications.current.length > 0) {
+      // Find new notifications (not in previous list)
+      const newNotifs = notifications.filter(
+        n => !previousNotifications.current.some(pn => pn.id === n.id)
+      );
+
+      if (newNotifs.length > 0) {
+        // Play sound for new notifications
+        playNotificationSound();
+
+        // Add toasts for each new notification
+        const newToasts: ToastNotification[] = newNotifs.map(n => ({
+          id: `toast-${n.id}-${Date.now()}`,
+          title: n.title,
+          message: n.message,
+          type: n.type
+        }));
+        
+        setToastQueue(prev => [...prev, ...newToasts]);
+
+        // Auto-remove toasts after 5 seconds
+        newToasts.forEach(toast => {
+          setTimeout(() => removeToast(toast.id), 5000);
         });
+
+        // Show browser notification if permission granted
+        if ('Notification' in window && Notification.permission === 'granted') {
+          newNotifs.forEach(n => {
+            new Notification(n.title, {
+              body: n.message,
+              icon: '/favicon.ico',
+              badge: '/favicon.ico',
+              tag: `notif-${n.id}`,
+              requireInteraction: false
+            });
+          });
+        }
       }
     }
+    
+    previousNotifications.current = notifications;
     previousUnreadCount.current = unreadCount;
-  }, [unreadCount]);
+  }, [notifications, unreadCount]);
 
   // Fetch notifications
   const fetchNotifications = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const userId = getUserId();
-      const res = await apiSalonRequest<NotificationListResponse>('/notifications/?limit=20&offset=0&unread_only=false', {
-        headers: { "X-User-Id": userId || '' }
-      });
+      // JWT token in apiRequest already identifies the user
+      // No need to send X-User-Id header - backend gets user from JWT
+      const res = await apiRequest<NotificationListResponse>('/notifications/?limit=20&offset=0&unread_only=false');
+      console.log('[NotificationCenter] API response:', res);
+      console.log('[NotificationCenter] Response data:', res.data);
+      
+      if (res.status === 403) {
+        setError('Authentication required');
+        setNotifications([]);
+        setUnreadCount(0);
+        return;
+      }
+      
       if (res.data) {
-        setNotifications(res.data.notifications);
-        setUnreadCount(res.data.unreadCount);
+        console.log('[NotificationCenter] Notifications count:', res.data.notifications?.length);
+        console.log('[NotificationCenter] Unread count:', res.data.unreadCount);
+        setNotifications(res.data.notifications || []);
+        setUnreadCount(res.data.unreadCount || 0);
+      } else {
+        console.log('[NotificationCenter] No data in response');
       }
     } catch (error) {
-      console.error('Error fetching notifications:', error);
-      // Set empty state on error
+      console.error('[NotificationCenter] Error fetching notifications:', error);
+      setError('Failed to load notifications');
       setNotifications([]);
       setUnreadCount(0);
     } finally {
@@ -114,11 +181,9 @@ const NotificationCenter: React.FC = () => {
   // Mark notification as read
   const markAsRead = async (notificationId?: string) => {
     try {
-      const userId = getUserId();
-      await apiSalonPost('/notifications/mark-read', {
+      // JWT token already identifies the user - no need for X-User-Id header
+      await apiPost('/notifications/mark-read', {
         notificationIds: notificationId ? [notificationId] : null
-      }, {
-        headers: { "X-User-Id": userId || '' }
       });
       if (notificationId) {
         setNotifications(notifications.map(n => 
@@ -137,10 +202,9 @@ const NotificationCenter: React.FC = () => {
   // Clear all notifications
   const clearNotifications = async () => {
     try {
-      const userId = getUserId();
-      const res = await apiSalonRequest<{ deletedCount: number }>('/notifications/', {
-        method: 'DELETE',
-        headers: { "X-User-Id": userId || '' }
+      // JWT token already identifies the user - no need for X-User-Id header
+      const res = await apiRequest<{ deletedCount: number }>('/notifications/', {
+        method: 'DELETE'
       });
       if (res.data) {
         setNotifications([]);
@@ -187,11 +251,43 @@ const NotificationCenter: React.FC = () => {
 
   // Initial fetch and polling for new notifications
   useEffect(() => {
+    console.log('[NotificationCenter] Component mounted, fetching notifications...');
     fetchNotifications();
     // Poll for new notifications every 30 seconds
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // TEST: Add a test notification to verify UI is working
+  const addTestNotification = () => {
+    const testNotif: Notification = {
+      id: `test-${Date.now()}`,
+      type: 'SALON_NEW_BOOKING',
+      title: 'New Booking Request!',
+      message: 'Test customer has requested a booking for Haircut on 2026-04-30 at 14:30.',
+      isRead: false,
+      createdAt: new Date().toISOString(),
+      data: { bookingId: 'TEST123', price: 500 }
+    };
+    setNotifications(prev => [testNotif, ...prev]);
+    setUnreadCount(prev => prev + 1);
+    
+    // Trigger toast
+    setToastQueue(prev => [...prev, {
+      id: `toast-test-${Date.now()}`,
+      title: testNotif.title,
+      message: testNotif.message,
+      type: testNotif.type
+    }]);
+    
+    // Play sound
+    playNotificationSound();
+    
+    // Auto-remove toast
+    setTimeout(() => {
+      setToastQueue(prev => prev.filter(t => !t.id.includes('toast-test')));
+    }, 5000);
+  };
 
   // Fetch full list when dropdown opens
   useEffect(() => {
@@ -211,7 +307,7 @@ const NotificationCenter: React.FC = () => {
           rotate: [0, -5, 5, -5, 5, 0],
           transition: { duration: 0.4 }
         }}
-        style={{ color: '#D4AF37' }}
+        style={{ color: iconColor || '#D4AF37' }}
       >
         {/* Custom Minimalist Bell SVG in Polished Gold */}
         <svg 
@@ -263,10 +359,10 @@ const NotificationCenter: React.FC = () => {
           />
 
           {/* Notification Panel - Tech-Luxury Design */}
-          <div className="absolute right-0 top-12 w-96 bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/10 z-50 max-h-[500px] flex flex-col" style={{ boxShadow: "rgba(0,0,0,0.15) 0 8px 32px" }}>
+          <div className="absolute right-0 top-10 w-64 sm:w-72 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 z-50 max-h-[350px] flex flex-col" style={{ boxShadow: "rgba(0,0,0,0.15) 0 8px 32px" }}>
             {/* Header */}
-            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="font-bold text-gray-800" style={{ fontFamily: "'Playfair Display', serif" }}>{t('common.notifications')}</h3>
+            <div className="p-3 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="font-bold text-sm text-gray-800" style={{ fontFamily: "'Playfair Display', serif" }}>{t('common.notifications')}</h3>
               <div className="flex items-center gap-2">
                 {unreadCount > 0 && (
                   <button
@@ -280,7 +376,7 @@ const NotificationCenter: React.FC = () => {
                   onClick={() => setIsOpen(false)}
                   className="p-1 hover:bg-gray-100 rounded-full"
                 >
-                  <X className="w-4 h-4 text-gray-400" />
+                  <X className="w-3.5 h-3.5 text-gray-400" />
                 </button>
               </div>
             </div>
@@ -288,11 +384,21 @@ const NotificationCenter: React.FC = () => {
             {/* Notifications List */}
             <div className="flex-1 overflow-y-auto">
               {loading ? (
-                <div className="p-8 text-center text-gray-400 text-sm">
+                <div className="p-4 text-center text-gray-400 text-xs">
                   {t('common.loading')}
                 </div>
+              ) : error ? (
+                <div className="p-4 text-center">
+                  <p className="text-red-500 text-xs mb-1">{error}</p>
+                  <button
+                    onClick={fetchNotifications}
+                    className="text-[10px] text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    Retry
+                  </button>
+                </div>
               ) : notifications.length === 0 ? (
-                <div className="p-8 text-center text-gray-400 text-sm">
+                <div className="p-4 text-center text-gray-400 text-xs">
                   {t('common.noNotifications')}
                 </div>
               ) : (
@@ -300,32 +406,40 @@ const NotificationCenter: React.FC = () => {
                   {notifications.map((notification) => (
                     <div
                       key={notification.id}
-                      className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
+                      className={`p-3 hover:bg-gray-50 cursor-pointer transition-colors ${
                         !notification.isRead ? 'bg-blue-50/50' : ''
                       }`}
                       onClick={() => {
+                        // Mark notification as read
                         if (!notification.isRead) {
                           markAsRead(notification.id);
                         }
+                        // Navigate to booking page if bookingId exists
+                        if (notification.data?.bookingId) {
+                          const bookingPath = userType === 'salon' ? '/dashboard/booking' : '/bookings';
+                          navigate(bookingPath);
+                        }
+                        // Close notification panel
+                        setIsOpen(false);
                       }}
                     >
-                      <div className="flex items-start gap-3">
-                        <div className="p-2 bg-gray-100 rounded-full">
+                      <div className="flex items-start gap-2">
+                        <div className="p-1 bg-gray-100 rounded-full flex-shrink-0">
                           {getNotificationIcon(notification.type)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2 mb-1">
-                            <p className="font-bold text-sm text-gray-800 truncate">
+                          <div className="flex items-center justify-between gap-1 mb-0.5">
+                            <p className="font-bold text-[11px] text-gray-800 truncate">
                               {notification.title}
                             </p>
                             {!notification.isRead && (
-                              <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
+                              <span className="w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0" />
                             )}
                           </div>
-                          <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                          <p className="text-[11px] text-gray-600 mb-0.5 line-clamp-2 leading-tight">
                             {notification.message}
                           </p>
-                          <p className="text-[10px] text-gray-400 font-bold">
+                          <p className="text-[9px] text-gray-400 font-bold">
                             {formatDate(notification.createdAt)}
                           </p>
                         </div>
@@ -337,10 +451,10 @@ const NotificationCenter: React.FC = () => {
             </div>
 
             {/* Footer */}
-            <div className="p-3 border-t border-gray-100">
-              <button 
+            <div className="p-2 border-t border-gray-100">
+              <button
                 onClick={clearNotifications}
-                className="w-full flex items-center justify-center gap-2 text-xs text-gray-500 hover:text-gray-700 py-2 hover:bg-gray-50 rounded-xl transition-colors"
+                className="w-full flex items-center justify-center gap-2 text-xs text-gray-500 hover:text-gray-700 py-1.5 hover:bg-gray-50 rounded-lg transition-colors"
               >
                 {t('common.clear')}
               </button>
@@ -348,6 +462,65 @@ const NotificationCenter: React.FC = () => {
           </div>
         </>
       )}
+
+      {/* Toast Notifications - Popup alerts for new notifications */}
+      <AnimatePresence>
+        {toastQueue.map((toast) => (
+          <motion.div
+            key={toast.id}
+            initial={{ opacity: 0, x: 100, scale: 0.8 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 100, scale: 0.8 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            className="fixed top-20 right-3 z-[100] max-w-[280px] w-full sm:max-w-sm"
+          >
+            <div
+              className="bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl border-l-4 p-3 flex items-start gap-2.5 cursor-pointer hover:shadow-3xl transition-shadow"
+              style={{
+                borderLeftColor: toast.type.includes('CANCELLED') ? '#EF4444' :
+                                toast.type.includes('CONFIRMED') ? '#10B981' :
+                                toast.type.includes('RESCHEDULED') ? '#F59E0B' : '#D4AF37',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05)'
+              }}
+              onClick={() => {
+                setIsOpen(true);
+                removeToast(toast.id);
+              }}
+            >
+              <div
+                className="p-1.5 rounded-full flex-shrink-0"
+                style={{
+                  backgroundColor: toast.type.includes('CANCELLED') ? 'rgba(239, 68, 68, 0.1)' :
+                                  toast.type.includes('CONFIRMED') ? 'rgba(16, 185, 129, 0.1)' :
+                                  toast.type.includes('RESCHEDULED') ? 'rgba(245, 158, 11, 0.1)' : 'rgba(212, 175, 55, 0.1)'
+                }}
+              >
+                <Bell
+                  className="w-4 h-4"
+                  style={{
+                    color: toast.type.includes('CANCELLED') ? '#EF4444' :
+                           toast.type.includes('CONFIRMED') ? '#10B981' :
+                           toast.type.includes('RESCHEDULED') ? '#F59E0B' : '#D4AF37'
+                  }}
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-xs text-gray-900 mb-0.5">{toast.title}</p>
+                <p className="text-xs text-gray-600 line-clamp-2">{toast.message}</p>
+              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeToast(toast.id);
+                }}
+                className="p-1 hover:bg-gray-100 rounded-full flex-shrink-0"
+              >
+                <X className="w-3.5 h-3.5 text-gray-400" />
+              </button>
+            </div>
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </div>
   );
 };
