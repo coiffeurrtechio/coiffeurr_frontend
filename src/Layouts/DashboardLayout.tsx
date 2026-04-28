@@ -252,7 +252,7 @@ const DashboardLayout: React.FC = () => {
 
           {/* GLASS CONTAINER - Header Action Bar */}
           <div className="flex items-center gap-0">
-            <div className="hidden lg:flex items-center gap-0 px-4 py-2 rounded-2xl"
+            <div className="flex items-center gap-0 px-4 py-2 rounded-2xl"
               style={{
                 background: 'rgba(255, 255, 255, 0.6)',
                 backdropFilter: 'blur(20px)',
