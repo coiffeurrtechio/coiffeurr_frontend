@@ -239,7 +239,7 @@ const StaffManagement: React.FC = () => {
             <DashboardLoader isVisible={loading || submitting} />
 
             {/* Main Stage Container */}
-            <div className="main-stage p-6 space-y-6">
+            <div className="main-stage p-4 md:p-6 space-y-6">
                 {/* Fixed Header Strip */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4" style={{ borderBottom: '1px solid var(--light-greige)' }}>
                     <div>
@@ -254,12 +254,12 @@ const StaffManagement: React.FC = () => {
                 {/* Search Bar - Integrated in Header Strip */}
                 <div className="relative w-full md:w-96">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2" size={18} style={{ color: '#666' }} />
-                    <input 
-                        type="text" 
-                        placeholder={t('staff.searchStaff')} 
-                        value={searchQuery} 
-                        onChange={(e) => setSearchQuery(e.target.value)} 
-                        className="w-full pl-12 pr-4 rounded-2xl text-sm outline-none transition-all typography-label-light" 
+                    <input
+                        type="text"
+                        placeholder={t('staff.searchStaff')}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-12 pr-4 rounded-2xl text-sm outline-none transition-all typography-label-light"
                         style={{ height: '44px', backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
                     />
                 </div>
@@ -268,19 +268,19 @@ const StaffManagement: React.FC = () => {
             {/* Staff Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-in fade-in duration-500 delay-200 mt-6">
                 {staffList.filter(s => s.name?.toLowerCase().includes(searchQuery.toLowerCase())).map((staff) => (
-                    <div 
-                        key={staff.staff_id} 
+                    <div
+                        key={staff.staff_id}
                         className="floating-tile overflow-hidden hover-lift"
                     >
                         {/* Card Header with Image */}
-                        <div className="relative h-32 overflow-hidden" style={{ background: 'linear-gradient(135deg, var(--muted-gold) 0%, var(--deep-charcoal) 100%)' }}>
+                        <div className="relative h-24 md:h-32 overflow-hidden" style={{ background: 'linear-gradient(135deg, var(--muted-gold) 0%, var(--deep-charcoal) 100%)' }}>
                             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0wIDQwaDQwVjBIMHY0MHptMjAgMjBWMjBIMHYyMGgyMHptMjAgMjBWMjBIMHYyMGgyMHoiIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvZz48L3N2Zz4=')] opacity-30"></div>
-                            <div className="absolute bottom-3 left-4">
-                                <div className="w-24 h-24 rounded-xl bg-white shadow-lg overflow-hidden border-3 border-white">
-                                    {staff.images?.[0] ? 
-                                        <img src={staff.images[0]} className="w-full h-full object-cover" alt={staff.name} /> : 
+                            <div className="absolute bottom-2 left-3 md:bottom-3 md:left-4">
+                                <div className="w-16 h-16 md:w-24 md:h-24 rounded-xl bg-white shadow-lg overflow-hidden border-3 border-white">
+                                    {staff.images?.[0] ?
+                                        <img src={staff.images[0]} className="w-full h-full object-cover" alt={staff.name} /> :
                                         <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: 'var(--light-greige)' }}>
-                                            <User size={40} style={{ color: '#666' }} />
+                                            <User size={32} md:size={40} style={{ color: '#666' }} />
                                         </div>
                                     }
                                 </div>
@@ -303,14 +303,14 @@ const StaffManagement: React.FC = () => {
                         </div>
 
                         {/* Card Body */}
-                        <div className="pt-10 pb-4 px-4">
-                            <div className="flex justify-between items-start mb-3">
-                                <div className="flex-1">
-                                    <h3 className="typography-label" style={{ fontSize: '16px', color: 'var(--deep-charcoal)' }}>{staff.name}</h3>
-                                    <p className="typography-label-light" style={{ fontSize: '10px', letterSpacing: '0.05em' }}>{staff.role}</p>
+                        <div className="pt-6 md:pt-10 pb-4 px-4">
+                            <div className="flex flex-col md:flex-row md:justify-between items-start mb-3 gap-2">
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="typography-label truncate" style={{ fontSize: '14px md:16px', color: 'var(--deep-charcoal)' }}>{staff.name}</h3>
+                                    <p className="typography-label-light truncate" style={{ fontSize: '10px', letterSpacing: '0.05em' }}>{staff.role}</p>
                                 </div>
                                 {/* Experience & Rating on right */}
-                                <div className="flex flex-col gap-1 items-end">
+                                <div className="flex flex-row md:flex-col gap-2 md:gap-1 items-end md:items-end">
                                     {staff.experienceYears && (
                                         <div className="flex items-center gap-1">
                                             <div className="w-4 h-4 rounded flex items-center justify-center" style={{ backgroundColor: 'var(--light-greige)' }}>

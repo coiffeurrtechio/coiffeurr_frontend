@@ -17,11 +17,11 @@ function Sponser_Footer({ collapsed }: { collapsed: boolean }) {
                             </p>
                             <Sparkles size={12} className="text-[#D4AF37]" />
                         </div>
-                        <div className="flex items-center justify-center gap-4 px-5 py-2.5 rounded-full border border-gray-200/30">
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 px-5 py-2.5 rounded-full border border-gray-200/30">
                             <span className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-[0.1em] hover:text-[#1a1a1a] hover:scale-105 transition-all cursor-pointer" style={{ textShadow: "0 1px 2px rgba(212, 175, 55, 0.3)" }}>
                                 IIM SHILLONG
                             </span>
-                            <span className="text-gray-300 text-[10px]">•</span>
+                            <span className="text-gray-300 text-[10px] hidden sm:block">•</span>
                             <span className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-[0.1em] hover:text-[#1a1a1a] hover:scale-105 transition-all cursor-pointer" style={{ textShadow: "0 1px 2px rgba(212, 175, 55, 0.3)" }}>
                                 SIDBI
                             </span>

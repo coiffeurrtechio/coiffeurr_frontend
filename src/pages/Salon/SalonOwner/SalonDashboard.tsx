@@ -44,19 +44,19 @@ function SalonDashboard({ open, setOpen, collapsed, onLogout, isPoweringDown = f
     <>
       <aside
         className={`
-          fixed top-0 left-0 h-screen z-[60]
+          fixed top-0 left-0 h-screen z-[60] pointer-events-auto
           bg-[#0A0A0A] md:bg-[#0A0A0A] text-white
           transform transition-all duration-300 ease-in-out
           ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
           ${collapsed ? "md:w-20" : "md:w-64"}
           w-64
-          border-r border-white/10 shadow-2xl backdrop-blur-[20px]
+          border-r border-white/10 shadow-2xl
         `}
         style={{
-          background: open ? 'rgba(10, 10, 10, 0.85)' : 'rgba(10, 10, 10, 0.95)'
+          background: open ? 'rgba(10, 10, 10, 0.95)' : 'rgba(10, 10, 10, 0.95)'
         }}
       >
-        <div className="h-full flex flex-col overflow-hidden bg-[#0A0A0A]">
+        <div className="h-full flex flex-col overflow-hidden bg-[#0A0A0A] relative">
 
           {/* MOBILE CLOSE BUTTON */}
           <button
@@ -68,7 +68,7 @@ function SalonDashboard({ open, setOpen, collapsed, onLogout, isPoweringDown = f
 
           {/* LOGO SECTION */}
           <div
-            className={`p-6 border-b border-white/10 flex cursor-pointer items-center flex-shrink-0 group ${collapsed ? "justify-center" : "gap-4"}`}
+            className={`p-6 border-b border-white/10 flex cursor-pointer items-center flex-shrink-0 group relative z-10 ${collapsed ? "justify-center" : "gap-4"}`}
             onClick={() => navigate("/dashboard")}
           >
             <div className={`bg-white rounded-xl p-1.5 transition-transform group-hover:scale-105 ${collapsed ? "w-10 h-10" : "w-16 h-16"}`}>
@@ -109,7 +109,7 @@ function SalonDashboard({ open, setOpen, collapsed, onLogout, isPoweringDown = f
           </div>
 
           {/* NAVIGATION SECTION */}
-          <nav className="flex-1 p-4 space-y-2 mt-4">
+          <nav className="flex-1 p-4 space-y-2 mt-4 relative z-10">
             {menuItems.map((item) => {
               const Icon = item.icon;
 
@@ -127,7 +127,7 @@ function SalonDashboard({ open, setOpen, collapsed, onLogout, isPoweringDown = f
                     if (window.innerWidth < 768) setOpen(false);
                   }}
                   className={`
-                    w-full justify-center group py-6 rounded-xl transition-all duration-200 relative
+                    w-full justify-center group py-3 md:py-6 rounded-xl transition-all duration-200 relative z-10 opacity-100
                     ${collapsed ? "px-2" : "justify-between px-4"}
                     ${isActive
                       ? 'bg-white/10 text-white shadow-lg hover:bg-white/15'
@@ -149,7 +149,7 @@ function SalonDashboard({ open, setOpen, collapsed, onLogout, isPoweringDown = f
             })}
 
             {/* VISUAL SEPARATOR */}
-            <div className="mt-6 border-t border-white/10" />
+            <div className="mt-auto border-t border-white/10" />
 
             {/* Logout Button - Professional Tech Style */}
             <motion.button
@@ -159,7 +159,7 @@ function SalonDashboard({ open, setOpen, collapsed, onLogout, isPoweringDown = f
                 }
               }}
               className={`
-                w-full group py-3 relative flex items-center gap-3 px-4 mt-4
+                w-full group py-3 relative flex items-center gap-3 px-4 mt-4 mb-10 md:mb-4
                 ${collapsed ? "px-2 justify-center" : ""}
                 ${isPoweringDown ? 'grayscale opacity-50 pointer-events-none' : ''}
               `}
@@ -186,9 +186,9 @@ function SalonDashboard({ open, setOpen, collapsed, onLogout, isPoweringDown = f
               >
                 <LogOut size={16} className="text-gray-400 group-hover:text-red-400 transition-colors" />
                 {!collapsed && (
-                  <span 
-                    className="font-semibold text-sm tracking-wide" 
-                    style={{ 
+                  <span
+                    className="font-semibold text-sm tracking-wide"
+                    style={{
                       fontFamily: "'JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', monospace"
                     }}
                   >

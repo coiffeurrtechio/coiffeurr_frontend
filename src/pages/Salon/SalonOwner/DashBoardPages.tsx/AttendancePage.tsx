@@ -885,10 +885,10 @@ const AttendancePage: React.FC = () => {
       </div>
 
       {/* View Tabs */}
-      <div className="flex items-center gap-4 pb-4" style={{ borderBottom: '1px solid var(--ghost-row-line)' }}>
+      <div className="flex items-center gap-2 md:gap-4 pb-4" style={{ borderBottom: '1px solid var(--ghost-row-line)' }}>
         <button
           onClick={() => handleViewModeChange('daily')}
-          className={`px-6 py-3 text-sm font-semibold border-b-3 transition-all ${viewMode === 'daily' ? 'text-[#D4AF37]' : 'text-gray-500 hover:text-gray-700'}`}
+          className={`flex-1 md:flex-none px-4 md:px-6 py-3 text-sm font-semibold border-b-3 transition-all ${viewMode === 'daily' ? 'text-[#D4AF37]' : 'text-gray-500 hover:text-gray-700'}`}
           style={{
             borderBottom: viewMode === 'daily' ? '3px solid #D4AF37' : '3px solid transparent',
             letterSpacing: '0.15em',
@@ -899,7 +899,7 @@ const AttendancePage: React.FC = () => {
         </button>
         <button
           onClick={() => handleViewModeChange('monthly')}
-          className={`px-6 py-3 text-sm font-semibold border-b-3 transition-all ${viewMode === 'monthly' ? 'text-[#D4AF37]' : 'text-gray-500 hover:text-gray-700'}`}
+          className={`flex-1 md:flex-none px-4 md:px-6 py-3 text-sm font-semibold border-b-3 transition-all ${viewMode === 'monthly' ? 'text-[#D4AF37]' : 'text-gray-500 hover:text-gray-700'}`}
           style={{
             borderBottom: viewMode === 'monthly' ? '3px solid #D4AF37' : '3px solid transparent',
             letterSpacing: '0.15em',
@@ -912,28 +912,28 @@ const AttendancePage: React.FC = () => {
 
       {/* Date Scroller - Daily View Only */}
       {viewMode === 'daily' && (
-        <div className="flex items-center justify-between gap-3 py-2 transition-opacity duration-300" style={{ opacity: isChangingDate ? 0.5 : 1 }}>
-          <div className="flex items-center gap-3 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="flex flex-col md:flex-row items-center justify-between gap-3 py-2 transition-opacity duration-300" style={{ opacity: isChangingDate ? 0.5 : 1 }}>
+          <div className="flex items-center gap-3 overflow-x-auto w-full md:w-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <button
               onClick={() => changeDate(-1)}
-              className="p-1 rounded-full transition-all hover:bg-gray-100"
+              className="p-1 rounded-full transition-all hover:bg-gray-100 flex-shrink-0"
               style={{ color: '#2C2C2C' }}
             >
               <ChevronLeft size={16} />
             </button>
-            
+
             <div className="flex gap-2">
               {Array.from({ length: 7 }, (_, i) => {
                 const date = new Date(selectedDate);
                 date.setDate(date.getDate() - 3 + i);
                 const isSelected = date.toDateString() === selectedDate.toDateString();
                 const isToday = date.toDateString() === new Date().toDateString();
-                
+
                 return (
                   <button
                     key={i}
                     onClick={() => handleDateChange(date.toISOString().split('T')[0])}
-                    className="flex flex-col items-center justify-center px-2 py-2 rounded-lg transition-all duration-300 hover:scale-105"
+                    className="flex flex-col items-center justify-center px-2 py-2 rounded-lg transition-all duration-300 hover:scale-105 flex-shrink-0"
                     style={{
                       backgroundColor: isSelected ? '#D4AF37' : 'transparent',
                       border: isSelected ? '1.5px solid #D4AF37' : '1.5px solid #E8E4DE',
@@ -942,7 +942,7 @@ const AttendancePage: React.FC = () => {
                       transform: isChangingDate ? 'scale(0.95)' : 'scale(1)'
                     }}
                   >
-                    <span className="text-xs font-medium" style={{ 
+                    <span className="text-xs font-medium" style={{
                       color: isSelected ? '#FFFFFF' : '#999',
                       fontFamily: 'Inter, sans-serif',
                       fontSize: '8px',
@@ -950,7 +950,7 @@ const AttendancePage: React.FC = () => {
                     }}>
                       {date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
                     </span>
-                    <span className="text-base font-bold" style={{ 
+                    <span className="text-base font-bold" style={{
                       color: isSelected ? '#FFFFFF' : '#2C2C2C',
                       fontFamily: 'Playfair Display, serif',
                       fontSize: '14px'
@@ -958,7 +958,7 @@ const AttendancePage: React.FC = () => {
                       {date.getDate()}
                     </span>
                     {isToday && (
-                      <span className="text-xs font-medium" style={{ 
+                      <span className="text-xs font-medium" style={{
                         color: isSelected ? '#FFFFFF' : '#D4AF37',
                         fontFamily: 'Inter, sans-serif',
                         fontSize: '7px'
@@ -973,7 +973,7 @@ const AttendancePage: React.FC = () => {
 
             <button
               onClick={() => changeDate(1)}
-              className="p-1 rounded-full transition-all hover:bg-gray-100"
+              className="p-1 rounded-full transition-all hover:bg-gray-100 flex-shrink-0"
               style={{ color: '#2C2C2C' }}
             >
               <ChevronRight size={16} />
@@ -981,7 +981,7 @@ const AttendancePage: React.FC = () => {
           </div>
 
           {/* Action Buttons - Premium Action Chips */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-center md:justify-end w-full md:w-auto mt-2 md:mt-0">
             <button
               onClick={handleMarkAllPresent}
               disabled={loading || saving}
