@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, X, Scissors, Check, MoreHorizontal, Save, Download, Mail, Calendar, Clock, Users, CheckCircle, XCircle, AlertCircle, AlertTriangle, ChevronLeft, ChevronRight, ChevronDown, Search, Filter, RefreshCw, UserCheck, ImageIcon, Briefcase, MessageSquare } from "lucide-react";
+import { Plus, Edit2, Trash2, X, Scissors, Check, MoreHorizontal, Save, Download, Mail, Calendar, Clock, User, Users, CheckCircle, XCircle, AlertCircle, AlertTriangle, ChevronLeft, ChevronRight, ChevronDown, Search, Filter, RefreshCw, UserCheck, ImageIcon, Briefcase, MessageSquare } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
 import { useApi } from "../../../../API/SalonsAPIs/ALLSalonAPI";
