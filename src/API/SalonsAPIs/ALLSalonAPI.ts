@@ -41,28 +41,38 @@ export function useApi() {
       }
 
       const result = await response.json();
+      
+      // Extract the access token from the response
+      const accessToken = result.access_token || result.accessToken;
+      
+      // Store the complete user data including the access token in Redux
       dispatch(
         login({
-          user: result             // user details (id, email, etc.)
+          user: {
+            ...result,           // user details (id, email, etc.)
+            access_token: accessToken  // store the access token
+          }
         })
       );
 
+      // Also update localStorage with the new token
+      const currentAuthState = localStorage.getItem("authState");
+      if (currentAuthState) {
+        const parsed = JSON.parse(currentAuthState);
+        localStorage.setItem(
+          "authState",
+          JSON.stringify({
+            ...parsed,
+            user: {
+              ...parsed.user,
+              ...result,
+              access_token: accessToken
+            }
+          })
+        );
+      }
 
-      // const json = await response.json();
-
-      // localStorage.setItem(
-      //   "authState",
-      //   JSON.stringify({
-      //     ...parsed,
-      //     user: {
-      //       json
-      //     },
-      //   })
-      // );
-      // localStorage.setItem("accessToken", JSON.stringify(json.accessToken));
-
-
-      return result;
+      return accessToken;
     } catch {
       navigate("/login");
       return null;
@@ -73,22 +83,33 @@ export function useApi() {
 
   const apiRequest = async <T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    requireAuth: boolean = false
   ): Promise<ApiResponse<T>> => {
     try {
-      const userData = localStorage.getItem("authState");
-      if (!userData) return { data: null, error: "No user data", status: 401 };
+      // const userData = localStorage.getItem("authState");
+      // const parsed = userData ? JSON.parse(userData) : null;
+      // const accessToken = parsed?.user?.access_token;
+      console.log("coming for api call = ");
+      
+      // Only require auth if explicitly needed
+      // if (requireAuth && !userData) {
+      //   return { data: null, error: "No user data", status: 401 };
+      // }
 
-      const parsed = JSON.parse(userData);
-      const accessToken = parsed?.user?.access_token;
+      const headers: any = {
+        "Content-Type": "application/json",
+        ...(options.headers || {}),
+      };
+
+      // Add auth header only if we have a token
+      // if (accessToken) {
+      //   headers["Authorization"] = `Bearer ${accessToken}`;
+      // }
 
       const response = await fetch(`${Config.API_Customers}${endpoint}`, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`,
-          ...(options.headers || {}),
-        },
+        headers,
         credentials: "include",
         ...options,
       });
@@ -103,22 +124,16 @@ export function useApi() {
         json = null;
       }
 
-      // If unauthorized, try refreshing token once
-      if (status === 401) {
+      // If unauthorized and auth was required, try refreshing token once
+      if (status === 401 && requireAuth) {
         const newToken = await generateAccessToken();
         if (newToken) {
-          // Save new token to localStorage
-          // localStorage.setItem(
-          //   "authState",
-          //   JSON.stringify({ ...parsed, accessToken: newToken })
-          // );
-
           // Retry original request with new token
           const retryResponse = await fetch(`${Config.API_Customers}${endpoint}`, {
             ...options,
             headers: {
               "Content-Type": "application/json",
-              // Authorization: `Bearer ${newToken}`,
+              "Authorization": `Bearer ${newToken}`,
               ...(options.headers || {}),
             },
             credentials: "include",
@@ -131,7 +146,7 @@ export function useApi() {
             status: retryResponse.status,
           };
         } else {
-          navigate("/login");
+          // navigate("/login");
           return { data: null, error: "Unauthorized", status: 401 };
         }
       }

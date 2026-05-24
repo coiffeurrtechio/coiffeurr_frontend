@@ -76,6 +76,11 @@ export default function SalonDetailPage() {
 
 
   useEffect(() => {
+    console.log("salonId  =",salonId);
+    
+    // Scroll to top on page load
+    window.scrollTo(0, 0);
+    
     if (salonId) {
       fetchSalonById();
       checkWishlistStatus();
@@ -108,7 +113,7 @@ export default function SalonDetailPage() {
     const parsedUser = user ? JSON.parse(user) : null;
     const userID = parsedUser?.user?.user?.id || parsedUser?.user?.id;
 
-    if (!userID || !salonId) return;
+    // if (!userID || !salonId) return;
 
     try {
       const res = await userapiRequest(`/wishlist/${userID}`);
@@ -306,7 +311,7 @@ export default function SalonDetailPage() {
     setIsFavorite(prev => !prev);
 
     try {
-      const res = await userapiPost(`/wishlist/${userID}/${salonId}`);
+      const res = await userapiPost<any>(`/wishlist/${userID}/${salonId}`);
 
       if (res?.error) {
         throw new Error(res.error);

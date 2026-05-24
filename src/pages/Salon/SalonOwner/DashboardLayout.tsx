@@ -12,7 +12,7 @@ interface DashboardLayoutProps {
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
-  const [open, setOpen] = useState(window.innerWidth > 1024);
+  const [open, setOpen] = useState(window.innerWidth > 1280);
   const [collapsed, setCollapsed] = useState(false);
   const [isSalonOnline, setIsSalonOnline] = useState(true);
   const [isPoweringDown, setIsPoweringDown] = useState(false);
@@ -42,7 +42,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           This physically occupies the space on desktop so the content
           starts AFTER the fixed sidebar.
       */}
-      <div className={`hidden md:block flex-shrink-0 transition-all duration-300 ${collapsed ? 'w-20' : 'w-64'}`} />
+      <div className={`hidden xl:block flex-shrink-0 transition-all duration-300 ${collapsed ? 'w-20' : 'w-64'}`} />
 
       {/* 3. THE RIGHT SIDE CONTENT WRAPPER 
           Crucial: Everything (Header + Main) must be inside this div 
@@ -55,7 +55,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <div className="flex items-center gap-4">
             <motion.button
               onClick={() => setOpen(true)}
-              className="md:hidden flex items-center justify-center p-3 rounded-xl transition-all"
+              className="xl:hidden flex items-center justify-center p-3 rounded-xl transition-all"
               style={{
                 background: 'rgba(255, 255, 255, 0.6)',
                 backdropFilter: 'blur(20px)',
@@ -74,7 +74,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             {/* SIDEBAR COLLAPSE TOGGLE - Desktop Only */}
             <motion.button
               onClick={() => setCollapsed(!collapsed)}
-              className="hidden md:flex items-center justify-center p-3 rounded-xl transition-all"
+              className="hidden xl:flex items-center justify-center p-3 rounded-xl transition-all"
               style={{
                 background: 'rgba(255, 255, 255, 0.6)',
                 backdropFilter: 'blur(20px)',
@@ -343,7 +343,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       {/* MOBILE OVERLAY */}
       {open && (
         <div
-          className="fixed inset-0 glass-overlay z-[55] md:hidden animate-md3-fade-in"
+          className="fixed inset-0 glass-overlay z-[55] xl:hidden animate-md3-fade-in"
           onClick={() => setOpen(false)}
         />
       )}

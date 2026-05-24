@@ -45,28 +45,28 @@ function SalonDashboard({ open, setOpen, collapsed, onLogout, isPoweringDown = f
       <aside
         className={`
           fixed top-0 left-0 h-screen z-[60] pointer-events-auto
-          bg-[#0A0A0A] md:bg-[#0A0A0A] text-white
+          bg-[#0A0A0A] text-white
           transform transition-all duration-300 ease-in-out
-          ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-          ${collapsed ? "md:w-20" : "md:w-64"}
+          ${open ? "translate-x-0" : "-translate-x-full xl:translate-x-0"}
+          ${collapsed ? "xl:w-20" : "xl:w-64"}
           w-64
           border-r border-white/10 shadow-2xl
         `}
         style={{
-          background: open ? 'rgba(10, 10, 10, 0.95)' : 'rgba(10, 10, 10, 0.95)'
+          background: 'rgba(10, 10, 10, 0.95)'
         }}
       >
         <div className="h-full flex flex-col overflow-hidden bg-[#0A0A0A] relative">
 
-          {/* MOBILE CLOSE BUTTON */}
+          {/* MOBILE/TABLET CLOSE BUTTON - Changed from xl:hidden to absolute target sync */}
           <button
             onClick={() => setOpen(false)}
-            className="md:hidden absolute top-4 right-4 p-2 hover:bg-white/10 rounded-lg transition-colors z-[70]"
+            className="xl:hidden absolute top-4 right-4 p-2 hover:bg-white/10 rounded-lg transition-colors z-[70]"
           >
             <X className="w-5 h-5 text-white" />
           </button>
 
-          {/* LOGO SECTION */}
+          {/* LOGO SECTION - Changed md sizes to xl sizes */}
           <div
             className={`p-6 border-b border-white/10 flex cursor-pointer items-center flex-shrink-0 group relative z-10 ${collapsed ? "justify-center" : "gap-4"}`}
             onClick={() => navigate("/dashboard")}
@@ -113,7 +113,6 @@ function SalonDashboard({ open, setOpen, collapsed, onLogout, isPoweringDown = f
             {menuItems.map((item) => {
               const Icon = item.icon;
 
-              // Improved Active Logic: Matches the base path even if on a sub-route
               const isActive = item.path === "/dashboard/"
                 ? location.pathname === "/dashboard/"
                 : location.pathname.startsWith(item.path);
@@ -124,10 +123,10 @@ function SalonDashboard({ open, setOpen, collapsed, onLogout, isPoweringDown = f
                   variant="ghost"
                   onClick={() => {
                     navigate(item.path);
-                    if (window.innerWidth < 768) setOpen(false);
+                    if (window.innerWidth < 1280) setOpen(false);
                   }}
                   className={`
-                    w-full justify-center group py-3 md:py-6 rounded-xl transition-all duration-200 relative z-10 opacity-100
+                    w-full justify-center group py-3 rounded-xl transition-all duration-200 relative z-10 opacity-100
                     ${collapsed ? "px-2" : "justify-between px-4"}
                     ${isActive
                       ? 'bg-white/10 text-white shadow-lg hover:bg-white/15'
@@ -151,7 +150,7 @@ function SalonDashboard({ open, setOpen, collapsed, onLogout, isPoweringDown = f
             {/* VISUAL SEPARATOR */}
             <div className="mt-auto border-t border-white/10" />
 
-            {/* Logout Button - Professional Tech Style */}
+            {/* Logout Button - Changed margin rules from md to xl layout matching */}
             <motion.button
               onClick={() => {
                 if (onLogoutClick) {
@@ -159,7 +158,7 @@ function SalonDashboard({ open, setOpen, collapsed, onLogout, isPoweringDown = f
                 }
               }}
               className={`
-                w-full group py-3 relative flex items-center gap-3 px-4 mt-4 mb-10 md:mb-4
+                w-full group py-3 relative flex items-center gap-3 px-4 mt-4 mb-10 xl:mb-4
                 ${collapsed ? "px-2 justify-center" : ""}
                 ${isPoweringDown ? 'grayscale opacity-50 pointer-events-none' : ''}
               `}
@@ -203,7 +202,6 @@ function SalonDashboard({ open, setOpen, collapsed, onLogout, isPoweringDown = f
           <SponserFooter collapsed={collapsed} />
         </div>
       </aside>
-
     </>
   );
 }

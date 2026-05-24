@@ -202,17 +202,26 @@ const HomePage: React.FC = () => {
             if (city) localStorage.setItem("Address", city);
 
             // Wait for both APIs to return data before flagging "Loaded"
-            await Promise.all([
-              FetchAllSalons(latitude, longitude, city),
-              FetchTopStaff(latitude, longitude)
-            ]);
+            try {
+              await Promise.all([
+                FetchAllSalons(latitude, longitude, city),
+                FetchTopStaff(latitude, longitude)
+              ]);
+              console.log("✓ Both APIs called successfully");
+            } catch (apiError) {
+              console.error("API call error:", apiError);
+            }
 
             // CRITICAL: Set loaded only AFTER promise settles
             setIsDataLoaded(true);
           } catch (error) {
             console.error("Geocoding error:", error);
             setAddress(savedCity || t('home.nearby'));
-            await FetchAllSalons(latitude, longitude, savedCity || "");
+            try {
+              await FetchAllSalons(latitude, longitude, savedCity || "");
+            } catch (apiError) {
+              console.error("Fallback API call error:", apiError);
+            }
             setIsDataLoaded(true);
           } finally {
             setIsLoading(false);
@@ -241,22 +250,31 @@ const HomePage: React.FC = () => {
 
   const FetchAllSalons = async (lat: number, lon: number, city: string) => {
     try {
+      console.log(`Fetching salons for: lat=${lat}, lon=${lon}, city=${city}`);
       const res = await apiRequest<any[]>(
         `/salons/search?city=${city}&user_latitude=${lat}&user_longitude=${lon}&limit=10`
       );
+      console.log("✓ Salons fetched:", res.data?.length || 0);
       setsalons(res.data || []);
+      return res.data || [];
     } catch (err) {
-      console.error("Fetch error:", err);
+      console.error("Fetch salons error:", err);
       setsalons([]);
+      throw err; // Re-throw so Promise.all knows there was an error
     }
   };
 
   const FetchTopStaff = async (lat: number, lon: number) => {
     try {
+      console.log(`Fetching top staff for: lat=${lat}, lon=${lon}`);
       const res = await apiRequest<any[]>(`/salons/staff/search?user_latitude=${lat}&user_longitude=${lon}&max_distance_km=30&limit=20`);
+      console.log("✓ Staff fetched:", res.data?.length || 0);
       setStaff(res.data || []);
+      return res.data || [];
     } catch (err) {
-      console.error("Staff fetch failed", err);
+      console.error("Fetch staff error:", err);
+      setStaff([]);
+      throw err; // Re-throw so Promise.all knows there was an error
     }
   };
 
@@ -340,7 +358,7 @@ const HomePage: React.FC = () => {
 
       <div className="relative z-10">
         <header className="text-white rounded-b-[2rem] sm:rounded-b-[3rem] shadow-lg relative z-20 pt-safe pb-safe" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
-          <div className="max-w-7xl mx-auto p-6 sm:px-8 sm:pt-8 sm:pb-12">
+          <div className="max-w-7xl mx-auto p-6 sm:px-8 sm:pt-8 sm:pb-2">
             <div className="flex items-center justify-between mb-8 relative">
               {/* Left: Location */}
               <div className="flex items-center gap-2 max-w-[30%] sm:max-w-[25%]">
@@ -397,7 +415,7 @@ const HomePage: React.FC = () => {
             <div className="max-w-2xl mx-auto">
               <div className={`mb-6 text-center transition-all duration-800 ${showHeader ? 'header-slide-up' : ''}`}>
                 <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 overflow-hidden" style={{ fontFamily: 'Playfair Display, serif', letterSpacing: '-1px' }}>
-                  {'Coiffeur'.split('').map((letter, index) => (
+                  {'Coiffeurr'.split('').map((letter, index) => (
                     <span 
                       key={index} 
                       className={`${showHeader ? 'letter-reveal' : 'opacity-0'} inline-block`}
@@ -406,8 +424,25 @@ const HomePage: React.FC = () => {
                       {letter}
                     </span>
                   ))}
+                  <span className={`${showHeader ? 'ui-fade-in' : 'opacity-0'} text-lg sm:text-xl md:text-2xl italic font-bold ml-4 sm:ml-3 md:ml-4 align-middle`} style={{ 
+                    animationDelay: '0.8s', 
+                    fontFamily: 'Playfair Display, serif', 
+                    letterSpacing: '2px',
+                    background: 'linear-gradient(135deg, #D4AF37 0%, #F5E6A3 25%, #D4AF37 50%, #C9A227 75%, #D4AF37 100%)',
+                    backgroundSize: '200% auto',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    textShadow: '0 0 20px rgba(212, 175, 55, 0.4), 0 2px 4px rgba(0,0,0,0.2)',
+                    filter: 'drop-shadow(0 0 8px rgba(212, 175, 55, 0.3))'
+                  }}>
+                    Your Stylist
+                  </span>
                 </h1>
-                <p className={`text-xs sm:text-sm text-blue-200 ${showUI ? 'ui-fade-in' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>{t('home.tagline') || 'Where your signature style is authored.'}</p>
+                <p className={`text-sm sm:text-sm text-blue-200 text-center ${showUI ? 'ui-fade-in' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>
+                  Skip the<span className='font-bold ml-1'>Wait, </span>Fix  the <span className='font-bold'>Date</span>
+                </p>
+                  {/* <span className='font-bold'>No Waiting</span> */}
               </div>
 
               <div className={`flex justify-center ${showUI ? 'ui-fade-in' : 'opacity-0'}`} style={{ animationDelay: '0.3s', width: '100%', margin: '0 auto' }}>
@@ -417,8 +452,8 @@ const HomePage: React.FC = () => {
                   style={{ boxShadow: '0 4px 30px rgba(0, 0, 0, 0.05)' }}
                 >
                   <div className="flex items-center gap-2 mb-3">
-                    <Search className="w-5 h-5 text-white" />
-                    <span className="text-white font-bold text-sm sm:text-base">{t('home.discoverTransformation') || 'Discover your next transformation'}</span>
+                    {/* <Search className="w-5 h-5 text-white" /> */}
+                    <span className="text-white ml-2 font-bold text-sm sm:text-base bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent" style={{ fontFamily: 'Playfair Display, serif', letterSpacing: '0.5px', textShadow: '0 2px 8px rgba(255,255,255,0.3)' }}>{ 'Book Your Salon or Parlour'}</span>
                   </div>
                   <div className="flex gap-2">
                     <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-lg px-2 sm:px-3 py-2.5 flex items-center border border-white/20 font-bold text-[10px] sm:text-xs text-white/70">{t('home.tapToSearch')}</div>

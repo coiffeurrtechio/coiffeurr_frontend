@@ -42,28 +42,38 @@ export function useSalonApi() {
       }
 
       const result = await response.json();
+      
+      // Extract the access token from the response
+      const accessToken = result.access_token || result.accessToken;
+      
+      // Store the complete user data including the access token in Redux
       dispatch(
         login({
-          user: result             // user details (id, email, etc.)
+          user: {
+            ...result,           // user details (id, email, etc.)
+            access_token: accessToken  // store the access token
+          }
         })
       );
 
+      // Also update localStorage with the new token
+      const currentAuthState = localStorage.getItem("authState");
+      if (currentAuthState) {
+        const parsed = JSON.parse(currentAuthState);
+        localStorage.setItem(
+          "authState",
+          JSON.stringify({
+            ...parsed,
+            user: {
+              ...parsed.user,
+              ...result,
+              access_token: accessToken
+            }
+          })
+        );
+      }
 
-      // const json = await response.json();
-
-      // localStorage.setItem(
-      //   "authState",
-      //   JSON.stringify({
-      //     ...parsed,
-      //     user: {
-      //       json
-      //     },
-      //   })
-      // );
-      // localStorage.setItem("accessToken", JSON.stringify(json.accessToken));
-
-
-      return result;
+      return accessToken;
     } catch {
       navigate("/login");
       return null;

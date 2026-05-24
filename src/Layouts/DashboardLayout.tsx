@@ -116,20 +116,20 @@ const DashboardLayout: React.FC = () => {
         <SalonDashboard open={open} setOpen={setOpen} collapsed={sidebarCollapsed} onLogout={handleLogout} isPoweringDown={isPoweringDown} onLogoutClick={() => setShowLogoutConfirm(true)} />
 
       {/* 2. GHOST SPACER (Desktop only) */}
-      <div className={`hidden md:block flex-shrink-0 transition-all duration-300 ${sidebarCollapsed ? 'w-20' : 'w-64'}`} />
+      <div className={`hidden xl:block flex-shrink-0 transition-all duration-300 ${sidebarCollapsed ? 'w-20' : 'w-64'}`} />
 
       {/* 3. RIGHT SIDE CONTENT WRAPPER */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
 
         {/* TOP HEADER */}
-        <header className={`h-16 flex items-center justify-between px-4 md:px-8 border-b border-black/[0.05] bg-[#FAF9F6]/80 backdrop-blur-[15px] flex-shrink-0 z-30 transition-all duration-800 ${isPoweringDown ? 'grayscale opacity-50' : ''}`}>
+        <header className={`h-16 flex items-center justify-between px-4 xl:px-8 border-b border-black/[0.05] bg-[#FAF9F6]/80 backdrop-blur-[15px] flex-shrink-0 z-30 transition-all duration-800 ${isPoweringDown ? 'grayscale opacity-50' : ''}`}>
           <div className="flex items-center gap-4">
-            <button onClick={() => setOpen(true)} className="md:hidden p-2 hover:bg-gray-100/50 rounded-md transition-all">
+            <button onClick={() => setOpen(true)} className="xl:hidden p-2 hover:bg-gray-100/50 rounded-xl transition-all">
               <Menu className="w-6 h-6 text-gray-600" />
             </button>
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="hidden md:flex p-2 hover:bg-gray-100/50 rounded-md transition-colors"
+              className="hidden xl:flex p-2 hover:bg-gray-100/50 rounded-xl transition-colors"
               title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               {sidebarCollapsed ? (
@@ -269,7 +269,7 @@ const DashboardLayout: React.FC = () => {
         </header>
 
         {/* SCROLLABLE MAIN CONTENT AREA */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main className="flex-1 overflow-y-auto p-4 xl:p-8">
           <div className="max-w-7xl mx-auto">
             {/* 🔑 This is where your nested routes (Business, Sales, etc.) will render */}
             <div className="min-h-screen flex flex-col">
@@ -286,7 +286,7 @@ const DashboardLayout: React.FC = () => {
       {/* MOBILE OVERLAY */}
       {open && (
         <div
-          className="fixed inset-0 bg-black/50 z-[55] md:hidden backdrop-blur-sm"
+          className="fixed inset-0 bg-black/50 z-[55] xl:hidden backdrop-blur-sm"
           onClick={() => setOpen(false)}
         />
       )}
@@ -299,7 +299,7 @@ const DashboardLayout: React.FC = () => {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="bg-white/95 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl max-w-md w-full p-8 text-center"
+            className="bg-white/95 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl max-w-xl w-full p-8 text-center"
             style={{ boxShadow: "rgba(0,0,0,0.15) 0 8px 32px" }}
           >
             <div className="flex flex-col items-center gap-4 mb-6">
@@ -353,7 +353,7 @@ const DashboardLayout: React.FC = () => {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="bg-white/95 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl max-w-md w-full p-8 text-center"
+            className="bg-white/95 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl max-w-xl w-full p-8 text-center"
             style={{ boxShadow: "rgba(0,0,0,0.15) 0 8px 32px" }}
           >
             <div className="flex flex-col items-center gap-4 mb-6">

@@ -242,7 +242,7 @@ const handleSalonSelect = (salonId: string) => {
     clearTimeout(searchTimeoutRef.current);
   }
   // Redirect to the specific salon detail page
-  navigate(`/salons/${salonId?.id}`);
+  navigate(`/salons/${salonId}`);
 };
 
 // --- 2. Submit Handler (For pressing Enter) ---
@@ -320,7 +320,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
                     {quickResults.slice(0, 5).map((salon, index) => (
                       <div
                         key={salon.id}
-                        onClick={() => handleSalonSelect(salon)}
+                        onClick={() => handleSalonSelect(salon?.id)}
                         className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl cursor-pointer transition-all ${
                           index === selectedIndex ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-400' : 'hover:bg-gray-50 border-2 border-transparent'
                         }`}

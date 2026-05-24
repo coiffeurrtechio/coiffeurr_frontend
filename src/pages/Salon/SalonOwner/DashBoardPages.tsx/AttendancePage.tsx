@@ -1081,7 +1081,7 @@ const AttendancePage: React.FC = () => {
                       const currentStatus = attendance.get(staff.staff_id) || 'NOT_MARKED';
 
                       return (
-                        <tr key={staff.staff_id} className="transition-all duration-300 hover:scale-[1.01] hover:shadow-lg" style={{ height: '72px', borderBottom: '1px solid #F7F5F2' }}>
+                        <tr key={staff.staff_id} className="overflow-x-auto transition-all duration-300 hover:scale-[1.01] hover:shadow-lg" style={{ height: '72px', borderBottom: '1px solid #F7F5F2' }}>
                           <td style={{ padding: '16px' }}>
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-semibold flex-shrink-0" style={{ backgroundColor: 'var(--light-greige)', color: 'var(--deep-charcoal)', margin: '0', padding: '3px' }}>

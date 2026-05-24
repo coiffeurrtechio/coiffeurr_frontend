@@ -396,19 +396,19 @@ const AnalyticsPage: React.FC = () => {
   const COLORS = ['#1E4D8C', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   return (
-    <div className="min-h-screen p-6 animate-in fade-in duration-500" style={{ fontFamily: 'Inter, sans-serif', backgroundColor: 'var(--soft-ivory)' }}>
+    <div className="min-h-screen p-3 sm:p-4 md:p-6 animate-in fade-in duration-500" style={{ fontFamily: 'Inter, sans-serif', backgroundColor: 'var(--soft-ivory)' }}>
       <DashboardLoader isVisible={loading} />
 
       {/* Main Stage Container */}
-      <div className="main-stage p-6 space-y-6">
+      <div className="main-stage p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
         {/* Fixed Header Strip */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4" style={{ borderBottom: '1px solid var(--light-greige)' }}>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 pb-3 sm:pb-4" style={{ borderBottom: '1px solid var(--light-greige)' }}>
           <div>
-            <h1 className="font-semibold" style={{ fontFamily: 'Playfair Display, serif', fontSize: '24px', color: 'var(--deep-charcoal)' }}>{t('analytics.title')}</h1>
-            <p className="typography-label-light" style={{ fontSize: '14px' }}>{t('analytics.trackPerformance')}</p>
+            <h1 className="font-semibold" style={{ fontFamily: 'Playfair Display, serif', fontSize: 'clamp(18px, 4vw, 24px)', color: 'var(--deep-charcoal)' }}>{t('analytics.title')}</h1>
+            <p className="typography-label-light" style={{ fontSize: 'clamp(12px, 2.5vw, 14px)' }}>{t('analytics.trackPerformance')}</p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center rounded-lg p-1" style={{ 
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
+            <div className="flex items-center rounded-lg p-1 w-full sm:w-auto" style={{ 
               backgroundColor: 'var(--light-greige)',
               border: '1px solid var(--ghost-row-line)',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
@@ -421,14 +421,14 @@ const AnalyticsPage: React.FC = () => {
                 <button
                   key={range.id}
                   onClick={() => setTimeRange(range.id)}
-                  className={`px-5 rounded-md text-xs font-bold transition-all ${
+                  className={`flex-1 sm:flex-initial px-3 sm:px-5 rounded-md text-xs font-bold transition-all ${
                     timeRange === range.id 
                       ? 'bg-white shadow-md' 
                       : 'text-gray-600 hover:bg-white/50'
                   }`}
                   style={{ 
                     color: timeRange === range.id ? 'var(--deep-charcoal)' : '#666',
-                    height: '44px',
+                    height: 'clamp(36px, 8vw, 44px)',
                     letterSpacing: '0.02em',
                     textTransform: 'uppercase'
                   }}
@@ -439,11 +439,11 @@ const AnalyticsPage: React.FC = () => {
             </div>
             <button
               onClick={() => fetchAllAnalytics()}
-              className="rounded-lg transition-colors"
+              className="rounded-lg transition-colors flex-shrink-0"
               style={{ 
                 backgroundColor: 'var(--muted-gold)', 
-                height: '44px', 
-                width: '44px', 
+                height: 'clamp(36px, 8vw, 44px)', 
+                width: 'clamp(36px, 8vw, 44px)', 
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center', 
@@ -452,7 +452,7 @@ const AnalyticsPage: React.FC = () => {
               }}
               title="Refresh"
             >
-              <RefreshCw size={18} />
+              <RefreshCw size={16} className="sm:size-18" />
             </button>
           </div>
         </div>
@@ -466,7 +466,7 @@ const AnalyticsPage: React.FC = () => {
       )}
 
       {/* Tab Navigation */}
-      <div className="flex items-center gap-4 pb-4" style={{ borderBottom: '1px solid var(--ghost-row-line)' }}>
+      <div className="flex items-center gap-2 sm:gap-4 pb-3 sm:pb-4 overflow-x-auto" style={{ borderBottom: '1px solid var(--ghost-row-line)' }}>
         {[
           { id: 'overview' as const, label: t('analytics.overview'), icon: BarChart3 },
           { id: 'services' as const, label: t('analytics.services'), icon: Star },
@@ -476,34 +476,35 @@ const AnalyticsPage: React.FC = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-6 py-3 text-sm font-bold border-b-3 transition-all typography-label ${activeTab === tab.id ? 'text-[#1E4D8C]' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-bold border-b-3 transition-all typography-label whitespace-nowrap ${activeTab === tab.id ? 'text-[#1E4D8C]' : 'text-gray-500 hover:text-gray-700'}`}
             style={{
               borderBottom: activeTab === tab.id ? '3px solid #1E4D8C' : '3px solid transparent',
               letterSpacing: '0.03em',
               textTransform: 'uppercase'
             }}
           >
-            <tab.icon size={16} className="inline mr-2" />
-            {tab.label}
+            <tab.icon size={14} className="inline mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">{tab.label}</span>
+            <span className="sm:hidden">{tab.label.slice(0, 3)}</span>
           </button>
         ))}
       </div>
 
       {/* Overview Tab */}
       {activeTab === 'overview' && dashboardData && (
-        <div className="space-y-6 px-6">
+        <div className="space-y-4 sm:space-y-6 px-3 sm:px-6">
           {/* Dashboard Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <StatCard
               label={t('analytics.todayBookings')}
               value={(dashboardData?.todayBookings ?? 0).toString()}
-              icon={<ShoppingBag size={20} />}
+              icon={<ShoppingBag size={18} className="sm:size-20" />}
               color="blue"
             />
             <StatCard
               label={t('analytics.todayIncome')}
               value={formatRevenue(dashboardData?.todayIncome ?? 0, showTodayIncome)}
-              icon={<IndianRupee size={20} />}
+              icon={<IndianRupee size={18} className="sm:size-20" />}
               color="green"
               showEyeIcon={true}
               onEyeClick={() => setShowTodayIncome(!showTodayIncome)}
@@ -513,13 +514,13 @@ const AnalyticsPage: React.FC = () => {
             <StatCard
               label={t('analytics.totalBookings')}
               value={(dashboardData?.totalBookings ?? 0).toString()}
-              icon={<ShoppingBag size={20} />}
+              icon={<ShoppingBag size={18} className="sm:size-20" />}
               color="purple"
             />
             <StatCard
               label={t('analytics.monthlyIncome')}
               value={formatRevenue(dashboardData?.monthlyIncome ?? 0, showMonthlyIncome)}
-              icon={<IndianRupee size={20} />}
+              icon={<IndianRupee size={18} className="sm:size-20" />}
               color="orange"
               showEyeIcon={true}
               onEyeClick={() => setShowMonthlyIncome(!showMonthlyIncome)}
@@ -529,7 +530,7 @@ const AnalyticsPage: React.FC = () => {
           </div>
 
           {/* Status Metrics */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
             <MetricPill
               label={t('analytics.confirmed')}
               value={dashboardData.confirmedCount}
@@ -557,19 +558,19 @@ const AnalyticsPage: React.FC = () => {
           </div>
 
           {/* Booking Status Distribution */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <div style={{
               borderRadius: '12px',
               boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
               border: '1px solid rgba(0, 0, 0, 0.06)',
               background: 'linear-gradient(135deg, #FFFFFF 0%, #F7F5F2 100%)',
-              padding: '24px'
+              padding: '16px sm:px-6'
             }}>
-              <h3 className="typography-label mb-6 flex items-center gap-2" style={{ fontSize: '16px', color: '#D4AF37', letterSpacing: '0.03em', fontWeight: '700', fontFamily: 'Playfair Display, serif' }}>
-                <PieChart size={18} style={{ color: '#D4AF37' }} />
+              <h3 className="typography-label m-4 sm:mb-6 flex items-center gap-2" style={{ fontSize: 'clamp(14px, 3vw, 16px)', color: '#D4AF37', letterSpacing: '0.03em', fontWeight: '700', fontFamily: 'Playfair Display, serif' }}>
+                <PieChart size={16} className="sm:size-18" style={{ color: '#D4AF37' }} />
                 {t('analytics.bookingStatusDistribution')}
               </h3>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={250}>
                 <RechartsPieChart>
                   <Pie
                     data={[
@@ -582,7 +583,7 @@ const AnalyticsPage: React.FC = () => {
                     cy="50%"
                     labelLine={false}
                     label={({ name, percent }) => `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`}
-                    outerRadius={100}
+                    outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
                     style={{ filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))' }}
@@ -602,16 +603,16 @@ const AnalyticsPage: React.FC = () => {
             </div>
 
             {/* Quick Insights with Actionable Insights */}
-            <div className="rounded-2xl shadow-lg p-6 hover-lift" style={{
+            <div className="rounded-2xl shadow-lg p-4 sm:p-6 hover-lift" style={{
               background: 'linear-gradient(135deg, var(--luxury-charcoal) 0%, #2d2d2d 100%)',
               color: 'white'
             }}>
-              <h3 className="font-bold text-lg mb-6 flex items-center gap-2" style={{ fontFamily: 'Playfair Display, serif' }}>
-                <Target size={20} style={{ color: 'var(--luxury-gold)' }} />
+              <h3 className="font-bold text-base sm:text-lg mb-4 sm:mb-6 flex items-center gap-2" style={{ fontFamily: 'Playfair Display, serif' }}>
+                <Target size={18} className="sm:size-20" style={{ color: 'var(--luxury-gold)' }} />
                 {t('analytics.performanceInsights')}
               </h3>
 
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <InsightCard
                   icon={TrendingUp}
                   title={t('analytics.completionRate')}
@@ -640,19 +641,19 @@ const AnalyticsPage: React.FC = () => {
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
             border: '1px solid rgba(212, 175, 55, 0.3)',
             background: '#FFFFFF',
-            padding: '24px',
+            padding: '16px sm:px-6',
             color: '#1a1a1a'
           }}>
-            <div className="flex flex-col gap-4 mb-6">
+            <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
               <div className="flex items-center justify-between">
-                <h3 className="typography-label flex items-center gap-2" style={{ fontSize: '16px', color: '#D4AF37', letterSpacing: '0.03em', fontWeight: '700', fontFamily: 'Playfair Display, serif' }}>
-                  <TrendingUp size={18} style={{ color: '#D4AF37' }} />
+                <h3 className="typography-label flex items-center gap-2" style={{ fontSize: 'clamp(14px, 3vw, 16px)', color: '#D4AF37', letterSpacing: '0.03em', fontWeight: '700', fontFamily: 'Playfair Display, serif' }}>
+                  <TrendingUp size={16} className="sm:size-18" style={{ color: '#D4AF37' }} />
                   Salon Stars Tracker
                 </h3>
               </div>
               
               {/* Time Range Filter */}
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-1 sm:gap-2">
                 {[
                   { id: '2DAYS' as const, label: '2 Days' },
                   { id: '1WEEK' as const, label: '1 Week' },
@@ -662,7 +663,7 @@ const AnalyticsPage: React.FC = () => {
                   <button
                     key={range.id}
                     onClick={() => setReviewTimeRange(range.id)}
-                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                    className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition-all ${
                       reviewTimeRange === range.id 
                         ? 'bg-[#D4AF37] text-white' 
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -675,7 +676,7 @@ const AnalyticsPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="relative" style={{ height: '256px', marginBottom: '16px' }}>
+            <div className="relative" style={{ height: '200px sm:h-64 md:h-64', marginBottom: '16px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={ratingData}>
                   <defs>
@@ -1354,7 +1355,7 @@ interface MetricPillProps {
   icon: React.ElementType;
 }
 
-const MetricPill: React.FC<MetricPillProps> = ({ label, value, color, icon: Icon }) => {
+const   MetricPill: React.FC<MetricPillProps> = ({ label, value, color, icon: Icon }) => {
   const iconBgColors = {
     green: '#10b981',
     blue: '#3b82f6',
@@ -1371,29 +1372,51 @@ const MetricPill: React.FC<MetricPillProps> = ({ label, value, color, icon: Icon
 
   return (
     <div style={{
-      borderRadius: '12px',
-      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
-      border: '1px solid rgba(0, 0, 0, 0.06)',
-      background: 'linear-gradient(135deg, #FFFFFF 0%, #F7F5F2 100%)',
-      padding: '16px'
-    }}>
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <div className="p-2.5 rounded-lg" style={{ 
-            backgroundColor: iconBgColors[color],
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
-          }}>
-            <Icon size={16} style={{ color: '#FFFFFF' }} />
-          </div>
-          <span className="text-xs font-bold uppercase tracking-wider typography-label" style={{ color: '#4A4A4A', fontSize: '11px', letterSpacing: '0.05em' }}>
-            {label}
-          </span>
-        </div>
+  borderRadius: '12px',
+  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
+  border: '1px solid rgba(0, 0, 0, 0.06)',
+  background: 'linear-gradient(135deg, #FFFFFF 0%, #F7F5F2 100%)',
+}}
+  // Dynamic padding: smaller on mobile (p-3 = 12px) to save space, standard on desktop (sm:p-4 = 16px)
+  className="p-3 sm:p-4 w-full min-w-0"
+>
+  {/* Flex layout converts to vertical stacking on tiny screens if space runs out completely */}
+  <div className="flex flex-row items-center justify-between gap-1.5 mb-2 min-w-0">
+    <div className="flex items-center gap-1.5 min-w-0">
+      {/* Icon size wrapper - slight padding drop on mobile */}
+      <div className="p-2 sm:p-2.5 rounded-lg flex-shrink-0" style={{ 
+        backgroundColor: iconBgColors[color],
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+      }}>
+        <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: '#FFFFFF' }} />
       </div>
-      <p className="typography-number font-bold" style={{ color: valueColorClasses[color], fontSize: '28px', letterSpacing: '-0.02em' }}>
-        {value}
-      </p>
+      
+      {/* Label text uses truncation to prevent line-wrapping breaking your grid container layout */}
+      <span 
+        className="font-bold uppercase tracking-wider typography-label truncate" 
+        style={{ 
+          color: '#4A4A4A', 
+          fontSize: '10px', // slightly smaller base fallback for mobile columns
+          letterSpacing: '0.05em' 
+        }}
+      >
+        {label}
+      </span>
     </div>
+  </div>
+
+  {/* Fluid numeric metric layout wrapper handles string length safely */}
+  <p 
+    className="typography-number font-bold tracking-tight text-xl xs:text-2xl sm:text-3xl truncate" 
+    style={{ 
+      color: valueColorClasses[color],
+      letterSpacing: '-0.02em',
+      lineHeight: '1.2'
+    }}
+  >
+    {value}
+  </p>
+</div>
   );
 };
 
