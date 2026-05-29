@@ -33,6 +33,7 @@ import UniversalVerification from "../pages/UniversalVerification";
 import SalonReviewsPage from "../pages/Salon/SalonReviewsPage";
 import SuperAdminLogin from "../pages/SuperAdmin/SuperAdminLogin";
 import SuperAdminHome from "../pages/SuperAdmin/SuperAdminHome";
+import FeedbackPage from "../pages/FeedbackPage";
 
 
 export interface AppRoute {
@@ -69,6 +70,7 @@ const routes: AppRoute[] = [
       { key: 21, path: "/salon/:salonId/staff/:staffId", Element: StaffDetailPage, isProtected: false },
       { key: 22, path: "/verify", Element: UniversalVerification, isProtected: true },
       { key: 23, path: "/salon/:salonId/reviews", Element: SalonReviewsPage, isProtected: false },
+      { key: 24, path: "/feedback/:bookingId", Element: FeedbackPage, isProtected: false },
 
     ],
   },

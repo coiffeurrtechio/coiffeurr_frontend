@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Star, ChevronLeft, ChevronRight, ArrowLeft, Loader2 } from 'lucide-react';
 import { useApi } from '../../API/SalonsAPIs/ALLSalonAPI';
 import { useParams } from 'react-router-dom';
+import { getDefaultSalonImage } from '../../utils/defaultServiceImage';
 
 interface Review {
   id: string;
@@ -149,13 +150,11 @@ const SalonReviewsPage = () => {
               <ArrowLeft size={20} className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
             </button>
             <div className="flex items-center gap-3">
-              {salonData?.branding?.logoUrl && (
-                <img
-                  src={salonData.branding.logoUrl}
-                  alt={salonData.salonName}
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-[#D4AF37]/20"
-                />
-              )}
+              <img
+                src={salonData?.branding?.logoUrl || getDefaultSalonImage(salonData?.id || salonData?.salonName || '')}
+                alt={salonData?.salonName}
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-[#D4AF37]/20"
+              />
               <div>
                 <h1 className="text-lg sm:text-xl font-bold text-gray-900" style={{ fontFamily: "'Playfair Display', serif" }}>
                   {salonData?.salonName}

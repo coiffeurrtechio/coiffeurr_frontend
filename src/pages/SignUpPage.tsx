@@ -904,28 +904,28 @@ const CustomerRegistration: React.FC = () => {
 
       {/* Terms & Privacy Modal */}
       {showTermsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowTermsModal(false)}>
-          <div className="glass-card rounded-3xl p-6 sm:p-8 w-full max-w-2xl mx-auto animate-in fade-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-start mb-6">
-              <h2 className="text-2xl sm:text-3xl font-bold text-white" style={{ fontFamily: 'Playfair Display, serif' }}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowTermsModal(false)}>
+          <div className="glass-card rounded-t-[2rem] sm:rounded-3xl p-5 sm:p-8 w-full max-w-2xl mx-auto animate-in fade-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-start mb-4 sm:mb-6">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white" style={{ fontFamily: 'Playfair Display, serif' }}>
                 Terms of Service & Privacy Policy
               </h2>
-              <button onClick={() => setShowTermsModal(false)} className="text-white/60 hover:text-white transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <button onClick={() => setShowTermsModal(false)} className="text-white/60 hover:text-white transition-colors p-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
                   <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
               </button>
             </div>
 
-            <div className="space-y-6 text-white/80 text-sm">
+            <div className="space-y-4 sm:space-y-6 text-white/80 text-xs sm:text-sm">
               <div>
-                <p className="text-xs text-white/50 mb-4">Last Updated: April 1, 2026</p>
-                <p className="mb-4">Welcome to Coiffeurr ("Platform", "we", "our", "us"). By accessing or using our website, mobile application, or services ("Services"), you agree to these Terms. If you do not agree, please do not use the Platform.</p>
+                <p className="text-[10px] sm:text-xs text-white/50 mb-3 sm:mb-4">Last Updated: April 1, 2026</p>
+                <p className="mb-3 sm:mb-4">Welcome to Coiffeurr ("Platform", "we", "our", "us"). By accessing or using our website, mobile application, or services ("Services"), you agree to these Terms. If you do not agree, please do not use the Platform.</p>
               </div>
 
               <div>
-                <h3 className="text-lg font-bold text-[#D4AF37] mb-2">1. Nature of Service</h3>
+                <h3 className="text-base sm:text-lg font-bold text-[#D4AF37] mb-2">1. Nature of Service</h3>
                 <p className="mb-2">Coiffeurr is an intermediary platform connecting users ("Customers") with independent salons and service providers ("Service Providers").</p>
                 <p className="mb-2">We do not:</p>
                 <ul className="list-disc list-inside space-y-1 ml-4">

@@ -82,15 +82,15 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
     <>
       {/* Settings Modal */}
       {isOpen && (
-        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50">
-          <div className="glass-modal rounded-2xl max-w-md w-full mx-4 overflow-hidden animate-md3-scale-in elevation-5">
+        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 p-4 sm:p-6">
+          <div className="glass-modal rounded-2xl max-w-md w-full mx-auto overflow-hidden animate-md3-scale-in elevation-5">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-100">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-100 rounded-xl">
                   <Settings className="w-5 h-5 text-blue-600" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-800">{t('settings.title')}</h2>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-800">{t('settings.title')}</h2>
               </div>
               <button
                 onClick={onClose}
@@ -101,7 +101,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
             </div>
 
             {/* Content */}
-            <div className="p-6 space-y-6">
+            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
               {/* Language Selection */}
               <div>
                 <div className="flex items-center gap-2 mb-4">
@@ -144,10 +144,10 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-gray-100 bg-gray-50">
+            <div className="p-4 sm:p-6 border-t border-gray-100 bg-gray-50">
               <button
                 onClick={onClose}
-                className="w-full px-4 py-3 bg-[#1E4D8C] text-white rounded-xl font-semibold hover:bg-[#153a6b] transition-colors"
+                className="w-full px-4 py-3 sm:py-3 bg-[#1E4D8C] text-white rounded-xl font-semibold hover:bg-[#153a6b] transition-colors text-sm sm:text-base"
               >
                 {t('common.save')}
               </button>
@@ -158,29 +158,29 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
 
       {/* Confirmation Dialog */}
       {showConfirmDialog && (
-        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-[60]">
-          <div className="glass-modal rounded-2xl max-w-sm w-full mx-4 overflow-hidden animate-md3-bounce-in elevation-5">
-            <div className="p-6">
+        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-[60] p-4 sm:p-6">
+          <div className="glass-modal rounded-2xl max-w-sm w-full mx-auto overflow-hidden animate-md3-bounce-in elevation-5">
+            <div className="p-4 sm:p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 bg-orange-100 rounded-full">
                   <AlertCircle className="w-5 h-5 text-orange-600" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-800">{t('settings.confirmLanguageChange')}</h3>
+                <h3 className="text-base sm:text-lg font-bold text-gray-800">{t('settings.confirmLanguageChange')}</h3>
               </div>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 mb-6 text-sm sm:text-base">
                 {t('settings.confirmLanguageMessage', { language: languages.find(l => l.code === pendingLanguage)?.name })}
               </p>
-              <div className="flex gap-3">
+              <div className="flex gap-2 sm:gap-3">
                 <button
                   onClick={cancelLanguageChange}
-                  className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+                  className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors text-sm sm:text-base"
                 >
                   {t('settings.cancel')}
                 </button>
                 <button
                   onClick={confirmLanguageChange}
                   disabled={isSaving}
-                  className="flex-1 px-4 py-3 bg-[#1E4D8C] text-white rounded-xl font-semibold hover:bg-[#153a6b] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-3 bg-[#1E4D8C] text-white rounded-xl font-semibold hover:bg-[#153a6b] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
                   {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : t('settings.confirm')}
                 </button>

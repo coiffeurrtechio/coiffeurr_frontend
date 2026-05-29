@@ -13,6 +13,8 @@ import GrandEntranceOverlay from '../components/GrandEntranceOverlay';
 import { SalonCardSkeleton } from '../components/GlassmorphismSkeleton';
 import BottomNavigation from '../components/BottomNavigation';
 import SearchOverlay from '../components/SearchOverlay';
+import PromoPopup from '../components/PromoPopup';
+import { getDefaultStaffImage, getDefaultSalonImage } from '../utils/defaultServiceImage';
 
 const HomePage: React.FC = () => {
   const { t } = useTranslation();
@@ -170,75 +172,101 @@ const HomePage: React.FC = () => {
     };
   }, [staff]);
 
-  const getLocationAndFetch = () => {
+  const getLocationAndFetch = (retryCount = 0) => {
     const savedCity = localStorage.getItem("Address");
+    const savedLat = localStorage.getItem("userLat");
+    const savedLon = localStorage.getItem("userLon");
+
+    const fetchWithCoords = async (latitude: number, longitude: number) => {
+      const body = {
+        "lat": latitude,
+        "lon": longitude,
+        "language": "en"
+      };
+      try {
+        const response = await fetch(`${Config.API_Customers}/geolocation/geolocation/location-details`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body)
+        });
+
+        const data = await response.json();
+
+        const city = data.address.city || data.address.town || data.address.village || "";
+        const suburb = data.address.suburb || data.address.neighbourhood || "";
+        const displayAddress = suburb ? `${suburb}, ${city}` : city || t('home.nearby');
+
+        setAddress(displayAddress);
+        if (city) localStorage.setItem("Address", city);
+        localStorage.setItem("userLat", String(latitude));
+        localStorage.setItem("userLon", String(longitude));
+
+        try {
+          await Promise.all([
+            FetchAllSalons(latitude, longitude, city),
+            FetchTopStaff(latitude, longitude)
+          ]);
+          console.log("✓ Both APIs called successfully");
+        } catch (apiError) {
+          console.error("API call error:", apiError);
+        }
+
+        setIsDataLoaded(true);
+      } catch (error) {
+        console.error("Geocoding error:", error);
+        setAddress(savedCity || t('home.nearby'));
+        try {
+          await FetchAllSalons(latitude, longitude, savedCity || "");
+        } catch (apiError) {
+          console.error("Fallback API call error:", apiError);
+        }
+        setIsDataLoaded(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        async (position) => {
+        (position) => {
           const { latitude, longitude } = position.coords;
-          const body = {
-            "lat": latitude,
-            "lon": longitude,
-            "language": "en"
-          }
-          try {
-            const response = await fetch(`${Config.API_Customers}/geolocation/geolocation/location-details`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                // Include "Authorization": `Bearer ${token}` here if required
-              },
-              body: JSON.stringify(body)
-            });
-
-            const data = await response.json();
-
-            const city = data.address.city || data.address.town || data.address.village || "";
-            const suburb = data.address.suburb || data.address.neighbourhood || "";
-            const displayAddress = suburb ? `${suburb}, ${city}` : city || t('home.nearby');
-
-            setAddress(displayAddress);
-            if (city) localStorage.setItem("Address", city);
-
-            // Wait for both APIs to return data before flagging "Loaded"
-            try {
-              await Promise.all([
-                FetchAllSalons(latitude, longitude, city),
-                FetchTopStaff(latitude, longitude)
-              ]);
-              console.log("✓ Both APIs called successfully");
-            } catch (apiError) {
-              console.error("API call error:", apiError);
-            }
-
-            // CRITICAL: Set loaded only AFTER promise settles
-            setIsDataLoaded(true);
-          } catch (error) {
-            console.error("Geocoding error:", error);
-            setAddress(savedCity || t('home.nearby'));
-            try {
-              await FetchAllSalons(latitude, longitude, savedCity || "");
-            } catch (apiError) {
-              console.error("Fallback API call error:", apiError);
-            }
-            setIsDataLoaded(true);
-          } finally {
-            setIsLoading(false);
-          }
+          fetchWithCoords(latitude, longitude);
         },
         (error) => {
-          console.error("Location error:", error);
-          setAddress(savedCity || "");
-          setIsLoading(false);
-          setIsDataLoaded(true);
+          console.error(`Location error (attempt ${retryCount + 1}):`, error);
+
+          // Retry once with high accuracy disabled and longer timeout
+          if (retryCount < 1) {
+            console.log("Retrying geolocation...");
+            getLocationAndFetch(retryCount + 1);
+            return;
+          }
+
+          // After retry fails, use saved coordinates if available
+          if (savedLat && savedLon) {
+            console.log("Using saved coordinates as fallback");
+            setAddress(savedCity || t('home.nearby'));
+            fetchWithCoords(parseFloat(savedLat), parseFloat(savedLon));
+          } else {
+            setAddress(savedCity || "");
+            setIsLoading(false);
+            setIsDataLoaded(true);
+          }
         },
-        { timeout: 10000, enableHighAccuracy: false }
+        { timeout: retryCount === 0 ? 8000 : 15000, enableHighAccuracy: retryCount === 0, maximumAge: 300000 }
       );
     } else {
-      setAddress(savedCity || "");
-      setIsLoading(false);
-      setIsDataLoaded(true);
+      // No geolocation API — use saved coordinates if available
+      if (savedLat && savedLon) {
+        setAddress(savedCity || t('home.nearby'));
+        fetchWithCoords(parseFloat(savedLat), parseFloat(savedLon));
+      } else {
+        setAddress(savedCity || "");
+        setIsLoading(false);
+        setIsDataLoaded(true);
+      }
     }
   };
 
@@ -485,7 +513,7 @@ const HomePage: React.FC = () => {
                       <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full p-1 artist-image-container" style={{ border: '2px solid #D4AF37' }}>
                         <img
                           key={`${member.staff_id}-${currentImageIndices[member.staff_id] || 0}`}
-                          src={member.images?.[currentImageIndices[member.staff_id] || 0] || "/placeholder-user.png"}
+                          src={member.images?.[currentImageIndices[member.staff_id] || 0] || getDefaultStaffImage(member.staff_id || member.name || '')}
                           alt={member.name}
                           className="w-full h-full rounded-full object-cover shadow-inner"
                           style={{
@@ -809,15 +837,26 @@ const HomePage: React.FC = () => {
 
                   /* 3. If loaded, address exists, but array is empty (True empty state) */
                   filteredSalons.length === 0 ? (
-                    <div className="col-span-full w-full text-center py-20 bg-white/80 backdrop-blur-md rounded-3xl border border-gray-50 animate-in zoom-in duration-500">
-                      <p className="text-gray-500 font-bold mb-4">No salons match your criteria</p>
-                      {hasActiveFilters && (
-                        <button
-                          onClick={clearFilters}
-                          className="px-6 py-3 bg-[#1E4D8C] text-white rounded-2xl font-black text-sm shadow-lg hover:scale-105 transition-transform"
-                        >
-                          Reset All Filters
-                        </button>
+                    <div className="col-span-full w-full flex flex-col items-center justify-center py-20 bg-white/80 backdrop-blur-md rounded-3xl border border-gray-50 animate-in zoom-in duration-500">
+                      {hasActiveFilters ? (
+                        <>
+                          <p className="text-gray-500 font-bold mb-4">No salons match your criteria</p>
+                          <button
+                            onClick={clearFilters}
+                            className="px-6 py-3 bg-[#1E4D8C] text-white rounded-2xl font-black text-sm shadow-lg hover:scale-105 transition-transform"
+                          >
+                            Reset All Filters
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mb-5">
+                            <MapPin className="w-7 h-7 text-[#D4AF37]" />
+                          </div>
+                          <h3 className="text-gray-900 font-black text-lg mb-2 text-center" style={{ fontFamily: 'Playfair Display, serif' }}>We're not in your city yet</h3>
+                          <p className="text-gray-500 text-sm text-center max-w-xs mb-1">We're expanding fast! We'll be in your area soon.</p>
+                          <p className="text-[10px] text-gray-400 font-medium tracking-wide uppercase mt-3">Stay tuned for updates</p>
+                        </>
                       )}
                     </div>
                   ) : (
@@ -829,9 +868,9 @@ const HomePage: React.FC = () => {
 
                         return (
                         <Link to={`/salons/${salon.id}`} key={salon.id} className="bg-white border border-[#E0E0E0] rounded-xl overflow-hidden group flex hover:shadow-sm transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 0.1}s`, borderWidth: '0.5px' }}>
-                          {/* Mobile: 40% image, Desktop: fixed width */}
-                          <div className="relative w-[40%] sm:w-32 sm:w-36 h-24 sm:h-32 sm:h-36 shrink-0">
-                            <img src={salon.logoUrl || "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&amp;w=400"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={salon.salonName} style={{ borderRadius: '8px' }} />
+                          {/* Mobile: 35% image, Desktop: fixed width */}
+                          <div className="relative w-[35%] sm:w-32 sm:w-36 h-28 sm:h-32 sm:h-36 shrink-0">
+                            <img src={salon.logoUrl || getDefaultSalonImage(salon.id || salon.salonName || '')} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={salon.salonName} style={{ borderRadius: '8px' }} />
                           </div>
                           <div className="p-3 sm:p-5 flex-1 flex flex-col justify-between" style={{ padding: '16px' }}>
                             <div>
@@ -946,6 +985,7 @@ const HomePage: React.FC = () => {
         <div className="h-16 sm:hidden" />
       </div>
       <SearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />
+      <PromoPopup />
     </div>
   );
 };

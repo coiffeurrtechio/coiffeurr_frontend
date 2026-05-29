@@ -7,6 +7,7 @@ import { Loader } from "../components/ui_components/Loader";
 import { Card, CardContent } from "../components/ui_components/card";
 import { Badge } from "../components/ui_components/badge";
 import { useToast } from "../components/Toast";
+import { getDefaultSalonImage } from "../utils/defaultServiceImage";
 
 export default function UserWishlist() {
   const { t } = useTranslation();
@@ -97,7 +98,7 @@ export default function UserWishlist() {
               >
                 <div className="relative h-64 overflow-hidden">
                   <img
-                    src={salon.branding?.coverImages?.[0] || "/placeholder.svg"}
+                    src={salon.branding?.coverImages?.[0] || getDefaultSalonImage(salon.id || salon.salonName || '')}
                     alt={salon.salonName}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />

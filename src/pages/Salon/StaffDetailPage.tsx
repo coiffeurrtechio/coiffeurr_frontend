@@ -9,6 +9,7 @@ import { Loader } from "../../components/ui_components/Loader";
 import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI";
 import { usersalonApi } from "../../API/SalonsAPIs/UserSalonAPI";
 import { useTranslation } from 'react-i18next';
+import { getDefaultStaffImage, getDefaultSalonImage } from '../../utils/defaultServiceImage';
 
 // Styles
 // @ts-ignore - Swiper CSS imports
@@ -210,7 +211,7 @@ export default function StaffDetailPage() {
                         autoplay={{ delay: 5000 }}
                         className="h-full w-full"
                     >
-                        {staff.images?.map((img: string, i: number) => (
+                        {(staff.images?.length > 0 ? staff.images : [getDefaultStaffImage(staff.staff_id || staff.name || '')]).map((img: string, i: number) => (
                             <SwiperSlide key={i}>
                                 <div className="relative w-full h-full">
                                     <img 
@@ -318,13 +319,11 @@ export default function StaffDetailPage() {
 
                             {/* Contextual Booking Text with Salon Info */}
                             <div className="flex items-center gap-2 sm:gap-3">
-                                {salon?.branding?.coverImages?.[0] && (
-                                    <img 
-                                        src={salon.branding.coverImages[0]} 
-                                        alt={salon.salonName}
-                                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-cover"
-                                    />
-                                )}
+                                <img 
+                                    src={salon?.branding?.coverImages?.[0] || getDefaultSalonImage(salon?.id || salon?.salonName || '')} 
+                                    alt={salon?.salonName}
+                                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-cover"
+                                />
                                 <p className="text-[11px] sm:text-xs text-slate-500 font-normal">
                                     Visit <span className="font-bold text-slate-700">{salon?.salonName || 'the salon'}</span> to book {staff.name.split(' ')[0]} for your transformation
                                 </p>

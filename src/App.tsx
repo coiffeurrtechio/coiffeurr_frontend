@@ -2,6 +2,7 @@ import Router from "./navigations/Router";
 import { useSelector } from 'react-redux';
 import { ToastProvider } from "./components/Toast";
 import ParticleSystem from "./components/ParticleSystem";
+import AnalyticsTracker from "./components/AnalyticsTracker";
 import './i18n/config';
 
 const App = () => {
@@ -14,6 +15,7 @@ const App = () => {
   return (
     <ToastProvider>
       <ParticleSystem />
+      <AnalyticsTracker />
       <Router />
       
     </ToastProvider>

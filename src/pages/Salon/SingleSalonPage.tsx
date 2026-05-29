@@ -21,6 +21,7 @@ import { Loader } from "../../components/ui_components/Loader";
 
 // API
 import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI";
+import { getDefaultStaffImage, getDefaultServiceImage, getDefaultSalonImage } from "../../utils/defaultServiceImage";
 
 // Swiper Styles
 import "swiper/css";
@@ -378,7 +379,7 @@ export default function SalonDetailPage() {
         {/* --- Hero Section --- */}
         <section className="relative h-[40vh] sm:h-[50vh] md:h-[65vh] w-full bg-slate-100">
           <Swiper modules={[Pagination, Autoplay, EffectFade]} effect="fade" pagination={{ clickable: true }} autoplay={{ delay: 5000 }} className="h-full w-full">
-            {(salon?.branding?.coverImages?.length ? salon.branding.coverImages : ["/placeholder.svg"]).map((img: string, i: number) => (
+            {(salon?.branding?.coverImages?.length ? salon.branding.coverImages : [getDefaultSalonImage(salon?.id || salon?.salonName || '')]).map((img: string, i: number) => (
               <SwiperSlide key={i}><img src={img.trim()} alt="Salon" className="w-full h-full object-cover" /></SwiperSlide>
             ))}
           </Swiper>
@@ -435,17 +436,22 @@ export default function SalonDetailPage() {
                 {salonService?.length > 0 ? (
                   <div className="divide-y divide-slate-100">
                     {salonService.map((item: any, index: number) => (
-                      <div key={index} className="py-4 sm:py-6 grid grid-cols-[1fr_auto_auto] gap-3 sm:gap-4 items-center">
-                        <div className="min-h-[50px] sm:min-h-[60px] flex flex-col justify-center">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="text-sm sm:font-medium">{item.serviceName.replace('Triming', 'Trimming')}</h4>
-                          </div>
-                          <p className="text-xs sm:text-sm text-slate-500">{item.description}</p>
+                      <div key={index} className="py-4 sm:py-6 flex items-center gap-3 sm:gap-4">
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden shrink-0 bg-slate-100">
+                          <img
+                            src={item.imageUrl || getDefaultServiceImage(item.serviceName || '')}
+                            alt={item.serviceName}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
-                        <div className="font-semibold text-slate-900 text-right text-sm sm:text-base">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm sm:font-medium truncate">{item.serviceName.replace('Triming', 'Trimming')}</h4>
+                          <p className="text-xs sm:text-sm text-slate-500 truncate">{item.description}</p>
+                        </div>
+                        <div className="font-semibold text-slate-900 text-right text-sm sm:text-base shrink-0">
                           <span className="text-xs sm:text-sm text-slate-500 font-normal">₹</span>{item.price}
                         </div>
-                        <Button size="sm" className="rounded-full border-2 border-slate-900 bg-transparent text-slate-900 hover:bg-slate-900 hover:text-white hover:shadow-lg hover:shadow-slate-900/20 transition-all duration-300 hover:scale-105 px-4 sm:px-6 text-xs sm:text-sm" onClick={() => handleViewService(item?.service_id)}>Book Now</Button>
+                        <Button size="sm" className="rounded-full border-2 border-slate-900 bg-transparent text-slate-900 hover:bg-slate-900 hover:text-white hover:shadow-lg hover:shadow-slate-900/20 transition-all duration-300 hover:scale-105 px-4 sm:px-6 text-xs sm:text-sm shrink-0" onClick={() => handleViewService(item?.service_id)}>Book Now</Button>
                       </div>
                     ))}
                   </div>
@@ -471,17 +477,11 @@ export default function SalonDetailPage() {
 
                         {/* Artist Image */}
                         <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-100 shrink-0 overflow-hidden rounded-xl">
-                          {staff.images?.[0] ? (
-                            <img
-                              src={staff.images[0]}
-                              alt={staff.name}
-                              className="w-full h-full object-cover transition-transform group-hover:scale-110"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-slate-300">
-                              <Scissors className="w-8 h-8 opacity-30" />
-                            </div>
-                          )}
+                          <img
+                            src={staff.images?.[0] || getDefaultStaffImage(staff.staff_id || staff.name || '')}
+                            alt={staff.name}
+                            className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                          />
                         </div>
 
                         {/* Text Content - Right Aligned */}
@@ -1043,9 +1043,11 @@ export default function SalonDetailPage() {
                   ))}
                 </Swiper>
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-slate-400">
-                  <Scissors className="w-12 h-12 opacity-20" />
-                </div>
+                <img
+                  src={getDefaultStaffImage(selectedStaff.staff_id || selectedStaff.name || '')}
+                  alt={selectedStaff.name}
+                  className="w-full h-full object-cover"
+                />
               )}
             </div>
 

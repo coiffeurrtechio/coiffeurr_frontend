@@ -6,6 +6,7 @@ import { Button } from '../components/ui_components/button';
 import { useApi } from '../API/SalonsAPIs/ALLSalonAPI';
 import Fuse from 'fuse.js';
 import { normalizeSearchQuery, getMatchingServices } from '../utils/semanticSearchMapping';
+import { getDefaultSalonImage } from '../utils/defaultServiceImage';
 
 function SearchPage() {
   const { t } = useTranslation();
@@ -327,7 +328,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
                       >
                         <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
                           <img
-                            src={salon.logoUrl || "/placeholder.png"}
+                            src={salon.logoUrl || getDefaultSalonImage(salon.id || salon.salonName || '')}
                             alt={salon.salonName}
                             className="w-full h-full object-cover"
                           />
@@ -399,7 +400,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
               >
                 <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
                   <img
-                    src={salon.logoUrl || "/placeholder.png"}
+                    src={salon.logoUrl || getDefaultSalonImage(salon.id || salon.salonName || '')}
                     alt={salon.salonName}
                     className="w-full h-full object-cover"
                   />
@@ -458,24 +459,24 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
       {isFilterModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsFilterModalOpen(false)} />
-          <div className="relative w-full max-w-lg bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 animate-in slide-in-from-bottom duration-300 shadow-2xl">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-xl font-black text-gray-900 tracking-tight">{t('search.searchSettings')}</h2>
+          <div className="relative w-full max-w-lg bg-white rounded-t-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 animate-in slide-in-from-bottom duration-300 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6 sm:mb-8">
+              <h2 className="text-lg sm:text-xl font-black text-gray-900 tracking-tight">{t('search.searchSettings')}</h2>
               <button onClick={() => setIsFilterModalOpen(false)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200">
-                <X size={20} />
+                <X size={18} sm:size-20 />
               </button>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-5 sm:space-y-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-gray-400 tracking-widest">{t('search.location')}</label>
                 <div className="relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} sm:size-18 />
                   <input
                     type="text"
                     value={tempFilters.city}
                     onChange={(e) => setTempFilters({ ...tempFilters, city: e.target.value })}
-                    className="w-full h-14 pl-12 pr-4 bg-gray-50 border-none rounded-2xl font-bold text-sm outline-none"
+                    className="w-full h-12 sm:h-14 pl-12 pr-4 bg-gray-50 border-none rounded-2xl font-bold text-sm outline-none"
                     placeholder={t('search.cityName')}
                   />
                 </div>
@@ -488,7 +489,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
                     <button
                       key={num}
                       onClick={() => setTempFilters({ ...tempFilters, limit: num })}
-                      className={`h-12 rounded-2xl font-bold text-sm transition-all ${tempFilters.limit === num ? 'bg-[#1E4D8C] text-white' : 'bg-gray-50 text-gray-400'
+                      className={`h-10 sm:h-12 rounded-2xl font-bold text-xs sm:text-sm transition-all ${tempFilters.limit === num ? 'bg-[#1E4D8C] text-white' : 'bg-gray-50 text-gray-400'
                         }`}
                     >
                       {num}
@@ -499,7 +500,7 @@ const handleSearchSubmit = (e?: React.FormEvent) => {
 
               <Button
                 onClick={() => setIsFilterModalOpen(false)}
-                className="w-full h-14 bg-[#1E4D8C] text-white rounded-2xl font-black text-sm tracking-widest mt-4 shadow-xl"
+                className="w-full h-12 sm:h-14 bg-[#1E4D8C] text-white rounded-2xl font-black text-xs sm:text-sm tracking-widest mt-4 shadow-xl"
               >
                 {t('search.savePreferences')}
               </Button>

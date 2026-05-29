@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Search, Star, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Config from '../configs/config';
+import { getDefaultSalonImage } from '../utils/defaultServiceImage';
 
 interface SearchOverlayProps {
   isOpen: boolean;
@@ -165,7 +166,7 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose }) => {
                 {/* Thumbnail */}
                 <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 border-2 border-[#D4AF37]">
                   <img
-                    src={result.logoUrl || '/placeholder-user.png'}
+                    src={result.logoUrl || getDefaultSalonImage(result.id || result.salonName || '')}
                     alt={result.salonName}
                     className="w-full h-full object-cover"
                   />

@@ -225,7 +225,21 @@
     "city": "City",
     "streetAddress": "Street Address",
     "pincode": "Pincode",
-    "notAvailable": "N/A"
+    "notAvailable": "N/A",
+    "profileNotFound": "Profile Not Found",
+    "yourSalonName": "Your Salon Name",
+    "identity": "Identity",
+    "owner": "Owner",
+    "email": "Email",
+    "phone": "Phone",
+    "opens": "Opens",
+    "closes": "Closes",
+    "holidays": "Holidays",
+    "expertise": "Expertise",
+    "socialMedia": "Social Media",
+    "instagram": "Instagram",
+    "facebook": "Facebook",
+    "established": "Est."
   },
   "business": {
     "title": "Business Analytics",
@@ -323,7 +337,11 @@
     "languages": "Languages",
     "certifications": "Certifications",
     "specializations": "Specializations",
-    "add": "Add"
+    "add": "Add",
+    "noReviewsYet": "No reviews yet",
+    "beFirstToShare": "Be the first to share your experience",
+    "staffUpdated": "Staff Updated",
+    "changesSavedSuccessfully": "Changes saved successfully"
   },
   "home": {
     "locating": "Locating...",
@@ -345,7 +363,10 @@
     "precisionLuxury": "Precision in every snip. Luxury in every touch.",
     "trending": "Trending",
     "stylist": "Stylist",
-    "mostBooked": "Most Booked"
+    "mostBooked": "Most Booked",
+    "noSalonsMatchCriteria": "No salons match your criteria",
+    "stayTunedForUpdates": "Stay tuned for updates",
+    "startingFrom": "Starting from"
   },
   "search": {
     "searchForSalons": "Search for salons...",
@@ -355,7 +376,12 @@
     "location": "Location",
     "cityName": "City name...",
     "limit": "Limit",
-    "savePreferences": "Save Preferences"
+    "savePreferences": "Save Preferences",
+    "navigateKeyboard": "↑↓ Navigate · Enter Select · Esc Close",
+    "noResultsFound": "No results found",
+    "trendingSearches": "TRENDING SEARCHES",
+    "press": "Press",
+    "forQuickSearch": "for quick search"
   },
   "noSalonsFound": {
     "title": "No Salons Found in {{city}}",
@@ -415,7 +441,8 @@
     "divorced": "Divorced",
     "widowed": "Widowed",
     "seeLess": "See Less",
-    "seeMore": "See More"
+    "seeMore": "See More",
+    "datePlaceholder": "DD/MM/YYYY"
   },
   "salons": {
     "searchSalons": "Search salons...",
@@ -500,6 +527,11 @@
     "artist2Specialty": "Nail Art & Manicure",
     "artist3Name": "Isabella Rodriguez",
     "artist3Specialty": "Skincare & Facials"
+  },
+  "feedback": {
+    "describeSalonExperience": "Describe your experience at the salon...",
+    "describeArtistExperience": "Describe your experience with the artist...",
+    "submitted": "Submitted"
   },
   "verification": {
     "emailRequired": "Email Required",
@@ -603,7 +635,19 @@
     "resetFailed": "Reset failed",
     "sendOTP": "Send OTP",
     "photoUploaded": "Photo Uploaded!",
-    "uploadFailed": "Upload Failed"
+    "uploadFailed": "Upload Failed",
+    "emailPlaceholder": "name@example.com",
+    "passwordPlaceholder": "••••••••",
+    "emailAddress": "Email Address",
+    "phone": "Phone Number",
+    "quickSignup": "Quick Signup",
+    "signupWithGoogle": "Sign up with Google",
+    "male": "Male",
+    "female": "Female",
+    "other": "Other",
+    "back": "Back",
+    "support": "Support",
+    "enterOTPLabel": "Enter OTP"
   },
   "salon": {
     "title": "Salon",
@@ -625,7 +669,9 @@
     "noSalonsFound": "No salons found",
     "searchSalons": "Search salons...",
     "viewDetails": "View Details",
-    "bookAppointment": "Book Appointment"
+    "bookAppointment": "Book Appointment",
+    "searchByNameCityPincode": "Search by name, city, pincode...",
+    "searchReviews": "Search reviews..."
   },
   "booking": {
     "title": "Command Deck",
@@ -711,7 +757,12 @@
     "original": "Original",
     "reason": "Reason",
     "modified": "Modified",
-    "salonLogo": "Salon Logo"
+    "salonLogo": "Salon Logo",
+    "searchBookings": "Search bookings...",
+    "salonId": "Salon ID",
+    "minPricePlaceholder": "Min Price",
+    "maxPricePlaceholder": "Max Price",
+    "enterReasonRescheduling": "Enter reason for rescheduling"
   },
   "analytics": {
     "title": "Analytics",

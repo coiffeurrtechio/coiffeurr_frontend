@@ -18,6 +18,7 @@ import { Loader } from "../../components/ui_components/Loader";
 
 // API & Types
 import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI";
+import { getDefaultSalonImage } from "../../utils/defaultServiceImage";
 
 // Styles
 import "swiper/css";
@@ -218,7 +219,7 @@ export default function SalonsPage(): JSX.Element {
                 {/* --- 1. VISUAL IDENTIFIER (TOP) --- */}
                 <div className="relative h-48 sm:h-56 md:h-64 w-full overflow-hidden bg-slate-50">
                   <img
-                    src={salon.logoUrl || "/placeholder.svg"}
+                    src={salon.logoUrl || getDefaultSalonImage(salon.id || salon.salonName || '')}
                     alt={salon.salonName}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />

@@ -17,7 +17,24 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       devOptions: {
-        enabled: true
+        enabled: false
+      },
+      workbox: {
+        navigateFallback: '/index.html',
+        navigateFallbackAllowlist: [/^\/$/, /^\/salons/, /^\/profile/, /^\/search/],
+        runtimeCaching: [
+          {
+            urlPattern: /^\/feedback\/.*/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'feedback-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24
+              }
+            }
+          }
+        ]
       },
       manifest: {
         name: 'Coiffure App',

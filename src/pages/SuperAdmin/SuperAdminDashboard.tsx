@@ -6,7 +6,8 @@ import {
   Notebook,
   ChevronRight,
   Building2,
-  ShieldCheck
+  ShieldCheck,
+  BarChart3
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "../../components/ui_components/button";
@@ -25,6 +26,7 @@ function SuperAdminDashboard({ open, setOpen, collapsed }: SidebarProps) {
   const location = useLocation();
 
   const menuItems = [
+    { id: "tracking", label: "Tracking", icon: BarChart3, path: "/super-admin/dashboard/tracking" },
     { id: "analytics", label: "Analytics", icon: LayoutDashboard, path: "/super-admin/dashboard/analytics" },
     { id: "salons", label: "Salons", icon: Building2, path: "/super-admin/dashboard" },
     { id: "bookings", label: "Bookings", icon: Notebook, path: "/super-admin/dashboard/bookings" },

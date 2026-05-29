@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  Mail, Lock, Eye, EyeOff, Smartphone
+  Mail, Lock, Eye, EyeOff, Smartphone, KeyRound
 } from "lucide-react";
 import { Button } from "../components/ui_components/button";
 import { useToast } from "../components/Toast";
@@ -27,6 +27,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
   const [formData, setFormData] = useState({ email: "", phone: "", password: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // OTP Login State
+  const [useOtp, setUseOtp] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
+  const [countdown, setCountdown] = useState(0);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
   const { showToast } = useToast();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -42,6 +50,23 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
     }
   }, [isloggedin]);
 
+  // Countdown timer for OTP resend
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = setInterval(() => {
+      setCountdown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [countdown]);
+
+  // Reset OTP state when switching login method
+  useEffect(() => {
+    setUseOtp(false);
+    setOtpSent(false);
+    setOtp(['', '', '', '', '', '']);
+    setCountdown(0);
+  }, [loginMethod]);
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -54,10 +79,181 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
       else if (formData.phone.length < 10) newErrors.phone = t('auth.invalidCredentials');
     }
 
-    if (!formData.password) newErrors.password = t('auth.requiredField');
+    if (!useOtp && !formData.password) newErrors.password = t('auth.requiredField');
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const validateIdentifier = () => {
+    const newErrors: Record<string, string> = {};
+    if (loginMethod === 'email') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!formData.email) newErrors.email = t('auth.requiredField');
+      else if (!emailRegex.test(formData.email)) newErrors.email = t('auth.invalidEmail');
+    } else {
+      if (!formData.phone) newErrors.phone = t('auth.requiredField');
+      else if (formData.phone.length < 10) newErrors.phone = t('auth.invalidCredentials');
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSendOtp = async () => {
+    if (!validateIdentifier()) return;
+
+    setOtpLoading(true);
+    try {
+      const identifier = loginMethod === 'email' ? formData.email : formData.phone;
+      const response = await fetch(`${Config.API_AUTH_URL}/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: loginMethod, identifier }),
+        credentials: 'include',
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result?.detail || 'Failed to send OTP');
+      }
+
+      setOtpSent(true);
+      setCountdown(60);
+      setOtp(['', '', '', '', '', '']);
+      showToast({
+        type: "success",
+        title: "OTP Sent",
+        message: result.message || "OTP sent successfully",
+        duration: 4000,
+      });
+      // Focus first OTP input
+      setTimeout(() => otpInputRefs.current[0]?.focus(), 100);
+    } catch (error: any) {
+      showToast({
+        type: "error",
+        title: "Failed to send OTP",
+        message: error.message || "Could not send OTP. Try again.",
+        duration: 5000,
+      });
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleOtpChange = (index: number, value: string) => {
+    if (!/^\d*$/.test(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value.slice(-1);
+    setOtp(newOtp);
+
+    // Auto-focus next input
+    if (value && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (pasted.length === 6) {
+      setOtp(pasted.split(''));
+      otpInputRefs.current[5]?.focus();
+    }
+  };
+
+  const handleOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const otpValue = otp.join('');
+    if (otpValue.length !== 6) {
+      showToast({
+        type: "error",
+        title: "Invalid OTP",
+        message: "Please enter the complete 6-digit OTP",
+        duration: 3000,
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const identifier = loginMethod === 'email' ? formData.email : formData.phone;
+      const response = await fetch(`${Config.API_AUTH_URL}/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: loginMethod, identifier, otp: otpValue }),
+        credentials: 'include',
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result?.detail || 'OTP verification failed');
+      }
+
+      dispatch(login({ user: result.user }));
+
+      // Fetch user PII to get image URL
+      try {
+        const piiResponse = await fetch(`${Config.API_Customers}/users/${result.user.id}/pii`, {
+          headers: {
+            'Authorization': `Bearer ${result.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
+
+        if (piiResponse.ok) {
+          const piiData = await piiResponse.json();
+          const imageUrl = piiData.image_url || piiData.metadata?.google_picture_url;
+          dispatch(login({ user: { ...result.user, access_token: result.access_token, image_url: imageUrl } }));
+        }
+      } catch (piiError) {
+        console.error('Failed to fetch PII:', piiError);
+      }
+
+      // Set language from user preference
+      const languagePreference = result?.user?.language_preference || 'en';
+      if (['en', 'hi', 'mr'].includes(languagePreference)) {
+        i18n.changeLanguage(languagePreference);
+        localStorage.setItem('selectedLanguage', languagePreference);
+      } else {
+        i18n.changeLanguage('en');
+        localStorage.setItem('selectedLanguage', 'en');
+      }
+
+      if (result?.user?.role === "OWNER") {
+        sessionStorage.setItem('fromLogin', 'true');
+        navigate("/dashboard");
+      } else {
+        sessionStorage.setItem('fromLogin', 'true');
+        const pendingState = sessionStorage.getItem('pendingBookingState');
+        if (pendingState) {
+          try {
+            const state = JSON.parse(pendingState);
+            navigate(state.returnUrl || "/");
+          } catch (error) {
+            console.error('Error parsing pending state:', error);
+            navigate("/");
+          }
+        } else {
+          navigate("/");
+        }
+      }
+    } catch (error: any) {
+      showToast({
+        type: "error",
+        title: "Verification Failed",
+        message: error.message || "Invalid or expired OTP",
+        duration: 5000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -340,39 +536,130 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
                     </div>
                   </div>
                 )}
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center px-1">
-                    <label className="dark-label ml-1 text-xs sm:text-sm">{t('auth.password')}</label>
-                    <Link to="/forgetpassword" className="text-[10px] font-black text-white/50 hover:text-[#D4AF37] tracking-widest text-button transition-colors focus-ring">
-                      {t('auth.forgotPassword')}
-                    </Link>
-                  </div>
-                  <div className="relative input-wrapper">
-                    <Lock className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon" />
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      value={formData.password}
-                      onChange={(e) => handleInputChange("password", e.target.value)}
-                      className="w-full h-12 pl-12 pr-20 dark-input text-sm font-bold outline-none transition-all duration-300"
-                    />
+                {!useOtp ? (
+                  <>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center px-1">
+                        <label className="dark-label ml-1 text-xs sm:text-sm">{t('auth.password')}</label>
+                        <Link to="/forgetpassword" className="text-[10px] font-black text-white/50 hover:text-[#D4AF37] tracking-widest text-button transition-colors focus-ring">
+                          {t('auth.forgotPassword')}
+                        </Link>
+                      </div>
+                      <div className="relative input-wrapper">
+                        <Lock className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon" />
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          value={formData.password}
+                          onChange={(e) => handleInputChange("password", e.target.value)}
+                          className="w-full h-12 pl-12 pr-20 dark-input text-sm font-bold outline-none transition-all duration-300"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors focus-ring z-10"
+                        >
+                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <Button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full h-14 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30 text-sm sm:text-base"
+                    >
+                      {isLoading ? t('common.loading') : t('auth.signIn')}
+                    </Button>
+
                     <button
                       type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors focus-ring z-10"
+                      onClick={() => setUseOtp(true)}
+                      className="w-full flex items-center justify-center gap-2 py-2 text-[10px] font-black text-white/50 hover:text-[#D4AF37] tracking-widest transition-colors"
                     >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      <KeyRound size={12} /> Login via OTP
                     </button>
-                  </div>
-                </div>
+                  </>
+                ) : (
+                  <>
+                    {!otpSent ? (
+                      <>
+                        <Button
+                          type="button"
+                          onClick={handleSendOtp}
+                          disabled={otpLoading}
+                          className="w-full h-14 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30 text-sm sm:text-base"
+                        >
+                          {otpLoading ? t('common.loading') : 'Send OTP'}
+                        </Button>
 
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full h-14 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30 text-sm sm:text-base"
-                >
-                  {isLoading ? t('common.loading') : t('auth.signIn')}
-                </Button>
+                        <button
+                          type="button"
+                          onClick={() => setUseOtp(false)}
+                          className="w-full flex items-center justify-center gap-2 py-2 text-[10px] font-black text-white/50 hover:text-[#D4AF37] tracking-widest transition-colors"
+                        >
+                          <Lock size={12} /> Login with Password
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <div className="space-y-2">
+                          <label className="dark-label ml-1 text-xs sm:text-sm">Enter 6-digit OTP</label>
+                          <div className="flex gap-2 justify-center" onPaste={handleOtpPaste}>
+                            {otp.map((digit, index) => (
+                              <input
+                                key={index}
+                                ref={(el) => { otpInputRefs.current[index] = el; }}
+                                type="text"
+                                inputMode="numeric"
+                                maxLength={1}
+                                value={digit}
+                                onChange={(e) => handleOtpChange(index, e.target.value)}
+                                onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                                className="w-10 h-12 sm:w-12 sm:h-14 text-center text-lg font-bold dark-input rounded-xl outline-none focus:ring-2 focus:ring-[#D4AF37]/50 transition-all duration-300"
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-center gap-2">
+                          {countdown > 0 ? (
+                            <span className="text-[10px] font-black text-white/40 tracking-widest">
+                              Resend in {countdown}s
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={handleSendOtp}
+                              disabled={otpLoading}
+                              className="text-[10px] font-black text-[#D4AF37] hover:text-[#FFD700] tracking-widest transition-colors"
+                            >
+                              Resend OTP
+                            </button>
+                          )}
+                        </div>
+
+                        <Button
+                          type="button"
+                          onClick={handleOtpSubmit}
+                          disabled={isLoading || otp.join('').length !== 6}
+                          className="w-full h-14 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30 text-sm sm:text-base disabled:opacity-50"
+                        >
+                          {isLoading ? t('common.loading') : 'Verify & Sign In'}
+                        </Button>
+
+                        <button
+                          type="button"
+                          onClick={() => { setUseOtp(false); setOtpSent(false); setOtp(['', '', '', '', '', '']); }}
+                          className="w-full flex items-center justify-center gap-2 py-2 text-[10px] font-black text-white/50 hover:text-[#D4AF37] tracking-widest transition-colors"
+                        >
+                          <Lock size={12} /> Login with Password
+                        </button>
+                      </>
+                    )}
+                  </>
+                )}
+
                 <div className="text-center space-y-2">
                   <p className="text-xs sm:text-sm text-white/60">{t('auth.dontHaveAccount')} <Link to="/signup" className="text-[#D4AF37] hover:text-[#FFD700] font-semibold">{t('auth.createAccount')}</Link></p>
                 </div>

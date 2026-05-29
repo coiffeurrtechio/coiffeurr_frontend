@@ -5,6 +5,7 @@ import SalonManagement from "./SalonManagement";
 import BookingManagement from "./BookingManagement";
 import UserManagement from "./UserManagement";
 import Analytics from "./Analytics";
+import Tracking from "./Tracking";
 
 const SuperAdminHome = () => {
   const navigate = useNavigate();
@@ -22,6 +23,8 @@ const SuperAdminHome = () => {
     
     if (path === "/super-admin/dashboard/analytics") {
       return <Analytics />;
+    } else if (path === "/super-admin/dashboard/tracking") {
+      return <Tracking />;
     } else if (path === "/super-admin/dashboard" || path === "/super-admin/dashboard/") {
       return <SalonManagement />;
     } else if (path.includes("/super-admin/dashboard/bookings")) {

@@ -269,14 +269,14 @@ const BookingManagement = () => {
       <div className="bg-transparent backdrop-blur-xl rounded-xl p-4 border border-white/10 shadow-lg">
         <div className="flex flex-col lg:flex-row gap-4 flex-wrap">
           {/* Search */}
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <div className="relative flex-1 min-w-[150px] sm:min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
             <input
               type="text"
               placeholder="Search bookings..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-[#1e293b] border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 text-white placeholder-gray-400"
+              className="w-full pl-10 pr-4 py-2 sm:py-2.5 bg-[#1e293b] border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 text-white placeholder-gray-400 text-sm"
             />
           </div>
 
@@ -284,7 +284,7 @@ const BookingManagement = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2.5 bg-[#1e293b] border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 text-white"
+            className="px-3 sm:px-4 py-2 sm:py-2.5 bg-[#1e293b] border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 text-white text-sm"
           >
             <option value="" className="bg-gray-800">All Status</option>
             <option value="PENDING" className="bg-gray-800">Pending</option>

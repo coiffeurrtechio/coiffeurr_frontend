@@ -67,27 +67,78 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
   }, []);
 
   // Play notification sound
-  const playNotificationSound = () => {
+  const playNotificationSound = async () => {
+    console.log('Attempting to play notification sound...');
+    
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      // Resume audio context if suspended (required in modern browsers)
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+      
+      // Try to load the WAV file using fetch
+      const response = await fetch('/notification_sound.wav');
+      if (!response.ok) {
+        throw new Error('Failed to load audio file');
+      }
+      
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      
+      // Play the audio
+      const source = audioContext.createBufferSource();
+      source.buffer = audioBuffer;
+      
+      const gainNode = audioContext.createGain();
+      gainNode.gain.value = 1.0;
+      
+      source.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      source.start(0);
+      console.log('Audio played successfully using Web Audio API');
+    } catch (err) {
+      console.error('Web Audio API failed:', err);
+      // Fallback to synthesized sound
+      playFallbackSound();
+    }
+  };
+
+  // Fallback sound using Web Audio API
+  const playFallbackSound = async () => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      // Resume audio context if suspended
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+      
+      // Create a more prominent notification sound
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
       
-      // Pleasant chime sound - two tones
-      oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A5
-      oscillator.frequency.setValueAtTime(1109, audioContext.currentTime + 0.1); // C#6
+      // Create a pleasant ding-dong sound
+      oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+      oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.15); // E5
+      oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.3); // G5
       oscillator.type = 'sine';
       
-      gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
+      // Make it louder
+      gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
       
       oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.6);
+      oscillator.stop(audioContext.currentTime + 0.8);
+      
+      console.log('Fallback sound played');
     } catch (err) {
-      console.log('Audio play failed:', err);
+      console.error('Fallback audio also failed:', err);
     }
   };
 

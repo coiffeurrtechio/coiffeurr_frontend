@@ -225,7 +225,21 @@
     "city": "शहर",
     "streetAddress": "स्ट्रीट पत्ता",
     "pincode": "पिनकोड",
-    "notAvailable": "उपलब्ध नाही"
+    "notAvailable": "उपलब्ध नाही",
+    "profileNotFound": "प्रोफाइल सापडली नाही",
+    "yourSalonName": "तुमच्या सॅलूनचे नाव",
+    "identity": "ओळख",
+    "owner": "मालक",
+    "email": "ईमेल",
+    "phone": "फोन",
+    "opens": "उघडते",
+    "closes": "बंद होते",
+    "holidays": "सुट्ट्या",
+    "expertise": "विशेषज्ञता",
+    "socialMedia": "सोशल मीडिया",
+    "instagram": "इंस्टाग्राम",
+    "facebook": "फेसबुक",
+    "established": "स्थापन"
   },
   "business": {
     "title": "व्यवसाय विश्लेषण",
@@ -323,7 +337,11 @@
     "languages": "भाषा",
     "certifications": "प्रमाणपत्रे",
     "specializations": "विशेषज्ञता",
-    "add": "जोडा"
+    "add": "जोडा",
+    "noReviewsYet": "अजून कोणतीही समीक्षा नाही",
+    "beFirstToShare": "आपला अनुभव सामायिक करणारे पहिले व्हा",
+    "staffUpdated": "स्टाफ अपडेट केले",
+    "changesSavedSuccessfully": "बदल यशस्वीरित्या जतन केले"
   },
   "home": {
     "locating": "लोकेशन शोधत आहे...",
@@ -345,7 +363,10 @@
     "precisionLuxury": "प्रत्येक कटमध्ये अचूकता. प्रत्येक स्पर्शात विलासिता.",
     "trending": "लोकप्रिय",
     "stylist": "स्टायलिस्ट",
-    "mostBooked": "सर्वाधिक बुक केलेले"
+    "mostBooked": "सर्वाधिक बुक केलेले",
+    "noSalonsMatchCriteria": "कोणतेही सॅलून तुमच्या निकषांशी जुळत नाहीत",
+    "stayTunedForUpdates": "अपडेट्ससाठी जुळून राहा",
+    "startingFrom": "सुरूवातीपासून"
   },
   "search": {
     "searchForSalons": "सॅलून शोधा...",
@@ -355,7 +376,12 @@
     "location": "लोकेशन",
     "cityName": "शहराचे नाव...",
     "limit": "मर्यादा",
-    "savePreferences": "प्राधान्ये जतन करा"
+    "savePreferences": "प्राधान्ये जतन करा",
+    "navigateKeyboard": "↑↓ नेव्हिगेट · Enter निवडा · Esc बंद करा",
+    "noResultsFound": "कोणतेही परिणाम सापडले नाहीत",
+    "trendingSearches": "लोकप्रिय शोध",
+    "press": "दाबा",
+    "forQuickSearch": "त्वरित शोधासाठी"
   },
   "noSalonsFound": {
     "title": "{{city}} मध्ये कोणतेही सॅलून सापडले नाहीत",
@@ -421,7 +447,8 @@
     "divorced": "घटस्थ",
     "widowed": "विधवा/विधुर",
     "seeLess": "कमी पहा",
-    "seeMore": "अधिक पहा"
+    "seeMore": "अधिक पहा",
+    "datePlaceholder": "DD/MM/YYYY"
   },
   "salons": {
     "searchSalons": "सॅलून शोधा...",
@@ -506,6 +533,11 @@
     "artist2Specialty": "नेल आर्ट आणि मॅनिक्योर",
     "artist3Name": "इझाबेला रोड्रिगेझ",
     "artist3Specialty": "स्किनकेअर आणि फेशियल्स"
+  },
+  "feedback": {
+    "describeSalonExperience": "सॅलूनमधील आपला अनुभव वर्णन करा...",
+    "describeArtistExperience": "कलाकारासोबत आपला अनुभव वर्णन करा...",
+    "submitted": "सादर केले"
   },
   "verification": {
     "emailRequired": "ईमेल आवश्यक",
@@ -609,7 +641,19 @@
     "resetFailed": "रीसेट अयशस्वी",
     "sendOTP": "OTP पाठवा",
     "photoUploaded": "फोटो अपलोड झाले!",
-    "uploadFailed": "अपलोड अयशस्वी"
+    "uploadFailed": "अपलोड अयशस्वी",
+    "emailPlaceholder": "name@example.com",
+    "passwordPlaceholder": "••••••••",
+    "emailAddress": "ईमेल पत्ता",
+    "phone": "फोन नंबर",
+    "quickSignup": "त्वरित साइनअप",
+    "signupWithGoogle": "Google सह साइनअप करा",
+    "male": "पुरुष",
+    "female": "महिला",
+    "other": "इतर",
+    "back": "परत",
+    "support": "सहायता",
+    "enterOTPLabel": "OTP प्रविष्ट करा"
   },
   "salon": {
     "title": "सॅलून",
@@ -631,7 +675,9 @@
     "noSalonsFound": "कोणतेही सॅलून सापडले नाहीत",
     "searchSalons": "सॅलून शोधा...",
     "viewDetails": "तपशील पहा",
-    "bookAppointment": "अपॉइंटमेंट बुक करा"
+    "bookAppointment": "अपॉइंटमेंट बुक करा",
+    "searchByNameCityPincode": "नाव, शहर, पिनकोडने शोधा...",
+    "searchReviews": "समीक्षा शोधा..."
   },
   "booking": {
     "title": "कमांड डेक",
@@ -712,7 +758,12 @@
     "original": "मूळ",
     "reason": "कारण",
     "modified": "सुधारित",
-    "salonLogo": "सॅलून लोगो"
+    "salonLogo": "सॅलून लोगो",
+    "searchBookings": "बुकिंग शोधा...",
+    "salonId": "सॅलून ID",
+    "minPricePlaceholder": "किमान किंमत",
+    "maxPricePlaceholder": "कमाल किंमत",
+    "enterReasonRescheduling": "पुनर्निर्धारणाचे कारण प्रविष्ट करा"
   },
   "analytics": {
     "title": "विश्लेषण",

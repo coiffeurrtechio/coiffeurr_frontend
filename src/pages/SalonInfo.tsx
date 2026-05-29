@@ -36,6 +36,7 @@ import { Header } from "../components/Header";
 import { useApi } from "../API/SalonsAPIs/ALLSalonAPI";
 import { Loader } from "../components/ui_components/Loader";
 import { Link } from "react-router-dom";
+import { getDefaultStaffImage, getDefaultSalonImage } from "../utils/defaultServiceImage";
 
 
 export default function SalonInfo() {
@@ -185,12 +186,12 @@ const [searchTerm, setSearchTerm] = useState<string>("");
                 {artists.map((artist, index) => (
                     <Card
                         key={index}
-                        className="min-w-[70%] sm:min-w-[50%] md:min-w-[33%] border-0 bg-card/50 backdrop-blur-sm overflow-hidden group hover:shadow-lg transition-all duration-300"
+                        className="min-w-[60%] sm:min-w-[50%] md:min-w-[33%] border-0 bg-card/50 backdrop-blur-sm overflow-hidden group hover:shadow-lg transition-all duration-300"
                     >
                         <div className="aspect-square overflow-hidden">
                             <img
                                 fetchPriority="high"
-                                src={artist.image || "/placeholder.svg"}
+                                src={artist.image || getDefaultStaffImage(artist.name || '')}
                                 alt={artist.name}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
@@ -235,7 +236,7 @@ const [searchTerm, setSearchTerm] = useState<string>("");
                                         >
                                             {(salon?.images?.length > 0
                                                 ? salon.images
-                                                : ["/placeholder.svg"]
+                                                : [getDefaultSalonImage(salon?.id || salon?.salonName || '')]
                                             ).map((img, index) => (
                                                 <SwiperSlide key={index}>
                                                     <img
@@ -265,7 +266,7 @@ const [searchTerm, setSearchTerm] = useState<string>("");
                                         <div className="flex items-start justify-between mb-3">
                                             <div className="flex items-center gap-3">
                                                 <img
-                                                    src={salon.logoUrl || "/placeholder.svg"}
+                                                    src={salon.logoUrl || getDefaultSalonImage(salon.id || salon.salonName || '')}
                                                     alt={`${salon.salonName} logo`}
                                                     className="w-10 h-10 rounded-full object-cover"
                                                 />

@@ -497,19 +497,19 @@ export default function Profile() {
       {isEditModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
           <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-md" onClick={() => setIsEditModalOpen(false)} />
-          <div className="relative w-full max-w-lg bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 animate-in slide-in-from-bottom shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-black text-gray-900 tracking-tight">{t('profile.updateProfile')}</h2>
-              <button onClick={() => setIsEditModalOpen(false)} className="p-3 bg-gray-100 rounded-full hover:bg-gray-200 transition-all hover:scale-105 active:scale-95"><X size={20} /></button>
+          <div className="relative w-full max-w-lg bg-white rounded-t-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 animate-in slide-in-from-bottom shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar">
+            <div className="flex items-center justify-between mb-6 sm:mb-8">
+              <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">{t('profile.updateProfile')}</h2>
+              <button onClick={() => setIsEditModalOpen(false)} className="p-2 sm:p-3 bg-gray-100 rounded-full hover:bg-gray-200 transition-all hover:scale-105 active:scale-95"><X className="w-4 h-4 sm:w-5 sm:h-5" /></button>
             </div>
 
-            <div className="space-y-6">
-              <div className="flex flex-col items-center justify-center py-4 relative">
-                <div className="w-40 h-40 rounded-full border-4 border-white overflow-hidden shadow-xl bg-gradient-to-br from-gray-100 to-gray-200 relative">
-                  {isUploading && <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10 backdrop-blur-sm"><Loader2 className="w-8 h-8 text-white animate-spin" /></div>}
-                  {editForm.profileImage ? <img src={editForm.profileImage} alt="Preview" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-3xl">{user.name?.charAt(0)}</div>}
+            <div className="space-y-5 sm:space-y-6">
+              <div className="flex flex-col items-center justify-center py-3 sm:py-4 relative">
+                <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-white overflow-hidden shadow-xl bg-gradient-to-br from-gray-100 to-gray-200 relative">
+                  {isUploading && <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10 backdrop-blur-sm"><Loader2 className="w-6 h-6 sm:w-8 sm:h-8 text-white animate-spin" /></div>}
+                  {editForm.profileImage ? <img src={editForm.profileImage} alt="Preview" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-2xl sm:text-3xl">{user.name?.charAt(0)}</div>}
                 </div>
-                <button onClick={() => fileInputRef.current?.click()} className="absolute bottom-4 right-[calc(50%-3rem)] p-3 bg-gradient-to-br from-slate-700 to-slate-800 text-white rounded-full border-3 border-white shadow-xl hover:shadow-2xl active:scale-90 transition-all"><Camera size={16} /></button>
+                <button onClick={() => fileInputRef.current?.click()} className="absolute bottom-3 sm:bottom-4 right-[calc(50%-2.5rem)] sm:right-[calc(50%-3rem)] p-2 sm:p-3 bg-gradient-to-br from-slate-700 to-slate-800 text-white rounded-full border-3 border-white shadow-xl hover:shadow-2xl active:scale-90 transition-all"><Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></button>
                 <input type="file" ref={fileInputRef} onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;

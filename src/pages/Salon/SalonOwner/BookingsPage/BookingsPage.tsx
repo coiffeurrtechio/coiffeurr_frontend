@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import {
   Search, Calendar, Clock, CheckCircle, XCircle, X,
   CreditCard, CheckCircle2, User, MessageSquare, Filter, ChevronDown, RefreshCcw,
-  Users, ChevronLeft, ChevronRight, Phone
+  Users, ChevronLeft, ChevronRight, Phone, ShieldCheck, Send, Loader2
 } from 'lucide-react';
 import { Loader } from '../../../../components/ui_components/Loader';
 import { useSalonApi } from '../../../../API/Salon_Owner_API/SalonOwnerAPI';
@@ -80,6 +80,17 @@ const BookingsPage: React.FC = () => {
   const [showSlowLoader, setShowSlowLoader] = useState(false);
   const [priceError, setPriceError] = useState<{ min?: string; max?: string }>({});
 
+  // --- OTP STATES ---
+  const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [otpSent, setOtpSent] = useState(false);
+  const [resendTimer, setResendTimer] = useState(30);
+  const [otpChannels, setOtpChannels] = useState<string[]>([]);
+  const [maskedContacts, setMaskedContacts] = useState<string[]>([]);
+  const otpInputRefs = React.useRef<(HTMLInputElement | null)[]>([]);
+
   // --- FILTER STATES ---
   const initialFilters = {
     search: '',
@@ -99,7 +110,7 @@ const BookingsPage: React.FC = () => {
 
   // --- SLOW LOADER HELPER ---
   const withSlowLoader = async (operation: () => Promise<any>) => {
-    let loaderTimeout: NodeJS.Timeout;
+    let loaderTimeout: ReturnType<typeof setTimeout>;
     
     // Start timer to show loader after 1 second
     loaderTimeout = setTimeout(() => {
@@ -238,6 +249,17 @@ const BookingsPage: React.FC = () => {
       fetchAvailableSlots(rescheduleDate);
     }
   }, [isRescheduleMode, rescheduleDate]);
+
+  // --- OTP TIMER EFFECT ---
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    if (otpSent && resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [otpSent, resendTimer]);
 
   // --- BUTTON HANDLERS ---
   const handleApplyFilters = useCallback(() => {
@@ -395,6 +417,97 @@ const BookingsPage: React.FC = () => {
     }
   };
 
+  // --- OTP FUNCTIONS ---
+  const handleRequestOtp = async () => {
+    if (!selectedBooking) return;
+    setOtpLoading(true);
+    setOtpError(null);
+    try {
+      const res = await apiSalonPost(
+        `/bookings/${selectedBooking.id}/complete-otp/request`,
+        {}
+      );
+      if (res.error) throw new Error(res.error);
+      setOtpSent(true);
+      setResendTimer(30);
+      if (res.data.channels && res.data.masked_contacts) {
+        setOtpChannels(res.data.channels);
+        setMaskedContacts(res.data.masked_contacts);
+      }
+      const channels = res.data.channels || ['sms'];
+      setNotification({ type: 'success', message: `OTP sent via ${channels.map((c: string) => c.toUpperCase()).join(' & ')}` });
+    } catch (error: any) {
+      setOtpError(error.message || 'Failed to send OTP');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleVerifyOtpAndComplete = async () => {
+    if (!selectedBooking) return;
+    const otpString = otp.join('');
+    if (otpString.length !== 6) {
+      setOtpError('Please enter a valid 6-digit OTP');
+      return;
+    }
+    setOtpLoading(true);
+    setOtpError(null);
+    try {
+      const res = await apiSalonPost(
+        `/bookings/${selectedBooking.id}/complete-otp/verify`,
+        { otp: otpString, note: statusNote.trim() || 'Completed with OTP verification' }
+      );
+      if (res.error) throw new Error(res.error);
+      setNotification({ type: 'success', message: 'Booking marked as completed' });
+      setIsOtpModalOpen(false);
+      setIsModalOpen(false);
+      setOtp(['', '', '', '', '', '']);
+      setOtpSent(false);
+      setStatusNote("");
+      fetchBookings();
+    } catch (error: any) {
+      setOtpError(error.message || 'Invalid OTP. Please try again.');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleOtpChange = (index: number, value: string) => {
+    if (!/^\d*$/.test(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value.slice(-1);
+    setOtp(newOtp);
+    if (value && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    const newOtp = [...otp];
+    pastedData.split('').forEach((digit, idx) => {
+      if (idx < 6) newOtp[idx] = digit;
+    });
+    setOtp(newOtp);
+    const focusIndex = Math.min(pastedData.length, 5);
+    otpInputRefs.current[focusIndex]?.focus();
+  };
+
+  const resetOtpModal = () => {
+    setIsOtpModalOpen(false);
+    setOtp(['', '', '', '', '', '']);
+    setOtpError(null);
+    setOtpSent(false);
+    setResendTimer(30);
+  };
+
   const fetchAvailableSlots = async (date: string) => {
     if (!date || !selectedBooking) return;
     const salonId = getSalonId();
@@ -439,13 +552,13 @@ const BookingsPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-6 animate-in fade-in duration-500" style={{ fontFamily: 'Manrope, sans-serif', backgroundColor: 'var(--soft-ivory)' }}>
+    <div className="p-4 md:p-6 space-y-6 animate-in fade-in duration-500 overflow-x-hidden w-full max-w-full" style={{ fontFamily: 'Manrope, sans-serif', backgroundColor: 'var(--soft-ivory)' }}>
       <DashboardLoader isVisible={loading} />
 
       {notification && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 bg-white border-l-4 border-[#1E4D8C] animate-in slide-in-from-top-4">
-          <CheckCircle2 className="text-[#1E4D8C]" size={20} />
-          <span className="text-sm font-bold text-gray-800">{notification.message}</span>
+        <div className="fixed top-4 sm:top-6 left-1/2 -translate-x-1/2 z-[200] px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl shadow-2xl flex items-center gap-2 sm:gap-3 bg-white border-l-4 border-[#1E4D8C] animate-in slide-in-from-top-4 w-[90%] sm:w-auto max-w-sm">
+          <CheckCircle2 className="text-[#1E4D8C] w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="text-[11px] sm:text-sm font-bold text-gray-800">{notification.message}</span>
         </div>
       )}
 
@@ -454,12 +567,12 @@ const BookingsPage: React.FC = () => {
           <h1 className="font-semibold typography-display" style={{ color: 'var(--deep-charcoal)', fontSize: '24px', letterSpacing: '0.05em' }}>{t('booking.commandDeck') || 'Command Deck'}</h1>
           <p className="text-[10px] font-normal tracking-[0.2em] typography-label-light" style={{ color: '#666' }}>{t('booking.realtimeFlow') || 'Real-time flow of salon artistry'}</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button onClick={handleResetFilters} className="p-2 transition-colors flex items-center gap-2 text-[10px] font-black uppercase typography-label-light" style={{ color: '#666' }}>
-            <RefreshCcw size={14} /> {t('booking.reset')}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button onClick={handleResetFilters} className="p-1.5 sm:p-2 transition-colors flex items-center gap-1.5 sm:gap-2 text-[9px] sm:text-[10px] font-black uppercase typography-label-light" style={{ color: '#666' }}>
+            <RefreshCcw className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> <span className="hidden sm:inline">{t('booking.reset')}</span>
           </button>
-          <button onClick={handleApplyFilters} className="text-white px-6 rounded-2xl text-[10px] font-semibold uppercase tracking-widest transition-all flex items-center gap-2 hover:-translate-y-0.5 shadow-lg" style={{ height: '44px', background: 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)', boxShadow: '0 4px 20px rgba(212, 175, 55, 0.3)' }}>
-            <Filter size={14} /> {t('booking.applyFilters')}
+          <button onClick={handleApplyFilters} className="text-white px-4 sm:px-6 rounded-2xl text-[9px] sm:text-[10px] font-semibold uppercase tracking-widest transition-all flex items-center gap-1.5 sm:gap-2 hover:-translate-y-0.5 shadow-lg typography-label-light" style={{ height: '44px', background: 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)', boxShadow: '0 4px 20px rgba(212, 175, 55, 0.3)' }}>
+            <Filter className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> <span className="hidden sm:inline">{t('booking.applyFilters')}</span>
           </button>
         </div>
       </div>
@@ -467,27 +580,27 @@ const BookingsPage: React.FC = () => {
       {/* --- CONDENSED SMART FILTER BAR --- */}
       <div className="p-4 space-y-4" style={{ background: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(16px)', border: '1px solid rgba(0, 0, 0, 0.05)', borderRadius: '1.5rem', boxShadow: '0 4px 30px rgba(0, 0, 0, 0.05)' }}>
         {/* Single-line smart filter bar */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {/* Search Bar */}
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#666' }} />
+          <div className="relative flex-1 min-w-[150px] sm:min-w-[200px]">
+            <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: '#666' }} />
             <input
               type="text"
               value={draftFilters.global_search}
               onChange={(e) => setDraftFilters({ ...draftFilters, global_search: e.target.value })}
               onKeyPress={handleKeyPress}
               placeholder={t('booking.searchPlaceholder')}
-              className="w-full pl-12 pr-4 rounded-2xl text-sm font-semibold focus:ring-4 focus:ring-blue-50 transition-all outline-none typography-label-light"
+              className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 rounded-2xl text-xs sm:text-sm font-semibold focus:ring-4 focus:ring-blue-50 transition-all outline-none typography-label-light"
               style={{ height: '44px', backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
             />
           </div>
 
           {/* Status Dropdown */}
-          <div className="relative min-w-[140px]">
+          <div className="relative min-w-[100px] sm:min-w-[140px]">
             <select
               value={draftFilters.status || 'ALL'}
               onChange={(e) => setDraftFilters({ ...draftFilters, status: e.target.value })}
-              className="w-full px-4 rounded-2xl text-sm font-bold outline-none cursor-pointer focus:ring-4 focus:ring-blue-50 appearance-none transition-all typography-label-light"
+              className="w-full px-3 sm:px-4 rounded-2xl text-xs sm:text-sm font-bold outline-none cursor-pointer focus:ring-4 focus:ring-blue-50 appearance-none transition-all typography-label-light"
               style={{ height: '44px', backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
             >
               <option value="ALL">{t('booking.allStatuses')}</option>
@@ -495,15 +608,15 @@ const BookingsPage: React.FC = () => {
                 <option key={s} value={s}>{formatStatusForDisplay(s)}</option>
               ))}
             </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" size={14} style={{ color: '#666' }} />
+            <ChevronDown className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 pointer-events-none w-3 h-3 sm:w-3.5 sm:h-3.5" style={{ color: '#666' }} />
           </div>
 
           {/* Staff Dropdown */}
-          <div className="relative min-w-[140px]">
+          <div className="relative min-w-[100px] sm:min-w-[140px]">
             <select
               value={draftFilters.staff_id || 'ALL'}
               onChange={(e) => setDraftFilters({ ...draftFilters, staff_id: e.target.value })}
-              className="w-full px-4 rounded-2xl text-sm font-semibold outline-none cursor-pointer focus:ring-4 focus:ring-blue-50 appearance-none transition-all typography-label-light"
+              className="w-full px-3 sm:px-4 rounded-2xl text-xs sm:text-sm font-semibold outline-none cursor-pointer focus:ring-4 focus:ring-blue-50 appearance-none transition-all typography-label-light"
               style={{ height: '44px', backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
             >
               <option value="ALL">{t('booking.allStaff')}</option>
@@ -513,15 +626,15 @@ const BookingsPage: React.FC = () => {
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" size={14} style={{ color: '#666' }} />
+            <ChevronDown className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 pointer-events-none w-3 h-3 sm:w-3.5 sm:h-3.5" style={{ color: '#666' }} />
           </div>
 
           {/* Date Preset Dropdown */}
-          <div className="relative min-w-[140px]">
+          <div className="relative min-w-[100px] sm:min-w-[140px]">
             <select
               value={draftFilters.date_preset}
               onChange={(e) => setDraftFilters({ ...draftFilters, date_preset: e.target.value, from_date: '', to_date: '', date: '' })}
-              className="w-full px-4 rounded-2xl text-sm font-semibold outline-none cursor-pointer focus:ring-4 focus:ring-blue-50 appearance-none transition-all typography-label-light"
+              className="w-full px-3 sm:px-4 rounded-2xl text-xs sm:text-sm font-semibold outline-none cursor-pointer focus:ring-4 focus:ring-blue-50 appearance-none transition-all typography-label-light"
               style={{ height: '44px', backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
             >
               <option value="">{t('booking.noPreset')}</option>
@@ -530,18 +643,18 @@ const BookingsPage: React.FC = () => {
               <option value="this_week">{t('booking.thisWeek')}</option>
               <option value="last_month">{t('booking.lastMonth')}</option>
             </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" size={14} style={{ color: '#666' }} />
+            <ChevronDown className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 pointer-events-none w-3 h-3 sm:w-3.5 sm:h-3.5" style={{ color: '#666' }} />
           </div>
 
           {/* Advanced Filters Toggle */}
           <button
             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-            className="flex items-center gap-2 px-4 rounded-2xl text-sm font-semibold transition-all hover:-translate-y-0.5 shadow-lg typography-label-light"
+            className="flex items-center gap-2 px-3 sm:px-4 rounded-2xl text-xs sm:text-sm font-semibold transition-all hover:-translate-y-0.5 shadow-lg typography-label-light"
             style={{ height: '44px', backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}
           >
-            <Filter size={14} style={{ color: 'var(--muted-gold)' }} />
-            {showAdvancedFilters ? (t('booking.less') || 'Less') : (t('booking.more') || 'More')}
-            <ChevronDown size={14} style={{ color: '#666', transform: showAdvancedFilters ? 'rotate(180deg)' : '', transition: 'transform 0.3s' }} />
+            <Filter className="w-3 h-3 sm:w-3.5 sm:h-3.5" style={{ color: 'var(--muted-gold)' }} />
+            <span className="hidden sm:inline">{showAdvancedFilters ? (t('booking.less') || 'Less') : (t('booking.more') || 'More')}</span>
+            <ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5" style={{ color: '#666', transform: showAdvancedFilters ? 'rotate(180deg)' : '', transition: 'transform 0.3s' }} />
           </button>
         </div>
 
@@ -644,25 +757,25 @@ const BookingsPage: React.FC = () => {
             <table className="w-full text-left">
               <thead>
                 <tr style={{ borderBottom: '1px solid rgba(0, 0, 0, 0.05)' }}>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }} onClick={() => handleSort('booking_id')}>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4 text-xs font-semibold uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }} onClick={() => handleSort('booking_id')}>
                     {t('booking.bookingId')} {sortField === 'booking_id' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }} onClick={() => handleSort('slot.date')}>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4 text-xs font-semibold uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }} onClick={() => handleSort('slot.date')}>
                     {t('booking.schedule')} {sortField === 'slot.date' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }} onClick={() => handleSort('userData.username')}>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4 text-xs font-semibold uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }} onClick={() => handleSort('userData.username')}>
                     {t('booking.customer')} {sortField === 'userData.username' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-center typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }}>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4 text-xs font-semibold uppercase tracking-wider text-center typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }}>
                     {t('booking.customerNo')}
                   </th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }} onClick={() => handleSort('staffData.name')}>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4 text-xs font-semibold uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }} onClick={() => handleSort('staffData.name')}>
                     {t('booking.specialist')} {sortField === 'staffData.name' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }} onClick={() => handleSort('serviceData.serviceName')}>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4 text-xs font-semibold uppercase tracking-wider cursor-pointer hover:text-gray-600 transition-colors typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }} onClick={() => handleSort('serviceData.serviceName')}>
                     {t('booking.serviceRendered')} {sortField === 'serviceData.serviceName' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-center cursor-pointer hover:text-gray-600 transition-colors typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }} onClick={() => handleSort('status')}>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4 text-xs font-semibold uppercase tracking-wider text-center cursor-pointer hover:text-gray-600 transition-colors typography-label-light" style={{ color: '#666', fontSize: '12px', letterSpacing: '0.05em' }} onClick={() => handleSort('status')}>
                     {t('booking.status')} {sortField === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
                 </tr>
@@ -671,59 +784,59 @@ const BookingsPage: React.FC = () => {
               {sortedBookings.length > 0 ? (
                 sortedBookings.map((row) => (
                   <tr key={row.id} onClick={() => { setSelectedBooking(row); setStatusNote(""); setIsModalOpen(true); }} className="group cursor-pointer hover:-translate-y-0.5 transition-all duration-300" style={{ borderBottom: '1px solid rgba(0, 0, 0, 0.05)' }}>
-                    <td className="px-6 py-4">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4">
                       <p className="text-xs font-semibold typography-label-light" style={{ color: '#666' }}>{row.booking_id}</p>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4">
                       <div className="flex flex-col gap-1">
                         <p className="text-sm font-semibold typography-display" style={{ color: 'var(--deep-charcoal)' }}>{row.slot.date}</p>
                         <p className="text-[11px] font-semibold flex items-center gap-1.5 typography-label-light" style={{ color: '#666' }}>
-                          <Clock size={12} style={{ color: 'var(--muted-gold)' }} /> {row.slot.time}
+                          <span style={{ color: 'var(--muted-gold)' }}><Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" /></span> {row.slot.time}
                         </p>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4">
+                      <div className="flex items-center gap-2 sm:gap-3">
                         {row.userData?.imageUrl ? (
                           <img
                             src={row.userData.imageUrl}
                             alt={row.userData.username}
-                            className="w-8 h-8 rounded-full object-cover"
+                            className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover"
                           />
                         ) : (
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center font-black text-[10px] uppercase" style={{ background: 'linear-gradient(135deg, var(--muted-gold) 0%, var(--deep-charcoal) 100%)', color: 'white' }}>
+                          <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-black text-[8px] sm:text-[10px] uppercase" style={{ background: 'linear-gradient(135deg, var(--muted-gold) 0%, var(--deep-charcoal) 100%)', color: 'white' }}>
                             {row.userData?.username?.charAt(0)}
                           </div>
                         )}
                         <p className="text-sm font-semibold typography-display" style={{ color: 'var(--deep-charcoal)' }}>{row.userData?.username}</p>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-center">
                       <p className="text-sm font-semibold typography-label-light" style={{ color: '#666' }}>{row.userData?.phone || '-'}</p>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4">
+                      <div className="flex items-center gap-2 sm:gap-3">
                         {row.staffData?.imageUrl ? (
                           <img
                             src={row.staffData.imageUrl}
                             alt={row.staffData.name}
-                            className="w-8 h-8 rounded-full object-cover"
+                            className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover"
                           />
                         ) : (
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center font-black text-[10px] uppercase" style={{ background: 'linear-gradient(135deg, var(--muted-gold) 0%, var(--deep-charcoal) 100%)', color: 'white' }}>
+                          <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-black text-[8px] sm:text-[10px] uppercase" style={{ background: 'linear-gradient(135deg, var(--muted-gold) 0%, var(--deep-charcoal) 100%)', color: 'white' }}>
                             {row.staffData?.name?.charAt(0) || '?'}
                           </div>
                         )}
                         <p className="text-sm font-semibold typography-display" style={{ color: 'var(--deep-charcoal)' }}>{row.staffData?.name || t('booking.notAssigned')}</p>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4">
                       <p className="text-sm font-semibold typography-display" style={{ color: 'var(--deep-charcoal)' }}>{row.serviceData?.serviceName}</p>
                       <p className="text-[11px] font-semibold mt-1 uppercase tracking-tighter typography-number" style={{ color: 'var(--muted-gold)' }}>₹{row.price}</p>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-center">
                       <div className="flex items-center justify-center gap-2">
-                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-semibold uppercase border ${getStatusColor(row.status).bg} ${getStatusColor(row.status).text} ${getStatusColor(row.status).border} ${getStatusColor(row.status).glow} ${getStatusColor(row.status).animate || ''} transition-all duration-300`}>
+                        <span className={`px-2 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] font-semibold uppercase border ${getStatusColor(row.status).bg} ${getStatusColor(row.status).text} ${getStatusColor(row.status).border} ${getStatusColor(row.status).glow} ${getStatusColor(row.status).animate || ''} transition-all duration-300`}>
                           {formatStatusForDisplay(row.status)}
                         </span>
                         {row.isRescheduled && (
@@ -776,17 +889,161 @@ const BookingsPage: React.FC = () => {
       {/* GLOBAL SLOW LOADER OVERLAY */}
       {showSlowLoader && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/30 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="flex flex-col items-center gap-4 p-8 rounded-3xl" style={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(16px)' }}>
-            <RefreshCcw size={48} className="animate-spin" style={{ color: 'var(--muted-gold)' }} />
-            <p className="text-sm font-black uppercase tracking-widest typography-label-light" style={{ color: 'var(--deep-charcoal)' }}>Loading...</p>
+          <div className="flex flex-col items-center gap-4 p-6 sm:p-8 rounded-3xl w-[85%] sm:w-auto max-w-sm" style={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(16px)' }}>
+            <RefreshCcw className="w-10 h-10 sm:w-12 sm:h-12 animate-spin" style={{ color: 'var(--muted-gold)' }} />
+            <p className="text-xs sm:text-sm font-black uppercase tracking-widest typography-label-light" style={{ color: 'var(--deep-charcoal)' }}>Loading...</p>
+          </div>
+        </div>
+      )}
+
+      {/* OTP VERIFICATION MODAL - Dark Luxury Theme */}
+      {isOtpModalOpen && selectedBooking && (
+        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="w-[95%] sm:w-full max-w-md mx-auto animate-in zoom-in duration-300 overflow-hidden max-h-[90vh] overflow-y-auto" style={{ background: '#1A1A1A', borderRadius: '2rem sm:rounded-[2rem]', boxShadow: '0 25px 80px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(212, 175, 55, 0.1)' }}>
+            {/* Header - Metallic Dark Gold */}
+            <div className="p-5 sm:p-8 text-center relative" style={{ background: 'linear-gradient(135deg, #2A2520 0%, #3D3429 50%, #4A3F32 100%)', borderRadius: '2rem 2rem 0 0 sm:rounded-[2rem] sm:rounded-t-[2rem]', borderBottom: '1px solid rgba(212, 175, 55, 0.3)' }}>
+              {/* Subtle metallic shine overlay */}
+              <div className="absolute inset-0 opacity-30" style={{ background: 'linear-gradient(180deg, rgba(212, 175, 55, 0.15) 0%, transparent 60%)', borderRadius: '2rem 2rem 0 0 sm:rounded-[2rem] sm:rounded-t-[2rem]' }} />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-full flex items-center justify-center relative" style={{ background: 'rgba(212, 175, 55, 0.15)', border: '1px solid rgba(212, 175, 55, 0.3)', backdropFilter: 'blur(4px)' }}>
+                <ShieldCheck className="w-5 h-5 sm:w-7 sm:h-7" style={{ color: '#D4AF37' }} />
+              </div>
+              <h3 className="text-lg sm:text-xl font-black typography-display relative" style={{ color: '#D4AF37', textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>Verify Customer</h3>
+              <p className="text-[9px] sm:text-[10px] font-bold mt-2 uppercase tracking-[0.2em] typography-label-light relative" style={{ color: '#111111' }}>Complete Booking Confirmation</p>
+            </div>
+
+            <div className="p-5 sm:p-8 space-y-4 sm:space-y-6" style={{ background: '#1A1A1A' }}>
+              {/* Customer Info Card - Lighter Dark Gray */}
+              <div className="p-4 sm:p-5 rounded-2xl" style={{ backgroundColor: '#252525', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-2 sm:mb-3 flex items-center gap-2 typography-label-light" style={{ color: '#8B7355' }}>
+                  <User className="w-2.5 h-2.5 sm:w-3 sm:h-3" style={{ color: '#D4AF37' }} /> Customer
+                </p>
+                <p className="text-base sm:text-lg font-black typography-display" style={{ color: '#F5F5F5' }}>{selectedBooking.userData?.username}</p>
+                <p className="text-[10px] sm:text-xs font-medium mt-1 typography-label-light" style={{ color: '#888' }}>
+                  Booking ID: <span style={{ color: '#D4AF37', fontFamily: 'monospace', letterSpacing: '0.05em', fontSize: '10px sm:12px' }}>{selectedBooking.booking_id}</span>
+                </p>
+              </div>
+
+              {/* Instructions - Dynamic based on channels */}
+              <div className="text-center space-y-2">
+                <p className="text-xs sm:text-sm font-bold typography-label-light" style={{ color: '#E8E8E8' }}>
+                  {otpSent 
+                    ? (() => {
+                        const parts = [];
+                        if (otpChannels.includes('sms') && maskedContacts[otpChannels.indexOf('sms')]) {
+                          parts.push(`WhatsApp (${maskedContacts[otpChannels.indexOf('sms')]})`);
+                        } else if (otpChannels.includes('sms')) {
+                          parts.push('WhatsApp');
+                        }
+                        if (otpChannels.includes('email')) {
+                          parts.push('Email');
+                        }
+                        return `OTP sent to ${parts.join(' and ')}`;
+                      })()
+                    : 'Requesting OTP...'}
+                </p>
+                <p className="text-xs font-medium typography-label-light" style={{ color: '#777' }}>
+                  Customer must provide the OTP to complete this booking
+                </p>
+              </div>
+
+              {/* Remove channel toggle since we send to both now */}
+
+              {/* OTP Inputs - Dark Theme */}
+              <div className="flex justify-center gap-2 sm:gap-3">
+                {otp.map((digit, index) => (
+                  <input
+                    key={index}
+                    ref={(el) => { otpInputRefs.current[index] = el; }}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOtpChange(index, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                    onPaste={handleOtpPaste}
+                    disabled={otpLoading}
+                    className="w-10 h-12 sm:w-14 sm:h-16 text-center text-xl sm:text-2xl font-black rounded-xl outline-none transition-all duration-200 disabled:opacity-40 typography-display"
+                    style={{
+                      backgroundColor: '#252525',
+                      border: otpError 
+                        ? '2px solid #C75B5B' 
+                        : digit 
+                          ? '2px solid #D4AF37' 
+                          : '1px solid rgba(255, 255, 255, 0.1)',
+                      color: '#F5F5F5',
+                      boxShadow: digit 
+                        ? '0 0 20px rgba(212, 175, 55, 0.25), inset 0 2px 4px rgba(0,0,0,0.3)' 
+                        : 'inset 0 2px 4px rgba(0,0,0,0.3)',
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Error Message - Elegant Dark Crimson */}
+              {otpError && (
+                <div className="p-4 rounded-xl flex items-center justify-center gap-2" style={{ backgroundColor: '#4A1C1C', border: '1px solid rgba(199, 91, 91, 0.3)' }}>
+                  <XCircle size={14} style={{ color: '#E57373', flexShrink: 0 }} />
+                  <p className="text-xs font-bold typography-label-light" style={{ color: '#FFFFFF' }}>{otpError}</p>
+                </div>
+              )}
+
+              {/* Action Buttons - Sleek Dark */}
+              <div className="space-y-3 pt-2">
+                <button
+                  onClick={handleVerifyOtpAndComplete}
+                  disabled={otp.join('').length !== 6 || otpLoading}
+                  className="w-full h-14 rounded-2xl text-[12px] font-black uppercase tracking-widest transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed hover:-translate-y-0.5 typography-label-light"
+                  style={{ 
+                    background: 'linear-gradient(135deg, #D4AF37 0%, #B8960C 100%)', 
+                    color: '#1A1A1A',
+                    boxShadow: '0 4px 20px rgba(212, 175, 55, 0.35), 0 1px 0 rgba(255,255,255,0.15) inset',
+                    textShadow: '0 1px 0 rgba(255,255,255,0.2)'
+                  }}
+                >
+                  {otpLoading ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" /> Verifying...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle size={16} strokeWidth={2.5} /> Verify & Complete Booking
+                    </>
+                  )}
+                </button>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={resetOtpModal}
+                    disabled={otpLoading}
+                    className="flex-1 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-200 disabled:opacity-40 hover:bg-white/5 typography-label-light"
+                    style={{ backgroundColor: 'transparent', border: '1px solid rgba(255, 255, 255, 0.15)', color: '#999' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleRequestOtp}
+                    disabled={otpLoading || resendTimer > 0}
+                    className="flex-1 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed hover:-translate-y-0.5 typography-label-light"
+                    style={{ 
+                      backgroundColor: resendTimer > 0 ? '#252525' : 'rgba(212, 175, 55, 0.1)', 
+                      border: '1px solid rgba(212, 175, 55, 0.3)', 
+                      color: resendTimer > 0 ? '#555' : '#D4AF37'
+                    }}
+                  >
+                    <Send size={12} />
+                    {otpLoading ? 'Sending OTP...' : resendTimer > 0 ? `Resend (${resendTimer}s)` : 'Resend OTP'}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       {/* DETAIL SIDE-DRAWER */}
       {isModalOpen && selectedBooking && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-end bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="w-full max-w-lg max-h-[100vh] overflow-y-auto no-scrollbar floating-tile animate-in slide-in-from-right duration-300 mr-4" style={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(16px)' }}>
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-end sm:justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="w-full sm:max-w-lg max-h-[90vh] sm:max-h-[100vh] overflow-y-auto no-scrollbar floating-tile animate-in slide-in-from-right sm:slide-in-from-bottom duration-300 mr-0 sm:mr-4" style={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(16px)' }}>
             <div className="relative h-48 flex-shrink-0" style={{ background: 'linear-gradient(135deg, var(--deep-charcoal) 0%, var(--muted-gold) 100%)' }}>
               {selectedBooking.serviceData?.imageUrl && (
                 <img src={selectedBooking.serviceData.imageUrl} alt="service" className="w-full h-full object-cover opacity-40" />
@@ -972,7 +1229,7 @@ const BookingsPage: React.FC = () => {
                         <button onClick={() => setIsCancelMode(true)} className="h-16 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 hover:-translate-y-0.5 shadow-lg typography-label-light flex items-center justify-center gap-2" style={{ backgroundColor: 'var(--light-greige)', border: '1px solid var(--light-greige)', color: 'var(--deep-charcoal)', boxShadow: 'var(--inset-shadow)' }}>
                           <X size={18} /> {t('booking.cancelBooking')}
                         </button>
-                        <button onClick={() => updateBookingStatus(selectedBooking.id, 'COMPLETED')} className="h-16 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-3 hover:-translate-y-0.5 shadow-lg typography-label-light" style={{ backgroundColor: '#000000', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)' }}>
+                        <button onClick={() => { setIsOtpModalOpen(true); handleRequestOtp(); }} className="h-16 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-3 hover:-translate-y-0.5 shadow-lg typography-label-light" style={{ backgroundColor: '#000000', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)' }}>
                           <CheckCircle size={18} /> {t('booking.markAsCompleted')}
                         </button>
                       </div>

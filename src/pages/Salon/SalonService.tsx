@@ -16,6 +16,7 @@ import { BookingRequestSuccess } from "../../components/Loaders/BookingRequestSu
 import { useApi } from "../../API/SalonsAPIs/ALLSalonAPI";
 import { usersalonApi } from "../../API/SalonsAPIs/UserSalonAPI";
 import { useToast } from "../../components/Toast";
+import { getDefaultServiceImage, getDefaultStaffImage } from "../../utils/defaultServiceImage";
 
 const SalonService: React.FC = () => {
   const navigate = useNavigate();
@@ -84,16 +85,21 @@ const SalonService: React.FC = () => {
     }
   }, []);
 
-  // Fetch available slots when date changes
+  // Fetch available slots when date or staff changes
   useEffect(() => {
     if (mainPageSelectedDate) {
       fetchAvailableSlots(mainPageSelectedDate);
     }
-  }, [mainPageSelectedDate]);
+  }, [mainPageSelectedDate, mainPageSelectedStaffId]);
 
   const fetchAvailableSlots = async (date: string) => {
     try {
-      const res = await apiRequest(`/salons/${salonId}/slots?date=${date}&service_id=${serviceId}`);
+      let url = `/salons/${salonId}/slots?date=${date}&service_id=${serviceId}`;
+      // Pass staff_id if a staff is selected to filter slots for that specific artist
+      if (mainPageSelectedStaffId) {
+        url += `&staff_id=${mainPageSelectedStaffId}`;
+      }
+      const res = await apiRequest(url);
       if (res?.data?.slots) {
         setAvailableSlots(res.data.slots);
       } else {
@@ -310,7 +316,12 @@ const SalonService: React.FC = () => {
 
         {/* --- Left Hero Section --- */}
         <section className="relative h-[50vh] lg:h-screen lg:sticky lg:top-0 overflow-hidden bg-slate-100">
-          <img src={salonservicedata?.imageUrl} alt="Service Detail" className="w-full h-full object-cover" />
+          <img 
+            src={salonservicedata?.imageUrl || getDefaultServiceImage(salonservicedata?.serviceName || '')} 
+            alt="Service Detail" 
+            className="w-full h-full object-cover"
+            onError={(e) => { (e.target as HTMLImageElement).src = getDefaultServiceImage(salonservicedata?.serviceName || ''); }}
+          />
           <div className="absolute bottom-10 left-10 z-10 hidden lg:block">
             <Badge className="bg-white/20 backdrop-blur-lg border-none text-white text-[10px] tracking-[0.2em] px-4 py-2 uppercase font-black">
               Premium Quality Assured
@@ -363,7 +374,7 @@ const SalonService: React.FC = () => {
                       )}
                       <div className="relative mb-3">
                         <img
-                          src={person.image_url || "/placeholder-user.png"}
+                          src={person.image_url || getDefaultStaffImage(person.staff_id || person.name || '')}
                           alt={person.name}
                           className="w-24 h-28 object-cover rounded-xl ring-1 ring-slate-100 transition-all duration-300"
                         />
@@ -422,7 +433,9 @@ const SalonService: React.FC = () => {
               <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2">
                 {availableSlots.length > 0 ? (
                   availableSlots.map((slot: any, index: number) => {
-                    const isAvailable = slot?.availableCapacity > 0;
+                    // New format: slot has staff array with availability
+                    const staffList = slot?.staff || [];
+                    const isAvailable = slot?.hasAvailableStaff || staffList.some((s: any) => s.available);
                     const formattedTime = formatTimeTo12Hour(slot.time);
                     const isSelected = mainPageSelectedTime === formattedTime;
                     return (
@@ -430,15 +443,17 @@ const SalonService: React.FC = () => {
                         key={index}
                         disabled={!isAvailable}
                         onClick={() => {
-                          setMainPageSelectedTime(formattedTime);
-                          setMainPageSelectedSlotTime(slot.time);
+                          if (isAvailable) {
+                            setMainPageSelectedTime(formattedTime);
+                            setMainPageSelectedSlotTime(slot.time);
+                          }
                         }}
                         className={`px-4 py-2 lg:px-6 lg:py-3 text-[10px] lg:text-xs font-bold uppercase tracking-wider rounded-full transition-all duration-300 whitespace-nowrap
                           ${!isAvailable 
-                            ? "opacity-20 cursor-not-allowed bg-slate-100 text-slate-400" 
+                            ? "opacity-40 cursor-not-allowed bg-slate-50 text-slate-400 border border-slate-200" 
                             : isSelected 
                               ? "bg-slate-900 text-white shadow-lg scale-105" 
-                              : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                              : "bg-slate-100 text-slate-600 hover:bg-slate-200 border border-transparent hover:border-slate-300"}`}
                       >
                         {formattedTime}
                       </button>

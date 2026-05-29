@@ -452,7 +452,7 @@ const AnalyticsPage: React.FC = () => {
               }}
               title="Refresh"
             >
-              <RefreshCw size={16} className="sm:size-18" />
+              <RefreshCw size={16} />
             </button>
           </div>
         </div>
@@ -498,13 +498,13 @@ const AnalyticsPage: React.FC = () => {
             <StatCard
               label={t('analytics.todayBookings')}
               value={(dashboardData?.todayBookings ?? 0).toString()}
-              icon={<ShoppingBag size={18} className="sm:size-20" />}
+              icon={<ShoppingBag size={18} />}
               color="blue"
             />
             <StatCard
               label={t('analytics.todayIncome')}
               value={formatRevenue(dashboardData?.todayIncome ?? 0, showTodayIncome)}
-              icon={<IndianRupee size={18} className="sm:size-20" />}
+              icon={<IndianRupee size={18} />}
               color="green"
               showEyeIcon={true}
               onEyeClick={() => setShowTodayIncome(!showTodayIncome)}
@@ -514,13 +514,13 @@ const AnalyticsPage: React.FC = () => {
             <StatCard
               label={t('analytics.totalBookings')}
               value={(dashboardData?.totalBookings ?? 0).toString()}
-              icon={<ShoppingBag size={18} className="sm:size-20" />}
+              icon={<ShoppingBag size={18} />}
               color="purple"
             />
             <StatCard
               label={t('analytics.monthlyIncome')}
               value={formatRevenue(dashboardData?.monthlyIncome ?? 0, showMonthlyIncome)}
-              icon={<IndianRupee size={18} className="sm:size-20" />}
+              icon={<IndianRupee size={18} />}
               color="orange"
               showEyeIcon={true}
               onEyeClick={() => setShowMonthlyIncome(!showMonthlyIncome)}
@@ -567,7 +567,7 @@ const AnalyticsPage: React.FC = () => {
               padding: '16px sm:px-6'
             }}>
               <h3 className="typography-label m-4 sm:mb-6 flex items-center gap-2" style={{ fontSize: 'clamp(14px, 3vw, 16px)', color: '#D4AF37', letterSpacing: '0.03em', fontWeight: '700', fontFamily: 'Playfair Display, serif' }}>
-                <PieChart size={16} className="sm:size-18" style={{ color: '#D4AF37' }} />
+                <PieChart size={16} style={{ color: '#D4AF37' }} />
                 {t('analytics.bookingStatusDistribution')}
               </h3>
               <ResponsiveContainer width="100%" height={250}>
@@ -608,7 +608,7 @@ const AnalyticsPage: React.FC = () => {
               color: 'white'
             }}>
               <h3 className="font-bold text-base sm:text-lg mb-4 sm:mb-6 flex items-center gap-2" style={{ fontFamily: 'Playfair Display, serif' }}>
-                <Target size={18} className="sm:size-20" style={{ color: 'var(--luxury-gold)' }} />
+                <Target size={18} style={{ color: 'var(--luxury-gold)' }} />
                 {t('analytics.performanceInsights')}
               </h3>
 
@@ -647,7 +647,7 @@ const AnalyticsPage: React.FC = () => {
             <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
               <div className="flex items-center justify-between">
                 <h3 className="typography-label flex items-center gap-2" style={{ fontSize: 'clamp(14px, 3vw, 16px)', color: '#D4AF37', letterSpacing: '0.03em', fontWeight: '700', fontFamily: 'Playfair Display, serif' }}>
-                  <TrendingUp size={16} className="sm:size-18" style={{ color: '#D4AF37' }} />
+                  <TrendingUp size={16} style={{ color: '#D4AF37' }} />
                   Salon Stars Tracker
                 </h3>
               </div>
@@ -676,7 +676,7 @@ const AnalyticsPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="relative" style={{ height: '200px sm:h-64 md:h-64', marginBottom: '16px' }}>
+            <div className="relative h-48 sm:h-64 md:h-64" style={{ marginBottom: '16px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={ratingData}>
                   <defs>

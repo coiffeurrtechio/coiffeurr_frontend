@@ -13,6 +13,7 @@ import { Badge } from "../components/ui_components/badge";
 import { Loader } from "../components/ui_components/Loader";
 import { usersalonApi } from "../API/SalonsAPIs/UserSalonAPI";
 import { useToast } from "../components/Toast";
+import { getDefaultServiceImage } from "../utils/defaultServiceImage";
 
 function BookingPage() {
     const { t } = useTranslation();
@@ -322,7 +323,7 @@ function BookingPage() {
                                     <div className="flex gap-3">
                                         <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0" style={{ background: 'linear-gradient(135deg, var(--muted-gold) 0%, var(--deep-charcoal) 100%)' }}>
                                             <img
-                                                src={booking.serviceData?.imageUrl || 'https://via.placeholder.com/150'}
+                                                src={booking.serviceData?.imageUrl || getDefaultServiceImage(booking.serviceData?.serviceName || '')}
                                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 ease"
                                                 alt="service"
                                             />
@@ -411,7 +412,7 @@ function BookingPage() {
                         {/* Modal Header/Banner with Service Image */}
                         <div className="relative h-40 sm:h-64" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
                             <img
-                                src={selectedBooking.service?.imageUrl || selectedBooking.salon?.logoUrl}
+                                src={selectedBooking.service?.imageUrl || getDefaultServiceImage(selectedBooking.service?.serviceName || '')}
                                 className="w-full h-full object-cover"
                                 alt="Service"
                             />

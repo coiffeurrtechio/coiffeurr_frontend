@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, X, Scissors, Check, MoreHorizontal, Save, Download, Mail, Calendar, Clock, User, Users, CheckCircle, XCircle, AlertCircle, AlertTriangle, ChevronLeft, ChevronRight, ChevronDown, Search, Filter, RefreshCw, UserCheck, ImageIcon, Briefcase, MessageSquare } from "lucide-react";
+import { Plus, Edit2, Trash2, X, Scissors, Check, MoreHorizontal, Save, Download, Mail, Calendar, Clock, User, Users, CheckCircle, XCircle, AlertCircle, AlertTriangle, ChevronLeft, ChevronRight, ChevronDown, Search, Filter, RefreshCw, UserCheck, ImageIcon, Briefcase, MessageSquare, Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
 import { useApi } from "../../../../API/SalonsAPIs/ALLSalonAPI";
@@ -531,8 +531,8 @@ const StaffManagement: React.FC = () => {
                                     <div className="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(212, 175, 55, 0.1)' }}>
                                         <MessageSquare size={36} style={{ color: '#D4AF37' }} />
                                     </div>
-                                    <p className="text-base font-medium mb-2" style={{ color: '#666', fontFamily: 'Playfair Display, serif' }}>No reviews yet</p>
-                                    <p className="text-sm" style={{ color: '#999' }}>Be the first to share your experience</p>
+                                    <p className="text-base font-medium mb-2" style={{ color: '#666', fontFamily: 'Playfair Display, serif' }}>{t('staff.noReviewsYet')}</p>
+                                    <p className="text-sm" style={{ color: '#999' }}>{t('staff.beFirstToShare')}</p>
                                 </div>
                             )}
                         </div>
@@ -561,8 +561,8 @@ const StaffManagement: React.FC = () => {
                                 <Check size={24} className="text-white" />
                             </motion.div>
                             <div>
-                                <p className="text-lg font-bold text-[#1a1a1a]" style={{ fontFamily: "'Playfair Display', serif" }}>Staff Updated</p>
-                                <p className="text-xs font-semibold text-gray-500">Changes saved successfully</p>
+                                <p className="text-lg font-bold text-[#1a1a1a]" style={{ fontFamily: "'Playfair Display', serif" }}>{t('staff.staffUpdated')}</p>
+                                <p className="text-xs font-semibold text-gray-500">{t('staff.changesSavedSuccessfully')}</p>
                             </div>
                         </motion.div>
                     </div>
