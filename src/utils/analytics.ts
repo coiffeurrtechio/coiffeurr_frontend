@@ -61,7 +61,8 @@ export interface TrackingResponse {
 }
 
 // Configuration
-const ANALYTICS_API_URL = import.meta.env.VITE_ANALYTICS_API_URL || 'http://localhost:8000/api/v1/analytics/track';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://coiffeurr-com-backend.onrender.com';
+const ANALYTICS_API_URL = import.meta.env.VITE_ANALYTICS_API_URL || `${API_BASE_URL}/api/v1/analytics/track`;
 const BATCH_SIZE = 10;
 const BATCH_INTERVAL = 5000; // 5 seconds
 const MAX_RETRIES = 3;
@@ -71,7 +72,7 @@ const RETRY_DELAY = 1000; // 1 second
 let sessionId: string;
 let userId: string | null = null;
 let eventQueue: TrackingEvent[] = [];
-let batchTimer: NodeJS.Timeout | null = null;
+let batchTimer: number | null = null;
 let isOnline = navigator.onLine;
 
 // Initialize session
