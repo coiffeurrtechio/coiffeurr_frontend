@@ -227,6 +227,11 @@ const SalonRegistration: React.FC = () => {
       setFormData(prev => ({ ...prev, [name]: sanitized }));
       return;
     }
+    if (name === 'otp') {
+      const sanitized = value.replace(/[^0-9]/g, '').slice(0, 5);
+      setFormData(prev => ({ ...prev, [name]: sanitized }));
+      return;
+    }
     if (name.includes('.')) {
       const keys = name.split('.');
       setFormData(prev => {

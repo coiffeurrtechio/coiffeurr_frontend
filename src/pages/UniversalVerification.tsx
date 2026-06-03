@@ -212,13 +212,13 @@ const UniversalVerification: React.FC = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-[#4b5563] tracking-widest text-center block">{t('verification.enter6DigitOTP')}</label>
+                  <label className="text-[10px] font-black text-[#4b5563] tracking-widest text-center block">Enter 5-Digit OTP</label>
                   <input 
                     name="otp"
                     type="tel"
                     inputMode="numeric"
                     pattern="[0-9]*"
-                    maxLength={6}
+                    maxLength={5}
                     value={formData.otp}
                     onChange={handleInputChange}
                     placeholder={t('verification.otpPlaceholder')}
