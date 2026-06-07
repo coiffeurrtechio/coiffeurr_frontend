@@ -260,7 +260,7 @@ export function useSalonApi() {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              // Authorization: `Bearer ${newToken}`,
+              Authorization: `Bearer ${newToken}`,
               ...(options.headers || {}),
             },
             body: JSON.stringify(body),

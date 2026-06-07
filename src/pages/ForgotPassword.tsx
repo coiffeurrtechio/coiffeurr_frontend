@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Mail, Lock, ShieldCheck, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff, Smartphone } from "lucide-react";
+import { Mail, Lock, ShieldCheck, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff, Smartphone, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui_components/button";
 import Config from "../configs/config";
@@ -32,6 +32,11 @@ export default function ForgotPassword() {
       i18n.changeLanguage('en');
     }
   }, [isloggedin]);
+
+  // Scroll to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Countdown timer for resend OTP
   useEffect(() => {
@@ -209,7 +214,13 @@ export default function ForgotPassword() {
       )}
 
       <div className="relative z-10 w-full max-w-md mx-auto glass-card rounded-[2.5rem] overflow-hidden">
-        <div className="p-6 sm:p-8">
+        <div className="p-6 sm:p-8 relative">
+          <button
+            onClick={() => navigate(-1)}
+            className="absolute top-6 left-6 p-2 text-white/60 hover:text-white transition-colors focus-ring z-10"
+          >
+            <ArrowLeft size={24} />
+          </button>
           {/* Coiffeurr Logo */}
           <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-2xl flex items-center justify-center mb-4 sm:mb-6 mx-auto shadow-lg border border-white/20 transition-transform hover:scale-105 duration-300">
             <img src="/Coiffeurr_Logo.png" alt="Coiffeurr" className="w-12 h-12 sm:w-14 sm:h-14 object-contain" />

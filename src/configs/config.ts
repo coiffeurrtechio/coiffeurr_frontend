@@ -8,6 +8,7 @@ const Config = {
   API_BASE_URL: `${import.meta.env.VITE_BASE_URL}/api/v1/auth`,
   API_Customers: `${import.meta.env.VITE_BASE_URL}/api/v1`,
   API_Salon_owner: `${import.meta.env.VITE_BASE_URL}/api/v1`,
+  API_AI: `${import.meta.env.VITE_BASE_URL}/api/v1/ai`,
   GOOGLE_CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID,
 };
 

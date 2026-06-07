@@ -16,11 +16,11 @@ import {
 } from 'lucide-react';
 import { useApi } from '../../../../API/SalonsAPIs/ALLSalonAPI';
 import { Loader } from '../../../../components/ui_components/Loader';
+import { DashboardLoader } from '../../../../components/ui_components/DashboardLoader';
 import { useSalonApi } from '../../../../API/Salon_Owner_API/SalonOwnerAPI';
 import { logoutUser } from '../../../../API/APIs';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { DashboardLoader } from '../../../../components/ui_components/DashboardLoader';
 
 const ServiceManagement: React.FC = () => {
     const { t } = useTranslation();

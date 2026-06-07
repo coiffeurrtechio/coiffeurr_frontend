@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { login } from "../utils/Storage/slice/authSlice";
 import { useToast } from "../components/Toast";
 import { Button } from "../components/ui_components/button";
-import { Smartphone, Mail, Lock, Eye, EyeOff, VenusAndMars, CalendarDays, CheckCircle2, X, Loader2, ChevronLeft, ChevronRight, AlertCircle, User, Camera, ShieldCheck, Info } from "lucide-react";
+import { Smartphone, Mail, Lock, Eye, EyeOff, VenusAndMars, CalendarDays, CheckCircle2, X, Loader2, ChevronLeft, ChevronRight, AlertCircle, User, Camera, ShieldCheck, Info, ArrowLeft } from "lucide-react";
 import Config from "../configs/config";
 import { useApi } from "../API/SalonsAPIs/ALLSalonAPI";
 import Sponser_Footer from "../components/Sponser_Footer";
@@ -94,6 +94,11 @@ const CustomerRegistration: React.FC = () => {
       i18n.changeLanguage('en');
     }
   }, [isloggedin]);
+
+  // Scroll to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Real-time password validation
   const passwordIssues = useMemo(() => {
@@ -509,7 +514,13 @@ const CustomerRegistration: React.FC = () => {
           {[1, 2].map(num => <div key={num} className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${step >= num ? 'bg-gradient-to-r from-[#D4AF37] to-[#FFD700]' : 'bg-white/10'}`} />)}
         </div>
 
-        <div className="p-6 sm:p-8">
+        <div className="p-6 sm:p-8 relative">
+          <button
+            onClick={() => navigate(-1)}
+            className="absolute top-6 left-6 p-2 text-white/60 hover:text-white transition-colors focus-ring z-10"
+          >
+            <ArrowLeft size={24} />
+          </button>
           <header className="mb-6 sm:mb-8 text-center">
             <div className="mx-auto w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-2xl flex items-center justify-center mb-4 sm:mb-6 shadow-lg border border-white/20 transition-transform hover:scale-105 duration-300">
               <img src="/Coiffeurr_Logo.png" alt="Coiffeurr" className="w-12 h-12 sm:w-14 sm:h-14 object-contain" />

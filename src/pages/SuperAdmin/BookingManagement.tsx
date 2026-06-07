@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Calendar, Filter, CheckCircle, XCircle, ChevronDown, ChevronUp, User } from "lucide-react";
+import { Search, Calendar, CheckCircle, XCircle, ChevronDown, ChevronUp, User } from "lucide-react";
 import { Button } from "../../components/ui_components/button";
 import { motion } from "framer-motion";
 
@@ -9,9 +9,11 @@ interface Booking {
   salonId: string;
   salonName: string;
   salonPhone?: string;
+  salonEmail?: string;
   userId: string;
   userName: string;
   userPhone?: string;
+  userEmail?: string;
   status: string;
   bookingDate: string;
   services: any[];
@@ -459,7 +461,29 @@ const BookingManagement = () => {
                     </div>
                     <div>
                       <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">User Phone</p>
-                      <p className="text-sm text-white font-mono">{booking.userPhone || 'N/A'}</p>
+                      {booking.userPhone ? (
+                        <a 
+                          href={`tel:${booking.userPhone}`}
+                          className="text-sm text-cyan-400 font-mono hover:text-cyan-300 hover:underline cursor-pointer"
+                        >
+                          {booking.userPhone}
+                        </a>
+                      ) : (
+                        <p className="text-sm text-white font-mono">N/A</p>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">User Email</p>
+                      {booking.userEmail ? (
+                        <a 
+                          href={`mailto:${booking.userEmail}`}
+                          className="text-sm text-cyan-400 font-mono hover:text-cyan-300 hover:underline cursor-pointer"
+                        >
+                          {booking.userEmail}
+                        </a>
+                      ) : (
+                        <p className="text-sm text-white font-mono">N/A</p>
+                      )}
                     </div>
                     <div>
                       <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Salon ID</p>
@@ -471,7 +495,29 @@ const BookingManagement = () => {
                     </div>
                     <div>
                       <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Salon Phone</p>
-                      <p className="text-sm text-white font-mono">{booking.salonPhone || 'N/A'}</p>
+                      {booking.salonPhone ? (
+                        <a 
+                          href={`tel:${booking.salonPhone}`}
+                          className="text-sm text-cyan-400 font-mono hover:text-cyan-300 hover:underline cursor-pointer"
+                        >
+                          {booking.salonPhone}
+                        </a>
+                      ) : (
+                        <p className="text-sm text-white font-mono">N/A</p>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Salon Email</p>
+                      {booking.salonEmail ? (
+                        <a 
+                          href={`mailto:${booking.salonEmail}`}
+                          className="text-sm text-cyan-400 font-mono hover:text-cyan-300 hover:underline cursor-pointer"
+                        >
+                          {booking.salonEmail}
+                        </a>
+                      ) : (
+                        <p className="text-sm text-white font-mono">N/A</p>
+                      )}
                     </div>
                     <div>
                       <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Booking Date</p>

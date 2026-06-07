@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  Mail, Lock, Eye, EyeOff, Smartphone, KeyRound
+  Mail, Lock, Eye, EyeOff, Smartphone, KeyRound, ArrowLeft
 } from "lucide-react";
 import { Button } from "../components/ui_components/button";
 import { useToast } from "../components/Toast";
@@ -49,6 +49,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
       i18n.changeLanguage('en');
     }
   }, [isloggedin]);
+
+  // Scroll to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Countdown timer for OTP resend
   useEffect(() => {
@@ -443,31 +448,37 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
   };
 
   return (
-    <div className="min-h-screen classy-salon-bg flex flex-col items-center justify-center p-4 relative font-sans">
+    <div className="min-h-screen classy-salon-bg flex flex-col items-center justify-center p-4 sm:p-6 relative font-sans">
       <div className="classy-overlay" />
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative z-10 w-full max-w-md mx-auto glass-card rounded-[2.5rem] overflow-hidden"
+        className="relative z-10 w-full max-w-md mx-auto glass-card rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden"
       >
-        <div className="p-6 sm:p-8">
-          <header className="mb-6 sm:mb-8 text-center">
+        <div className="p-6 sm:p-8 lg:p-10">
+          <button
+            onClick={() => navigate(-1)}
+            className="absolute top-6 left-6 p-2 text-white/60 hover:text-white transition-colors focus-ring z-10"
+          >
+            <ArrowLeft size={24} />
+          </button>
+          <header className="mb-6 sm:mb-8 lg:mb-10 text-center">
             <motion.div 
-              className="mx-auto w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-2xl flex items-center justify-center mb-4 sm:mb-6 shadow-lg border border-white/20 transition-transform hover:scale-105 duration-300"
+              className="mx-auto w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-white rounded-2xl flex items-center justify-center mb-4 sm:mb-6 lg:mb-8 shadow-lg border border-white/20 transition-transform hover:scale-105 duration-300"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <img src="/Coiffeurr_Logo.png" alt="Coiffeurr" className="w-12 h-12 sm:w-14 sm:h-14 object-contain" />
+              <img src="/Coiffeurr_Logo.png" alt="Coiffeurr" className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 object-contain" />
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
             >
-              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight" style={{ fontFamily: 'Playfair Display, serif' }}>{t('auth.signIn')}</h1>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight" style={{ fontFamily: 'Playfair Display, serif' }}>{t('auth.signIn')}</h1>
             </motion.div>
             <motion.p 
               className="punch-line text-[9px]"
@@ -479,20 +490,20 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
             </motion.p>
           </header>
             <motion.div 
-              className="flex bg-white/5 p-1 rounded-2xl"
+              className="flex bg-white/5 p-1 sm:p-1.5 rounded-2xl"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.5 }}
             >
               <button
                 onClick={() => setLoginMethod('phone')}
-                className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-xl text-[9px] font-black tracking-widest transition-all ${loginMethod === 'phone' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40'}`}
+                className={`flex-1 flex items-center justify-center gap-1 sm:gap-2 py-1.5 sm:py-2 rounded-xl text-[9px] sm:text-[10px] font-black tracking-widest transition-all ${loginMethod === 'phone' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40'}`}
               >
                 <Smartphone size={12} /> {t('common.phone')}
               </button>
               <button
                 onClick={() => setLoginMethod('email')}
-                className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-xl text-[9px] font-black tracking-widest transition-all ${loginMethod === 'email' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40'}`}
+                className={`flex-1 flex items-center justify-center gap-1 sm:gap-2 py-1.5 sm:py-2 rounded-xl text-[9px] sm:text-[10px] font-black tracking-widest transition-all ${loginMethod === 'email' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40'}`}
               >
                 <Mail size={12} /> {t('common.email')}
               </button>
@@ -501,15 +512,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
               <motion.form 
                 key={loginMethod}
                 onSubmit={handleSubmit} 
-                className="space-y-5"
+                className="space-y-4 sm:space-y-5 lg:space-y-6"
                 initial={{ opacity: 0, x: loginMethod === 'email' ? 50 : -50 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: loginMethod === 'email' ? -50 : 50 }}
                 transition={{ duration: 0.4, ease: "easeInOut" }}
               >
                 {loginMethod === 'email' ? (
-                  <div className="space-y-2">
-                    <label className="dark-label ml-1 text-xs sm:text-sm">{t('common.email')}</label>
+                  <div className="space-y-2.5 sm:space-y-3">
+                    <label className="dark-label ml-1 text-[10px] sm:text-xs">{t('common.email')}</label>
                     <div className={`relative input-wrapper ${errors.email ? 'error' : ''}`}>
                       <Mail className={`absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon ${errors.email ? "text-[#DC143C]" : ""}`} />
                       <input
@@ -517,13 +528,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
                         placeholder="name@example.com"
                         value={formData.email}
                         onChange={(e) => handleInputChange("email", e.target.value)}
-                        className={`w-full h-10 sm:h-12 pl-12 sm:pl-14 pr-3 sm:pr-4 dark-input text-xs sm:text-sm font-bold outline-none transition-all duration-300 ${errors.email ? "error" : ""}`}
+                        className={`w-full h-11 sm:h-12 lg:h-14 pl-12 sm:pl-14 lg:pl-16 pr-3 sm:pr-4 dark-input text-xs sm:text-sm lg:text-base font-bold outline-none transition-all duration-300 ${errors.email ? "error" : ""}`}
                       />
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <label className="dark-label ml-1 text-xs sm:text-sm">{t('auth.phoneNumber')}</label>
+                  <div className="space-y-2.5 sm:space-y-3">
+                    <label className="dark-label ml-1 text-[10px] sm:text-xs">{t('auth.phoneNumber')}</label>
                     <div className={`relative input-wrapper ${errors.phone ? 'error' : ''}`}>
                       <Smartphone className={`absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 dark-icon ${errors.phone ? "text-[#DC143C]" : ""}`} />
                       <input
@@ -531,16 +542,16 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
                         placeholder="+91 00000 00000"
                         value={formData.phone}
                         onChange={(e) => handleInputChange("phone", e.target.value)}
-                        className={`w-full h-10 sm:h-12 pl-12 sm:pl-14 pr-3 sm:pr-4 dark-input text-xs sm:text-sm font-bold outline-none transition-all duration-300 ${errors.phone ? "error" : ""}`}
+                        className={`w-full h-11 sm:h-12 lg:h-14 pl-12 sm:pl-14 lg:pl-16 pr-3 sm:pr-4 dark-input text-xs sm:text-sm lg:text-base font-bold outline-none transition-all duration-300 ${errors.phone ? "error" : ""}`}
                       />
                     </div>
                   </div>
                 )}
                 {!useOtp ? (
                   <>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <div className="flex justify-between items-center px-1">
-                        <label className="dark-label ml-1 text-xs sm:text-sm">{t('auth.password')}</label>
+                        <label className="dark-label ml-1 text-[10px] sm:text-xs">{t('auth.password')}</label>
                         <Link to="/forgetpassword" className="text-[10px] font-black text-white/50 hover:text-[#D4AF37] tracking-widest text-button transition-colors focus-ring">
                           {t('auth.forgotPassword')}
                         </Link>
@@ -552,7 +563,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
                           placeholder="••••••••"
                           value={formData.password}
                           onChange={(e) => handleInputChange("password", e.target.value)}
-                          className="w-full h-12 pl-12 pr-20 dark-input text-sm font-bold outline-none transition-all duration-300"
+                          className="w-full h-12 sm:h-14 pl-12 sm:pl-14 pr-20 dark-input text-sm sm:text-base font-bold outline-none transition-all duration-300"
                         />
                         <button
                           type="button"
@@ -567,7 +578,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
                     <Button
                       type="submit"
                       disabled={isLoading}
-                      className="w-full h-14 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30 text-sm sm:text-base"
+                      className="w-full h-14 sm:h-16 lg:h-18 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30 text-sm sm:text-base lg:text-lg"
                     >
                       {isLoading ? t('common.loading') : t('auth.signIn')}
                     </Button>
@@ -575,9 +586,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
                     <button
                       type="button"
                       onClick={() => setUseOtp(true)}
-                      className="w-full flex items-center justify-center gap-2 py-2 text-[10px] font-black text-white/50 hover:text-[#D4AF37] tracking-widest transition-colors"
+                      className="w-full flex items-center justify-center gap-1 sm:gap-2 py-3 sm:py-4 text-[11px] sm:text-[12px] font-black text-white/50 hover:text-[#D4AF37] tracking-widest transition-colors"
                     >
-                      <KeyRound size={12} /> Login via OTP
+                      <KeyRound size={14} /> Login via OTP
                     </button>
                   </>
                 ) : (
@@ -588,7 +599,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
                           type="button"
                           onClick={handleSendOtp}
                           disabled={otpLoading}
-                          className="w-full h-14 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30 text-sm sm:text-base"
+                          className="w-full h-14 sm:h-16 lg:h-18 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30 text-sm sm:text-base lg:text-lg"
                         >
                           {otpLoading ? t('common.loading') : 'Send OTP'}
                         </Button>
@@ -596,15 +607,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
                         <button
                           type="button"
                           onClick={() => setUseOtp(false)}
-                          className="w-full flex items-center justify-center gap-2 py-2 text-[10px] font-black text-white/50 hover:text-[#D4AF37] tracking-widest transition-colors"
+                          className="w-full flex items-center justify-center gap-1 sm:gap-2 py-3 sm:py-4 text-[11px] sm:text-[12px] font-black text-white/50 hover:text-[#D4AF37] tracking-widest transition-colors"
                         >
-                          <Lock size={12} /> Login with Password
+                          <Lock size={14} /> Login with Password
                         </button>
                       </>
                     ) : (
                       <>
-                        <div className="space-y-2">
-                          <label className="dark-label ml-1 text-xs sm:text-sm">Enter 6-digit OTP</label>
+                        <div className="space-y-2.5 sm:space-y-3">
+                          <label className="dark-label ml-1 text-[10px] sm:text-xs">Enter 6-digit OTP</label>
                           <div className="flex gap-2 justify-center" onPaste={handleOtpPaste}>
                             {otp.map((digit, index) => (
                               <input
@@ -616,7 +627,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
                                 value={digit}
                                 onChange={(e) => handleOtpChange(index, e.target.value)}
                                 onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                                className="w-10 h-12 sm:w-12 sm:h-14 text-center text-lg font-bold dark-input rounded-xl outline-none focus:ring-2 focus:ring-[#D4AF37]/50 transition-all duration-300"
+                                className="w-10 h-12 sm:w-12 sm:h-14 lg:w-14 lg:h-16 text-center text-lg sm:text-xl font-bold dark-input rounded-xl outline-none focus:ring-2 focus:ring-[#D4AF37]/50 transition-all duration-300"
                               />
                             ))}
                           </div>
@@ -624,7 +635,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
 
                         <div className="flex items-center justify-center gap-2">
                           {countdown > 0 ? (
-                            <span className="text-[10px] font-black text-white/40 tracking-widest">
+                            <span className="text-[9px] sm:text-[10px] font-black text-white/40 tracking-widest">
                               Resend in {countdown}s
                             </span>
                           ) : (
@@ -632,7 +643,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
                               type="button"
                               onClick={handleSendOtp}
                               disabled={otpLoading}
-                              className="text-[10px] font-black text-[#D4AF37] hover:text-[#FFD700] tracking-widest transition-colors"
+                              className="text-[9px] sm:text-[10px] font-black text-[#D4AF37] hover:text-[#FFD700] tracking-widest transition-colors"
                             >
                               Resend OTP
                             </button>
@@ -643,7 +654,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
                           type="button"
                           onClick={handleOtpSubmit}
                           disabled={isLoading || otp.join('').length !== 6}
-                          className="w-full h-14 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30 text-sm sm:text-base disabled:opacity-50"
+                          className="w-full h-14 sm:h-16 lg:h-18 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-black font-extrabold rounded-2xl hover:from-[#FFD700] hover:to-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus-ring shadow-lg shadow-[#D4AF37]/30 text-sm sm:text-base lg:text-lg disabled:opacity-50"
                         >
                           {isLoading ? t('common.loading') : 'Verify & Sign In'}
                         </Button>
@@ -651,9 +662,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
                         <button
                           type="button"
                           onClick={() => { setUseOtp(false); setOtpSent(false); setOtp(['', '', '', '', '', '']); }}
-                          className="w-full flex items-center justify-center gap-2 py-2 text-[10px] font-black text-white/50 hover:text-[#D4AF37] tracking-widest transition-colors"
+                          className="w-full flex items-center justify-center gap-1 sm:gap-2 py-3 sm:py-4 text-[11px] sm:text-[12px] font-black text-white/50 hover:text-[#D4AF37] tracking-widest transition-colors"
                         >
-                          <Lock size={12} /> Login with Password
+                          <Lock size={14} /> Login with Password
                         </button>
                       </>
                     )}
@@ -685,7 +696,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ role }) => {
         </div>
       </motion.div>
 
-      <div className="mt-8">
+      <div className="mt-8 sm:mt-10 lg:mt-12">
         <Sponser_Footer collapsed={false} />
       </div>
     </div>

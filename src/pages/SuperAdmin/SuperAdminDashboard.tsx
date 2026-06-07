@@ -5,13 +5,10 @@ import {
   Users,
   Notebook,
   ChevronRight,
-  Building2,
-  ShieldCheck,
-  BarChart3
+  Building2
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "../../components/ui_components/button";
-import { useTranslation } from "react-i18next";
 import SponserFooter from "../../components/Sponser_Footer";
 
 interface SidebarProps {
@@ -21,16 +18,15 @@ interface SidebarProps {
 }
 
 function SuperAdminDashboard({ open, setOpen, collapsed }: SidebarProps) {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
   const menuItems = [
-    { id: "tracking", label: "Tracking", icon: BarChart3, path: "/super-admin/dashboard/tracking" },
     { id: "analytics", label: "Analytics", icon: LayoutDashboard, path: "/super-admin/dashboard/analytics" },
     { id: "salons", label: "Salons", icon: Building2, path: "/super-admin/dashboard" },
     { id: "bookings", label: "Bookings", icon: Notebook, path: "/super-admin/dashboard/bookings" },
     { id: "users", label: "Users", icon: Users, path: "/super-admin/dashboard/users" },
+    { id: "settings", label: "Settings", icon: Settings, path: "/super-admin/dashboard/settings" },
   ];
 
   return (

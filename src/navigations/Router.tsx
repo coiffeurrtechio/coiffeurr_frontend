@@ -1,8 +1,8 @@
 import { Route, Routes, useLocation } from "react-router-dom";
 import routes, { type AppRoute } from "./AllRoutes";
 import AuthRouter from "../utils/Auth/AuthRouter";
-import React, { useEffect } from "react";
-import { trackPageView } from "../utils/analytics";
+import ScrollToTop from "../components/ScrollToTop";
+import React from "react";
 
 const renderRoutes = (routeList: AppRoute[]) =>
 
@@ -26,21 +26,14 @@ const renderRoutes = (routeList: AppRoute[]) =>
 
 const Router: React.FC = () => {
   const location = useLocation();
-  
-  // Track page views automatically on route changes (only for user-facing pages)
-  useEffect(() => {
-    const excludedPaths = ['/dashboard', '/super-admin', '/salon-owner'];
-    const shouldTrack = !excludedPaths.some(excluded => location.pathname.startsWith(excluded));
-    
-    if (shouldTrack) {
-      trackPageView(location.pathname);
-    }
-  }, [location.pathname]);
 
   return (
-    <Routes location={location} key={location.pathname}>
-      {renderRoutes(routes)}
-    </Routes>
+    <>
+      <ScrollToTop />
+      <Routes location={location} key={location.pathname}>
+        {renderRoutes(routes)}
+      </Routes>
+    </>
   );
 };
 

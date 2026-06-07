@@ -32,6 +32,7 @@ export default function Profile() {
   const [isAddressExpanded, setIsAddressExpanded] = useState(false);
   const [isUserDetailsExpanded, setIsUserDetailsExpanded] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [showContactSupportModal, setShowContactSupportModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -298,6 +299,11 @@ export default function Profile() {
           <MenuItem label={t('profile.myBookings')} icon={<Calendar className="text-slate-800" />} onClick={() => navigate("/bookings")} />
           <MenuItem label={t('profile.wishlist')} icon={<Heart className="text-red-500" />} onClick={() => navigate("/wishlist")} />
           <MenuItem label={t('settings.language') || 'Language'} icon={<Globe className="text-slate-800" />} onClick={() => setShowLanguageModal(true)} />
+          <MenuItem
+            label="Contact Support"
+            icon={<MessageCircle className="text-slate-800" />}
+            onClick={() => setShowContactSupportModal(true)}
+          />
           {user?.role === "OWNER" && <MenuItem label={t('profile.salonDashboard')} icon={<LayoutDashboard className="text-slate-800" />} onClick={() => navigate("/dashboard")} />}
         </div>
 
@@ -699,6 +705,58 @@ export default function Profile() {
       )}
 
       <SettingsPanel isOpen={showLanguageModal} onClose={() => setShowLanguageModal(false)} />
+
+      {/* Contact Support Modal */}
+      {showContactSupportModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-md" onClick={() => setShowContactSupportModal(false)} />
+          <div className="relative w-full max-w-md bg-white rounded-[2rem] p-6 sm:p-8 animate-in zoom-in-95 duration-200 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">Contact Support</h2>
+              <button onClick={() => setShowContactSupportModal(false)} className="p-2 sm:p-3 bg-gray-100 rounded-full hover:bg-gray-200 transition-all hover:scale-105 active:scale-95">
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <a
+                href="mailto:support@coiffeurr.com"
+                className="flex items-center gap-4 p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-white/50 hover:shadow-lg transition-all hover:scale-[1.02]"
+              >
+                <div className="p-3 bg-white rounded-xl text-slate-800 shadow-sm">
+                  <Mail size={20} />
+                </div>
+                <div className="flex-1">
+                  <span className="text-[10px] font-black text-slate-500 tracking-tight uppercase">Email</span>
+                  <p className="text-sm font-bold text-slate-900">support@coiffeurr.com</p>
+                </div>
+                <ChevronRight size={18} className="text-slate-300" />
+              </a>
+
+              <a
+                href="tel:+917045464907"
+                className="flex items-center gap-4 p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-white/50 hover:shadow-lg transition-all hover:scale-[1.02]"
+              >
+                <div className="p-3 bg-white rounded-xl text-slate-800 shadow-sm">
+                  <Phone size={20} />
+                </div>
+                <div className="flex-1">
+                  <span className="text-[10px] font-black text-slate-500 tracking-tight uppercase">Phone</span>
+                  <p className="text-sm font-bold text-slate-900">+91 70454 64907</p>
+                </div>
+                <ChevronRight size={18} className="text-slate-300" />
+              </a>
+
+              <div className="mt-6 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                <p className="text-xs text-slate-600 text-center leading-relaxed">
+                  Our support team is available to help you with any questions or concerns. We typically respond within 24 hours.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mt-10">
         <Sponser_Footer collapsed={false} />
       </div>

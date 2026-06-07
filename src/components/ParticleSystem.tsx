@@ -23,11 +23,11 @@ const ParticleSystem: React.FC = () => {
             height: particle.size,
             left: `${particle.x}%`,
             top: `${particle.y}%`,
-            backgroundColor: 'rgba(30, 77, 140, 0.4)',
+            backgroundColor: 'rgba(30, 77, 140, 0.15)',
           }}
           initial={{ opacity: 0, scale: 0 }}
           animate={{
-            opacity: [0, 0.8, 0.3],
+            opacity: [0, 0.3, 0.1],
             scale: [0, 1, 0.6],
             y: [0, -150, 0],
             x: [0, Math.random() * 60 - 30, 0],

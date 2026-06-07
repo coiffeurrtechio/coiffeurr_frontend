@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { useApi } from "../../../../API/SalonsAPIs/ALLSalonAPI";
 import { useSalonApi } from '../../../../API/Salon_Owner_API/SalonOwnerAPI';
 import { useNavigate } from 'react-router-dom';
+import { Loader } from '../../../../components/ui_components/Loader';
 import { DashboardLoader } from '../../../../components/ui_components/DashboardLoader';
 
 const StaffManagement: React.FC = () => {

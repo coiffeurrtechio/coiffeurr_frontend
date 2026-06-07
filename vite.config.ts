@@ -68,7 +68,8 @@ export default defineConfig({
     port: 3001,
     strictPort: true,
     allowedHosts: [
-      '1e4e-2405-201-d035-1107-3d64-cbd3-cb9b-dd5a.ngrok-free.app'
+      '1e4e-2405-201-d035-1107-3d64-cbd3-cb9b-dd5a.ngrok-free.app',
+      '9986-2405-201-d035-1107-845-ff0c-3442-e717.ngrok-free.app'
     ]
   },
   build: {

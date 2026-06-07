@@ -114,7 +114,7 @@ export function usersalonApi() {
             ...options,
             headers: {
               "Content-Type": "application/json",
-              // Authorization: `Bearer ${newToken}`,
+              Authorization: `Bearer ${newToken}`,
               ...(options.headers || {}),
             },
             credentials: "include",
@@ -193,7 +193,7 @@ export function usersalonApi() {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              // Authorization: `Bearer ${newToken}`,
+              Authorization: `Bearer ${newToken}`,
               ...(options.headers || {}),
             },
             body: JSON.stringify(body),

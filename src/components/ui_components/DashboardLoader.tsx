@@ -1,183 +1,131 @@
-import { LayoutDashboard, Bell, Search, User, Sparkles, Scissors, Zap } from "lucide-react"
+import { motion } from "framer-motion"
 
 interface DashboardLoaderProps {
-  isVisible?: boolean
+  readonly isVisible?: boolean
+  readonly showText?: boolean
 }
 
-// Animated Scissors Component for Loader
-const AnimatedScissorsLoader = () => (
-  <div className="relative">
-    <style>{`
-      @keyframes scissorsCut {
-        0%, 100% { transform: rotate(0deg); }
-        25% { transform: rotate(-20deg); }
-        50% { transform: rotate(0deg); }
-        75% { transform: rotate(20deg); }
-      }
-      .scissors-cut-loader {
-        animation: scissorsCut 1.5s ease-in-out infinite;
-      }
-    `}</style>
-    <div className="scissors-cut-loader">
-      <Scissors size={32} className="text-[#1E4D8C]" />
-    </div>
-  </div>
-)
-
-// Animated Zap Component for Loader
-const AnimatedZapLoader = () => (
-  <div className="relative">
-    <style>{`
-      @keyframes zapPulseLoader {
-        0%, 100% { transform: scale(1); opacity: 0.6; }
-        50% { transform: scale(1.3); opacity: 1; }
-      }
-      .zap-pulse-loader {
-        animation: zapPulseLoader 1s ease-in-out infinite;
-      }
-    `}</style>
-    <div className="zap-pulse-loader">
-      <Zap size={24} className="text-yellow-500" />
-    </div>
-  </div>
-)
-
-export function DashboardLoader({ isVisible = true }: DashboardLoaderProps) {
+export function DashboardLoader({ isVisible = true, showText = false }: DashboardLoaderProps) {
   if (!isVisible) return null
 
   return (
-    <div className="w-full h-full min-h-screen bg-[#FDFDFF] p-6 lg:p-10 space-y-10 animate-in fade-in duration-700 relative overflow-hidden">
-      {/* Floating Salon-themed Particles */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <style>{`
-          @keyframes floatParticle {
-            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.2; }
-            50% { transform: translateY(-30px) rotate(180deg); opacity: 0.6; }
-          }
-          .particle-loader {
-            position: absolute;
-            animation: floatParticle 4s ease-in-out infinite;
-          }
-        `}</style>
-        {[...Array(8)].map((_, i) => (
-          <div
-            key={i}
-            className="particle-loader"
-            style={{
-              left: `${5 + i * 12}%`,
-              top: `${10 + (i % 4) * 25}%`,
-              animationDelay: `${i * 0.6}s`,
-            }}
-          >
-            <Scissors size={20} className="text-[#1E4D8C]/20" />
-          </div>
-        ))}
-      </div>
-
-      {/* --- TOP NAV SKELETON (Integrated Feel) --- */}
-      <div className="flex items-center justify-between pb-4 relative z-10">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center">
-            <AnimatedScissorsLoader />
-          </div>
-          <div className="space-y-2">
-            <div className="h-5 w-40 bg-slate-200/60 rounded-full animate-pulse" />
-            <div className="h-3 w-24 bg-slate-100 rounded-full animate-pulse" />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white rounded-xl border border-slate-100 flex items-center justify-center text-slate-200">
-            <Bell size={18} />
-          </div>
-          <div className="w-10 h-10 bg-slate-200 rounded-xl animate-pulse" />
-        </div>
-      </div>
-
-      {/* --- FEATURED ANALYTICS CARDS (Glassmorphism) --- */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={`card-${i}`}
-            className="group relative h-44 bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden"
-          >
-            {/* Subtle Gradient Spot */}
-            <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-50/50 rounded-full blur-2xl group-hover:bg-blue-100/50 transition-colors" />
-            {i === 1 && <div className="absolute top-4 right-4"><AnimatedZapLoader /></div>}
-
-            <div className="relative z-10 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-slate-50 animate-pulse" />
-                <div className="h-3 w-20 bg-slate-100 rounded-full animate-pulse" />
-              </div>
-              <div className="h-10 w-32 bg-slate-900/5 rounded-2xl animate-pulse" />
-              <div className="h-2 w-full bg-slate-50 rounded-full overflow-hidden">
-                <div className="h-full bg-slate-200 w-1/3 animate-shimmer"
-                     style={{ animation: 'shimmer 2s infinite linear' }} />
-              </div>
+    <>
+      {/* Mobile View - Full-screen glassmorphism */}
+      <div className="md:hidden fixed inset-0 z-[999] flex items-center justify-center bg-black/10 backdrop-blur-md">
+        <motion.div
+          className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-12 flex flex-col items-center justify-center shadow-2xl max-w-md w-full mx-4"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
+          {/* Rotating Gradient Ring Loader */}
+          <div className="relative w-24 h-24 mb-8">
+            <motion.div
+              className="absolute inset-0 rounded-full"
+              style={{
+                background: 'conic-gradient(from 0deg, #D4AF37, #FFD700, #D4AF37)',
+              }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            />
+            <div className="absolute inset-2 bg-black/10 backdrop-blur-md rounded-full flex items-center justify-center">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0.5 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
+              >
+                <img src="/Coiffeurr_Logo.png" alt="Coiffeurr" className="w-12 h-12 object-contain" />
+              </motion.div>
             </div>
           </div>
-        ))}
+
+          {/* Loading Text */}
+          {showText && (
+            <>
+              <motion.p
+                className="text-white font-semibold tracking-widest text-sm uppercase"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+              >
+                NAMASTE MALIK
+              </motion.p>
+              <motion.p
+                className="text-lg italic font-medium tracking-wide"
+                style={{ 
+                  fontFamily: "'Playfair Display', serif",
+                  color: '#D4AF37',
+                  opacity: 0.7
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.7 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+              >
+                Loading your dashboard
+              </motion.p>
+            </>
+          )}
+
+          {/* Subtle Pulse Effect */}
+          <motion.div
+            className="absolute inset-0 rounded-3xl bg-white/5"
+            animate={{ opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </motion.div>
       </div>
 
-      {/* --- RECENT ACTIVITY & CHART AREA --- */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-4">
-        
-        {/* Large Chart Area */}
-        <div className="lg:col-span-2 bg-white rounded-[3rem] p-10 border border-slate-100 shadow-sm space-y-8">
-          <div className="flex items-center justify-between">
-            <div className="h-4 w-32 bg-slate-200/60 rounded-full animate-pulse" />
-            <div className="flex gap-2">
-              <div className="h-8 w-16 bg-slate-50 rounded-lg" />
-              <div className="h-8 w-16 bg-slate-50 rounded-lg" />
+      {/* Desktop View - Compact, subtle loader */}
+      <div className="hidden md:flex fixed inset-0 z-[999] items-center justify-center bg-black/5 backdrop-blur-sm">
+        <motion.div
+          className="relative bg-white/80 backdrop-blur-lg border border-white/30 rounded-2xl px-8 py-6 flex items-center gap-4 shadow-xl"
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.98, opacity: 0 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+        >
+          {/* Compact Rotating Ring */}
+          <div className="relative w-10 h-10 flex-shrink-0">
+            <motion.div
+              className="absolute inset-0 rounded-full"
+              style={{
+                background: 'conic-gradient(from 0deg, #D4AF37, #FFD700, #D4AF37)',
+              }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            />
+            <div className="absolute inset-1.5 bg-white/90 rounded-full flex items-center justify-center">
+              <img src="/Coiffeurr_Logo.png" alt="Coiffeurr" className="w-5 h-5 object-contain" />
             </div>
           </div>
-          
-          {/* Mock Graph Waves */}
-          <div className="relative h-64 w-full flex items-end gap-3 px-2">
-            {[40, 70, 45, 90, 65, 80, 30, 55, 75, 50].map((height, i) => (
-              <div 
-                key={i} 
-                className="flex-1 bg-slate-100 rounded-t-xl animate-pulse" 
-                style={{ height: `${height}%`, animationDelay: `${i * 0.1}s` }} 
-              />
-            ))}
-          </div>
-        </div>
 
-        {/* Side Actions/Activity */}
-        <div className="bg-slate-900 rounded-[3rem] p-10 text-white space-y-8 relative overflow-hidden">
-          <Sparkles className="absolute top-6 right-6 text-white/10 w-20 h-20 rotate-12" />
-          
-          <div className="relative z-10 space-y-6">
-            <div className="h-5 w-24 bg-white/20 rounded-full animate-pulse" />
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-white/10 shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-2 w-full bg-white/10 rounded-full" />
-                    <div className="h-2 w-2/3 bg-white/5 rounded-full" />
-                  </div>
-                </div>
-              ))}
+          {/* Loading Text */}
+          {showText && (
+            <div className="flex flex-col">
+              <motion.p
+                className="text-gray-800 font-semibold tracking-wide text-sm"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+              >
+                NAMASTE MALIK
+              </motion.p>
+              <motion.p
+                className="text-gray-600 italic text-xs"
+                style={{ 
+                  fontFamily: "'Playfair Display', serif",
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.7 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+              >
+                Loading your dashboard
+              </motion.p>
             </div>
-            <div className="pt-4">
-              <div className="h-14 w-full bg-white/10 rounded-2xl border border-white/10 flex items-center justify-center">
-                 <div className="h-2 w-20 bg-white/20 rounded-full animate-pulse" />
-              </div>
-            </div>
-          </div>
-        </div>
-
+          )}
+        </motion.div>
       </div>
-
-      <style>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-      `}</style>
-    </div>
+    </>
   )
 }

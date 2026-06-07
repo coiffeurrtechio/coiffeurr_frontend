@@ -1,53 +1,8 @@
-// import { Scissors } from "lucide-react"
-// import { useEffect, useState } from "react"
-
-// interface LoaderProps {
-//   isVisible?: boolean
-// }
-
-// const phrases = [
-//   "New Hairstyle",
-//   "New Salon Experience",
-//   "Premium Beauty",
-//   "Expert Artists",
-//   "Luxury Services",
-//   "Transform Your Look",
-//   "Book Your Appointment",
-//   "Professional Care",
-// ]
-
-// export function Loader({ isVisible = true }: LoaderProps) {
-//   const [currentPhrase, setCurrentPhrase] = useState(0)
-
-//   useEffect(() => {
-//     const interval = setInterval(() => {
-//       setCurrentPhrase((prev) => (prev + 1) % phrases.length)
-//     }, 1000)
-
-//     return () => clearInterval(interval)
-//   }, [])
-
-//   if (!isVisible) return null
-
-//   return (
-//     <div className="min-h-screen bg-gray-50 max-w-md mx-auto flex flex-col items-center justify-center p-6 space-y-4">
-//       <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center animate-bounce">
-//         <Scissors className="w-10 h-10 text-[#1E4D8C]" />
-//       </div>
-//       <div className="w-full space-y-3">
-//         <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4 mx-auto"></div>
-//         <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2 mx-auto"></div>
-//       </div>
-//     </div>
-//   )
-// }
-
-
-import { Scissors } from "lucide-react"
+import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
 
 interface LoaderProps {
-  isVisible?: boolean
+  readonly isVisible?: boolean
 }
 
 const phrases = [
@@ -74,59 +29,95 @@ export function Loader({ isVisible = true }: LoaderProps) {
   if (!isVisible) return null
 
   return (
-    <div className="fixed inset-0 z-[999] bg-white flex flex-col items-center justify-center p-8 overflow-hidden">
-      {/* Background Decorative Elements */}
-      <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-60" />
-      <div className="absolute bottom-[-5%] left-[-5%] w-72 h-72 bg-slate-100 rounded-full blur-3xl opacity-60" />
-
-      <div className="relative flex flex-col items-center max-w-xs w-full text-center space-y-12">
-        
-        {/* Animated Icon Container */}
-        <div className="relative">
-          {/* Pulsing Outer Ring */}
-          <div className="absolute inset-0 rounded-full bg-[#1E4D8C]/10 animate-ping" />
-          
-          <div className="relative w-24 h-24 bg-white border border-slate-100 rounded-[2.5rem] shadow-2xl flex items-center justify-center animate-bounce duration-1000">
-            <Scissors className="w-10 h-10 text-[#1E4D8C]" />
+    <>
+      {/* Mobile View - Full-screen glassmorphism */}
+      <div className="md:hidden fixed inset-0 z-[999] flex items-center justify-center bg-black/10 backdrop-blur-md">
+        <motion.div
+          className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-12 flex flex-col items-center justify-center shadow-2xl max-w-md w-full mx-4"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
+          {/* Rotating Gradient Ring Loader */}
+          <div className="relative w-24 h-24 mb-8">
+            <motion.div
+              className="absolute inset-0 rounded-full"
+              style={{
+                background: 'conic-gradient(from 0deg, #D4AF37, #FFD700, #D4AF37)',
+              }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            />
+            <div className="absolute inset-2 bg-black/10 backdrop-blur-md rounded-full flex items-center justify-center">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0.5 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
+              >
+                <img src="/Coiffeurr_Logo.png" alt="Coiffeurr" className="w-12 h-12 object-contain" />
+              </motion.div>
+            </div>
           </div>
-        </div>
 
-        {/* Loading Progress & Text */}
-        <div className="space-y-6 w-full">
-          <div className="overflow-hidden">
-            <h2 
+          {/* Loading Text */}
+          <div className="space-y-4 w-full text-center">
+            <motion.h2
               key={currentPhrase}
-              className="text-lg font-black text-slate-900 uppercase tracking-[0.2em] animate-in fade-in slide-in-from-bottom-2 duration-500"
+              className="text-white font-semibold tracking-widest text-sm uppercase"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
             >
               {phrases[currentPhrase]}
-            </h2>
+            </motion.h2>
           </div>
 
-          {/* Luxury Loading Bar */}
-          <div className="relative w-48 mx-auto h-[2px] bg-slate-100 rounded-full overflow-hidden">
-            <div className="absolute inset-0 bg-[#1E4D8C] w-1/2 animate-shimmer rounded-full" 
-                 style={{ 
-                   animation: 'shimmer 1.5s infinite linear',
-                   backgroundImage: 'linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent)' 
-                 }} 
-            />
-          </div>
-        </div>
-
-        {/* Minimal Branding */}
-        <div className="absolute bottom-12">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300">
-            Coiffeurr Premium
-          </p>
-        </div>
+          {/* Subtle Pulse Effect */}
+          <motion.div
+            className="absolute inset-0 rounded-3xl bg-white/5"
+            animate={{ opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </motion.div>
       </div>
 
-      <style>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-150%); }
-          100% { transform: translateX(150%); }
-        }
-      `}</style>
-    </div>
+      {/* Desktop View - Compact, subtle loader */}
+      <div className="hidden md:flex fixed inset-0 z-[999] items-center justify-center bg-black/5 backdrop-blur-sm">
+        <motion.div
+          className="relative bg-white/80 backdrop-blur-lg border border-white/30 rounded-2xl px-8 py-6 flex items-center gap-4 shadow-xl"
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.98, opacity: 0 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+        >
+          {/* Compact Rotating Ring */}
+          <div className="relative w-10 h-10 flex-shrink-0">
+            <motion.div
+              className="absolute inset-0 rounded-full"
+              style={{
+                background: 'conic-gradient(from 0deg, #D4AF37, #FFD700, #D4AF37)',
+              }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            />
+            <div className="absolute inset-1.5 bg-white/90 rounded-full flex items-center justify-center">
+              <img src="/Coiffeurr_Logo.png" alt="Coiffeurr" className="w-5 h-5 object-contain" />
+            </div>
+          </div>
+
+          {/* Loading Text */}
+          <motion.h2
+            key={currentPhrase}
+            className="text-gray-800 font-medium tracking-wide text-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+          >
+            {phrases[currentPhrase]}
+          </motion.h2>
+        </motion.div>
+      </div>
+    </>
   )
 }

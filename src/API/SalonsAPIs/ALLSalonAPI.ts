@@ -87,25 +87,20 @@ export function useApi() {
     requireAuth: boolean = false
   ): Promise<ApiResponse<T>> => {
     try {
-      // const userData = localStorage.getItem("authState");
-      // const parsed = userData ? JSON.parse(userData) : null;
-      // const accessToken = parsed?.user?.access_token;
+      const userData = localStorage.getItem("authState");
+      const parsed = userData ? JSON.parse(userData) : null;
+      const accessToken = parsed?.user?.access_token;
       console.log("coming for api call = ");
-      
-      // Only require auth if explicitly needed
-      // if (requireAuth && !userData) {
-      //   return { data: null, error: "No user data", status: 401 };
-      // }
 
       const headers: any = {
         "Content-Type": "application/json",
         ...(options.headers || {}),
       };
 
-      // Add auth header only if we have a token
-      // if (accessToken) {
-      //   headers["Authorization"] = `Bearer ${accessToken}`;
-      // }
+      // Add auth header if we have a token
+      if (accessToken) {
+        headers["Authorization"] = `Bearer ${accessToken}`;
+      }
 
       const response = await fetch(`${Config.API_Customers}${endpoint}`, {
         method: "GET",
@@ -211,7 +206,7 @@ export function useApi() {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              // Authorization: `Bearer ${newToken}`,
+              Authorization: `Bearer ${newToken}`,
               ...(options.headers || {}),
             },
             body: JSON.stringify(body),

@@ -410,7 +410,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
           />
 
           {/* Notification Panel - Tech-Luxury Design */}
-          <div className="absolute right-0 top-10 w-64 sm:w-72 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 z-50 max-h-[350px] flex flex-col" style={{ boxShadow: "rgba(0,0,0,0.15) 0 8px 32px" }}>
+          <div className="absolute right-0 top-12 max-w-[340px] w-full max-h-[250px] bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 z-50 flex flex-col overflow-hidden" style={{ boxShadow: "rgba(0,0,0,0.15) 0 8px 32px" }}>
             {/* Header */}
             <div className="p-3 border-b border-gray-100 flex items-center justify-between">
               <h3 className="font-bold text-sm text-gray-800" style={{ fontFamily: "'Playfair Display', serif" }}>{t('common.notifications')}</h3>
@@ -435,21 +435,11 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
             {/* Notifications List */}
             <div className="flex-1 overflow-y-auto">
               {loading ? (
-                <div className="p-4 text-center text-gray-400 text-xs">
+                <div className="p-3 text-center text-gray-400 text-xs">
                   {t('common.loading')}
                 </div>
-              ) : error ? (
-                <div className="p-4 text-center">
-                  <p className="text-red-500 text-xs mb-1">{error}</p>
-                  <button
-                    onClick={fetchNotifications}
-                    className="text-[10px] text-blue-600 hover:text-blue-700 font-medium"
-                  >
-                    Retry
-                  </button>
-                </div>
-              ) : notifications.length === 0 ? (
-                <div className="p-4 text-center text-gray-400 text-xs">
+              ) : notifications.length === 0 || error ? (
+                <div className="p-3 text-center text-gray-400 text-xs">
                   {t('common.noNotifications')}
                 </div>
               ) : (

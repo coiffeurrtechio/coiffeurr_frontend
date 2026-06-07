@@ -26,6 +26,7 @@ import { useSalonApi } from '../../../../API/Salon_Owner_API/SalonOwnerAPI';
 import { logoutUser } from '../../../../API/APIs';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { Loader } from '../../../../components/ui_components/Loader';
 import { DashboardLoader } from '../../../../components/ui_components/DashboardLoader';
 import Config from '../../../../configs/config';
 

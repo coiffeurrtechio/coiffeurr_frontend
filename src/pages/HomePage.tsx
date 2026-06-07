@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n/config';
-import { MapPin, User, Search, Star, Navigation, Award, X, ChevronDown } from 'lucide-react';
+import { MapPin, User, Search, Star, Navigation, Award, X, ChevronDown, ChevronRight } from 'lucide-react';
 import NotificationCenter from '../components/NotificationCenter';
 import { useApi } from '../API/SalonsAPIs/ALLSalonAPI';
 import { usersalonApi } from '../API/SalonsAPIs/UserSalonAPI';
@@ -15,12 +15,15 @@ import BottomNavigation from '../components/BottomNavigation';
 import SearchOverlay from '../components/SearchOverlay';
 import PromoPopup from '../components/PromoPopup';
 import { getDefaultStaffImage, getDefaultSalonImage } from '../utils/defaultServiceImage';
+import LocationSelector from '../components/LocationSelector';
 
 const HomePage: React.FC = () => {
   const { t } = useTranslation();
   const [address, setAddress] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDataLoaded, setIsDataLoaded] = useState<boolean>(false);
+  const [locationDenied, setLocationDenied] = useState<boolean>(false);
+  const [isLocationSelectorOpen, setIsLocationSelectorOpen] = useState<boolean>(false);
   const { apiRequest } = useApi();
   const { userapiRequest } = usersalonApi();
   const [salons, setsalons] = useState<any[]>([]);
@@ -237,6 +240,17 @@ const HomePage: React.FC = () => {
         (error) => {
           console.error(`Location error (attempt ${retryCount + 1}):`, error);
 
+          // Check if permission was denied
+          if (error.code === error.PERMISSION_DENIED) {
+            console.log("Location permission denied");
+            // If no saved coordinates, show location denied screen
+            if (!savedLat || !savedLon) {
+              setLocationDenied(true);
+              setIsLoading(false);
+              return;
+            }
+          }
+
           // Retry once with high accuracy disabled and longer timeout
           if (retryCount < 1) {
             console.log("Retrying geolocation...");
@@ -250,9 +264,8 @@ const HomePage: React.FC = () => {
             setAddress(savedCity || t('home.nearby'));
             fetchWithCoords(parseFloat(savedLat), parseFloat(savedLon));
           } else {
-            setAddress(savedCity || "");
+            setLocationDenied(true);
             setIsLoading(false);
-            setIsDataLoaded(true);
           }
         },
         { timeout: retryCount === 0 ? 8000 : 15000, enableHighAccuracy: retryCount === 0, maximumAge: 300000 }
@@ -270,10 +283,148 @@ const HomePage: React.FC = () => {
     }
   };
 
-  const handleEnableLocation = () => {
+  const handleLocationSelect = async (city: string, lat: number, lon: number) => {
+    setAddress(city);
+    localStorage.setItem("Address", city);
+    localStorage.setItem("userLat", String(lat));
+    localStorage.setItem("userLon", String(lon));
+    setLocationDenied(false);
     setIsLoading(true);
     setIsDataLoaded(false);
-    getLocationAndFetch();
+
+    try {
+      await Promise.all([
+        FetchAllSalons(lat, lon, city),
+        FetchTopStaff(lat, lon)
+      ]);
+      setIsDataLoaded(true);
+    } catch (error) {
+      console.error("Error fetching data for selected location:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEnableLocation = () => {
+    console.log("handleEnableLocation called");
+    setLocationDenied(false);
+    setIsLoading(true);
+    setIsDataLoaded(false);
+    
+    // Clear any cached location data to force a fresh request
+    localStorage.removeItem("userLat");
+    localStorage.removeItem("userLon");
+    
+    // Make a fresh location request with mobile-friendly settings
+    if (navigator.geolocation) {
+      console.log("Requesting browser geolocation...");
+      // Use longer timeout for mobile devices
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const timeout = isMobile ? 30000 : 15000;
+      
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          console.log("Location granted successfully:", { latitude, longitude });
+          
+          // Call the geolocation API to get address details
+          const body = {
+            "lat": latitude,
+            "lon": longitude,
+            "language": "en"
+          };
+          
+          const apiUrl = `${Config.API_Customers}/geolocation/geolocation/location-details`;
+          console.log("Calling geolocation API:", apiUrl, "with body:", body);
+          
+          try {
+            const response = await fetch(apiUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(body)
+            });
+
+            console.log("Geolocation API response status:", response.status);
+            
+            if (!response.ok) {
+              throw new Error(`API call failed with status ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log("Geolocation API response data:", data);
+
+            const city = data.address.city || data.address.town || data.address.village || "";
+            const suburb = data.address.suburb || data.address.neighbourhood || "";
+            const displayAddress = suburb ? `${suburb}, ${city}` : city || 'Nearby';
+
+            console.log("Setting address:", displayAddress);
+            setAddress(displayAddress);
+            if (city) localStorage.setItem("Address", city);
+            localStorage.setItem("userLat", String(latitude));
+            localStorage.setItem("userLon", String(longitude));
+
+            // Fetch salons and staff
+            console.log("Fetching salons and staff...");
+            try {
+              await Promise.all([
+                FetchAllSalons(latitude, longitude, city),
+                FetchTopStaff(latitude, longitude)
+              ]);
+              console.log("✓ Both APIs called successfully");
+            } catch (apiError) {
+              console.error("API call error:", apiError);
+            }
+
+            setIsDataLoaded(true);
+          } catch (error) {
+            console.error("Geocoding error:", error);
+            setAddress('');
+            try {
+              await FetchAllSalons(latitude, longitude, "");
+            } catch (apiError) {
+              console.error("Fallback API call error:", apiError);
+            }
+            setIsDataLoaded(true);
+          } finally {
+            setIsLoading(false);
+          }
+        },
+        (error) => {
+          console.error("Location error after enable:", error);
+          console.error("Error code:", error.code, "Error message:", error.message);
+          
+          // Handle mobile-specific errors
+          if (error.code === error.PERMISSION_DENIED) {
+            console.log("Permission still denied, showing denied screen");
+            setLocationDenied(true);
+            setIsLoading(false);
+          } else if (error.code === error.TIMEOUT) {
+            console.log("Location request timed out on mobile, showing denied screen");
+            setLocationDenied(true);
+            setIsLoading(false);
+          } else if (error.code === error.POSITION_UNAVAILABLE) {
+            console.log("Position unavailable on mobile, showing denied screen");
+            setLocationDenied(true);
+            setIsLoading(false);
+          } else {
+            // For other errors, try the normal flow
+            console.log("Other error, trying normal flow");
+            getLocationAndFetch();
+          }
+        },
+        { 
+          timeout: timeout, 
+          enableHighAccuracy: false,
+          maximumAge: 0 // Force fresh location
+        }
+      );
+    } else {
+      console.log("Geolocation not supported");
+      setLocationDenied(true);
+      setIsLoading(false);
+    }
   };
 
   const FetchAllSalons = async (lat: number, lon: number, city: string) => {
@@ -379,6 +530,11 @@ const HomePage: React.FC = () => {
     </div>
   );
 
+  if (locationDenied) {
+    setIsLocationSelectorOpen(true);
+    setLocationDenied(false);
+  }
+
   return (
     <div className="min-h-screen font-sans pb-2 sm:pb-2 relative overflow-x-hidden" style={{ fontFamily: 'Inter, sans-serif', overflowX: 'hidden' }}>
       {showOverlay && <GrandEntranceOverlay onComplete={() => {}} />}
@@ -387,24 +543,20 @@ const HomePage: React.FC = () => {
       <div className="relative z-10">
         <header className="text-white rounded-b-[2rem] sm:rounded-b-[3rem] shadow-lg relative z-20 pt-safe pb-safe" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
           <div className="max-w-7xl mx-auto p-6 sm:px-8 sm:pt-8 sm:pb-2">
-            <div className="flex items-center justify-between mb-8 relative">
+            <div className="flex items-center justify-between mb-8">
               {/* Left: Location */}
-              <div className="flex items-center gap-2 max-w-[30%] sm:max-w-[25%]">
+              <button
+                onClick={() => setIsLocationSelectorOpen(true)}
+                className="flex items-center gap-2 max-w-[30%] sm:max-w-[25%] active:scale-95 transition-transform"
+              >
                 <MapPin className="w-4 h-4 text-blue-200 shrink-0" />
                 <span className="font-medium text-xs sm:text-sm truncate">
                   {address || t('home.locating')}
                 </span>
-              </div>
-              
-              {/* Center: Logo - Perfectly centered */}
-              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white p-1 rounded-2xl transition-transform group-hover:scale-105" style={{ animation: 'softPulse 4s ease-in-out infinite', mixBlendMode: 'difference', opacity: '0.9', filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.1))' }}>
-                  <img src="/Coiffeurr_Logo.png" alt="Coiffeurr" className="w-full h-full object-contain" style={{ shapeRendering: 'geometricPrecision', vectorEffect: 'non-scaling-stroke' }} />
-                </div>
-              </div>
+              </button>
               
               {/* Right: Notification + Profile/Login */}
-              <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+              <div className="flex items-center gap-2 sm:gap-3">
                 {/* Notification Center - Only show when logged in */}
                 {isloggedin && (
                   <NotificationCenter userType="customer" iconColor="#FFFFFF" />
@@ -441,8 +593,9 @@ const HomePage: React.FC = () => {
             </div>
 
             <div className="max-w-2xl mx-auto">
-              <div className={`mb-6 text-center transition-all duration-800 ${showHeader ? 'header-slide-up' : ''}`}>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 overflow-hidden" style={{ fontFamily: 'Playfair Display, serif', letterSpacing: '-1px' }}>
+              <div className={`mb-4 text-center transition-all duration-800 ${showHeader ? 'header-slide-up' : ''}`}>
+                {/* Main Brand Name */}
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-1 overflow-hidden" style={{ fontFamily: 'Playfair Display, serif', letterSpacing: '0.02em' }}>
                   {'Coiffeurr'.split('').map((letter, index) => (
                     <span 
                       key={index} 
@@ -452,25 +605,27 @@ const HomePage: React.FC = () => {
                       {letter}
                     </span>
                   ))}
-                  <span className={`${showHeader ? 'ui-fade-in' : 'opacity-0'} text-lg sm:text-xl md:text-2xl italic font-bold ml-4 sm:ml-3 md:ml-4 align-middle`} style={{ 
-                    animationDelay: '0.8s', 
-                    fontFamily: 'Playfair Display, serif', 
-                    letterSpacing: '2px',
-                    background: 'linear-gradient(135deg, #D4AF37 0%, #F5E6A3 25%, #D4AF37 50%, #C9A227 75%, #D4AF37 100%)',
-                    backgroundSize: '200% auto',
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    textShadow: '0 0 20px rgba(212, 175, 55, 0.4), 0 2px 4px rgba(0,0,0,0.2)',
-                    filter: 'drop-shadow(0 0 8px rgba(212, 175, 55, 0.3))'
-                  }}>
-                    Your Stylist
-                  </span>
                 </h1>
-                <p className={`text-sm sm:text-sm text-blue-200 text-center ${showUI ? 'ui-fade-in' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>
-                  Skip the<span className='font-bold ml-1'>Wait, </span>Fix  the <span className='font-bold'>Date</span>
+                
+                {/* Accent - Your Stylist */}
+                <p className={`${showUI ? 'ui-fade-in' : 'opacity-0'} text-lg sm:text-xl md:text-2xl font-serif italic mb-3`} style={{ 
+                  animationDelay: '0.7s', 
+                  fontFamily: 'Playfair Display, serif',
+                  background: 'linear-gradient(135deg, #D4AF37 0%, #F5E6A3 25%, #D4AF37 50%, #C9A227 75%, #D4AF37 100%)',
+                  backgroundSize: '200% auto',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  letterSpacing: '0.05em',
+                  filter: 'drop-shadow(0 0 10px rgba(212, 175, 55, 0.3))'
+                }}>
+                  Your Stylist
                 </p>
-                  {/* <span className='font-bold'>No Waiting</span> */}
+                
+                {/* Value Proposition Tagline - Lighter & Sleeker */}
+                <p className={`text-sm sm:text-base font-light text-slate-300 text-center ${showUI ? 'ui-fade-in' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>
+                  Skip the <span className="font-medium text-amber-300">Wait</span>, Fix the <span className="font-medium text-amber-300">Date</span>
+                </p>
               </div>
 
               <div className={`flex justify-center ${showUI ? 'ui-fade-in' : 'opacity-0'}`} style={{ animationDelay: '0.3s', width: '100%', margin: '0 auto' }}>
@@ -498,19 +653,19 @@ const HomePage: React.FC = () => {
         <main className="max-w-7xl mx-auto px-4 sm:px-8 relative z-10">
           {/* --- TOP STYLISTS SECTION --- */}
           {isDataLoaded && staff.length > 0 && (
-            <div className={`mt-20 sm:mt-24 mb-2 ${showUI ? 'ui-fade-in' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
-              <div className="flex items-center justify-between px-1 mb-4">
+            <div className={`mt-12 sm:mt-16 mb-2 ${showUI ? 'ui-fade-in' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
+              <div className="flex items-center justify-between px-1 mb-2">
                 <div>
                   <h2 className="text-gray-900 text-lg sm:text-xl font-black tracking-tight" style={{ fontFamily: 'Playfair Display, serif' }}>{t('home.topArtistsNearYou')}</h2>
-                  <p className="text-[10px] text-gray-400 font-bold tracking-wider mt-1">{t('home.precisionLuxury') || 'Precision in every snip. Luxury in every touch.'}</p>
+                  <p className="text-[10px] text-gray-400 font-bold tracking-wider mt-0.5">{t('home.precisionLuxury') || 'Precision in every snip. Luxury in every touch.'}</p>
                 </div>
                 {/* <button onClick={() => navigate('/all-experts')} className="text-[#1E4D8C] bg-blue-50 p-2 rounded-full active:scale-90 transition-transform"><ChevronRight size={20} /></button> */}
               </div>
-              <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 scroll-snap-x scroll-snap-type-x-mandatory">
+              <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 scroll-snap-x scroll-snap-type-x-mandatory">
                 {staff.map((member, index) => (
-                  <div key={member.staff_id} onClick={() => navigate(`salon/${member.salon_id}/staff/${member.staff_id}`)} className="flex-shrink-0 w-28 sm:w-32 md:w-36 flex flex-col items-center group cursor-pointer artist-bounce scroll-snap-center active:scale-[0.97] transition-transform duration-100" style={{ animationDelay: `${index * 0.1}s` }}>
-                    <div className="relative mb-3">
-                      <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full p-1 artist-image-container" style={{ border: '2px solid #D4AF37' }}>
+                  <div key={member.staff_id} onClick={() => navigate(`salon/${member.salon_id}/staff/${member.staff_id}`)} className="flex-shrink-0 w-24 sm:w-28 md:w-32 flex flex-col items-center group cursor-pointer artist-bounce scroll-snap-center active:scale-[0.97] transition-transform duration-100" style={{ animationDelay: `${index * 0.1}s` }}>
+                    <div className="relative mb-2">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full p-1 artist-image-container" style={{ border: '2px solid #D4AF37' }}>
                         <img
                           key={`${member.staff_id}-${currentImageIndices[member.staff_id] || 0}`}
                           src={member.images?.[currentImageIndices[member.staff_id] || 0] || getDefaultStaffImage(member.staff_id || member.name || '')}
@@ -526,12 +681,12 @@ const HomePage: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="text-center w-full flex flex-col" style={{ minHeight: '90px' }}>
-                      <div style={{ minHeight: '50px' }}>
+                    <div className="text-center w-full flex flex-col" style={{ minHeight: '70px' }}>
+                      <div style={{ minHeight: '40px' }}>
                         <h4 className="font-black text-gray-900 text-xs sm:text-sm capitalize truncate leading-tight" style={{ fontFamily: 'Playfair Display, serif' }}>{member.name}</h4>
                         <p className="text-[9px] sm:text-[10px] text-gray-500 font-medium truncate">{member.role || t('home.stylist')}</p>
                       </div>
-                      <div className="flex flex-col items-center gap-1 mt-1 sm:mt-2">
+                      <div className="flex flex-col items-center gap-1 mt-0.5">
                         <div className="flex items-center gap-1 text-[8px] sm:text-[9px] font-black text-emerald-600 bg-emerald-50 py-0.5 sm:py-1 px-1.5 sm:px-2 rounded-lg"><Award size={10} className="w-2 h-2 sm:w-2.5 sm:h-2.5" /><span>{member.experience_years}{t('home.yExp')}</span></div>
                       </div>
                     </div>
@@ -867,82 +1022,45 @@ const HomePage: React.FC = () => {
                         const displayDistance = distance < 0.1 ? '< 0.1 km' : `${distance.toFixed(1)} km`;
 
                         return (
-                        <Link to={`/salons/${salon.id}`} key={salon.id} className="bg-white border border-[#E0E0E0] rounded-xl overflow-hidden group flex hover:shadow-sm transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 0.1}s`, borderWidth: '0.5px' }}>
-                          {/* Mobile: 35% image, Desktop: fixed width */}
-                          <div className="relative w-[35%] sm:w-32 sm:w-36 h-28 sm:h-32 sm:h-36 shrink-0">
-                            <img src={salon.logoUrl || getDefaultSalonImage(salon.id || salon.salonName || '')} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={salon.salonName} style={{ borderRadius: '8px' }} />
+                        <Link to={`/salons/${salon.id}`} key={salon.id} className="bg-white border border-[#E0E0E0] rounded-xl overflow-hidden group flex items-stretch gap-4 py-4 px-4 h-auto hover:shadow-sm transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 0.1}s`, borderWidth: '0.5px' }}>
+                          {/* Fixed size image wrapper - Increased size */}
+                          <div className="relative w-20 h-20 sm:w-36 sm:h-36 shrink-0 rounded-xl overflow-hidden">
+                            <img src={salon.logoUrl || getDefaultSalonImage(salon.id || salon.salonName || '')} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={salon.salonName} />
                           </div>
-                          <div className="p-3 sm:p-5 flex-1 flex flex-col justify-between" style={{ padding: '16px' }}>
-                            <div>
-                              {/* Top Row: Title with Rating */}
-                              <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-4">
-                                <h3 className="font-light text-base sm:text-lg text-[#1A1A1A] truncate" style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.1rem', fontWeight: '300' }}>{salon.salonName}</h3>
-                                <div className="flex items-center gap-1 shrink-0">
-                                  <Star size={10} className="fill-[#C5A059] text-[#C5A059] w-3 h-3 sm:w-4 sm:h-4" />
-                                  <span className="text-[10px] sm:text-xs text-[#C5A059]">
-                                    {salon.rating?.average || "5.0"} {salon.rating?.reviewsCount ? `(${salon.rating.reviewsCount} reviews)` : ''}
-                                  </span>
-                                </div>
-                              </div>
-                              
-                              {/* Middle Row: Badges */}
-                              <div className="flex flex-wrap gap-2 sm:gap-3 mb-2 sm:mb-4">
-                                {salon.tags && Array.isArray(salon.tags) && salon.tags.length > 0 && (
-                                  salon.tags.map((tag: string, idx: number) => (
-                                    <span key={idx} className="text-[8px] font-normal uppercase text-[#757575] bg-transparent border border-[#C5A059] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded" style={{ letterSpacing: '2px', borderWidth: '0.5px' }}>
-                                      {tag.replace(/_/g, ' ')}
-                                    </span>
-                                  ))
-                                )}
+
+                          {/* Text Content - Flex Column with auto margin for button */}
+                          <div className="flex-1 flex flex-col justify-start gap-3">
+                            {/* Title and Rating - tightly grouped */}
+                            <div className="flex flex-col justify-start gap-1">
+                              <h3 className="font-light text-lg sm:text-xl text-[#1A1A1A] truncate" style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.25rem', fontWeight: '300' }}>{salon.salonName}</h3>
+                              <div className="flex items-center gap-1">
+                                <Star size={10} className="fill-[#C5A059] text-[#C5A059] w-3 h-3 sm:w-4 sm:h-4" />
+                                <span className="text-[10px] sm:text-xs text-[#757575]">
+                                  {salon.rating?.average || "5.0"} {salon.rating?.reviewsCount ? `(${salon.rating.reviewsCount} reviews)` : ''}
+                                </span>
                               </div>
                             </div>
-                            
-                            {/* Bottom Row: Pricing, Rating+Distance (mobile), Button */}
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                              {/* Mobile: Rating and Distance on same line with separator */}
-                              <div className="flex items-center gap-2 sm:hidden">
-                                <div className="flex items-center gap-1">
-                                  <Star size={8} className="fill-[#C5A059] text-[#C5A059]" />
-                                  <span className="text-[10px] text-[#C5A059]">{salon.rating?.average || "5.0"}</span>
-                                </div>
-                                <span className="text-[#757575]">|</span>
-                                {salon.distance && (
-                                  <span className="text-[10px] text-[#757575] font-light flex items-center gap-1">
-                                    <MapPin size={8} className="text-[#757575]" />
-                                    {displayDistance}
+
+                            {/* Badges */}
+                            {salon.tags && Array.isArray(salon.tags) && salon.tags.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5">
+                                {salon.tags.map((tag: string, idx: number) => (
+                                  <span key={idx} className="text-[8px] font-normal uppercase text-[#757575] bg-transparent border border-[#C5A059] px-1.5 sm:px-2 py-0.5 rounded" style={{ letterSpacing: '2px', borderWidth: '0.5px' }}>
+                                    {tag.replace(/_/g, ' ')}
                                   </span>
-                                )}
+                                ))}
                               </div>
-                              
-                              {/* Desktop: Pricing, Distance, Separator */}
-                              <div className="hidden sm:flex items-center gap-4">
-                                {/* Pricing */}
-                                <div>
-                                  <p className="text-[10px] text-[#757575] uppercase tracking-wider mb-0.5">Starting from</p>
-                                  <p className="text-sm text-[#1A1A1A] font-normal">
-                                    ₹{salon.priceRange || '299'}
-                                  </p>
-                                </div>
-                                
-                                {/* Vertical Separator */}
-                                {salon.distance && (
-                                  <div className="w-px h-8 bg-[#E0E0E0]" style={{ width: '0.5px' }}></div>
-                                )}
-                                
-                                {/* Distance */}
-                                {salon.distance && (
-                                  <span className="text-[10px] text-[#757575] font-light flex items-center gap-1">
-                                    <MapPin size={8} className="text-[#757575]" />
-                                    {displayDistance}
-                                  </span>
-                                )}
-                              </div>
-                              
-                              {/* Mobile: Full-width button, Desktop: Text-link */}
-                              <button className="sm:hidden w-full py-2 bg-[#C5A059] text-black font-bold text-xs uppercase tracking-wider rounded-sm transition-all duration-300" style={{ letterSpacing: '1px' }}>
-                                Book Now
-                              </button>
-                              <button className="hidden sm:block text-xs font-bold text-[#C5A059] uppercase tracking-wider hover:underline decoration-1 underline-offset-4 transition-all duration-300" style={{ letterSpacing: '1px' }}>
+                            )}
+
+                            {/* Distance */}
+                            <div className="flex items-center gap-1 text-[10px] sm:text-xs text-[#757575] font-light">
+                              <MapPin size={10} className="text-[#757575]" />
+                              {displayDistance}
+                            </div>
+
+                            {/* Button - Pushed to bottom with mt-auto */}
+                            <div className="mt-auto pt-2">
+                              <button className="w-full px-4 py-2 bg-[#C5A059] hover:bg-[#D4AF37] text-white font-bold text-xs uppercase tracking-wider rounded-full transition-all duration-300 shadow-sm" style={{ letterSpacing: '1px' }}>
                                 Book Now
                               </button>
                             </div>
@@ -986,6 +1104,12 @@ const HomePage: React.FC = () => {
       </div>
       <SearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />
       <PromoPopup />
+      <LocationSelector
+        isOpen={isLocationSelectorOpen}
+        onClose={() => setIsLocationSelectorOpen(false)}
+        onLocationSelect={handleLocationSelect}
+        currentCity={address}
+      />
     </div>
   );
 };
