@@ -35,6 +35,8 @@ export default function SalonsPage(): JSX.Element {
   const [fetchSalonAPI, setFetchSalonAPI] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [userLat, setUserLat] = useState<number | null>(null);
+  const [userLon, setUserLon] = useState<number | null>(null);
 
   // --- 2. MODAL DRAFT STATE (New Variables for the Modal) ---
   const [tempFilters, setTempFilters] = useState({
@@ -49,9 +51,12 @@ export default function SalonsPage(): JSX.Element {
     try {
       const apiParams = new URLSearchParams();
       // Only add to API call if value exists
-      if (city?.trim()) apiParams.append("city", city.trim());
+      if (city?.trim()) apiParams.append("selected_city", city.trim());
       if (name?.trim()) apiParams.append("query", name.trim());
       if (limit) apiParams.append("limit", limit.toString());
+      // Add user's current location for distance calculation
+      if (userLat !== null) apiParams.append("user_lat", userLat.toString());
+      if (userLon !== null) apiParams.append("user_lng", userLon.toString());
 
       const res = await apiRequest<any[]>(`/salons/super_search?${apiParams.toString()}`);
       if (res.data) setSalons(res.data);
@@ -60,10 +65,18 @@ export default function SalonsPage(): JSX.Element {
     } finally {
       setFetchSalonAPI(false);
     }
-  }, [apiRequest]);
+  }, [apiRequest, userLat, userLon]);
 
   // --- 4. INITIAL SYNC & URL WATCHER ---
   useEffect(() => {
+    // Load user's current location from localStorage for distance calculation
+    const savedLat = localStorage.getItem("userLat");
+    const savedLon = localStorage.getItem("userLon");
+    if (savedLat && savedLon) {
+      setUserLat(parseFloat(savedLat));
+      setUserLon(parseFloat(savedLon));
+    }
+
     const params = new URLSearchParams(location.search);
     const q = params.get("query") || "";
     const c = params.get("city") || localStorage.getItem("Address") || "Mumbai";

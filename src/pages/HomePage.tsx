@@ -20,6 +20,9 @@ import LocationSelector from '../components/LocationSelector';
 const HomePage: React.FC = () => {
   const { t } = useTranslation();
   const [address, setAddress] = useState<string>("");
+  const [selectedCity, setSelectedCity] = useState<string>("");
+  const [userLat, setUserLat] = useState<number | null>(null);
+  const [userLon, setUserLon] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDataLoaded, setIsDataLoaded] = useState<boolean>(false);
   const [locationDenied, setLocationDenied] = useState<boolean>(false);
@@ -35,6 +38,8 @@ const HomePage: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [showHeader, setShowHeader] = useState<boolean>(false);
   const [showUI, setShowUI] = useState<boolean>(false);
+  const [showCityConfirmation, setShowCityConfirmation] = useState<boolean>(false);
+  const [pendingCityChange, setPendingCityChange] = useState<{city: string, lat: number, lon: number, distance: number} | null>(null);
   const [userImageUrl, setUserImageUrl] = useState<string>("");
   const [showOverlay, setShowOverlay] = useState<boolean>(false);
 
@@ -175,12 +180,37 @@ const HomePage: React.FC = () => {
     };
   }, [staff]);
 
-  const getLocationAndFetch = (retryCount = 0) => {
+  const getLocationAndFetch = async (retryCount = 0) => {
     const savedCity = localStorage.getItem("Address");
+    const savedSelectedCity = localStorage.getItem("selectedCity"); // User's manually selected city
     const savedLat = localStorage.getItem("userLat");
     const savedLon = localStorage.getItem("userLon");
 
     const fetchWithCoords = async (latitude: number, longitude: number) => {
+      // If user has manually selected a city, use that instead of geolocated city
+      if (savedSelectedCity) {
+        setAddress(savedSelectedCity);
+        setSelectedCity(savedSelectedCity);
+        setUserLat(latitude);
+        setUserLon(longitude);
+        if (savedSelectedCity) localStorage.setItem("Address", savedSelectedCity);
+        localStorage.setItem("userLat", String(latitude));
+        localStorage.setItem("userLon", String(longitude));
+
+        try {
+          await Promise.all([
+            FetchAllSalons(latitude, longitude, savedSelectedCity),
+            FetchTopStaff(latitude, longitude, savedSelectedCity)
+          ]);
+          console.log("✓ Both APIs called successfully with saved selected city");
+        } catch (apiError) {
+          console.error("API call error:", apiError);
+        }
+        setIsDataLoaded(true);
+        setIsLoading(false);
+        return;
+      }
+
       const body = {
         "lat": latitude,
         "lon": longitude,
@@ -202,6 +232,9 @@ const HomePage: React.FC = () => {
         const displayAddress = suburb ? `${suburb}, ${city}` : city || t('home.nearby');
 
         setAddress(displayAddress);
+        setSelectedCity(city);
+        setUserLat(latitude);
+        setUserLon(longitude);
         if (city) localStorage.setItem("Address", city);
         localStorage.setItem("userLat", String(latitude));
         localStorage.setItem("userLon", String(longitude));
@@ -209,7 +242,7 @@ const HomePage: React.FC = () => {
         try {
           await Promise.all([
             FetchAllSalons(latitude, longitude, city),
-            FetchTopStaff(latitude, longitude)
+            FetchTopStaff(latitude, longitude, city)
           ]);
           console.log("✓ Both APIs called successfully");
         } catch (apiError) {
@@ -220,6 +253,9 @@ const HomePage: React.FC = () => {
       } catch (error) {
         console.error("Geocoding error:", error);
         setAddress(savedCity || t('home.nearby'));
+        setSelectedCity(savedCity || "");
+        setUserLat(latitude);
+        setUserLon(longitude);
         try {
           await FetchAllSalons(latitude, longitude, savedCity || "");
         } catch (apiError) {
@@ -235,6 +271,8 @@ const HomePage: React.FC = () => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
+          // Clear location denied flag on successful location fetch
+          localStorage.removeItem("locationDenied");
           fetchWithCoords(latitude, longitude);
         },
         (error) => {
@@ -243,11 +281,33 @@ const HomePage: React.FC = () => {
           // Check if permission was denied
           if (error.code === error.PERMISSION_DENIED) {
             console.log("Location permission denied");
-            // If no saved coordinates, show location denied screen
+            // Check if we've already denied location before
+            const locationDeniedPreviously = localStorage.getItem("locationDenied");
+            
+            // If no saved coordinates, handle location denial
             if (!savedLat || !savedLon) {
-              setLocationDenied(true);
-              setIsLoading(false);
-              return;
+              if (locationDeniedPreviously && !savedSelectedCity) {
+                // Already denied before and no selected city - use fallback automatically
+                console.log("Location denied previously, using fallback automatically");
+                const defaultLat = 19.0760; // Mumbai
+                const defaultLon = 72.8777;
+                const defaultCity = "Mumbai";
+                setAddress(defaultCity);
+                setSelectedCity("");
+                setUserLat(defaultLat);
+                setUserLon(defaultLon);
+                FetchAllSalons(defaultLat, defaultLon, "").catch(err => console.error("Fallback API call error:", err));
+                FetchTopStaff(defaultLat, defaultLon, "").catch(err => console.error("Fallback API call error:", err));
+                setIsDataLoaded(true);
+                setIsLoading(false);
+                return;
+              } else {
+                // First time denying - show location denied screen
+                localStorage.setItem("locationDenied", "true");
+                setLocationDenied(true);
+                setIsLoading(false);
+                return;
+              }
             }
           }
 
@@ -262,6 +322,9 @@ const HomePage: React.FC = () => {
           if (savedLat && savedLon) {
             console.log("Using saved coordinates as fallback");
             setAddress(savedCity || t('home.nearby'));
+            setSelectedCity(savedCity || "");
+            setUserLat(parseFloat(savedLat));
+            setUserLon(parseFloat(savedLon));
             fetchWithCoords(parseFloat(savedLat), parseFloat(savedLon));
           } else {
             setLocationDenied(true);
@@ -271,31 +334,86 @@ const HomePage: React.FC = () => {
         { timeout: retryCount === 0 ? 8000 : 15000, enableHighAccuracy: retryCount === 0, maximumAge: 300000 }
       );
     } else {
-      // No geolocation API — use saved coordinates if available
+      // No geolocation API — use saved coordinates or default location
       if (savedLat && savedLon) {
         setAddress(savedCity || t('home.nearby'));
+        setSelectedCity(savedCity || "");
+        setUserLat(parseFloat(savedLat));
+        setUserLon(parseFloat(savedLon));
         fetchWithCoords(parseFloat(savedLat), parseFloat(savedLon));
       } else {
-        setAddress(savedCity || "");
+        // No saved location - use default coordinates (Mumbai) to ensure APIs are called
+        const defaultLat = 19.0760; // Mumbai
+        const defaultLon = 72.8777;
+        const defaultCity = "Mumbai";
+        setAddress(defaultCity);
+        setSelectedCity(""); // No selected city, will use nearby discovery
+        setUserLat(defaultLat);
+        setUserLon(defaultLon);
+        console.log("Using default location (Mumbai) as fallback");
+        // Call APIs without city filter (nearby discovery mode)
+        try {
+          await Promise.all([
+            FetchAllSalons(defaultLat, defaultLon, ""),
+            FetchTopStaff(defaultLat, defaultLon, "")
+          ]);
+          setIsDataLoaded(true);
+        } catch (apiError) {
+          console.error("Fallback API call error:", apiError);
+          setIsDataLoaded(true); // Still mark as loaded to prevent infinite loading
+        }
         setIsLoading(false);
-        setIsDataLoaded(true);
       }
     }
   };
 
   const handleLocationSelect = async (city: string, lat: number, lon: number) => {
+    // Calculate distance from user's current location
+    let distance = 0;
+    if (userLat !== null && userLon !== null) {
+      // Calculate distance using Haversine formula
+      const R = 6371; // Earth's radius in km
+      const dLat = (lat - userLat) * Math.PI / 180;
+      const dLon = (lon - userLon) * Math.PI / 180;
+      const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(userLat * Math.PI / 180) * Math.cos(lat * Math.PI / 180) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      distance = R * c;
+    }
+
+    // If distance > 50km, show confirmation dialog
+    if (distance > 50) {
+      setPendingCityChange({ city, lat, lon, distance });
+      setShowCityConfirmation(true);
+      return;
+    }
+
+    // Proceed with city change
+    confirmCityChange(city, lat, lon);
+  };
+
+  const confirmCityChange = async (city: string, lat: number, lon: number) => {
+    setSelectedCity(city);
     setAddress(city);
     localStorage.setItem("Address", city);
-    localStorage.setItem("userLat", String(lat));
-    localStorage.setItem("userLon", String(lon));
+    localStorage.setItem("selectedCity", city); // Persist user's selected city
+    localStorage.removeItem("locationDenied"); // Clear location denied flag
     setLocationDenied(false);
     setIsLoading(true);
     setIsDataLoaded(false);
+    setShowCityConfirmation(false);
+    setPendingCityChange(null);
+
+    // Use user's current location for distance calculation if available
+    const currentLat = userLat !== null ? userLat : lat;
+    const currentLon = userLon !== null ? userLon : lon;
 
     try {
       await Promise.all([
-        FetchAllSalons(lat, lon, city),
-        FetchTopStaff(lat, lon)
+        FetchAllSalons(currentLat, currentLon, city),
+        FetchTopStaff(currentLat, currentLon, city)
       ]);
       setIsDataLoaded(true);
     } catch (error) {
@@ -314,6 +432,7 @@ const HomePage: React.FC = () => {
     // Clear any cached location data to force a fresh request
     localStorage.removeItem("userLat");
     localStorage.removeItem("userLon");
+    localStorage.removeItem("selectedCity"); // Clear manually selected city since user wants to use current location
     
     // Make a fresh location request with mobile-friendly settings
     if (navigator.geolocation) {
@@ -370,7 +489,7 @@ const HomePage: React.FC = () => {
             try {
               await Promise.all([
                 FetchAllSalons(latitude, longitude, city),
-                FetchTopStaff(latitude, longitude)
+                FetchTopStaff(latitude, longitude, city)
               ]);
               console.log("✓ Both APIs called successfully");
             } catch (apiError) {
@@ -431,7 +550,7 @@ const HomePage: React.FC = () => {
     try {
       console.log(`Fetching salons for: lat=${lat}, lon=${lon}, city=${city}`);
       const res = await apiRequest<any[]>(
-        `/salons/search?city=${city}&user_latitude=${lat}&user_longitude=${lon}&limit=10`
+        `/salons/search?selected_city=${city}&user_lat=${lat}&user_lng=${lon}&limit=10`
       );
       console.log("✓ Salons fetched:", res.data?.length || 0);
       setsalons(res.data || []);
@@ -443,10 +562,13 @@ const HomePage: React.FC = () => {
     }
   };
 
-  const FetchTopStaff = async (lat: number, lon: number) => {
+  const FetchTopStaff = async (lat: number, lon: number, selected_city: string = "") => {
     try {
-      console.log(`Fetching top staff for: lat=${lat}, lon=${lon}`);
-      const res = await apiRequest<any[]>(`/salons/staff/search?user_latitude=${lat}&user_longitude=${lon}&max_distance_km=30&limit=20`);
+      console.log(`Fetching top staff for: lat=${lat}, lon=${lon}, city=${selected_city}`);
+      const url = selected_city 
+        ? `/salons/staff/search?selected_city=${selected_city}&user_lat=${lat}&user_lng=${lon}&limit=20`
+        : `/salons/staff/search?user_lat=${lat}&user_lng=${lon}&max_distance_km=30&limit=20`;
+      const res = await apiRequest<any[]>(url);
       console.log("✓ Staff fetched:", res.data?.length || 0);
       setStaff(res.data || []);
       return res.data || [];
@@ -708,21 +830,23 @@ const HomePage: React.FC = () => {
             {/* Sticky Filter Bar */}
             <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md rounded-2xl p-3 mb-4 shadow-sm border border-gray-100">
               <div className="flex gap-2 flex-wrap relative">
-                {/* Sort By: Distance */}
-                {sortBy === 'distance' ? (
-                  <button
-                    onClick={() => setSortBy('relevant')}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border border-[#D4AF37] bg-[#D4AF37] text-white"
-                  >
-                    Nearest <X size={12} />
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setSortBy('distance')}
-                    className="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-                  >
-                    Nearest
-                  </button>
+                {/* Sort By: Distance - Only show if user location is available */}
+                {userLat !== null && userLon !== null && (
+                  sortBy === 'distance' ? (
+                    <button
+                      onClick={() => setSortBy('relevant')}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border border-[#D4AF37] bg-[#D4AF37] text-white"
+                    >
+                      Nearest <X size={12} />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setSortBy('distance')}
+                      className="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                    >
+                      Nearest
+                    </button>
+                  )
                 )}
 
                 {/* Sort By: Rating */}
@@ -869,16 +993,17 @@ const HomePage: React.FC = () => {
                 </div>
 
 
-                {/* Distance Filter with Custom Dropdown */}
-                <div className="relative">
-                  {distanceFilter !== 'all' ? (
-                    <button
-                      onClick={() => setDistanceFilter('all')}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border border-[#D4AF37] bg-[#D4AF37] text-white"
-                    >
-                      {distanceFilter === '2km' ? 'Within 2km' : distanceFilter === '5km' ? 'Within 5km' : distanceFilter === '10km' ? 'Within 10km' : distanceFilter === '15km' ? 'Within 15km' : '20km+'} <X size={12} />
-                    </button>
-                  ) : (
+                {/* Distance Filter with Custom Dropdown - Only show if user location is available */}
+                {userLat !== null && userLon !== null && (
+                  <div className="relative">
+                    {distanceFilter !== 'all' ? (
+                      <button
+                        onClick={() => setDistanceFilter('all')}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border border-[#D4AF37] bg-[#D4AF37] text-white"
+                      >
+                        {distanceFilter === '2km' ? 'Within 2km' : distanceFilter === '5km' ? 'Within 5km' : distanceFilter === '10km' ? 'Within 10km' : distanceFilter === '15km' ? 'Within 15km' : '20km+'} <X size={12} />
+                      </button>
+                    ) : (
                     <div className="relative">
                       <button
                         onClick={() => {
@@ -927,6 +1052,7 @@ const HomePage: React.FC = () => {
                     </div>
                   )}
                 </div>
+                )}
 
               </div>
             </div>
@@ -950,7 +1076,8 @@ const HomePage: React.FC = () => {
                     </button>
                   </div>
                 )}
-                {distanceFilter !== 'all' && (
+                {/* Distance Filter - Only show if user location is available */}
+                {userLat !== null && userLon !== null && distanceFilter !== 'all' && (
                   <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#1E4D8C]/10 border border-[#1E4D8C]/30 text-xs font-medium text-[#1E4D8C]">
                     {distanceFilter === '2km' ? 'Within 2km' : distanceFilter === '5km' ? 'Within 5km' : distanceFilter === '10km' ? 'Within 10km' : distanceFilter === '15km' ? 'Within 15km' : '20km+'}
                     <button onClick={() => setDistanceFilter('all')} className="hover:text-[#1a3d7a] transition-colors">
@@ -1052,11 +1179,13 @@ const HomePage: React.FC = () => {
                               </div>
                             )}
 
-                            {/* Distance */}
-                            <div className="flex items-center gap-1 text-[10px] sm:text-xs text-[#757575] font-light">
-                              <MapPin size={10} className="text-[#757575]" />
-                              {displayDistance}
-                            </div>
+                            {/* Distance - Only show if user location is available */}
+                            {userLat !== null && userLon !== null && (
+                              <div className="flex items-center gap-1 text-[10px] sm:text-xs text-[#757575] font-light">
+                                <MapPin size={10} className="text-[#757575]" />
+                                {displayDistance}
+                              </div>
+                            )}
 
                             {/* Button - Pushed to bottom with mt-auto */}
                             <div className="mt-auto pt-2">
@@ -1110,6 +1239,34 @@ const HomePage: React.FC = () => {
         onLocationSelect={handleLocationSelect}
         currentCity={address}
       />
+      {showCityConfirmation && pendingCityChange && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <h3 className="text-lg font-bold text-slate-900 mb-2">Confirm City Change</h3>
+            <p className="text-slate-600 mb-4">
+              Are you sure you want to search for salons in <span className="font-semibold text-slate-900">{pendingCityChange.city}</span>?<br />
+              It's <span className="font-semibold text-orange-600">{Math.round(pendingCityChange.distance)} km</span> away from your current location.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowCityConfirmation(false);
+                  setPendingCityChange(null);
+                }}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => confirmCityChange(pendingCityChange.city, pendingCityChange.lat, pendingCityChange.lon)}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-[#0f172a] text-white font-medium hover:bg-[#1e293b] transition-colors"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
