@@ -17,7 +17,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       devOptions: {
-        enabled: false
+        enabled: true
       },
       workbox: {
         navigateFallback: '/index.html',

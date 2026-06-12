@@ -550,7 +550,7 @@ const HomePage: React.FC = () => {
     try {
       console.log(`Fetching salons for: lat=${lat}, lon=${lon}, city=${city}`);
       const res = await apiRequest<any[]>(
-        `/salons/search?selected_city=${city}&user_lat=${lat}&user_lng=${lon}&limit=10`
+        `/salons/search?selected_city=${city}&user_latitude=${lat}&user_longitude=${lon}&limit=10`
       );
       console.log("✓ Salons fetched:", res.data?.length || 0);
       setsalons(res.data || []);
@@ -566,8 +566,8 @@ const HomePage: React.FC = () => {
     try {
       console.log(`Fetching top staff for: lat=${lat}, lon=${lon}, city=${selected_city}`);
       const url = selected_city 
-        ? `/salons/staff/search?selected_city=${selected_city}&user_lat=${lat}&user_lng=${lon}&limit=20`
-        : `/salons/staff/search?user_lat=${lat}&user_lng=${lon}&max_distance_km=30&limit=20`;
+        ? `/salons/staff/search?selected_city=${selected_city}&user_latitude=${lat}&user_longitude=${lon}&limit=20`
+        : `/salons/staff/search?user_latitude=${lat}&user_longitude=${lon}&max_distance_km=30&limit=20`;
       const res = await apiRequest<any[]>(url);
       console.log("✓ Staff fetched:", res.data?.length || 0);
       setStaff(res.data || []);

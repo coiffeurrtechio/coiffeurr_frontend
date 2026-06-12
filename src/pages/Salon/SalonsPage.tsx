@@ -55,8 +55,8 @@ export default function SalonsPage(): JSX.Element {
       if (name?.trim()) apiParams.append("query", name.trim());
       if (limit) apiParams.append("limit", limit.toString());
       // Add user's current location for distance calculation
-      if (userLat !== null) apiParams.append("user_lat", userLat.toString());
-      if (userLon !== null) apiParams.append("user_lng", userLon.toString());
+      if (userLat !== null) apiParams.append("user_latitude", userLat.toString());
+      if (userLon !== null) apiParams.append("user_longitude", userLon.toString());
 
       const res = await apiRequest<any[]>(`/salons/super_search?${apiParams.toString()}`);
       if (res.data) setSalons(res.data);

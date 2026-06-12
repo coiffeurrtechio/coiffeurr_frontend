@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSalonApi } from '../API/Salon_Owner_API/SalonOwnerAPI';
 import { useApi } from '../API/SalonsAPIs/ALLSalonAPI';
 import { useTranslation } from 'react-i18next';
+import Config from '../configs/config';
 
 interface ToastNotification {
   id: string;
@@ -41,12 +42,9 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
   const customerApi = useApi();
   
   // Use appropriate API based on user type
-  const apiRequest = userType === 'salon' 
-    ? salonApi.apiSalonRequest 
+  const apiRequest = userType === 'salon'
+    ? salonApi.apiSalonRequest
     : customerApi.apiRequest;
-  const apiPost = userType === 'salon'
-    ? salonApi.apiSalonPost
-    : customerApi.apiPost;
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -55,8 +53,36 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
   const [toastQueue, setToastQueue] = useState<ToastNotification[]>([]);
   const previousUnreadCount = useRef(0);
   const previousNotifications = useRef<Notification[]>([]);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioInitializedRef = useRef(false);
+  const [acknowledged, setAcknowledged] = useState(false);
 
-  // Request notification permission and initialize audio
+  // Initialize AudioContext on first user interaction
+  const initializeAudioContext = async () => {
+    if (audioInitializedRef.current) return;
+    
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) {
+        console.warn('Web Audio API not supported');
+        return;
+      }
+      
+      audioContextRef.current = new AudioContextClass();
+      
+      // Resume if suspended (requires user interaction)
+      if (audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
+      
+      audioInitializedRef.current = true;
+      console.log('AudioContext initialized successfully, state:', audioContextRef.current.state);
+    } catch (err) {
+      console.error('Failed to initialize AudioContext:', err);
+    }
+  };
+
+  // Request notification permission
   useEffect(() => {
     const requestNotificationPermission = async () => {
       if ('Notification' in window && Notification.permission === 'default') {
@@ -69,19 +95,33 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
   // Play notification sound
   const playNotificationSound = async () => {
     console.log('Attempting to play notification sound...');
+    console.log('Audio initialized:', audioInitializedRef.current);
+    console.log('AudioContext exists:', !!audioContextRef.current);
+    console.log('AudioContext state:', audioContextRef.current?.state);
     
     try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      // Initialize AudioContext if not already done
+      if (!audioInitializedRef.current || !audioContextRef.current) {
+        await initializeAudioContext();
+      }
       
-      // Resume audio context if suspended (required in modern browsers)
+      const audioContext = audioContextRef.current;
+      if (!audioContext) {
+        console.error('AudioContext still not available after initialization');
+        playFallbackSound();
+        return;
+      }
+      
+      // Resume if suspended
       if (audioContext.state === 'suspended') {
+        console.log('Resuming suspended AudioContext...');
         await audioContext.resume();
       }
       
       // Try to load the WAV file using fetch
       const response = await fetch('/notification_sound.wav');
       if (!response.ok) {
-        throw new Error('Failed to load audio file');
+        throw new Error(`Failed to load audio file: ${response.status} ${response.statusText}`);
       }
       
       const arrayBuffer = await response.arrayBuffer();
@@ -92,7 +132,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
       source.buffer = audioBuffer;
       
       const gainNode = audioContext.createGain();
-      gainNode.gain.value = 1.0;
+      gainNode.gain.value = 1;
       
       source.connect(gainNode);
       gainNode.connect(audioContext.destination);
@@ -108,10 +148,20 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
 
   // Fallback sound using Web Audio API
   const playFallbackSound = async () => {
+    console.log('Playing fallback synthesized sound...');
     try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      // Initialize AudioContext if not already done
+      if (!audioInitializedRef.current || !audioContextRef.current) {
+        await initializeAudioContext();
+      }
       
-      // Resume audio context if suspended
+      const audioContext = audioContextRef.current;
+      if (!audioContext) {
+        console.error('AudioContext not available for fallback sound');
+        return;
+      }
+      
+      // Resume if suspended
       if (audioContext.state === 'suspended') {
         await audioContext.resume();
       }
@@ -136,7 +186,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.8);
       
-      console.log('Fallback sound played');
+      console.log('Fallback sound played successfully');
     } catch (err) {
       console.error('Fallback audio also failed:', err);
     }
@@ -149,46 +199,51 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
 
   // Detect new notifications and show toasts
   useEffect(() => {
-    if (notifications.length > 0 && previousNotifications.current.length > 0) {
-      // Find new notifications (not in previous list)
-      const newNotifs = notifications.filter(
-        n => !previousNotifications.current.some(pn => pn.id === n.id)
-      );
+    // Find new notifications (not in previous list)
+    const newNotifs = notifications.filter(
+      n => !previousNotifications.current.some(pn => pn.id === n.id)
+    );
 
-      if (newNotifs.length > 0) {
-        // Play sound for new notifications
-        playNotificationSound();
+    // Also detect if we went from 0 to >0 notifications (first arrival)
+    const isFirstArrival = previousNotifications.current.length === 0 && notifications.length > 0;
 
-        // Add toasts for each new notification
-        const newToasts: ToastNotification[] = newNotifs.map(n => ({
-          id: `toast-${n.id}-${Date.now()}`,
-          title: n.title,
-          message: n.message,
-          type: n.type
-        }));
-        
-        setToastQueue(prev => [...prev, ...newToasts]);
+    if (newNotifs.length > 0 || isFirstArrival) {
+      // Reset acknowledged state to show blink for new notifications
+      setAcknowledged(false);
 
-        // Auto-remove toasts after 5 seconds
-        newToasts.forEach(toast => {
-          setTimeout(() => removeToast(toast.id), 5000);
-        });
+      // Play sound for new notifications
+      playNotificationSound();
 
-        // Show browser notification if permission granted
-        if ('Notification' in window && Notification.permission === 'granted') {
-          newNotifs.forEach(n => {
-            new Notification(n.title, {
-              body: n.message,
-              icon: '/favicon.ico',
-              badge: '/favicon.ico',
-              tag: `notif-${n.id}`,
-              requireInteraction: false
-            });
+      // Add toasts for each new notification
+      const toastsToCreate = newNotifs.length > 0 ? newNotifs : notifications;
+      const newToasts: ToastNotification[] = toastsToCreate.map(n => ({
+        id: `toast-${n.id}-${Date.now()}`,
+        title: n.title,
+        message: n.message,
+        type: n.type
+      }));
+
+      setToastQueue(prev => [...prev, ...newToasts]);
+
+      // Auto-remove toasts after 5 seconds
+      newToasts.forEach(toast => {
+        setTimeout(() => removeToast(toast.id), 5000);
+      });
+
+      // Show browser notification if permission granted
+      if ('Notification' in window && Notification.permission === 'granted') {
+        toastsToCreate.forEach(n => {
+          new Notification(n.title, {
+            body: n.message,
+            icon: '/favicon.ico',
+            badge: '/favicon.ico',
+            tag: `notif-${n.id}`,
+            requireInteraction: false
           });
-        }
+        });
       }
     }
-    
+
     previousNotifications.current = notifications;
     previousUnreadCount.current = unreadCount;
   }, [notifications, unreadCount]);
@@ -232,10 +287,26 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
   // Mark notification as read
   const markAsRead = async (notificationId?: string) => {
     try {
-      // JWT token already identifies the user - no need for X-User-Id header
-      await apiPost('/notifications/mark-read', {
-        notificationIds: notificationId ? [notificationId] : null
+      // Use correct token retrieval method
+      const userData = localStorage.getItem("authState");
+      const parsed = userData ? JSON.parse(userData) : null;
+      const accessToken = parsed?.user?.access_token;
+      
+      const response = await fetch(`${Config.API_Customers}/notifications/mark-read`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({
+          notificationIds: notificationId ? [notificationId] : null
+        })
       });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to mark as read: ${response.status}`);
+      }
+      
       if (notificationId) {
         setNotifications(notifications.map(n => 
           n.id === notificationId ? { ...n, isRead: true } : n
@@ -253,11 +324,19 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
   // Clear all notifications
   const clearNotifications = async () => {
     try {
-      // JWT token already identifies the user - no need for X-User-Id header
-      const res = await apiRequest<{ deletedCount: number }>('/notifications/', {
-        method: 'DELETE'
+      // Use correct token retrieval method
+      const userData = localStorage.getItem("authState");
+      const parsed = userData ? JSON.parse(userData) : null;
+      const accessToken = parsed?.user?.access_token;
+      
+      const response = await fetch(`${Config.API_Customers}/notifications/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
       });
-      if (res.data) {
+      
+      if (response.ok) {
         setNotifications([]);
         setUnreadCount(0);
         setIsOpen(false);
@@ -322,7 +401,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
     };
     setNotifications(prev => [testNotif, ...prev]);
     setUnreadCount(prev => prev + 1);
-    
+
     // Trigger toast
     setToastQueue(prev => [...prev, {
       id: `toast-test-${Date.now()}`,
@@ -330,10 +409,10 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
       message: testNotif.message,
       type: testNotif.type
     }]);
-    
+
     // Play sound
     playNotificationSound();
-    
+
     // Auto-remove toast
     setTimeout(() => {
       setToastQueue(prev => prev.filter(t => !t.id.includes('toast-test')));
@@ -351,7 +430,13 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
     <div className="relative">
       {/* Custom Gold Bell Button */}
       <motion.button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          initializeAudioContext();
+          setIsOpen(!isOpen);
+          if (!isOpen) {
+            setAcknowledged(true);
+          }
+        }}
         className="relative p-2 rounded-xl transition-all"
         whileHover={{ 
           scale: 1.1,
@@ -377,7 +462,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
         
         {/* Glowing Amber Dot for unread count */}
         <AnimatePresence>
-          {unreadCount > 0 && (
+          {unreadCount > 0 && !acknowledged && (
             <motion.span
               className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full"
               style={{ 
