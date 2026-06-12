@@ -92,6 +92,21 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
     requestNotificationPermission();
   }, []);
 
+  // Play notification sound with exception handling
+  const playNotificationSound = () => {
+    try {
+      const audio = new Audio('/notification_sound.wav');
+      audio.volume = 1;
+      audio.play().catch(err => {
+        // Silently fail if audio doesn't play
+        console.warn('Audio play failed:', err);
+      });
+    } catch (err) {
+      // Silently fail if audio creation fails
+      console.warn('Audio creation failed:', err);
+    }
+  };
+
   // Remove toast from queue
   const removeToast = (toastId: string) => {
     setToastQueue(prev => prev.filter(t => t.id !== toastId));
@@ -111,6 +126,9 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
       // Reset acknowledged state to show blink for new notifications
       setAcknowledged(false);
 
+      // Play sound for new notifications
+      playNotificationSound();
+
       // Add toasts for each new notification
       const toastsToCreate = newNotifs.length > 0 ? newNotifs : notifications;
       const newToasts: ToastNotification[] = toastsToCreate.map(n => ({
@@ -127,8 +145,10 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
         setTimeout(() => removeToast(toast.id), 5000);
       });
 
-      // Show browser notification if permission granted
-      if ('Notification' in window && Notification.permission === 'granted') {
+      // Show browser notification if permission granted (desktop only)
+      // Disabled on mobile to prevent Chrome Android blank screen issue
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (!isMobile && 'Notification' in window && Notification.permission === 'granted') {
         toastsToCreate.forEach(n => {
           new Notification(n.title, {
             body: n.message,
