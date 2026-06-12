@@ -14,12 +14,16 @@ export default defineConfig({
       NODE_ENV: process.env.NODE_ENV || 'development',
     }),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       injectRegister: 'auto',
       devOptions: {
         enabled: true
       },
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
       workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         navigateFallback: '/index.html',
         navigateFallbackAllowlist: [/^\/$/, /^\/salons/, /^\/profile/, /^\/search/],
         runtimeCaching: [

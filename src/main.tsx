@@ -23,6 +23,15 @@ const updateSW = registerSW({
   onOfflineReady() {
     console.log('App ready to work offline');
   },
+  onRegistered(registration) {
+    console.log('Service worker registered:', registration);
+    // Periodic check for updates (every 2 hours) instead of auto-update
+    if (registration) {
+      setInterval(() => {
+        registration.update();
+      }, 7200000);
+    }
+  },
 })
 
 createRoot(document.getElementById('root')!).render(
