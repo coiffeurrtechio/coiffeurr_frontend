@@ -436,10 +436,11 @@ export default function SalonDetailPage() {
         </section>
 
         {/* --- Content Body - Single Centered Column --- */}
-        <section className="max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+        <section className="max-w-3xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 pb-12 sm:pb-16 bg-[#F9FAFB] mt-16 sm:mt-20 rounded-t-[2.5rem]">
           <div className="flex flex-col gap-4">
             <div>
-              <h2 className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-2 text-center">The Studio</h2>
+              <div className="h-[1px] bg-gray-100 w-full mb-4"></div>
+              <h2 className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-4 text-center">The Studio</h2>
               {salon?.description?.includes('"') ? (
                 <blockquote className="p-8 bg-gradient-to-br from-amber-50 via-orange-50/50 to-yellow-50/30 border border-amber-200/50 rounded-2xl italic font-serif text-slate-700 text-center text-lg leading-relaxed relative">
                   <div className="absolute top-4 left-4 text-amber-400">
@@ -452,10 +453,10 @@ export default function SalonDetailPage() {
               )}
             </div>
 
-            <Tabs defaultValue="services" className="w-full">
+            <Tabs defaultValue="services" className="w-full mt-4">
               <TabsList className="bg-white/70 backdrop-blur-md border border-slate-200/40 shadow-sm rounded-full p-2 flex items-center w-full gap-2">
-                {["Services", "Artisans", "Truth Spoken"].map((tab) => (
-                  <TabsTrigger key={tab} value={tab === "Artisans" ? "stylists" : tab === "Truth Spoken" ? "reviews" : "services"} className="flex-1 data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:rounded-full data-[state=active]:font-bold text-slate-500 hover:text-slate-800 px-4 py-3 rounded-full transition-colors font-sans text-sm font-semibold tracking-wide whitespace-nowrap">
+                {["Services", "Stylists", "Reviews"].map((tab) => (
+                  <TabsTrigger key={tab} value={tab === "Stylists" ? "stylists" : tab === "Reviews" ? "reviews" : "services"} className="flex-1 data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:rounded-full data-[state=active]:font-bold text-slate-500 hover:text-slate-800 px-4 py-3 rounded-full transition-colors font-sans text-sm font-semibold tracking-wide whitespace-nowrap">
                     {tab}
                   </TabsTrigger>
                 ))}
@@ -465,42 +466,39 @@ export default function SalonDetailPage() {
               <TabsContent value="services" className="pt-3">
                 {salonService?.length > 0 ? (
                   <>
-                  <div className="divide-y divide-slate-100">
+                  <div className="space-y-6">
                     {salonService.map((item: any, index: number) => (
-                      <div key={index} className="py-3 sm:py-4 flex flex-col gap-2">
-                        {/* Top Section: Image + Text + Price */}
-                        <div className="flex items-center gap-3 w-full">
-                          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden shrink-0 bg-slate-100">
-                            <img
-                              src={item.imageUrl || getDefaultServiceImage(item.serviceName || '')}
-                              alt={item.serviceName}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-sm sm:font-medium">{item.serviceName.replace('Triming', 'Trimming')}</h4>
-                            <p className="text-xs sm:text-sm text-slate-500 line-clamp-1">{item.description}</p>
-                          </div>
-                          <div className="font-semibold text-slate-900 text-right text-sm sm:text-base shrink-0">
-                            <span className="text-xs sm:text-sm text-slate-500 font-normal">₹</span>{item.price}
+                      <div key={index} className="flex items-center gap-4 w-full">
+                        {/* Left: Service Image */}
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden shrink-0 bg-slate-100">
+                          <img
+                            src={item.imageUrl || getDefaultServiceImage(item.serviceName || '')}
+                            alt={item.serviceName}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        
+                        {/* Middle: Title and Price stacked vertically */}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-base sm:text-lg font-medium text-slate-900 break-words">{item.serviceName.replace('Triming', 'Trimming').replace(/\+/g, ' + ')}</h4>
+                          <p className="text-xs sm:text-sm text-slate-500 line-clamp-1 mb-1">{item.description}</p>
+                          <div className="font-semibold text-slate-900 text-sm sm:text-base">
+                            <span className="text-xs text-slate-500 font-normal">₹</span>{item.price}
                           </div>
                         </div>
-                        {/* Bottom Section: Full-width Button */}
-                        <div className="relative overflow-hidden rounded-full w-full">
-                          <Button
-                            size="sm"
-                            className="group relative rounded-full bg-gradient-to-r from-white via-slate-50 to-white text-slate-950 active:scale-95 transition-all duration-150 shadow-sm hover:shadow-md px-4 sm:px-6 font-mono text-[10px] uppercase tracking-[0.2em] font-bold w-full flex items-center justify-center gap-2 overflow-hidden border border-slate-200/80"
-                            onClick={() => handleViewService(item?.service_id)}
-                          >
-                            <span className="relative z-10">
-                              Book Now
-                            </span>
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-slate-900/[0.04] to-transparent pointer-events-none" style={{
-                              animation: 'shimmer 3s ease-in-out infinite',
-                              willChange: 'transform'
-                            }} />
-                          </Button>
-                        </div>
+                        
+                        {/* Right: Compact pill-shaped button */}
+                        <Button
+                          size="sm"
+                          className="group relative rounded-full bg-indigo-50/50 text-indigo-950 active:scale-95 transition-all duration-150 shadow-sm hover:shadow-md hover:bg-indigo-100/60 active:bg-indigo-200/70 px-4 sm:px-5 font-mono text-[10px] uppercase tracking-wider font-medium shrink-0 overflow-hidden border border-indigo-100"
+                          onClick={() => handleViewService(item?.service_id)}
+                        >
+                          <span className="relative z-10">Book</span>
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-200/[0.15] to-transparent pointer-events-none" style={{
+                            animation: 'shimmer 3s ease-in-out infinite',
+                            willChange: 'transform'
+                          }} />
+                        </Button>
                       </div>
                     ))}
                   </div>
@@ -566,7 +564,7 @@ export default function SalonDetailPage() {
                 <div className="space-y-4">
                   {/* Review Summary - Centered */}
                   <div className="text-center border-b border-slate-100 pb-3">
-                    <h3 className="text-lg font-serif font-semibold text-slate-900 mb-0.5">Truth Spoken</h3>
+                    <h3 className="text-lg font-serif font-semibold text-slate-900 mb-0.5">Reviews</h3>
                     <p className="text-[9px] font-normal text-slate-500 mb-2">Genuine experiences, authored by our community</p>
                     
                     {/* Calculate stats from reviews */}
@@ -652,7 +650,7 @@ export default function SalonDetailPage() {
             </Tabs>
 
             {/* Concierge Section - Below Services */}
-            <div className="bg-slate-50 rounded-3xl p-3 md:p-4 border border-slate-100">
+            <div className="mt-10 bg-slate-50 rounded-3xl p-3 md:p-4 border border-slate-100">
               <h3 className="text-[11px] font-black text-[#1E4D8C] uppercase tracking-[0.3em] mb-2 text-center">Concierge</h3>
               
               {/* Mobile Vertical List */}

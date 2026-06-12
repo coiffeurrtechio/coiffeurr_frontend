@@ -442,7 +442,9 @@
     "widowed": "Widowed",
     "seeLess": "See Less",
     "seeMore": "See More",
-    "datePlaceholder": "DD/MM/YYYY"
+    "datePlaceholder": "DD/MM/YYYY",
+    "contactSupport": "Contact Support",
+    "anniversary": "Anniversary"
   },
   "salons": {
     "searchSalons": "Search salons...",
@@ -825,5 +827,18 @@
     "role": "Role",
     "utilization": "Utilization",
     "rating": "Rating"
+  },
+  "location": {
+    "selectLocation": "Select Location",
+    "useMyCurrentLocation": "Use My Current Location",
+    "availableCities": "AVAILABLE CITIES",
+    "noCitiesAvailable": "No cities available",
+    "recentLocations": "RECENT LOCATIONS",
+    "unableToGetLocation": "Unable to get your location. Please try searching for a city instead.",
+    "currentLocation": "Current Location"
+  },
+  "validation": {
+    "priceTooLow": "Too low! Minimum is ₹{{min}}",
+    "priceTooHigh": "Too high! Maximum is ₹{{max}}"
   }
 }

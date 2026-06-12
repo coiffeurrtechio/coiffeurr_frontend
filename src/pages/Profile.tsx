@@ -300,7 +300,7 @@ export default function Profile() {
           <MenuItem label={t('profile.wishlist')} icon={<Heart className="text-red-500" />} onClick={() => navigate("/wishlist")} />
           <MenuItem label={t('settings.language') || 'Language'} icon={<Globe className="text-slate-800" />} onClick={() => setShowLanguageModal(true)} />
           <MenuItem
-            label="Contact Support"
+            label={t('profile.contactSupport')}
             icon={<MessageCircle className="text-slate-800" />}
             onClick={() => setShowContactSupportModal(true)}
           />
@@ -379,7 +379,7 @@ export default function Profile() {
                       <Calendar size={18} />
                     </div>
                     <div className="flex-1">
-                      <span className="text-[10px] font-black text-slate-500 tracking-tight">Date of Birth</span>
+                      <span className="text-[10px] font-black text-slate-500 tracking-tight">{t('profile.dateOfBirth')}</span>
                       <p className="mt-2 text-sm font-bold text-slate-900">{new Date(usercontactdetails.dob).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                     </div>
                   </div>
@@ -393,7 +393,7 @@ export default function Profile() {
                       <User size={18} />
                     </div>
                     <div className="flex-1">
-                      <span className="text-[10px] font-black text-slate-500 tracking-tight">Gender</span>
+                      <span className="text-[10px] font-black text-slate-500 tracking-tight">{t('profile.gender')}</span>
                       <p className="mt-2 text-sm font-bold text-slate-900 capitalize">{usercontactdetails.gender}</p>
                     </div>
                   </div>
@@ -407,7 +407,7 @@ export default function Profile() {
                       <Heart size={18} />
                     </div>
                     <div className="flex-1">
-                      <span className="text-[10px] font-black text-slate-500 tracking-tight">Anniversary</span>
+                      <span className="text-[10px] font-black text-slate-500 tracking-tight">{t('profile.anniversary')}</span>
                       <p className="mt-2 text-sm font-bold text-slate-900">{new Date(usercontactdetails.anniversary).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                     </div>
                   </div>
@@ -421,7 +421,7 @@ export default function Profile() {
                       <User size={18} />
                     </div>
                     <div className="flex-1">
-                      <span className="text-[10px] font-black text-slate-500 tracking-tight">Marital Status</span>
+                      <span className="text-[10px] font-black text-slate-500 tracking-tight">{t('profile.maritalStatus')}</span>
                       <p className="mt-2 text-sm font-bold text-slate-900 capitalize">{usercontactdetails.marital_status}</p>
                     </div>
                   </div>
@@ -712,7 +712,7 @@ export default function Profile() {
           <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-md" onClick={() => setShowContactSupportModal(false)} />
           <div className="relative w-full max-w-md bg-white rounded-[2rem] p-6 sm:p-8 animate-in zoom-in-95 duration-200 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">Contact Support</h2>
+              <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">{t('profile.contactSupport')}</h2>
               <button onClick={() => setShowContactSupportModal(false)} className="p-2 sm:p-3 bg-gray-100 rounded-full hover:bg-gray-200 transition-all hover:scale-105 active:scale-95">
                 <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>

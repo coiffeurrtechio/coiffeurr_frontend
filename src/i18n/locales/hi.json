@@ -442,7 +442,9 @@
     "widowed": "विधवा/विधुर",
     "seeLess": "कम देखें",
     "seeMore": "अधिक देखें",
-    "datePlaceholder": "DD/MM/YYYY"
+    "datePlaceholder": "DD/MM/YYYY",
+    "contactSupport": "सहायता से संपर्क करें",
+    "anniversary": "विवाह की वर्षगांठ"
   },
   "salons": {
     "searchSalons": "सैलून खोजें...",
@@ -825,5 +827,18 @@
     "role": "भूमिका",
     "utilization": "उपयोग",
     "rating": "रेटिंग"
+  },
+  "location": {
+    "selectLocation": "स्थान चुनें",
+    "useMyCurrentLocation": "मेरा वर्तमान स्थान उपयोग करें",
+    "availableCities": "उपलब्ध शहर",
+    "noCitiesAvailable": "कोई शहर उपलब्ध नहीं",
+    "recentLocations": "हाल के स्थान",
+    "unableToGetLocation": "आपका स्थान प्राप्त करने में असमर्थ। कृपया एक शहर खोजने का प्रयास करें।",
+    "currentLocation": "वर्तमान स्थान"
+  },
+  "validation": {
+    "priceTooLow": "बहुत कम! न्यूनतम ₹{{min}} है",
+    "priceTooHigh": "बहुत अधिक! अधिकतम ₹{{max}} है"
   }
 }

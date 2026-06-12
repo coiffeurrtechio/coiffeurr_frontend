@@ -669,12 +669,13 @@ const HomePage: React.FC = () => {
               {/* Left: Location */}
               <button
                 onClick={() => setIsLocationSelectorOpen(true)}
-                className="flex items-center gap-2 max-w-[30%] sm:max-w-[25%] active:scale-95 transition-transform"
+                className="flex items-center gap-2 max-w-[30%] sm:max-w-[25%] active:scale-95 transition-all cursor-pointer hover:bg-white/10 hover:opacity-90 rounded-lg px-2 py-1"
               >
                 <MapPin className="w-4 h-4 text-blue-200 shrink-0" />
                 <span className="font-medium text-xs sm:text-sm truncate">
                   {address || t('home.locating')}
                 </span>
+                <ChevronDown className="w-3 h-3 text-blue-200 shrink-0" />
               </button>
               
               {/* Right: Notification + Profile/Login */}
@@ -1240,12 +1241,19 @@ const HomePage: React.FC = () => {
         currentCity={address}
       />
       {showCityConfirmation && pendingCityChange && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            <h3 className="text-lg font-bold text-slate-900 mb-2">Confirm City Change</h3>
-            <p className="text-slate-600 mb-4">
-              Are you sure you want to search for salons in <span className="font-semibold text-slate-900">{pendingCityChange.city}</span>?<br />
-              It's <span className="font-semibold text-orange-600">{Math.round(pendingCityChange.distance)} km</span> away from your current location.
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          <button 
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => {
+              setShowCityConfirmation(false);
+              setPendingCityChange(null);
+            }}
+            aria-label="Close modal"
+          />
+          <div className="relative bg-[#FDFBF7] rounded-[20px] p-6 sm:p-8 mx-4 max-w-sm w-full border border-[rgba(0,0,0,0.05)] shadow-[0_8px_40px_rgba(0,0,0,0.08),0_2px_10px_rgba(0,0,0,0.04)] animate-in fade-in zoom-in-95 duration-200">
+            <h3 className="text-xl font-bold text-[#1a1a1a] tracking-tight mb-2">Confirm City Change</h3>
+            <p className="text-[#4b5563] mb-6 leading-relaxed">
+              <span className="font-semibold text-[#1a1a1a]">{pendingCityChange.city}</span> is <span className="font-semibold text-[#d4af37]">{Math.round(pendingCityChange.distance)} km</span> away. Continue?
             </p>
             <div className="flex gap-3">
               <button
@@ -1253,13 +1261,13 @@ const HomePage: React.FC = () => {
                   setShowCityConfirmation(false);
                   setPendingCityChange(null);
                 }}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+                className="flex-1 px-4 py-3 rounded-[16px] bg-white border border-[rgba(0,0,0,0.06)] text-[#4b5563] font-medium hover:bg-[#fafafa] hover:border-[rgba(0,0,0,0.1)] transition-all duration-300 active:scale-[0.98]"
               >
                 Cancel
               </button>
               <button
                 onClick={() => confirmCityChange(pendingCityChange.city, pendingCityChange.lat, pendingCityChange.lon)}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-[#0f172a] text-white font-medium hover:bg-[#1e293b] transition-colors"
+                className="flex-1 px-4 py-3 rounded-[16px] bg-[#d4af37] text-white font-medium hover:bg-[#c9a227] transition-all duration-300 active:scale-[0.98]"
               >
                 Continue
               </button>

@@ -699,9 +699,9 @@ const BookingsPage: React.FC = () => {
                   const maxAllowed = filterMeta?.price_range?.max_price;
                   
                   if (value < minAllowed) {
-                    setPriceError({ ...priceError, min: `Too low! Minimum is ₹${minAllowed}` });
+                    setPriceError({ ...priceError, min: t('validation.priceTooLow', { min: minAllowed }) });
                   } else if (value > maxAllowed) {
-                    setPriceError({ ...priceError, min: `Too high! Maximum is ₹${maxAllowed}` });
+                    setPriceError({ ...priceError, min: t('validation.priceTooHigh', { max: maxAllowed }) });
                   } else {
                     setPriceError({ ...priceError, min: undefined });
                   }
@@ -725,9 +725,9 @@ const BookingsPage: React.FC = () => {
                   const maxAllowed = filterMeta?.price_range?.max_price;
                   
                   if (value < minAllowed) {
-                    setPriceError({ ...priceError, max: `Too low! Minimum is ₹${minAllowed}` });
+                    setPriceError({ ...priceError, max: t('validation.priceTooLow', { min: minAllowed }) });
                   } else if (value > maxAllowed) {
-                    setPriceError({ ...priceError, max: `Too high! Maximum is ₹${maxAllowed}` });
+                    setPriceError({ ...priceError, max: t('validation.priceTooHigh', { max: maxAllowed }) });
                   } else {
                     setPriceError({ ...priceError, max: undefined });
                   }

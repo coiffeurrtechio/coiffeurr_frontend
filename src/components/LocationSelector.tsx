@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, X, Navigation, Clock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import Config from '../configs/config';
 
 interface LocationSelectorProps {
@@ -21,6 +22,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
   onLocationSelect,
   currentCity
 }) => {
+  const { t } = useTranslation();
   const [cities, setCities] = useState<CityData[]>([]);
   const [isLoadingCities, setIsLoadingCities] = useState(false);
   const [recentLocations, setRecentLocations] = useState<string[]>([]);
@@ -113,19 +115,19 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
 
             const data = await response.json();
             if (data.success && data.address) {
-              const city = data.address.city || data.address.town || data.address.village || 'Current Location';
+              const city = data.address.city || data.address.town || data.address.village || t('location.currentLocation');
               handleCitySelect(city, latitude, longitude);
             } else {
-              handleCitySelect('Current Location', latitude, longitude);
+              handleCitySelect(t('location.currentLocation'), latitude, longitude);
             }
           } catch (error) {
             console.error('Geocoding error:', error);
-            handleCitySelect('Current Location', latitude, longitude);
+            handleCitySelect(t('location.currentLocation'), latitude, longitude);
           }
         },
         (error) => {
           console.error('Location error:', error);
-          alert('Unable to get your location. Please try searching for a city instead.');
+          alert(t('location.unableToGetLocation'));
         }
       );
     }
@@ -135,57 +137,60 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+      <button 
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
+        aria-label="Close modal"
       />
-      <div className="relative w-full max-w-lg bg-white rounded-t-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 animate-in slide-in-from-bottom duration-300 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-[#FDFBF7] rounded-[20px] p-6 sm:p-8 animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-y-auto border border-[rgba(0,0,0,0.05)] shadow-[0_8px_40px_rgba(0,0,0,0.08),0_2px_10px_rgba(0,0,0,0.04)]">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900">Select Location</h2>
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-2xl font-bold text-[#1a1a1a] tracking-tight">{t('location.selectLocation')}</h2>
           <button 
             onClick={onClose}
-            className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+            className="p-2 rounded-full hover:bg-black/5 transition-all duration-200 group"
           >
-            <X size={20} className="text-gray-600" />
+            <X size={18} className="text-[#6b7280] group-hover:text-[#374151] group-hover:scale-110 transition-all" />
           </button>
         </div>
 
         {/* Use Current Location Button */}
         <button
           onClick={handleUseCurrentLocation}
-          className="w-full h-14 bg-gradient-to-r from-[#1E4D8C] to-[#2a5fb8] text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 mb-6 hover:shadow-lg transition-all active:scale-[0.98]"
+          className="w-full h-14 bg-white text-[#b8860b] rounded-full font-semibold text-sm flex items-center justify-center gap-3 mb-8 border border-[#d4af37]/30 hover:bg-[#faf8f0] hover:border-[#d4af37]/50 transition-all duration-300 active:scale-[0.98]"
         >
-          <Navigation size={20} />
-          Use My Current Location
+          <Navigation size={18} className="text-[#d4af37]" />
+          <span>{t('location.useMyCurrentLocation')}</span>
         </button>
 
         {/* Available Cities */}
-        <div className="mb-6">
-          <p className="text-xs font-bold text-gray-400 tracking-wider mb-3">WE ARE AVAILABLE IN FOLLOWING CITY</p>
+        <div className="mb-8">
+          <p className="text-[10px] font-bold text-[#9ca3af] tracking-[0.25em] mb-4">{t('location.availableCities')}</p>
           {isLoadingCities ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1E4D8C]"></div>
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#d4af37]/20 border-t-[#d4af37]"></div>
             </div>
           ) : cities.length > 0 ? (
             <div className="grid grid-cols-2 gap-3">
-              {cities.map((city) => (
-                <button
-                  key={city.name}
-                  onClick={() => handleCitySelect(city.name, city.lat, city.lon)}
-                  className={`p-4 rounded-2xl font-medium text-sm transition-all active:scale-[0.98] ${
-                    currentCity === city.name 
-                      ? 'bg-[#1E4D8C] text-white' 
-                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  {city.name}
-                </button>
-              ))}
+              {cities.map((city) => {
+                const isActive = currentCity === city.name;
+                const activeClasses = 'bg-[#faf6e8] border border-[#d4af37] text-[#1a1a1a] shadow-[inset_0_0_20px_rgba(212,175,55,0.08)]';
+                const inactiveClasses = 'bg-white border border-[rgba(0,0,0,0.06)] text-[#4b5563] hover:bg-[#fafafa] hover:border-[rgba(0,0,0,0.1)]';
+                
+                return (
+                  <button
+                    key={city.name}
+                    onClick={() => handleCitySelect(city.name, city.lat, city.lon)}
+                    className={`p-4 rounded-[16px] font-medium text-sm transition-all duration-300 active:scale-[0.98] ${isActive ? activeClasses : inactiveClasses}`}
+                  >
+                    {city.name}
+                  </button>
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-sm text-gray-500">No cities available</p>
+              <p className="text-sm text-gray-500">{t('location.noCitiesAvailable')}</p>
             </div>
           )}
         </div>
@@ -193,24 +198,28 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
         {/* Recent Locations */}
         {recentLocations.length > 0 && (
           <div>
-            <p className="text-xs font-bold text-gray-400 tracking-wider mb-3 flex items-center gap-2">
-              <Clock size={14} />
-              RECENT LOCATIONS
+            <p className="text-[10px] font-bold text-[#9ca3af] tracking-[0.25em] mb-4 flex items-center gap-2">
+              <Clock size={12} className="text-[#9ca3af]" />
+              {t('location.recentLocations')}
             </p>
             <div className="space-y-2">
-              {recentLocations.map((location, index) => {
+              {recentLocations.map((location) => {
                 // Find coordinates for recent location from cities list
                 const cityData = cities.find(c => c.name === location);
                 if (cityData) {
                   return (
                     <button
-                      key={index}
+                      key={location}
                       onClick={() => handleCitySelect(cityData.name, cityData.lat, cityData.lon)}
-                      className="w-full p-4 bg-gray-50 rounded-2xl text-left hover:bg-gray-100 transition-colors active:scale-[0.98] flex items-center justify-between"
+                      className={`w-full p-4 rounded-[16px] text-left transition-all duration-300 active:scale-[0.98] flex items-center justify-between ${
+                        currentCity === location
+                          ? 'bg-[#faf6e8] border border-[#d4af37] text-[#1a1a1a] shadow-[inset_0_0_20px_rgba(212,175,55,0.08)]'
+                          : 'bg-white border border-[rgba(0,0,0,0.06)] text-[#4b5563] hover:bg-[#fafafa] hover:border-[rgba(0,0,0,0.1)]'
+                      }`}
                     >
                       <div className="flex items-center gap-3">
-                        <MapPin size={18} className="text-gray-400" />
-                        <span className="font-medium text-sm text-gray-700">{location}</span>
+                        <MapPin size={16} className={currentCity === location ? 'text-[#d4af37]' : 'text-[#9ca3af]'} />
+                        <span className="font-medium text-sm">{location}</span>
                       </div>
                     </button>
                   );
