@@ -70,9 +70,14 @@ const routes: AppRoute[] = [
       { key: 21, path: "/salon/:salonId/staff/:staffId", Element: StaffDetailPage, isProtected: false },
       { key: 22, path: "/verify", Element: UniversalVerification, isProtected: true },
       { key: 23, path: "/salon/:salonId/reviews", Element: SalonReviewsPage, isProtected: false },
-      { key: 24, path: "/feedback/:bookingId", Element: FeedbackPage, isProtected: false },
 
     ],
+  },
+  {
+    key: 25,
+    path: "/feedback/:bookingId",
+    Element: FeedbackPage,
+    isProtected: false,
   },
   {
     key: 2,

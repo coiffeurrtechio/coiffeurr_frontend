@@ -410,24 +410,24 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
           />
 
           {/* Notification Panel - Tech-Luxury Design */}
-          <div className="absolute right-0 top-12 max-w-[340px] w-full max-h-[250px] bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 z-50 flex flex-col overflow-hidden" style={{ boxShadow: "rgba(0,0,0,0.15) 0 8px 32px" }}>
+          <div className="fixed left-1/2 -translate-x-1/2 top-16 w-[85vw] sm:absolute sm:left-auto sm:-translate-x-0 sm:right-0 sm:top-12 sm:w-[400px] max-h-[60vh] sm:max-h-[500px] bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 z-50 flex flex-col overflow-hidden" style={{ boxShadow: "rgba(0,0,0,0.15) 0 8px 32px" }}>
             {/* Header */}
-            <div className="p-3 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="font-bold text-sm text-gray-800" style={{ fontFamily: "'Playfair Display', serif" }}>{t('common.notifications')}</h3>
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="font-bold text-base text-gray-800" style={{ fontFamily: "'Playfair Display', serif" }}>{t('common.notifications')}</h3>
               <div className="flex items-center gap-2">
                 {unreadCount > 0 && (
                   <button
                     onClick={() => markAsRead()}
-                    className="text-xs text-blue-600 hover:text-blue-700 font-bold"
+                    className="text-sm text-blue-600 hover:text-blue-700 font-bold"
                   >
                     {t('common.markAllRead')}
                   </button>
                 )}
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-1 hover:bg-gray-100 rounded-full"
+                  className="p-1.5 hover:bg-gray-100 rounded-full"
                 >
-                  <X className="w-3.5 h-3.5 text-gray-400" />
+                  <X className="w-4 h-4 text-gray-400" />
                 </button>
               </div>
             </div>
@@ -435,11 +435,11 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
             {/* Notifications List */}
             <div className="flex-1 overflow-y-auto">
               {loading ? (
-                <div className="p-3 text-center text-gray-400 text-xs">
+                <div className="p-4 text-center text-gray-400 text-sm">
                   {t('common.loading')}
                 </div>
               ) : notifications.length === 0 || error ? (
-                <div className="p-3 text-center text-gray-400 text-xs">
+                <div className="p-4 text-center text-gray-400 text-sm">
                   {t('common.noNotifications')}
                 </div>
               ) : (
@@ -447,7 +447,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
                   {notifications.map((notification) => (
                     <div
                       key={notification.id}
-                      className={`p-3 hover:bg-gray-50 cursor-pointer transition-colors ${
+                      className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
                         !notification.isRead ? 'bg-blue-50/50' : ''
                       }`}
                       onClick={() => {
@@ -464,23 +464,23 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
                         setIsOpen(false);
                       }}
                     >
-                      <div className="flex items-start gap-2">
-                        <div className="p-1 bg-gray-100 rounded-full flex-shrink-0">
+                      <div className="flex items-start gap-3">
+                        <div className="p-1.5 bg-gray-100 rounded-full flex-shrink-0">
                           {getNotificationIcon(notification.type)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-1 mb-0.5">
-                            <p className="font-bold text-[11px] text-gray-800 truncate">
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <p className="font-bold text-sm text-gray-800 truncate">
                               {notification.title}
                             </p>
                             {!notification.isRead && (
-                              <span className="w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0" />
+                              <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
                             )}
                           </div>
-                          <p className="text-[11px] text-gray-600 mb-0.5 line-clamp-2 leading-tight">
+                          <p className="text-sm text-gray-600 mb-1 line-clamp-2 leading-relaxed">
                             {notification.message}
                           </p>
-                          <p className="text-[9px] text-gray-400 font-bold">
+                          <p className="text-xs text-gray-400 font-bold">
                             {formatDate(notification.createdAt)}
                           </p>
                         </div>
@@ -492,10 +492,10 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
             </div>
 
             {/* Footer */}
-            <div className="p-2 border-t border-gray-100">
+            <div className="p-3 border-t border-gray-100">
               <button
                 onClick={clearNotifications}
-                className="w-full flex items-center justify-center gap-2 text-xs text-gray-500 hover:text-gray-700 py-1.5 hover:bg-gray-50 rounded-lg transition-colors"
+                className="w-full flex items-center justify-center gap-2 text-sm text-gray-500 hover:text-gray-700 py-2 hover:bg-gray-50 rounded-lg transition-colors"
               >
                 {t('common.clear')}
               </button>
@@ -556,7 +556,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
                 }}
                 className="p-1 hover:bg-gray-100 rounded-full flex-shrink-0"
               >
-                <X className="w-3.5 h-3.5 text-gray-400" />
+                <X className="w-4 h-4 text-gray-400" />
               </button>
             </div>
           </motion.div>
