@@ -92,106 +92,6 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
     requestNotificationPermission();
   }, []);
 
-  // Play notification sound
-  const playNotificationSound = async () => {
-    console.log('Attempting to play notification sound...');
-    console.log('Audio initialized:', audioInitializedRef.current);
-    console.log('AudioContext exists:', !!audioContextRef.current);
-    console.log('AudioContext state:', audioContextRef.current?.state);
-    
-    try {
-      // Initialize AudioContext if not already done
-      if (!audioInitializedRef.current || !audioContextRef.current) {
-        await initializeAudioContext();
-      }
-      
-      const audioContext = audioContextRef.current;
-      if (!audioContext) {
-        console.error('AudioContext still not available after initialization');
-        playFallbackSound();
-        return;
-      }
-      
-      // Resume if suspended
-      if (audioContext.state === 'suspended') {
-        console.log('Resuming suspended AudioContext...');
-        await audioContext.resume();
-      }
-      
-      // Try to load the WAV file using fetch
-      const response = await fetch('/notification_sound.wav');
-      if (!response.ok) {
-        throw new Error(`Failed to load audio file: ${response.status} ${response.statusText}`);
-      }
-      
-      const arrayBuffer = await response.arrayBuffer();
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-      
-      // Play the audio
-      const source = audioContext.createBufferSource();
-      source.buffer = audioBuffer;
-      
-      const gainNode = audioContext.createGain();
-      gainNode.gain.value = 1;
-      
-      source.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      source.start(0);
-      console.log('Audio played successfully using Web Audio API');
-    } catch (err) {
-      console.error('Web Audio API failed:', err);
-      // Fallback to synthesized sound
-      playFallbackSound();
-    }
-  };
-
-  // Fallback sound using Web Audio API
-  const playFallbackSound = async () => {
-    console.log('Playing fallback synthesized sound...');
-    try {
-      // Initialize AudioContext if not already done
-      if (!audioInitializedRef.current || !audioContextRef.current) {
-        await initializeAudioContext();
-      }
-      
-      const audioContext = audioContextRef.current;
-      if (!audioContext) {
-        console.error('AudioContext not available for fallback sound');
-        return;
-      }
-      
-      // Resume if suspended
-      if (audioContext.state === 'suspended') {
-        await audioContext.resume();
-      }
-      
-      // Create a more prominent notification sound
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      // Create a pleasant ding-dong sound
-      oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
-      oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.15); // E5
-      oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.3); // G5
-      oscillator.type = 'sine';
-      
-      // Make it louder
-      gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.8);
-      
-      console.log('Fallback sound played successfully');
-    } catch (err) {
-      console.error('Fallback audio also failed:', err);
-    }
-  };
-
   // Remove toast from queue
   const removeToast = (toastId: string) => {
     setToastQueue(prev => prev.filter(t => t.id !== toastId));
@@ -210,9 +110,6 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
     if (newNotifs.length > 0 || isFirstArrival) {
       // Reset acknowledged state to show blink for new notifications
       setAcknowledged(false);
-
-      // Play sound for new notifications
-      playNotificationSound();
 
       // Add toasts for each new notification
       const toastsToCreate = newNotifs.length > 0 ? newNotifs : notifications;
@@ -387,37 +284,6 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
   }, []);
-
-  // TEST: Add a test notification to verify UI is working
-  const addTestNotification = () => {
-    const testNotif: Notification = {
-      id: `test-${Date.now()}`,
-      type: 'SALON_NEW_BOOKING',
-      title: 'New Booking Request!',
-      message: 'Test customer has requested a booking for Haircut on 2026-04-30 at 14:30.',
-      isRead: false,
-      createdAt: new Date().toISOString(),
-      data: { bookingId: 'TEST123', price: 500 }
-    };
-    setNotifications(prev => [testNotif, ...prev]);
-    setUnreadCount(prev => prev + 1);
-
-    // Trigger toast
-    setToastQueue(prev => [...prev, {
-      id: `toast-test-${Date.now()}`,
-      title: testNotif.title,
-      message: testNotif.message,
-      type: testNotif.type
-    }]);
-
-    // Play sound
-    playNotificationSound();
-
-    // Auto-remove toast
-    setTimeout(() => {
-      setToastQueue(prev => prev.filter(t => !t.id.includes('toast-test')));
-    }, 5000);
-  };
 
   // Fetch full list when dropdown opens
   useEffect(() => {
