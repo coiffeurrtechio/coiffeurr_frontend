@@ -41,19 +41,13 @@ export default defineConfig({
         ]
       },
       manifest: {
-        name: 'Coiffure App',
-        short_name: 'Coiffure',
+        name: 'Coiffeurr',
+        short_name: 'Coiffeurr',
         description: 'Premium Hair Styling PWA',
         theme_color: '#000000',
         background_color: '#000000',
         display: 'standalone',
         icons: [
-          {
-            src: 'maskable.png',
-            sizes: '1136x1136',
-            type: 'image/png',
-            purpose: 'any maskable'
-          },
           {
             src: 'logo192.png',
             sizes: '192x192',
@@ -63,6 +57,12 @@ export default defineConfig({
             src: 'logo512.png',
             sizes: '512x512',
             type: 'image/png'
+          },
+          {
+            src: 'logo512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       }

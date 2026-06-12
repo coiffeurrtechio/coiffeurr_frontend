@@ -53,34 +53,10 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
   const [toastQueue, setToastQueue] = useState<ToastNotification[]>([]);
   const previousUnreadCount = useRef(0);
   const previousNotifications = useRef<Notification[]>([]);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const audioInitializedRef = useRef(false);
   const [acknowledged, setAcknowledged] = useState(false);
-
-  // Initialize AudioContext on first user interaction
-  const initializeAudioContext = async () => {
-    if (audioInitializedRef.current) return;
-    
-    try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContextClass) {
-        console.warn('Web Audio API not supported');
-        return;
-      }
-      
-      audioContextRef.current = new AudioContextClass();
-      
-      // Resume if suspended (requires user interaction)
-      if (audioContextRef.current.state === 'suspended') {
-        await audioContextRef.current.resume();
-      }
-      
-      audioInitializedRef.current = true;
-      console.log('AudioContext initialized successfully, state:', audioContextRef.current.state);
-    } catch (err) {
-      console.error('Failed to initialize AudioContext:', err);
-    }
-  };
+  const audioUnlockedRef = useRef(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioBufferRef = useRef<AudioBuffer | null>(null);
 
   // Request notification permission
   useEffect(() => {
@@ -92,18 +68,61 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
     requestNotificationPermission();
   }, []);
 
-  // Play notification sound with exception handling
+  // Unlock audio and pre-load sound buffer on first user interaction
+  // This is required by Chrome/mobile autoplay policy
+  const unlockAudio = async () => {
+    if (audioUnlockedRef.current) return;
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const ctx = new AudioContextClass();
+      if (ctx.state === 'suspended') await ctx.resume();
+      // Pre-load the audio buffer
+      const response = await fetch('/notification_sound.wav');
+      if (response.ok) {
+        const arrayBuffer = await response.arrayBuffer();
+        audioBufferRef.current = await ctx.decodeAudioData(arrayBuffer);
+      }
+      audioContextRef.current = ctx;
+      audioUnlockedRef.current = true;
+    } catch (err) {
+      console.warn('Audio unlock failed:', err);
+    }
+  };
+
+  // Attach unlock to first user interaction on the document
+  useEffect(() => {
+    const handleFirstInteraction = () => {
+      unlockAudio();
+      document.removeEventListener('touchstart', handleFirstInteraction);
+      document.removeEventListener('click', handleFirstInteraction);
+    };
+    document.addEventListener('touchstart', handleFirstInteraction, { once: true });
+    document.addEventListener('click', handleFirstInteraction, { once: true });
+    return () => {
+      document.removeEventListener('touchstart', handleFirstInteraction);
+      document.removeEventListener('click', handleFirstInteraction);
+    };
+  }, []);
+
+  // Play notification sound using pre-unlocked AudioContext (works on mobile/Chrome)
   const playNotificationSound = () => {
     try {
+      // Use pre-loaded buffer via unlocked AudioContext if available
+      if (audioUnlockedRef.current && audioContextRef.current && audioBufferRef.current) {
+        const ctx = audioContextRef.current;
+        const source = ctx.createBufferSource();
+        source.buffer = audioBufferRef.current;
+        source.connect(ctx.destination);
+        source.start(0);
+        return;
+      }
+      // Fallback: HTML5 Audio (works on desktop without unlock)
       const audio = new Audio('/notification_sound.wav');
       audio.volume = 1;
-      audio.play().catch(err => {
-        // Silently fail if audio doesn't play
-        console.warn('Audio play failed:', err);
-      });
+      audio.play().catch(err => console.warn('Audio play failed:', err));
     } catch (err) {
-      // Silently fail if audio creation fails
-      console.warn('Audio creation failed:', err);
+      console.warn('Audio playback error:', err);
     }
   };
 
@@ -129,26 +148,33 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
       // Play sound for new notifications
       playNotificationSound();
 
-      // Add toasts for each new notification
-      const toastsToCreate = newNotifs.length > 0 ? newNotifs : notifications;
-      const newToasts: ToastNotification[] = toastsToCreate.map(n => ({
-        id: `toast-${n.id}-${Date.now()}`,
-        title: n.title,
-        message: n.message,
-        type: n.type
-      }));
+      // Detect mobile to disable toasts on Chrome mobile
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const isChrome = /Chrome/i.test(navigator.userAgent) && !/Edge|OPR/i.test(navigator.userAgent);
 
-      setToastQueue(prev => [...prev, ...newToasts]);
+      // Only add toasts on desktop or non-Chrome mobile to prevent Chrome mobile crashes
+      if (!isMobile || !isChrome) {
+        // Add toasts for each new notification
+        const toastsToCreate = newNotifs.length > 0 ? newNotifs : notifications;
+        const newToasts: ToastNotification[] = toastsToCreate.map(n => ({
+          id: `toast-${n.id}-${Date.now()}`,
+          title: n.title,
+          message: n.message,
+          type: n.type
+        }));
 
-      // Auto-remove toasts after 5 seconds
-      newToasts.forEach(toast => {
-        setTimeout(() => removeToast(toast.id), 5000);
-      });
+        setToastQueue(prev => [...prev, ...newToasts]);
+
+        // Auto-remove toasts after 5 seconds
+        newToasts.forEach(toast => {
+          setTimeout(() => removeToast(toast.id), 5000);
+        });
+      }
 
       // Show browser notification if permission granted (desktop only)
       // Disabled on mobile to prevent Chrome Android blank screen issue
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       if (!isMobile && 'Notification' in window && Notification.permission === 'granted') {
+        const toastsToCreate = newNotifs.length > 0 ? newNotifs : notifications;
         toastsToCreate.forEach(n => {
           new Notification(n.title, {
             body: n.message,
@@ -298,7 +324,6 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
 
   // Initial fetch and polling for new notifications
   useEffect(() => {
-    console.log('[NotificationCenter] Component mounted, fetching notifications...');
     fetchNotifications();
     // Poll for new notifications every 30 seconds
     const interval = setInterval(fetchNotifications, 30000);
@@ -317,7 +342,6 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ userType = 'sal
       {/* Custom Gold Bell Button */}
       <motion.button
         onClick={() => {
-          initializeAudioContext();
           setIsOpen(!isOpen);
           if (!isOpen) {
             setAcknowledged(true);
