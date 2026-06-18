@@ -5,7 +5,8 @@ import {
   MapPin, Clock, Star, ArrowRight, Filter, Search, Heart,
   ArrowLeft, X, Check,
   Navigation,
-  AlignLeft
+  AlignLeft,
+  Sparkles, Tag, ThumbsUp
 } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
@@ -23,6 +24,12 @@ import { getDefaultSalonImage } from "../../utils/defaultServiceImage";
 // Styles
 import "swiper/css";
 import "swiper/css/pagination";
+
+const TAG_CONFIG: Record<string, { Icon: React.ElementType; label: string; className: string }> = {
+  NEW_ARRIVAL:       { Icon: Sparkles,  label: 'New Arrival',        className: 'bg-emerald-500/90 text-white' },
+  BEST_VALUE:        { Icon: Tag,       label: 'Best Value',         className: 'bg-amber-400/90 text-white' },
+  CUSTOMERS_CHOICE:  { Icon: ThumbsUp,  label: "Customers' Choice",  className: 'bg-[#1E4D8C]/90 text-white' },
+};
 
 export default function SalonsPage(): JSX.Element {
   const { t } = useTranslation();
@@ -246,6 +253,23 @@ export default function SalonsPage(): JSX.Element {
                       <span className="text-white text-[9px] font-black tracking-tighter">Live</span>
                     </div>
                   </div> */}
+
+                  {/* Top Left: Tag Badges */}
+                  {salon.tags && Array.isArray(salon.tags) && salon.tags.length > 0 && (
+                    <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+                      {salon.tags.map((tag: string, idx: number) => {
+                        const cfg = TAG_CONFIG[tag];
+                        if (!cfg) return null;
+                        const { Icon, label, className } = cfg;
+                        return (
+                          <div key={idx} className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-sm shadow-sm ${className}`}>
+                            <Icon size={9} />
+                            {label}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
 
                   {/* Bottom Left: Quick Identity */}
                   <div className="absolute bottom-4 sm:bottom-6 left-4 sm:left-6 right-4 sm:right-6">

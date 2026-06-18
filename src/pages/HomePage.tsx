@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n/config';
-import { MapPin, User, Search, Star, Navigation, Award, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { MapPin, User, Search, Star, Navigation, Award, X, ChevronDown, ChevronRight, Sparkles, Tag, ThumbsUp } from 'lucide-react';
 import NotificationCenter from '../components/NotificationCenter';
 import { useApi } from '../API/SalonsAPIs/ALLSalonAPI';
 import { usersalonApi } from '../API/SalonsAPIs/UserSalonAPI';
@@ -1172,11 +1172,21 @@ const HomePage: React.FC = () => {
                             {/* Badges */}
                             {salon.tags && Array.isArray(salon.tags) && salon.tags.length > 0 && (
                               <div className="flex flex-wrap gap-1.5">
-                                {salon.tags.map((tag: string, idx: number) => (
-                                  <span key={idx} className="text-[8px] font-normal uppercase text-[#757575] bg-transparent border border-[#C5A059] px-1.5 sm:px-2 py-0.5 rounded" style={{ letterSpacing: '2px', borderWidth: '0.5px' }}>
-                                    {tag.replace(/_/g, ' ')}
-                                  </span>
-                                ))}
+                                {salon.tags.map((tag: string, idx: number) => {
+                                  const TAG_ICONS: Record<string, { Icon: React.ElementType; color: string }> = {
+                                    NEW_ARRIVAL:      { Icon: Sparkles,  color: 'text-emerald-500' },
+                                    BEST_VALUE:       { Icon: Tag,       color: 'text-amber-500' },
+                                    CUSTOMERS_CHOICE: { Icon: ThumbsUp,  color: 'text-[#1E4D8C]' },
+                                  };
+                                  const cfg = TAG_ICONS[tag];
+                                  const Icon = cfg?.Icon;
+                                  return (
+                                    <span key={idx} className="flex items-center gap-1 text-[8px] font-normal uppercase text-[#757575] bg-transparent border border-[#C5A059] px-1.5 sm:px-2 py-0.5 rounded" style={{ letterSpacing: '2px', borderWidth: '0.5px' }}>
+                                      {Icon && <Icon size={8} className={cfg.color} />}
+                                      {tag.replace(/_/g, ' ')}
+                                    </span>
+                                  );
+                                })}
                               </div>
                             )}
 

@@ -1212,7 +1212,7 @@ const SalonManagement = () => {
                       className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
                         isSelected
                           ? `${tag.color} border-current`
-                          : "border-gray-200 hover:border-gray-300"
+                          : "border-gray-200 hover:border-gray-300 text-gray-800"
                       }`}
                     >
                       <Icon className={`w-5 h-5 ${isSelected ? "" : "text-gray-400"}`} />

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { superAdminFetch } from "../../API/superAdminFetch";
 import { Settings as SettingsIcon, Save, Phone, Bell } from "lucide-react";
 import { Button } from "../../components/ui_components/button";
 import { motion } from "framer-motion";
@@ -20,14 +21,7 @@ const Settings = () => {
 
   const fetchSettings = async () => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const token = localStorage.getItem('super_admin_access_token');
-      
-      const response = await fetch(`${apiUrl}/api/v1/super-admin/settings`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await superAdminFetch('/super-admin/settings');
 
       if (response.ok) {
         const data = await response.json();
@@ -50,15 +44,9 @@ const Settings = () => {
     setMessage(null);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const token = localStorage.getItem('super_admin_access_token');
-      
-      const response = await fetch(`${apiUrl}/api/v1/super-admin/settings`, {
+      const response = await superAdminFetch('/super-admin/settings', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),
       });
 
