@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, MapPin, Clock, Phone, Star, Heart,
@@ -7,7 +7,11 @@ import {
   Navigation,
   Instagram,
   Facebook,
-  ChevronRight
+  ChevronRight,
+  Image,
+  Trash2,
+  Sparkles,
+  Gift
 } from "lucide-react";
 import { usersalonApi } from "../../API/SalonsAPIs/UserSalonAPI";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -33,7 +37,7 @@ export default function SalonDetailPage() {
   const { apiRequest } = useApi();
   const { userapiRequest } = usersalonApi();
 
-  const { userapiPost } = usersalonApi()
+  const { userapiPost, apiCustomerPut } = usersalonApi()
   const navigate = useNavigate();
 
   const [salon, setSalon] = useState<any>(null);
@@ -54,14 +58,19 @@ export default function SalonDetailPage() {
   const reviewsPerPage = 10;
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isReviewSubmitting, setIsReviewSubmitting] = useState(false);
+  const [isPolishing, setIsPolishing] = useState(false);
   const [reviewData, setReviewData] = useState({
     rating: 5,
     reviewText: "",
     targetType: "SALON"
   });
+  const [reviewImages, setReviewImages] = useState<File[]>([]);
+  const reviewImageInputRef = useRef<HTMLInputElement>(null);
   const [selectedStaff, setSelectedStaff] = useState<any>(null);
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
+  const [existingReview, setExistingReview] = useState<any>(null);
+  const [isUpdateConfirmOpen, setIsUpdateConfirmOpen] = useState(false);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error'; showLoginLink?: boolean } | null>(null);
 
   const user = localStorage.getItem("authState");
@@ -69,6 +78,7 @@ export default function SalonDetailPage() {
   const parsedUser = user ? JSON.parse(user) : null;
 
   const isloggedin = parsedUser?.isAuthenticated;
+  const currentUserId = parsedUser?.user?.user?.id || parsedUser?.user?.id;
 
   // const handleStaffClick = (staff: any) => {
   //   setSelectedStaff(staff);
@@ -202,18 +212,106 @@ export default function SalonDetailPage() {
     }
   }, [isReviewsModalOpen]);
 
+  const findExistingReview = () => {
+    if (!currentUserId) return null;
+    return [...reviews, ...allReviews].find((r) => r.userId === currentUserId);
+  };
+
+  const uploadReviewImages = async (): Promise<string[]> => {
+    if (!reviewImages.length) return [];
+    const formData = new FormData();
+    reviewImages.forEach((file) => formData.append('files', file));
+    formData.append('salon_id', salonId || '');
+    const uploadRes = await userapiPost<any>(`/upload/review-images`, formData);
+    if (uploadRes.error || !uploadRes.data?.success) {
+      throw new Error(uploadRes.error || uploadRes.data?.detail || "Image upload failed");
+    }
+    return uploadRes.data.data?.urls || [];
+  };
+
+  const handleUpdateReview = async () => {
+    if (!existingReview) return;
+    setIsReviewSubmitting(true);
+    setReviewError(null);
+    try {
+      const imageUrls = await uploadReviewImages();
+      const updatePayload: any = {
+        rating: reviewData.rating,
+        reviewText: reviewData.reviewText,
+      };
+      if (imageUrls.length) updatePayload.images = imageUrls;
+
+      const res = await apiCustomerPut<any>(`/reviews/${existingReview.id}`, updatePayload);
+
+      if (res.status === 400 || res.error) {
+        setReviewError(res?.data?.detail || res.error || "Update failed");
+        return;
+      }
+
+      setReviewData({ ...reviewData, reviewText: "", rating: 5 });
+      setReviewImages([]);
+      setExistingReview(null);
+      setIsUpdateConfirmOpen(false);
+      setIsReviewModalOpen(false);
+      setNotification({
+        message: 'Yay! Review updated successfully!',
+        type: 'success'
+      });
+      setTimeout(() => setNotification(null), 4000);
+      fetchReviews();
+    } catch (error: any) {
+      setReviewError(error.message || error.response?.data?.detail || "Update failed");
+      console.error("Review update failed:", error);
+    } finally {
+      setIsReviewSubmitting(false);
+    }
+  };
+
+  const handleAIPolish = async () => {
+    if (!reviewData.reviewText.trim()) return;
+    setIsPolishing(true);
+    setReviewError(null);
+    try {
+      const res = await userapiPost<any>(`/ai/review-polish/`, {
+        text: reviewData.reviewText,
+        tone: "friendly and professional",
+        max_length: 200
+      });
+      if (res.error || !res.data?.polished_text) {
+        setReviewError(res.error || "AI polish failed");
+        return;
+      }
+      setReviewData({ ...reviewData, reviewText: res.data.polished_text });
+    } catch (error: any) {
+      setReviewError(error.message || "AI polish failed");
+      console.error("AI polish failed:", error);
+    } finally {
+      setIsPolishing(false);
+    }
+  };
+
   const handlePostReview = async () => {
     if (!reviewData.reviewText.trim()) return alert("Please write a review.");
+
+    const existing = findExistingReview();
+    if (existing) {
+      setExistingReview(existing);
+      setIsUpdateConfirmOpen(true);
+      return;
+    }
 
     setIsReviewSubmitting(true);
     setReviewError(null); // Clear previous errors
 
     try {
+      const imageUrls = await uploadReviewImages();
+
       const payload = {
         rating: reviewData.rating,
         reviewText: reviewData.reviewText,
         targetType: "SALON",
-        targetId: salonId
+        targetId: salonId,
+        images: imageUrls
       };
 
       const res = await userapiPost<any>(`/reviews`, payload, {});
@@ -225,13 +323,20 @@ export default function SalonDetailPage() {
       }
 
       if (res.data) {
+        const points = res.data.pointsEarned || 0;
         setReviewData({ ...reviewData, reviewText: "", rating: 5 });
+        setReviewImages([]);
         setIsReviewModalOpen(false);
+        setNotification({
+          message: points ? `Yay! You won ${points} points!` : 'Review posted successfully!',
+          type: 'success'
+        });
+        setTimeout(() => setNotification(null), 4000);
         fetchReviews();
       }
     } catch (error: any) {
       // Capture the "detail" message from your API response
-      const errorMessage = error.response?.data?.detail || "Something went wrong. Please try again.";
+      const errorMessage = error.message || error.response?.data?.detail || "Something went wrong. Please try again.";
       setReviewError(errorMessage);
       console.error("Review failed:", error);
     } finally {
@@ -610,6 +715,19 @@ export default function SalonDetailPage() {
                             <div className="flex gap-0.5 shrink-0">{[1, 2, 3, 4, 5].map(s => <Star key={s} size={9} className={s <= rev.rating ? "fill-[#D4AF37] text-[#D4AF37]" : "text-slate-200"} />)}</div>
                           </div>
                           <p className="text-slate-700 font-serif leading-snug text-xs line-clamp-3">{rev.reviewText}</p>
+                          {rev.images?.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {rev.images.map((url: string, idx: number) => (
+                                <img
+                                  key={idx}
+                                  src={url}
+                                  alt=""
+                                  className="w-14 h-14 rounded-lg object-cover border border-slate-200 cursor-pointer hover:opacity-90"
+                                  onClick={() => window.open(url, '_blank')}
+                                />
+                              ))}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -883,7 +1001,7 @@ export default function SalonDetailPage() {
 
             {/* Textarea - Inter Font */}
             <textarea
-              disabled={isReviewSubmitting}
+              disabled={isReviewSubmitting || isPolishing}
               className={`w-full p-[15px] bg-gray-50 border rounded-2xl text-sm font-sans outline-none focus:ring-2 focus:ring-[#D4AF37]/20 min-h-[120px] transition-all ${
                 reviewError ? 'border-red-200' : 'border-gray-200'
               }`}
@@ -894,6 +1012,80 @@ export default function SalonDetailPage() {
                 if (reviewError) setReviewError(null);
               }}
             />
+
+            {/* AI Polish */}
+            <button
+              type="button"
+              disabled={!reviewData.reviewText.trim() || isPolishing || isReviewSubmitting}
+              onClick={handleAIPolish}
+              className="w-full py-2.5 border border-[#D4AF37]/40 text-[#B8952E] rounded-full text-xs font-bold uppercase tracking-wider hover:bg-[#D4AF37]/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+            >
+              {isPolishing ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Polishing...
+                </>
+              ) : (
+                <>
+                  <Sparkles size={14} />
+                  Write with AI
+                </>
+              )}
+            </button>
+
+            {/* Review Image Upload */}
+            <input
+              ref={reviewImageInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              disabled={isReviewSubmitting}
+              onChange={(e) => {
+                const files = e.target.files ? Array.from(e.target.files) : [];
+                if (files.length) setReviewImages((prev) => [...prev, ...files].slice(0, 5));
+              }}
+            />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-gray-600">Add up to 5 photos</p>
+                <button
+                  type="button"
+                  disabled={reviewImages.length >= 5 || isReviewSubmitting}
+                  onClick={() => reviewImageInputRef.current?.click()}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 text-[10px] font-bold uppercase tracking-wider text-gray-600 hover:border-[#D4AF37] hover:text-[#D4AF37] disabled:opacity-50 transition-all"
+                >
+                  <Image size={12} />
+                  Add Photos
+                </button>
+              </div>
+              {reviewImages.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {reviewImages.map((file, i) => (
+                    <div key={i} className="relative w-16 h-16 rounded-xl overflow-hidden border border-gray-200">
+                      <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setReviewImages(reviewImages.filter((_, idx) => idx !== i))}
+                        className="absolute top-0 right-0 p-0.5 bg-black/50 text-white rounded-bl"
+                      >
+                        <Trash2 size={10} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Potential Points */}
+            <div className="flex items-center gap-2 px-4 py-2 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-2xl">
+              <Gift size={16} className="text-[#D4AF37]" />
+              <span className="text-xs font-semibold text-[#B8952E]">
+                {reviewImages.length > 0
+                  ? `Earn ${10 + Math.min(reviewImages.length, 5) * 10} points: 5 for rating, 5 for review, and ${Math.min(reviewImages.length, 5) * 10} for your photos`
+                  : 'Earn 10 points: 5 for rating + 5 for your review'}
+              </span>
+            </div>
 
             {/* Pill Button with Gold Hover */}
             <button
@@ -910,6 +1102,73 @@ export default function SalonDetailPage() {
                 "Share with the Community"
               )}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- Update Existing Review Confirmation --- */}
+      {isUpdateConfirmOpen && existingReview && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-md rounded-[24px] shadow-2xl p-8 space-y-6 relative animate-in zoom-in duration-300">
+            <button
+              onClick={() => setIsUpdateConfirmOpen(false)}
+              className="absolute top-4 right-4 p-2 hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              <X size={20} className="text-gray-400" />
+            </button>
+
+            <h3 className="text-2xl font-serif font-semibold text-slate-900 text-center" style={{ fontFamily: "'Playfair Display', serif" }}>
+              You already shared your thoughts
+            </h3>
+
+            <div className="bg-gray-50 rounded-2xl p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <Star
+                    key={s}
+                    size={16}
+                    className={s <= existingReview.rating ? "text-[#D4AF37] fill-[#D4AF37]" : "text-gray-300"}
+                  />
+                ))}
+                <span className="text-xs text-gray-500">Your previous rating</span>
+              </div>
+              <p className="text-sm text-gray-700 italic" style={{ fontFamily: "'Playfair Display', serif" }}>
+                "{existingReview.reviewText || existingReview.text}"
+              </p>
+            </div>
+
+            <p className="text-sm text-slate-600 text-center">
+              Would you like to update this review with your new feedback?
+            </p>
+
+            {reviewError && (
+              <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-xs font-bold text-red-600 text-center">
+                {reviewError}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setIsUpdateConfirmOpen(false)}
+                className="flex-1 py-3 border border-slate-900 text-slate-900 rounded-full font-semibold text-sm tracking-wider hover:bg-slate-50 transition-all"
+              >
+                Keep as is
+              </button>
+              <button
+                disabled={isReviewSubmitting}
+                onClick={handleUpdateReview}
+                className="flex-1 py-3 bg-[#D4AF37] text-white rounded-full font-semibold text-sm tracking-wider shadow-lg disabled:opacity-70 hover:bg-[#C9A227] transition-all"
+              >
+                {isReviewSubmitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Updating...
+                  </span>
+                ) : (
+                  "Update review"
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -980,6 +1239,19 @@ export default function SalonDetailPage() {
                             </div>
                           </div>
                           <p className="text-xs text-gray-700 leading-snug">{review.text || review.reviewText || 'No review text'}</p>
+                          {review.images?.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {review.images.map((url: string, idx: number) => (
+                                <img
+                                  key={idx}
+                                  src={url}
+                                  alt=""
+                                    className="w-14 h-14 rounded-lg object-cover border border-gray-200 cursor-pointer hover:opacity-90"
+                                  onClick={() => window.open(url, '_blank')}
+                                />
+                              ))}
+                            </div>
+                          )}
                         </div>
                       ))
                     ) : (

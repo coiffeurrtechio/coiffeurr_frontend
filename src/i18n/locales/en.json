@@ -580,7 +580,17 @@
     "wishlist": "Wishlist",
     "analytics": "Analytics",
     "settings": "Settings",
+    "playground": "Playground",
     "mainMenu": "Main Menu"
+  },
+  "playground": {
+    "title": "Live Floor Control",
+    "subtitle": "Real-time salon operations & walk-in dispatch",
+    "expressWalkIn": "Express Walk-In",
+    "onlineQueue": "Online Bookings Queue",
+    "noUpcoming": "No upcoming online bookings",
+    "noStaff": "No active staff found. Add staff to use the live floor.",
+    "confirmStart": "Confirm & Start"
   },
   "auth": {
     "login": "Login",

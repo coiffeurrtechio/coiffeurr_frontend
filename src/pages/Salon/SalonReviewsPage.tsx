@@ -13,6 +13,8 @@ interface Review {
   targetId: string;
   rating: number;
   text: string;
+  reviewText: string;
+  images: string[];
   helpfulCount: number;
   createdAt: string;
   updatedAt: string;
@@ -218,7 +220,20 @@ const SalonReviewsPage = () => {
                       <div className="flex items-center gap-1 mb-2">
                         {renderStars(review.rating)}
                       </div>
-                      <p className="text-xs sm:text-sm text-gray-600">{review.text}</p>
+                      <p className="text-xs sm:text-sm text-gray-600">{review.reviewText || review.text}</p>
+                      {review.images?.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {review.images.map((url: string, idx: number) => (
+                            <img
+                              key={idx}
+                              src={url}
+                              alt=""
+                              className="w-16 h-16 rounded-lg object-cover border border-gray-200 cursor-pointer hover:opacity-90"
+                              onClick={() => window.open(url, '_blank')}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

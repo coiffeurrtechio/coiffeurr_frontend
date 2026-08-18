@@ -1,6 +1,71 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Star, Loader2, X, Store, Scissors, Calendar, Clock, User, CheckCircle } from "lucide-react";
+import { Star, Loader2, X, Store, Scissors, Calendar, Clock, User, CheckCircle, Image, Trash2, Sparkles, Gift } from "lucide-react";
+
+function ReviewImageUpload({
+  label,
+  images,
+  setImages,
+  disabled,
+}: {
+  label: string;
+  images: File[];
+  setImages: (files: File[]) => void;
+  disabled?: boolean;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    if (files.length) setImages([...images, ...files].slice(0, 5));
+  };
+
+  const removeImage = (index: number) => {
+    setImages(images.filter((_, i) => i !== index));
+  };
+
+  return (
+    <div className="mt-4">
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        disabled={disabled}
+        onChange={handleChange}
+      />
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-semibold text-slate-600">{label}</p>
+        <button
+          type="button"
+          disabled={disabled || images.length >= 5}
+          onClick={() => inputRef.current?.click()}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-600 hover:border-[#D4AF37] hover:text-[#D4AF37] disabled:opacity-50 transition-all"
+        >
+          <Image size={12} />
+          Add Photos
+        </button>
+      </div>
+      {images.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {images.map((file, i) => (
+            <div key={i} className="relative w-16 h-16 rounded-xl overflow-hidden border border-slate-200">
+              <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
+              <button
+                type="button"
+                onClick={() => removeImage(i)}
+                className="absolute top-0 right-0 p-0.5 bg-black/50 text-white rounded-bl"
+              >
+                <Trash2 size={10} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface FeedbackData {
   userId: string;
@@ -37,6 +102,12 @@ export default function FeedbackPage() {
   const [staffSubmitted, setStaffSubmitted] = useState(false);
   const [staffError, setStaffError] = useState<string | null>(null);
 
+  const [salonImages, setSalonImages] = useState<File[]>([]);
+  const [staffImages, setStaffImages] = useState<File[]>([]);
+  const [polishingTarget, setPolishingTarget] = useState<'SALON' | 'STAFF' | null>(null);
+  const [salonPointsEarned, setSalonPointsEarned] = useState(0);
+  const [staffPointsEarned, setStaffPointsEarned] = useState(0);
+
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -70,7 +141,61 @@ export default function FeedbackPage() {
     }
   };
 
-  const submitReview = async (targetType: 'SALON' | 'STAFF', targetId: string, rating: number, reviewText: string, setErrorFn: (e: string | null) => void) => {
+  const uploadReviewImages = async (files: File[], targetType: 'SALON' | 'STAFF'): Promise<string[]> => {
+    if (!files.length || !feedbackData) return [];
+    const formData = new FormData();
+    files.forEach((file) => formData.append('files', file));
+    formData.append('salon_id', feedbackData.salonId);
+    if (targetType === 'STAFF' && feedbackData.staffId) {
+      formData.append('staff_id', feedbackData.staffId);
+    }
+
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/upload/review-images`, {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.detail || 'Image upload failed');
+    return data.data?.urls || [];
+  };
+
+  const polishText = async (
+    target: 'SALON' | 'STAFF',
+    currentText: string,
+    setText: (value: string) => void,
+    setErrorFn: (e: string | null) => void
+  ) => {
+    if (!currentText.trim()) return;
+    setPolishingTarget(target);
+    setErrorFn(null);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/ai/review-polish/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: currentText,
+          tone: 'friendly and professional',
+          max_length: 200
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'AI polish failed');
+      setText(data.polished_text || currentText);
+    } catch (error: any) {
+      setErrorFn(error.message || 'AI polish failed');
+    } finally {
+      setPolishingTarget(null);
+    }
+  };
+
+  const submitReview = async (
+    targetType: 'SALON' | 'STAFF',
+    targetId: string,
+    rating: number,
+    reviewText: string,
+    images: File[],
+    setErrorFn: (e: string | null) => void
+  ) => {
     if (!reviewText.trim()) {
       setErrorFn('Please write a review');
       return;
@@ -79,6 +204,11 @@ export default function FeedbackPage() {
     setSubmitting(true);
     setErrorFn(null);
     try {
+      let imageUrls: string[] = [];
+      if (images.length) {
+        imageUrls = await uploadReviewImages(images, targetType);
+      }
+
       const response = await fetch(`${import.meta.env.VITE_API_URL}/bookings/feedback/${bookingId}/review`, {
         method: 'POST',
         headers: {
@@ -88,7 +218,8 @@ export default function FeedbackPage() {
           targetType,
           targetId,
           rating,
-          reviewText
+          reviewText,
+          images: imageUrls
         }),
       });
 
@@ -100,18 +231,23 @@ export default function FeedbackPage() {
       }
 
       if (data.success) {
+        const points = data.review?.pointsEarned || 0;
         if (targetType === 'SALON') {
           setSalonSubmitted(true);
+          setSalonPointsEarned(points);
           setSalonReviewText("");
           setSalonRating(5);
+          setSalonImages([]);
         } else {
           setStaffSubmitted(true);
+          setStaffPointsEarned(points);
           setStaffReviewText("");
           setStaffRating(5);
+          setStaffImages([]);
         }
       }
     } catch (error: any) {
-      setErrorFn(error.response?.data?.detail || "Review failed.");
+      setErrorFn(error.message || error.response?.data?.detail || "Review failed.");
     } finally {
       setSubmitting(false);
     }
@@ -224,7 +360,7 @@ export default function FeedbackPage() {
             {salonSubmitted && (
               <div className="flex items-center gap-2 text-green-600">
                 <CheckCircle size={18} />
-                <span className="font-medium text-sm">Submitted</span>
+                <span className="font-medium text-sm">{salonPointsEarned > 0 ? `Yay! +${salonPointsEarned} pts` : 'Submitted'}</span>
               </div>
             )}
           </div>
@@ -259,7 +395,7 @@ export default function FeedbackPage() {
               </div>
 
               <textarea
-                disabled={submitting}
+                disabled={submitting || polishingTarget === 'SALON'}
                 className={`w-full p-4 bg-gray-50 border rounded-2xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/20 min-h-[120px] transition-all ${
                   salonError ? 'border-red-200' : 'border-gray-200'
                 }`}
@@ -272,8 +408,38 @@ export default function FeedbackPage() {
               />
 
               <button
+                type="button"
+                disabled={!salonReviewText.trim() || polishingTarget === 'SALON' || submitting}
+                onClick={() => polishText('SALON', salonReviewText, setSalonReviewText, setSalonError)}
+                className="w-full py-2.5 border border-[#D4AF37]/40 text-[#B8952E] rounded-full text-xs font-bold uppercase tracking-wider hover:bg-[#D4AF37]/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+              >
+                {polishingTarget === 'SALON' ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Polishing...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={14} />
+                    Write with AI
+                  </>
+                )}
+              </button>
+
+              <ReviewImageUpload label="Add up to 5 salon photos" images={salonImages} setImages={setSalonImages} disabled={submitting} />
+
+              <div className="flex items-center gap-2 px-4 py-2 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-2xl">
+                <Gift size={16} className="text-[#D4AF37]" />
+                <span className="text-xs font-semibold text-[#B8952E]">
+                  {salonImages.length > 0
+                    ? `Earn ${10 + Math.min(salonImages.length, 5) * 10} points: 5 for rating, 5 for review, and ${Math.min(salonImages.length, 5) * 10} for your photos`
+                    : 'Earn 10 points: 5 for rating + 5 for your review'}
+                </span>
+              </div>
+
+              <button
                 disabled={submitting || salonRating === 0}
-                onClick={() => submitReview('SALON', feedbackData.salonId, salonRating, salonReviewText, setSalonError)}
+                onClick={() => submitReview('SALON', feedbackData.salonId, salonRating, salonReviewText, salonImages, setSalonError)}
                 className="w-full py-4 bg-slate-900 text-white rounded-full font-semibold text-sm tracking-[0.1em] shadow-lg disabled:opacity-70 flex items-center justify-center gap-2 transition-all hover:bg-[#D4AF37] hover:shadow-xl mt-6"
               >
                 {submitting ? (
@@ -300,7 +466,7 @@ export default function FeedbackPage() {
             {staffSubmitted && (
               <div className="flex items-center gap-2 text-green-600">
                 <CheckCircle size={18} />
-                <span className="font-medium text-sm">Submitted</span>
+                <span className="font-medium text-sm">{staffPointsEarned > 0 ? `Yay! +${staffPointsEarned} pts` : 'Submitted'}</span>
               </div>
             )}
           </div>
@@ -335,7 +501,7 @@ export default function FeedbackPage() {
               </div>
 
               <textarea
-                disabled={submitting}
+                disabled={submitting || polishingTarget === 'STAFF'}
                 className={`w-full p-4 bg-gray-50 border rounded-2xl text-sm outline-none focus:ring-2 focus:ring-[#D4AF37]/20 min-h-[120px] transition-all ${
                   staffError ? 'border-red-200' : 'border-gray-200'
                 }`}
@@ -348,8 +514,38 @@ export default function FeedbackPage() {
               />
 
               <button
+                type="button"
+                disabled={!staffReviewText.trim() || polishingTarget === 'STAFF' || submitting}
+                onClick={() => polishText('STAFF', staffReviewText, setStaffReviewText, setStaffError)}
+                className="w-full py-2.5 border border-[#D4AF37]/40 text-[#B8952E] rounded-full text-xs font-bold uppercase tracking-wider hover:bg-[#D4AF37]/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+              >
+                {polishingTarget === 'STAFF' ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Polishing...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={14} />
+                    Write with AI
+                  </>
+                )}
+              </button>
+
+              <ReviewImageUpload label="Add up to 5 artist photos" images={staffImages} setImages={setStaffImages} disabled={submitting} />
+
+              <div className="flex items-center gap-2 px-4 py-2 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-2xl">
+                <Gift size={16} className="text-[#D4AF37]" />
+                <span className="text-xs font-semibold text-[#B8952E]">
+                  {staffImages.length > 0
+                    ? `Earn ${10 + Math.min(staffImages.length, 5) * 10} points: 5 for rating, 5 for review, and ${Math.min(staffImages.length, 5) * 10} for your photos`
+                    : 'Earn 10 points: 5 for rating + 5 for your review'}
+                </span>
+              </div>
+
+              <button
                 disabled={submitting || staffRating === 0 || !feedbackData.staffId}
-                onClick={() => feedbackData.staffId ? submitReview('STAFF', feedbackData.staffId, staffRating, staffReviewText, setStaffError) : null}
+                onClick={() => feedbackData.staffId ? submitReview('STAFF', feedbackData.staffId, staffRating, staffReviewText, staffImages, setStaffError) : null}
                 className={`w-full py-4 rounded-full font-semibold text-sm tracking-[0.1em] shadow-lg disabled:opacity-70 flex items-center justify-center gap-2 transition-all mt-6 ${
                   !feedbackData.staffId ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-slate-900 text-white hover:bg-[#D4AF37] hover:shadow-xl'
                 }`}
@@ -376,6 +572,9 @@ export default function FeedbackPage() {
             <p className="text-slate-300 mb-6">
               Your feedback helps us improve and helps others make better choices.
             </p>
+            <div className="mb-6 text-[#D4AF37]">
+              <p className="text-sm font-semibold">Yay! You won {salonPointsEarned + staffPointsEarned} points!</p>
+            </div>
             <button
               onClick={() => navigate('/')}
               className="px-8 py-3 bg-white text-slate-900 rounded-full font-semibold text-sm tracking-[0.1em] hover:bg-[#D4AF37] transition-all"

@@ -9,7 +9,8 @@ import {
   UserCheck,
   Globe,
   LogOut,
-  X
+  X,
+  Zap
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "../../../components/ui_components/button";
@@ -33,6 +34,7 @@ function SalonDashboard({ open, setOpen, collapsed, onLogout, isPoweringDown = f
   const menuItems = [
     { id: "analytics", label: t('navigation.analytics'), icon: BarChart3, path: "/dashboard/" },
     { id: "booking", label: t('navigation.bookings'), icon: Notebook, path: "/dashboard/booking" },
+    { id: "playground", label: t('navigation.playground'), icon: Zap, path: "/dashboard/playground" },
     { id: "attendance", label: t('navigation.attendance'), icon: UserCheck, path: "/dashboard/attendance" },
     { id: "staff", label: t('navigation.staff'), icon: Users, path: "/dashboard/staff" },
     { id: "services", label: t('navigation.services'), icon: LayoutDashboard, path: "/dashboard/services" },
@@ -109,7 +111,7 @@ function SalonDashboard({ open, setOpen, collapsed, onLogout, isPoweringDown = f
           </div>
 
           {/* NAVIGATION SECTION */}
-          <nav className="flex-1 p-4 space-y-2 mt-4 relative z-10">
+          <nav className="flex-1 p-4 space-y-2 mt-4 relative z-10 overflow-y-auto overflow-x-hidden min-h-0">
             {menuItems.map((item) => {
               const Icon = item.icon;
 
@@ -158,7 +160,7 @@ function SalonDashboard({ open, setOpen, collapsed, onLogout, isPoweringDown = f
                 }
               }}
               className={`
-                w-full group py-3 relative flex items-center gap-3 px-4 mt-4 mb-10 xl:mb-4
+                w-full group py-3 relative flex items-center gap-3 px-4 mt-4 mb-4
                 ${collapsed ? "px-2 justify-center" : ""}
                 ${isPoweringDown ? 'grayscale opacity-50 pointer-events-none' : ''}
               `}
@@ -200,6 +202,7 @@ function SalonDashboard({ open, setOpen, collapsed, onLogout, isPoweringDown = f
           </nav>
 
           <SponserFooter collapsed={collapsed} />
+
         </div>
       </aside>
     </>

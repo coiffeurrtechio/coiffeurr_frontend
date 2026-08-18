@@ -293,6 +293,16 @@ export default function Profile() {
           <p className="mt-1 text-sm font-light italic text-gray-500 text-center opacity-70">
             Ready for your next transformation?
           </p>
+
+          <div className="mt-4 inline-flex flex-col items-center gap-1">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#D4AF37]/10 to-[#D4AF37]/5 border border-[#D4AF37]/20 rounded-full">
+              <Gift size={16} className="text-[#D4AF37]" />
+              <span className="text-sm font-bold text-[#B8952E]">{usercontactdetails?.rewardPoints || 0} Reward Points</span>
+            </div>
+            <p className="text-[10px] text-[#B8952E]/80 text-center max-w-[240px] leading-tight">
+              Your loyalty pays off! We’re rolling out special offers and perks very soon.
+            </p>
+          </div>
         </div>
 
         <div className="mt-8 bg-white rounded-[2rem] shadow-xl border border-white/20 overflow-hidden divide-y divide-slate-100 backdrop-blur-[15px]">

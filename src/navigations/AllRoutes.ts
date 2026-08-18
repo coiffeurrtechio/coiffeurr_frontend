@@ -28,6 +28,7 @@ import StaffDetailPage from "../pages/Salon/StaffDetailPage";
 import AnalyticsPage from "../pages/Salon/SalonOwner/DashBoardPages.tsx/AnalyticsPage";
 import AttendancePage from "../pages/Salon/SalonOwner/DashBoardPages.tsx/AttendancePage";
 import SettingsPage from "../pages/Salon/SalonOwner/DashBoardPages.tsx/SettingsPage";
+import PlaygroundPage from "../pages/Salon/SalonOwner/DashBoardPages.tsx/PlaygroundPage";
 import ForgotPassword from "../pages/ForgotPassword";
 import UniversalVerification from "../pages/UniversalVerification";
 import SalonReviewsPage from "../pages/Salon/SalonReviewsPage";
@@ -144,6 +145,7 @@ const routes: AppRoute[] = [
       { key: 27, path: "services", Element: ServiceManagement, isProtected: true },
       { key: 28, path: "", Element: AnalyticsPage, isProtected: true },
       { key: 29, path: "booking", Element: BookingsPage, isProtected: true },
+      { key: 33, path: "playground", Element: PlaygroundPage, isProtected: true },
       { key: 30, path: "profile", Element: DashboardProfile, isProtected: true },
       { key: 31, path: "attendance", Element: AttendancePage, isProtected: true },
       { key: 32, path: "settings", Element: SettingsPage, isProtected: true },
