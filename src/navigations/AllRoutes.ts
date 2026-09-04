@@ -35,6 +35,7 @@ import SalonReviewsPage from "../pages/Salon/SalonReviewsPage";
 import SuperAdminLogin from "../pages/SuperAdmin/SuperAdminLogin";
 import SuperAdminHome from "../pages/SuperAdmin/SuperAdminHome";
 import FeedbackPage from "../pages/FeedbackPage";
+import PolicyPage from "../pages/PolicyPage";
 
 
 export interface AppRoute {
@@ -84,6 +85,12 @@ const routes: AppRoute[] = [
     key: 2,
     path: "/login",
     Element: LoginPage,
+    isProtected: false,
+  },
+  {
+    key: 2,
+    path: "/PrivacyPolicy",
+    Element: PolicyPage,
     isProtected: false,
   },
 
